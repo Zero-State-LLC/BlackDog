@@ -15,6 +15,7 @@ from tests.t06support import (
     cleared,
     inventory_doc,
     notice_doc,
+    pins_for,
     stage,
 )
 
@@ -52,11 +53,12 @@ def test_cli_prints_the_digest_and_a_repeat_is_idempotent(tmp_path: Path, capsys
     stage(root, REPO, PIN, "osc.dsp", data)
     row, notice = cleared("osc", data, path="osc.dsp")
     args = _args(tmp_path, [row], [notice])
-    assert main(args) == 0
-    first = capsys.readouterr().out.strip()
-    assert len(first) == 7 + 64
-    assert main(args) == 0
-    assert capsys.readouterr().out.strip() == first
+    with pins_for(inventory_doc([row]), notice_doc([notice])):
+        assert main(args) == 0
+        first = capsys.readouterr().out.strip()
+        assert len(first) == 7 + 64
+        assert main(args) == 0
+        assert capsys.readouterr().out.strip() == first
 
 
 def test_cli_compile_check_and_usage_exit_2(tmp_path: Path, capsys) -> None:
@@ -91,14 +93,16 @@ def test_cli_acquire_and_store_exit_codes(tmp_path: Path, capsys) -> None:
     root = tmp_path / "fixtures"
     row, notice = cleared("osc", data, path="missing.dsp")
     args = _args(tmp_path, [row], [notice])
-    assert main(args) == 3
+    with pins_for(inventory_doc([row]), notice_doc([notice])):
+        assert main(args) == 3
     capsys.readouterr()
     stage(root, REPO, PIN, "osc.dsp", data)
     good_row, good_notice = cleared("osc", data, path="osc.dsp")
     good = _args(tmp_path, [good_row], [good_notice])
-    assert main(good) == 0
-    capsys.readouterr()
-    moved = good.copy()
-    created = moved.index("--created-at")
-    moved[created + 1] = "2026-10-17T20:00:01Z"
-    assert main(moved) == 4
+    with pins_for(inventory_doc([good_row]), notice_doc([good_notice])):
+        assert main(good) == 0
+        capsys.readouterr()
+        moved = good.copy()
+        created = moved.index("--created-at")
+        moved[created + 1] = "2026-10-17T20:00:01Z"
+        assert main(moved) == 4

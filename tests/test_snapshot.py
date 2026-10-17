@@ -26,6 +26,7 @@ from tests.t06support import (
     long_text,
     notice_doc,
     notice_row,
+    pins_for,
     stage,
 )
 
@@ -45,14 +46,15 @@ def _compile(
 
     inventory = inventory_doc(entries) if inventory_at is None else inventory_doc(entries, inventory_at)
     notice = notice_doc(notices) if notice_at is None else notice_doc(notices, notice_at)
-    return compile_snapshot(
-        inventory,
-        notice,
-        DirectoryFetcher(root),
-        actor=actor,
-        created_at=created_at,
-        sealed=sealed or (),
-    )
+    with pins_for(inventory, notice):
+        return compile_snapshot(
+            inventory,
+            notice,
+            DirectoryFetcher(root),
+            actor=actor,
+            created_at=created_at,
+            sealed=sealed or (),
+        )
 
 
 def _manifest(compiled) -> dict[str, object]:
@@ -150,11 +152,12 @@ def test_actor_is_never_the_reviewer(tmp_path: Path) -> None:
 def test_training_only_impulse_path_is_carried(tmp_path: Path) -> None:
     root = tmp_path / "fixtures"
     data = b"process = 1;\n"
-    stage(root, REPO, PIN, "tests/impulse.dsp", data)
+    path = "tests/impulse-tests/osc.dsp"
+    stage(root, REPO, PIN, path, data)
     row, notice = cleared(
-        "impulse",
+        "faust-impulse-osc",
         data,
-        path="tests/impulse.dsp",
+        path=path,
         license_name="GPL-3.0-only",
         eligible_for=["train"],
     )
@@ -163,6 +166,40 @@ def test_training_only_impulse_path_is_carried(tmp_path: Path) -> None:
     assert unit["training_only"] is True
     assert unit["impulse"] is True
     assert unit["eligible_for"] == ["train"]
+
+
+def test_impulse_substring_does_not_drop_eval(tmp_path: Path) -> None:
+    """A path that merely contains the letters impulse is not an impulse test."""
+    root = tmp_path / "fixtures"
+    data = b"process = 1;\n"
+    path = "examples/impulseResponse.dsp"
+    stage(root, REPO, PIN, path, data)
+    row, notice = cleared("faust-examples-mit", data, path=path)
+    compiled = _compile(root, [row], [notice])
+    unit = _manifest(compiled)["units"][0]  # type: ignore[index]
+    assert unit["impulse"] is False
+    assert unit["eligible_for"] == ["train", "eval", "redistribute"]
+
+
+def test_impulse_entry_id_with_eval_is_refused(tmp_path: Path) -> None:
+    """Entry id faust-impulse-* refuses eval even when the path is not impulse-tests."""
+    root = tmp_path / "fixtures"
+    data = b"process = 1;\n"
+    path = "examples/readme-only.dsp"
+    stage(root, REPO, PIN, path, data)
+    row, notice = cleared(
+        "faust-impulse-readme",
+        data,
+        path=path,
+        eligible_for=["train", "eval", "redistribute"],
+    )
+    compiled = _compile(root, [row], [notice])
+    payload = _manifest(compiled)
+    assert payload["units"] == []
+    excluded = payload["excluded"][0]  # type: ignore[index]
+    assert excluded["reason"] == "impulse-eval"
+    assert excluded["entry_id"] == "faust-impulse-readme"
+    assert "eval" not in (excluded.get("eligible_for") or [])
 
 
 def test_manifest_has_no_program_text(tmp_path: Path) -> None:
@@ -266,13 +303,16 @@ def test_rejected_row_is_not_fetched(tmp_path: Path) -> None:
         reason="faust-stk ffunction files are not cleared",
         reviewer="",
     )
-    compiled = compile_snapshot(
-        inventory_doc([rejected]),
-        notice_doc([]),
-        _Boom(),
-        actor=ACTOR,
-        created_at=CREATED_AT,
-    )
+    inventory = inventory_doc([rejected])
+    notice = notice_doc([])
+    with pins_for(inventory, notice):
+        compiled = compile_snapshot(
+            inventory,
+            notice,
+            _Boom(),
+            actor=ACTOR,
+            created_at=CREATED_AT,
+        )
     row = _manifest(compiled)["excluded"][0]  # type: ignore[index]
     assert row["entry_id"] == "stk"
     assert row["origin"] == "inventory"
@@ -326,13 +366,16 @@ def test_uncleared_function_blocks_the_shared_blob(tmp_path: Path) -> None:
         reviewer="",
     )
     notice = notice_row(data, path="vaeffects.lib", function="gain")
-    compiled = compile_snapshot(
-        inventory_doc([cleared_row, blocked]),
-        notice_doc([notice]),
-        _Boom(),
-        actor=ACTOR,
-        created_at=CREATED_AT,
-    )
+    inventory = inventory_doc([cleared_row, blocked])
+    notices = notice_doc([notice])
+    with pins_for(inventory, notices):
+        compiled = compile_snapshot(
+            inventory,
+            notices,
+            _Boom(),
+            actor=ACTOR,
+            created_at=CREATED_AT,
+        )
     excluded = _by_entry(_manifest(compiled)["excluded"])  # type: ignore[arg-type]
     assert excluded["mit-fn"]["reason"] == "needs-human"
     assert excluded["mit-fn"]["function"] == "gain"
@@ -365,23 +408,28 @@ def test_missing_notice_and_license_mismatch_are_refused(tmp_path: Path) -> None
 
     data = b"process = 1;\n"
     row = entry("osc", data, path="osc.dsp")
-    compiled = compile_snapshot(
-        inventory_doc([row]),
-        notice_doc([]),
-        _Boom(),
-        actor=ACTOR,
-        created_at=CREATED_AT,
-    )
+    inventory = inventory_doc([row])
+    empty = notice_doc([])
+    with pins_for(inventory, empty):
+        compiled = compile_snapshot(
+            inventory,
+            empty,
+            _Boom(),
+            actor=ACTOR,
+            created_at=CREATED_AT,
+        )
     assert _manifest(compiled)["excluded"][0]["reason"] == "notice-missing"  # type: ignore[index]
 
     mismatched = notice_row(data, path="osc.dsp", license_name="BSD")
-    compiled = compile_snapshot(
-        inventory_doc([row]),
-        notice_doc([mismatched]),
-        _Boom(),
-        actor=ACTOR,
-        created_at=CREATED_AT,
-    )
+    mismatched_doc = notice_doc([mismatched])
+    with pins_for(inventory, mismatched_doc):
+        compiled = compile_snapshot(
+            inventory,
+            mismatched_doc,
+            _Boom(),
+            actor=ACTOR,
+            created_at=CREATED_AT,
+        )
     assert _manifest(compiled)["excluded"][0]["reason"] == "notice-missing"  # type: ignore[index]
     assert _manifest(compiled)["units"] == []
 
@@ -436,6 +484,37 @@ def test_normalize_failure_quarantines_one_unit_and_a_bad_blob_aborts(tmp_path: 
         _compile(root, [mismatch], [mismatch_notice])
 
 
+def test_tampered_text_with_the_claimed_sha_is_refused_before_normalize(
+    tmp_path: Path,
+) -> None:
+    """T05 binds blob_sha, not the text. A changed body with the same claim is refused."""
+    from faustcoder.acquire import git_blob_sha1
+
+    original = b"process = 1;\n"
+    tampered = b"\x00tampered"
+    claimed = git_blob_sha1(original)
+    assert claimed != git_blob_sha1(tampered)
+    row, notice = cleared("osc", original, path="osc.dsp")
+    assert row["files"][0]["blob_sha"] == claimed  # type: ignore[index]
+
+    class _Tamper:
+        def fetch(self, repo: str, pin: str, path: str, blob_sha: str) -> bytes:
+            assert blob_sha == claimed
+            return tampered
+
+    inventory = inventory_doc([row])
+    notices = notice_doc([notice])
+    with pins_for(inventory, notices):
+        with pytest.raises(AcquireError, match="blob_sha"):
+            compile_snapshot(
+                inventory,
+                notices,
+                _Tamper(),
+                actor=ACTOR,
+                created_at=CREATED_AT,
+            )
+
+
 def test_duplicate_identity_and_file_count_are_refused() -> None:
     data = b"process = 1;\n"
     first = entry("one", data, path="osc.dsp")
@@ -443,15 +522,71 @@ def test_duplicate_identity_and_file_count_are_refused() -> None:
     notice = notice_row(data, path="osc.dsp")
     with pytest.raises(InventoryError, match="already"):
         content = inventory_doc([first, second])
-        from faustcoder.inventory import parse_corpus
+        from tests.t06support import parse_pinned
 
-        parse_corpus(content, notice_doc([notice]))
+        parse_pinned(content, notice_doc([notice]))
     broken = entry("one", data, path="osc.dsp")
     broken["file_count"] = 2
     with pytest.raises(InventoryError, match="file_count"):
-        from faustcoder.inventory import parse_corpus
+        from tests.t06support import parse_pinned
 
-        parse_corpus(inventory_doc([broken]), notice_doc([notice]))
+        parse_pinned(inventory_doc([broken]), notice_doc([notice]))
+
+
+def test_production_corpus_is_pinned_and_foreign_units_are_refused() -> None:
+    import json
+
+    from faustcoder.inventory import (
+        PINNED_INVENTORY_DIGEST,
+        PINNED_NOTICE_DIGEST,
+        parse_corpus,
+    )
+
+    inventory = json.loads(
+        Path("corpus/rights-inventory.v1.json").read_text(encoding="utf-8")
+    )
+    notice = json.loads(
+        Path("corpus/notice-manifest.v1.json").read_text(encoding="utf-8")
+    )
+    assert content_digest(inventory) == PINNED_INVENTORY_DIGEST
+    assert content_digest(notice) == PINNED_NOTICE_DIGEST
+    resigned = dict(inventory)
+    resigned["generated_at"] = "2026-10-18T00:00:00Z"
+    assert content_digest(resigned) == PINNED_INVENTORY_DIGEST
+    corpus = parse_corpus(resigned, notice)
+    assert corpus.inventory_digest == PINNED_INVENTORY_DIGEST
+    assert corpus.notice_digest == PINNED_NOTICE_DIGEST
+    cleared: set[tuple[str, str, str, str, str]] = set()
+    for row in inventory["entries"]:
+        if row["decision"] != "rights_cleared":
+            continue
+        repo = row["pin"]["repo"]
+        commit = row["pin"]["commit"]
+        specs = list(row.get("files") or []) + list(row.get("functions") or [])
+        for spec in specs:
+            cleared.add(
+                (repo, commit, spec["path"], spec.get("function") or "", spec["blob_sha"])
+            )
+    admitted = {
+        (unit.repo, unit.pin, unit.path, unit.function, unit.blob_sha)
+        for unit in corpus.units
+    }
+    assert admitted
+    assert admitted <= cleared
+    assert ("other/repo", "c" * 40, "nope.dsp", "", "d" * 40) not in admitted
+    for unit in corpus.units:
+        assert unit.decision == "rights_cleared"
+        if unit.impulse:
+            assert "eval" not in unit.eligible_for
+    extra = json.loads(json.dumps(inventory))
+    extra["entries"].append({"id": "forged-entry"})
+    with pytest.raises(InventoryError, match="digest"):
+        parse_corpus(extra, notice)
+    swapped = json.loads(json.dumps(inventory))
+    specs = swapped["entries"][0].get("files") or swapped["entries"][0].get("functions")
+    specs[0]["blob_sha"] = "d" * 40
+    with pytest.raises(InventoryError, match="digest"):
+        parse_corpus(swapped, notice)
 
 
 def _two(root: Path) -> tuple[list[dict[str, object]], list[dict[str, object]]]:

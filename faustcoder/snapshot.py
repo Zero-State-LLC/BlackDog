@@ -21,7 +21,7 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, replace
 from typing import Any
 
-from faustcoder.acquire import BlobFetcher, fetch_verified
+from faustcoder.acquire import BlobFetcher, fetch_verified, git_blob_sha1
 from faustcoder.canonical import build_envelope
 from faustcoder.compiler_gate import assert_corpus_compile_disabled
 from faustcoder.dataset import PRODUCER, SCHEMA_VERSION, receipt_payload
@@ -165,6 +165,10 @@ def _sealed_keys(sealed: Sequence[Mapping[str, str]]) -> set[tuple[str, str, str
 
 def _prepare(unit: Unit, blobs: dict[tuple[str, str, str, str], bytes]) -> _Norm:
     raw = blobs[(unit.repo, unit.pin, unit.path, unit.blob_sha)]
+    # Hash the ingested bytes before any transform. T05 binds the claimed
+    # blob id, not the text, so a tampered body with the same claim is refused.
+    if git_blob_sha1(raw) != unit.blob_sha:
+        raise AcquireError("ingested bytes do not match blob_sha")
     try:
         normalized = normalize_bytes(raw, None)
     except NormalizeError as exc:

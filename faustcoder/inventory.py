@@ -9,8 +9,11 @@ are exclusions. They are not fetched.
 ``generated_at`` is not part of the content digest. Re-signing an
 inventory without changing entries does not change the snapshot.
 
-This module does not clear rights. The decision on the row is T05's.
-A missing reviewer is not filled in from the snapshot actor.
+This module does not clear rights. Admission of a cleared unit calls
+``faustcoder.rights.guard_cleared_unit``, the T05 guard. The documents
+must match the pinned content digests of ``corpus/rights-inventory.v1.json``
+and ``corpus/notice-manifest.v1.json``. A missing reviewer is not filled
+in from the snapshot actor.
 """
 
 from __future__ import annotations
@@ -22,10 +25,20 @@ from dataclasses import dataclass
 from typing import Any
 
 from faustcoder.canonical import canonical_bytes, sha256_prefixed
-from faustcoder.errors import InventoryError
+from faustcoder.errors import InventoryError, LicenseEvidenceError, NeedsHumanDecision
+from faustcoder.rights import guard_cleared_unit
+from faustcoder.rights_policy import is_impulse_path
 
 INVENTORY_VERSION = "rights-inventory.v1"
 NOTICE_VERSION = "notice-manifest.v1"
+# Content digests of the T05 corpus files. ``generated_at`` is omitted
+# and entries are sorted, so a re-sign does not move the pin.
+PINNED_INVENTORY_DIGEST = (
+    "sha256:e3938dd19b9456e94f563d446e4994fdd2d3d7f785e9599e02aabad6641c4f26"
+)
+PINNED_NOTICE_DIGEST = (
+    "sha256:bbda20fdef13092d010805aa2bc3df65f84250a9241de89292148fdb21b5f4ec"
+)
 FFUNCTION_REASON = "ffunction"
 NEEDS_HUMAN_REASON = "needs-human"
 _TIME = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$")
@@ -126,13 +139,20 @@ def parse_corpus(
         raise InventoryError("inventory has no entries")
     if not isinstance(rows, list):
         raise InventoryError("notice manifest entries must be a list")
+    inventory_digest, notice_digest = _pinned_digests(inventory, notice)
     notices = _notice_index(rows)
     admitted: list[Unit] = []
     excluded: list[InventoryExclusion] = []
     pending: list[tuple[Unit, tuple[str, str, str, str]]] = []
     blocked: set[tuple[str, str, str, str]] = set()
     seen: set[tuple[str, str, str, str]] = set()
+    by_id: dict[str, Mapping[str, Any]] = {}
     for entry in entries:
+        if isinstance(entry, Mapping) and isinstance(entry.get("id"), str):
+            entry_id = str(entry["id"])
+            if entry_id in by_id:
+                raise InventoryError(f"{entry_id}: inventory entry id is repeated")
+            by_id[entry_id] = entry
         pieces, blocks = _entry(entry, notices)
         blocked.update(blocks)
         for unit, blob_key in pieces:
@@ -160,22 +180,78 @@ def parse_corpus(
         if len(unit.reviewer) < 3:
             excluded.append(_exclude(unit, NEEDS_HUMAN_REASON, "inventory"))
             continue
+        refusal = _cleared_refusal(by_id[unit.entry_id], unit, inventory, notice)
+        if refusal is not None:
+            excluded.append(_exclude(unit, refusal, "inventory"))
+            continue
         admitted.append(unit)
     admitted.sort(key=lambda item: (item.repo, item.pin, item.path, item.function, item.unit_id))
     excluded.sort(key=lambda item: item.unit_id)
     return Corpus(
         units=tuple(admitted),
         excluded=tuple(excluded),
-        inventory_digest=content_digest(inventory),
-        notice_digest=content_digest(notice),
+        inventory_digest=inventory_digest,
+        notice_digest=notice_digest,
     )
 
 
 def source_uri(unit: Unit) -> str:
-    """Return a pinned https identifier. The fragment names the function."""
+    """Return the T05 blob URL. A function name is the fragment."""
     base = f"https://github.com/{unit.repo}/blob/{unit.pin}/{unit.path}"
-    function = unit.function or ""
-    return f"{base}#function={function}&entry={unit.entry_id}"
+    if unit.function:
+        return f"{base}#{unit.function}"
+    return base
+
+
+def _pinned_digests(
+    inventory: Mapping[str, Any], notice: Mapping[str, Any]
+) -> tuple[str, str]:
+    """Refuse a document whose content digest is not the T05 corpus pin."""
+    inventory_digest = content_digest(inventory)
+    notice_digest = content_digest(notice)
+    if inventory_digest != PINNED_INVENTORY_DIGEST:
+        raise InventoryError("inventory digest does not match the T05 pin")
+    if notice_digest != PINNED_NOTICE_DIGEST:
+        raise InventoryError("notice digest does not match the T05 pin")
+    return inventory_digest, notice_digest
+
+
+def _cleared_refusal(
+    entry: Mapping[str, Any],
+    unit: Unit,
+    inventory: Mapping[str, Any],
+    notice: Mapping[str, Any],
+) -> str | None:
+    """Return an exclusion reason when T05's guard refuses the unit."""
+    evidence_uri = entry.get("evidence_uri") or entry.get("url") or ""
+    if not isinstance(evidence_uri, str):
+        evidence_uri = ""
+    try:
+        guard_cleared_unit(
+            inventory,
+            notice,
+            repo=unit.repo,
+            commit=unit.pin,
+            path=unit.path,
+            function=unit.function,
+            blob_sha=unit.blob_sha,
+            license_name=unit.license,
+            eligible_for=list(entry.get("eligible_for") or []),
+            attribution=unit.attribution,
+            evidence_label=unit.evidence_label,
+            evidence_uri=evidence_uri,
+            reason=unit.reason,
+            reviewer=unit.reviewer,
+            inventory_id=unit.entry_id,
+        )
+    except (LicenseEvidenceError, NeedsHumanDecision) as exc:
+        message = str(exc)
+        if "impulse-test" in message:
+            return "impulse-eval"
+        if "notice" in message:
+            return "notice-missing"
+        return NEEDS_HUMAN_REASON
+    return None
 
 
 def _entry(
@@ -315,7 +391,7 @@ def _unit(
         notice=notice,
         reviewer=reviewer,
         reason=reason,
-        impulse="impulse" in path,
+        impulse=is_impulse_path(path, entry_id),
         holdout=False,
         training_only=flags == ("train",),
     )

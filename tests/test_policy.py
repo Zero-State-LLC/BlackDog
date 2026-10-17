@@ -5,10 +5,9 @@ from __future__ import annotations
 import pytest
 
 from faustcoder.errors import InventoryError
-from faustcoder.inventory import parse_corpus
 from faustcoder.policy import license_class, maximum_flags
 
-from tests.t06support import entry, inventory_doc, notice_doc, notice_row
+from tests.t06support import entry, inventory_doc, notice_doc, notice_row, parse_pinned
 
 
 def test_license_table_records_the_2026_10_17_defaults() -> None:
@@ -30,7 +29,7 @@ def test_inferred_clearance_needs_a_reviewer_and_speculative_is_refused() -> Non
     row = entry("osc", data, path="osc.dsp", evidence_label="INFERRED", reviewer="")
     notice = notice_row(data, path="osc.dsp")
     with pytest.raises(InventoryError, match="reviewer"):
-        parse_corpus(inventory_doc([row]), notice_doc([notice]))
+        parse_pinned(inventory_doc([row]), notice_doc([notice]))
     named = entry(
         "osc",
         data,
@@ -38,11 +37,11 @@ def test_inferred_clearance_needs_a_reviewer_and_speculative_is_refused() -> Non
         evidence_label="INFERRED",
         reviewer="Danny",
     )
-    corpus = parse_corpus(inventory_doc([named]), notice_doc([notice]))
+    corpus = parse_pinned(inventory_doc([named]), notice_doc([notice]))
     assert corpus.units[0].reviewer == "Danny"
     speculative = entry("osc", data, path="osc.dsp", evidence_label="SPECULATIVE")
     with pytest.raises(InventoryError, match="label"):
-        parse_corpus(inventory_doc([speculative]), notice_doc([notice]))
+        parse_pinned(inventory_doc([speculative]), notice_doc([notice]))
 
 
 def test_rejected_and_needs_human_rows_are_not_admitted() -> None:
@@ -67,7 +66,7 @@ def test_rejected_and_needs_human_rows_are_not_admitted() -> None:
         reason="copyright only",
         reviewer="",
     )
-    corpus = parse_corpus(inventory_doc([rejected, human]), notice_doc([]))
+    corpus = parse_pinned(inventory_doc([rejected, human]), notice_doc([]))
     assert corpus.units == ()
     reasons = {item.entry_id: item.reason for item in corpus.excluded}
     assert reasons == {"stk": "ffunction", "gap": "copyright only"}

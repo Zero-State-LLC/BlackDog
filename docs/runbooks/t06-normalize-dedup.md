@@ -17,12 +17,16 @@ a cleared row with no reviewer is excluded as `needs-human`.
 This runbook records the dataset machine from
 [spec §7.1](../../specs/001-faustcoder/spec.md). T06 does not edit that
 section. `split_frozen` stays unimplemented. T07 writes the
-`DatasetSnapshot` and the signed split. The production digests of
+`DatasetSnapshot` and the signed split. Admission calls T05's
+`guard_cleared_unit` and consumes
 `corpus/rights-inventory.v1.json` and `corpus/notice-manifest.v1.json`
-are not pinned here until T05 #37 merges. Until then the snapshot
-records the content digest of the documents it was given and refuses
-any unit that is not a cleared row unit `(path, function, blob_sha)`
-with a matching notice. That pin is the remaining B1 step.
+by content digest. `generated_at` is not part of that digest. The pins
+are `sha256:e3938dd19b9456e94f563d446e4994fdd2d3d7f785e9599e02aabad6641c4f26`
+and `sha256:bbda20fdef13092d010805aa2bc3df65f84250a9241de89292148fdb21b5f4ec`.
+A unit is admitted only when it is a cleared T05 unit
+`(repo, commit, path, function, blob_sha)`. Before normalization, the
+snapshot hashes the ingested bytes with `git hash-object` and refuses
+a mismatch with that `blob_sha`.
 
 ## States and events
 
@@ -197,8 +201,11 @@ short-text fallback above applies, so a one-token edit of a short
 holdout is `holdout-family`.
 
 `training_only` on the manifest is true when the effective flags are
-exactly `train`. `impulse` is true when the path contains `impulse`.
-Those fields record the T05 row. They are not a second rights guard.
+exactly `train`. `impulse` is true when the path contains
+`impulse-tests` or the entry id starts with `faust-impulse-`. Eval is
+refused for that pair. A path that only contains the letters `impulse`
+is not an impulse test and can keep eval. Those fields record the T05
+row. They are not a second rights decision.
 
 ## Rights defaults (2026-10-17)
 
@@ -253,5 +260,5 @@ artifact. It is not a field of the manifest.
 ## Labels
 
 - OBSERVED: the §7.1 table and diagram; T02 digest rules; ADR-0003; the 2026-10-17 defaults; spec §4.2 (no custom parser); `DatasetSnapshot` is the `split_frozen` effect; the T03 harness does not stage faustlibraries `2edec0537f53`; T05's inventory uses `rights_cleared`, `rights_rejected` and `needs_human`, with `files[]` or `functions[]` and a notice manifest keyed by commit, path, function and blob sha.
-- INFERRED: T06 stops at `normalized` and consumes the T05 documents by content digest instead of importing unmerged `faustcoder.rights`; `generated_at` is outside that digest; a mixed-license family is `needs-human` rather than an intersection; a shared blob with any non-cleared unit is `needs-human` because function rows have no line range; character 5-gram Jaccard for texts under 40 tokens; the 32-character and 1/3 skeleton thresholds; `ffunction` as a token backstop; `DedupManifest` rather than `DatasetSnapshot`; receipt time is `--created-at`; the compiler flag refuses instead of compiling. The production digest pin waits until #37 merges.
+- INFERRED: T06 stops at `normalized` and admits through T05's guard against the pinned inventory and notice digests; `generated_at` is outside that digest; the ingested blob is hashed before normalization; a mixed-license family is `needs-human` rather than an intersection; a shared blob with any non-cleared unit is `needs-human` because function rows have no line range; character 5-gram Jaccard for texts under 40 tokens; the 32-character and 1/3 skeleton thresholds; `ffunction` as a token backstop; `DedupManifest` rather than `DatasetSnapshot`; receipt time is `--created-at`; the compiler flag refuses instead of compiling.
 - SPECULATIVE: the 4/5 threshold, the 40-token floor, and the short-text 1/3 skeleton threshold need a real corpus before they are treated as tuned; full commit hashes are not in the approval note.

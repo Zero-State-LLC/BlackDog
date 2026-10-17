@@ -2,9 +2,13 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+from contextlib import contextmanager
 from pathlib import Path
+from typing import Any, Iterator
 
 from faustcoder.acquire import git_blob_sha1
+from faustcoder.inventory import content_digest, parse_corpus
 
 PIN = "a" * 40
 PIN_B = "b" * 40
@@ -50,7 +54,9 @@ def entry(
         "evidence_label": evidence_label,
         "attribution": attribution,
         "reviewer": reviewer,
-        "reason": reason,
+        "reason": reason or "cleared row",
+        "evidence_uri": f"https://example.com/rights/{entry_id}",
+        "url": f"https://example.com/rights/{entry_id}",
         "file_count": 1,
     }
     if function:
@@ -128,6 +134,34 @@ def notice_doc(
         "generated_at": generated_at,
         "entries": rows,
     }
+
+
+@contextmanager
+def pins_for(
+    inventory: Mapping[str, Any], notice: Mapping[str, Any]
+) -> Iterator[None]:
+    """Point the production digest pins at one fixture corpus for a test."""
+    import faustcoder.inventory as inventory_mod
+
+    saved = (
+        inventory_mod.PINNED_INVENTORY_DIGEST,
+        inventory_mod.PINNED_NOTICE_DIGEST,
+    )
+    inventory_mod.PINNED_INVENTORY_DIGEST = content_digest(inventory)
+    inventory_mod.PINNED_NOTICE_DIGEST = content_digest(notice)
+    try:
+        yield
+    finally:
+        (
+            inventory_mod.PINNED_INVENTORY_DIGEST,
+            inventory_mod.PINNED_NOTICE_DIGEST,
+        ) = saved
+
+
+def parse_pinned(inventory: Mapping[str, Any], notice: Mapping[str, Any]):
+    """Parse a fixture corpus against its own content digests."""
+    with pins_for(inventory, notice):
+        return parse_corpus(inventory, notice)
 
 
 def stage(root: Path, repo: str, pin: str, path: str, data: bytes) -> str:
