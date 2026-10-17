@@ -1,0 +1,27 @@
+{
+  "task_id": "task-osc-sine",
+  "task_type": "remix",
+  "prompt": "Remix two sine oscillators into one voice.",
+  "constraints": {
+    "max_lines": 40
+  },
+  "expected_io": {
+    "inputs": 0,
+    "outputs": 1
+  },
+  "test_profile": {
+    "classes": ["syntax"]
+  },
+  "schema_version": "0.3.0",
+  "category": "oscillators",
+  "target": [
+    {
+      "target_class": "host",
+      "target": "cpp"
+    }
+  ],
+  "remix_sources": [
+    "sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+    "sha256:fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210"
+  ]
+}

@@ -1,0 +1,81 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Zero-State-LLC/FaustCoder/specs/001-faustcoder/contracts/CompilerReceipt.schema.json",
+  "title": "CompilerReceipt",
+  "description": "Spec §8 CompilerReceipt (R-005). Fields compiler, lang, options and diagnostic_class added in spec 0.3.0 (ADR-0004); optional until T03 implements them.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "source_sha256",
+    "faust_version",
+    "command",
+    "exit_code",
+    "stdout_digest",
+    "stderr_digest",
+    "duration_ms",
+    "environment_digest"
+  ],
+  "properties": {
+    "source_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "faust_version": {
+      "type": "string"
+    },
+    "command": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "exit_code": {
+      "type": "integer"
+    },
+    "stdout_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "stderr_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "duration_ms": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "environment_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "compiler": {
+      "type": "string",
+      "enum": [
+        "libfaust-wasm",
+        "faust-cli"
+      ]
+    },
+    "lang": {
+      "type": "string",
+      "description": "Faust output backend, for example cpp, c, rust, cmajor, wasm"
+    },
+    "options": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "diagnostic_class": {
+      "type": "string",
+      "enum": [
+        "ok",
+        "warning",
+        "type_error",
+        "arity_error",
+        "parse_error",
+        "timeout",
+        "other"
+      ]
+    }
+  }
+}

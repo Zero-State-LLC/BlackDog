@@ -1,0 +1,79 @@
+"""Typed failures for the artifact store.
+
+Callers can catch ArtifactStoreError for any store refusal. The store
+does not rewrite an existing object when one of these is raised.
+"""
+
+from __future__ import annotations
+
+
+class ArtifactStoreError(Exception):
+    """Base class for artifact-store failures."""
+
+
+class CanonicalError(ArtifactStoreError):
+    """Value cannot be encoded as canonical JSON."""
+
+
+class SchemaValidationError(ArtifactStoreError):
+    """Instance does not satisfy a local JSON Schema."""
+
+    def __init__(self, schema_name: str, detail: str) -> None:
+        self.schema_name = schema_name
+        self.detail = detail
+        super().__init__(f"{schema_name}: {detail}")
+
+
+class SchemaError(ArtifactStoreError):
+    """A schema file is missing or is not itself a valid schema."""
+
+
+class DigestMismatchError(ArtifactStoreError):
+    """Caller-supplied id or content_digest does not match the payload."""
+
+
+class MutationError(ArtifactStoreError):
+    """Write-once store refused different bytes for an existing id."""
+
+    def __init__(self, artifact_id: str) -> None:
+        self.artifact_id = artifact_id
+        super().__init__(
+            f"artifact {artifact_id} is already stored with different bytes"
+        )
+
+
+class TamperError(ArtifactStoreError):
+    """Stored bytes failed the hash or canonical-encoding check."""
+
+    def __init__(self, artifact_id: str, detail: str) -> None:
+        self.artifact_id = artifact_id
+        self.detail = detail
+        super().__init__(f"tampered artifact {artifact_id}: {detail}")
+
+
+class MissingParentError(ArtifactStoreError):
+    """A parent content digest does not resolve to a stored artifact."""
+
+    def __init__(self, content_digest: str) -> None:
+        self.content_digest = content_digest
+        super().__init__(f"missing parent {content_digest}")
+
+
+class CycleError(ArtifactStoreError):
+    """Parent links would form a cycle in the evidence DAG."""
+
+    def __init__(self, detail: str) -> None:
+        self.detail = detail
+        super().__init__(detail)
+
+
+class ArtifactNotFoundError(ArtifactStoreError):
+    """No artifact is stored for this reference."""
+
+    def __init__(self, artifact_id: str) -> None:
+        self.artifact_id = artifact_id
+        super().__init__(f"artifact not found: {artifact_id}")
+
+
+class InvalidReferenceError(ArtifactStoreError):
+    """Reference is not a lowercase hex id or a sha256 content digest."""

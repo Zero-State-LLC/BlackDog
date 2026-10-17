@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Zero-State-LLC/FaustCoder/specs/001-faustcoder/contracts/DecisionRecord.schema.json",
+  "title": "DecisionRecord",
+  "description": "Spec §8 DecisionRecord.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "candidate_digest",
+    "baseline_digest",
+    "suite_digest",
+    "gate_results",
+    "reviewer",
+    "disposition",
+    "rationale",
+    "timestamp"
+  ],
+  "properties": {
+    "candidate_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "baseline_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "suite_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "gate_results": {
+      "type": "object"
+    },
+    "reviewer": {
+      "type": "string"
+    },
+    "disposition": {
+      "type": "string",
+      "enum": [
+        "accepted",
+        "rejected",
+        "admitted",
+        "abstained"
+      ],
+      "description": "INFERRED enum from spec §7"
+    },
+    "rationale": {
+      "type": "string"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

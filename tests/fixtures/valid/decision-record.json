@@ -1,0 +1,12 @@
+{
+  "candidate_digest": "sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+  "baseline_digest": "sha256:fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210",
+  "suite_digest": "sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+  "gate_results": {
+    "compile": true
+  },
+  "reviewer": "t02-fixture",
+  "disposition": "admitted",
+  "rationale": "Synthetic fixture for schema validation.",
+  "timestamp": "2026-10-17T00:00:00Z"
+}

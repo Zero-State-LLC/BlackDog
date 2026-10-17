@@ -1,0 +1,10 @@
+{
+  "source_sha256": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+  "target_class": "host",
+  "target": "cpp",
+  "toolchain_pins": {},
+  "build_command": [],
+  "exit_code": 0,
+  "passed": false,
+  "environment_digest": "sha256:fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210"
+}

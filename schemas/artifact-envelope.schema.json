@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Zero-State-LLC/FaustCoder/specs/001-faustcoder/contracts/ArtifactEnvelope.schema.json",
+  "title": "ArtifactEnvelope",
+  "description": "Common envelope for every durable entity (spec §3). DRAFT.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "artifact_id",
+    "content_digest",
+    "created_at",
+    "producer",
+    "parents",
+    "payload"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string"
+    },
+    "artifact_id": {
+      "type": "string"
+    },
+    "content_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "producer": {
+      "type": "string"
+    },
+    "parents": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^sha256:[0-9a-f]{64}$"
+      },
+      "uniqueItems": true
+    },
+    "payload": {
+      "type": "object"
+    }
+  }
+}
