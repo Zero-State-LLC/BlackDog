@@ -1,0 +1,26 @@
+{
+  "source_sha256": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+  "target_class": "plugin",
+  "target": "lv2",
+  "toolchain_pins": {
+    "faust": "2.88.0"
+  },
+  "build_command": ["faust2lv2", "gain.dsp"],
+  "exit_code": 0,
+  "resource_report": {
+    "ram_bytes": 1024
+  },
+  "validator": "lv2lint",
+  "validator_version": "0.0.0-fixture",
+  "validator_result": {
+    "passed": true
+  },
+  "parameter_map_check": {
+    "passed": true
+  },
+  "realtime_checks": {
+    "nan_inf": true
+  },
+  "passed": true,
+  "environment_digest": "sha256:fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210"
+}

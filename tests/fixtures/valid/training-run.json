@@ -1,0 +1,17 @@
+{
+  "run_id": "run-fixture-1",
+  "base_model_revision": "example-base@0000000",
+  "dataset_digest": "sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+  "split_digest": "sha256:fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210",
+  "config_digest": "sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+  "code_revision": "0000000",
+  "hardware_profile": {
+    "name": "synthetic"
+  },
+  "checkpoint_digests": [
+    "sha256:fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210"
+  ],
+  "metrics": {
+    "loss": 1.0
+  }
+}

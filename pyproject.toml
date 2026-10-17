@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "faustcoder"
+version = "0.0.0"
+description = "Content-addressed artifact store and JSON Schema validation for FaustCoder."
+requires-python = ">=3.11"
+dependencies = [
+  "jsonschema>=4.23",
+  "rfc3339-validator>=0.1.4",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.3",
+]
+
+[tool.setuptools.packages.find]
+include = ["faustcoder*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+addopts = ["-q", "--strict-markers"]

@@ -1,0 +1,8 @@
+{
+  "task_id": "task-osc-sine",
+  "task_type": "generate",
+  "constraints": {},
+  "expected_io": {},
+  "test_profile": {},
+  "schema_version": "0.3.0"
+}

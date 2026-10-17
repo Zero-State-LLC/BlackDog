@@ -1,0 +1,11 @@
+{
+  "schema_version": "0.3.0",
+  "artifact_id": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+  "content_digest": "sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+  "created_at": "yesterday",
+  "producer": "t02-fixture",
+  "parents": [],
+  "payload": {
+    "kind": "example"
+  }
+}

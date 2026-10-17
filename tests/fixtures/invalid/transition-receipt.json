@@ -1,0 +1,10 @@
+{
+  "actor": "t02-fixture",
+  "timestamp": "2026-10-17T00:00:00Z",
+  "input_hashes": [],
+  "machine": "compiler",
+  "from": "DISCOVERED",
+  "event": "rights_cleared",
+  "to": "RIGHTS_CLEARED",
+  "disposition": "recorded"
+}

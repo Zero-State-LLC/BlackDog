@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Zero-State-LLC/FaustCoder/specs/001-faustcoder/contracts/TransitionReceipt.schema.json",
+  "title": "TransitionReceipt",
+  "description": "Append-only receipt for every state transition (spec §7, §7.0).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "actor",
+    "timestamp",
+    "input_hashes",
+    "machine",
+    "from",
+    "event",
+    "to",
+    "disposition"
+  ],
+  "properties": {
+    "actor": {
+      "type": "string"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "input_hashes": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^sha256:[0-9a-f]{64}$"
+      }
+    },
+    "machine": {
+      "type": "string",
+      "enum": [
+        "dataset",
+        "candidate",
+        "training",
+        "release"
+      ],
+      "description": "INFERRED"
+    },
+    "from": {
+      "type": "string"
+    },
+    "event": {
+      "type": "string"
+    },
+    "to": {
+      "type": "string"
+    },
+    "disposition": {
+      "type": "string"
+    }
+  }
+}

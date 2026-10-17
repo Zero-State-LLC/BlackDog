@@ -1,0 +1,10 @@
+{
+  "source_sha256": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+  "faust_version": "2.88.0",
+  "command": ["faust"],
+  "exit_code": 0,
+  "stdout_digest": "sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+  "stderr_digest": "sha256:fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210",
+  "duration_ms": -1,
+  "environment_digest": "sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+}

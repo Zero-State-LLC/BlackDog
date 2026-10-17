@@ -93,6 +93,9 @@ secrets.*
 
 # Tooling
 node_modules/
+*.egg-info/
+dist/
+build/
 .DS_Store
 .idea/
 .vscode/

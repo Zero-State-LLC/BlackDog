@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Zero-State-LLC/FaustCoder/specs/001-faustcoder/contracts/TrainingRun.schema.json",
+  "title": "TrainingRun",
+  "description": "Spec §8 TrainingRun (R-008, R-009).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "run_id",
+    "base_model_revision",
+    "dataset_digest",
+    "split_digest",
+    "config_digest",
+    "code_revision",
+    "hardware_profile",
+    "checkpoint_digests",
+    "metrics"
+  ],
+  "properties": {
+    "run_id": {
+      "type": "string"
+    },
+    "base_model_revision": {
+      "type": "string"
+    },
+    "dataset_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "split_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "config_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "code_revision": {
+      "type": "string"
+    },
+    "hardware_profile": {
+      "type": "object"
+    },
+    "checkpoint_digests": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^sha256:[0-9a-f]{64}$"
+      }
+    },
+    "metrics": {
+      "type": "object"
+    }
+  }
+}

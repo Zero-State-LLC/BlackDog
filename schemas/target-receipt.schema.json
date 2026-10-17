@@ -1,0 +1,80 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Zero-State-LLC/FaustCoder/specs/001-faustcoder/contracts/TargetReceipt.schema.json",
+  "title": "TargetReceipt",
+  "description": "Spec §8 TargetReceipt (ADD 0.3.0, ADR-0004): evidence from one target lane. Types INFERRED.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "source_sha256",
+    "target_class",
+    "target",
+    "toolchain_pins",
+    "build_command",
+    "exit_code",
+    "passed",
+    "environment_digest"
+  ],
+  "properties": {
+    "source_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "target_class": {
+      "type": "string",
+      "enum": [
+        "language",
+        "plugin",
+        "embedded",
+        "fpga"
+      ]
+    },
+    "target": {
+      "type": "string"
+    },
+    "toolchain_pins": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "build_command": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "exit_code": {
+      "type": "integer"
+    },
+    "resource_report": {
+      "type": "object",
+      "description": "Boards: flash_bytes, ram_bytes, cpu_percent, cpu_source (hardware or proxy). FPGA: luts, ffs, dsps, brams, fmax_mhz, samples_per_period."
+    },
+    "validator": {
+      "type": "string",
+      "description": "for example clap-validator, pluginval, lv2lint, auval, verilator"
+    },
+    "validator_version": {
+      "type": "string"
+    },
+    "validator_result": {
+      "type": "object"
+    },
+    "parameter_map_check": {
+      "type": "object",
+      "description": "Per Faust UI item: name, range, default, unit present and equal in the target"
+    },
+    "realtime_checks": {
+      "type": "object",
+      "description": "R-021: nan_inf, denormals, bounded_memory, no_alloc_in_callback"
+    },
+    "passed": {
+      "type": "boolean"
+    },
+    "environment_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    }
+  }
+}

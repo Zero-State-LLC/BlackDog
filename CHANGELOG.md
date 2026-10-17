@@ -10,6 +10,8 @@ See [docs/VERSIONING.md](docs/VERSIONING.md).
 
 ### Added
 
+- T02: content-addressed filesystem artifact store (`faustcoder/`) and top-level `schemas/` copied from `specs/001-faustcoder/contracts/`. Pytest covers schema validation, digest determinism, immutability, tamper detection and parent-cycle rejection.
+
 - ADR-0004: target lanes and Faust tooling reuse; `target-receipt.schema.json`.
 
 - Starter package: README, CONTRIBUTING, KANBAN, spec 001, ADR-0001 and the spec-structure CI check (#1).
