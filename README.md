@@ -12,6 +12,7 @@ Compiler-verified Faust DSP coding model, developed on NVIDIA DGX Spark.
 - [Constitution](.specify/memory/constitution.md)
 - [Contribution guidelines](CONTRIBUTING.md) and [security policy](SECURITY.md)
 - [Changelog](CHANGELOG.md) and [versioning](docs/VERSIONING.md)
+- [DGX Spark feasibility study](docs/dgx-spark-feasibility.md) and the [env_verified runbook](docs/runbooks/dgx-spark-env-verified.md)
 
 ## Principles
 

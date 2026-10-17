@@ -10,6 +10,8 @@ See [docs/VERSIONING.md](docs/VERSIONING.md).
 
 ### Added
 
+- T09: DGX Spark feasibility study, bounded environment probe, and the training-machine `env_verified` transition. CI covers the state machine with a mocked Spark fingerprint. On-hardware throughput is not measured in this change.
+
 - T02 follow-up: envelope-integrity sidecar verified on read, and a pytest job in the existing spec-check workflow.
 
 - T02: content-addressed filesystem artifact store (`faustcoder/`) and top-level `schemas/` copied from `specs/001-faustcoder/contracts/`. Pytest covers schema validation, digest determinism, immutability, tamper detection and parent-cycle rejection.
