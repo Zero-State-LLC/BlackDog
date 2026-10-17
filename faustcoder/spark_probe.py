@@ -10,10 +10,12 @@ diagnostics object is stored as an artifact envelope payload only.
 That shape is SPECULATIVE. The transition receipt payload is the
 existing TransitionReceipt schema.
 
-Safety (shared machines):
+Safety (dedicated Spark, cleared of other workloads before training;
+OBSERVED, Danny 2026-10-17):
 
 - Duration is capped at ``MAX_PROBE_SECONDS``.
-- The process memory cap defaults to 4 GiB and cannot exceed 96 GiB.
+- The process memory cap defaults to MemTotal minus an 8 GiB OS margin,
+  and cannot exceed 120 GiB. A lower cap can still be set.
 - Model weights are loaded only from an existing local directory.
 - Offline mode is forced. There is no flag that turns the network on.
 - Payloads omit absolute paths, environment variables and command output.
@@ -74,8 +76,14 @@ ADR0004_PINS: dict[str, str] = {
 }
 
 MIN_UNIFIED_MEMORY_BYTES = 100 * 1024**3
-MAX_MEMORY_CAP_BYTES = 96 * 1024**3
-DEFAULT_MEMORY_CAP_BYTES = 4 * 1024**3
+# NVIDIA prints "128 GB". The ceiling treats that as 128 GiB. The decimal
+# reading (128e9 bytes) is smaller; the feasibility study states both.
+# 8 GiB is INFERRED headroom for the OS, driver, page cache and a CUDA
+# context. It is not an NVIDIA specification.
+NOMINAL_UNIFIED_BYTES = 128 * 1024**3
+OS_HEADROOM_BYTES = 8 * 1024**3
+MAX_MEMORY_CAP_BYTES = NOMINAL_UNIFIED_BYTES - OS_HEADROOM_BYTES
+DEFAULT_MEMORY_CAP_BYTES = MAX_MEMORY_CAP_BYTES
 MAX_PROBE_SECONDS = 600
 DEFAULT_PROBE_SECONDS = 60
 MAX_SEQ_LEN = 128
@@ -106,6 +114,27 @@ _PACKAGE_NAMES = (
 
 class ProbeUsageError(Exception):
     """The operator's arguments cannot be run safely."""
+
+
+def default_memory_cap_bytes(memory_total_bytes: int | None) -> int:
+    """Budget for a cleared dedicated Spark: MemTotal minus OS headroom.
+
+    The ceiling is 120 GiB. Unknown memory, or a total that does not
+    exceed the headroom, falls back to that ceiling. The Spark identity
+    guard still rejects a machine whose MemTotal is under 100 GiB.
+    """
+    if (
+        isinstance(memory_total_bytes, bool)
+        or not isinstance(memory_total_bytes, int)
+        or memory_total_bytes <= OS_HEADROOM_BYTES
+    ):
+        return MAX_MEMORY_CAP_BYTES
+    return min(MAX_MEMORY_CAP_BYTES, memory_total_bytes - OS_HEADROOM_BYTES)
+
+
+def _cap_limit_text() -> str:
+    gib = MAX_MEMORY_CAP_BYTES // 1024**3
+    return f"1 byte..{gib} GiB"
 
 
 @dataclass(frozen=True)
@@ -289,7 +318,7 @@ def _check_probe_bounds(request: ProbeRequest) -> None:
             f"max_seconds must be 1..{MAX_PROBE_SECONDS}"
         )
     if not 1 <= request.memory_cap_bytes <= MAX_MEMORY_CAP_BYTES:
-        raise ProbeUsageError("memory cap must be 1 byte..96 GiB")
+        raise ProbeUsageError(f"memory cap must be {_cap_limit_text()}")
     if not 1 <= request.seq_len <= MAX_SEQ_LEN:
         raise ProbeUsageError(f"seq_len must be 1..{MAX_SEQ_LEN}")
     if not 1 <= request.max_new_tokens <= MAX_NEW_TOKENS:
@@ -481,9 +510,9 @@ def environment_guard(diagnostics: Mapping[str, Any]) -> list[str]:
             reasons.append("probe duration is outside 1..600 seconds")
         cap = limits.get("memory_cap_bytes")
         if isinstance(cap, bool) or not isinstance(cap, int):
-            reasons.append("memory cap is outside 1 byte..96 GiB")
+            reasons.append(f"memory cap is outside {_cap_limit_text()}")
         elif not 1 <= cap <= MAX_MEMORY_CAP_BYTES:
-            reasons.append("memory cap is outside 1 byte..96 GiB")
+            reasons.append(f"memory cap is outside {_cap_limit_text()}")
     probes = diagnostics.get("probes")
     if not isinstance(probes, Mapping) or not {"inference", "lora_step"} <= set(probes):
         reasons.append("probes are incomplete")
@@ -619,11 +648,12 @@ def main(argv: Sequence[str] | None = None) -> int:
         model_path = (
             assert_local_model_path(args.model_path) if args.model_path else None
         )
+        cap_bytes = _memory_cap_from_cli(args.memory_cap_mib)
         _check_probe_bounds(
             ProbeRequest(
                 model_path=model_path,
                 cuda_available=False,
-                memory_cap_bytes=args.memory_cap_mib * 1024**2,
+                memory_cap_bytes=cap_bytes,
                 available_bytes=None,
                 max_seconds=args.max_seconds,
                 seq_len=args.seq_len,
@@ -643,7 +673,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     request = ProbeRequest(
         model_path=model_path,
         cuda_available=bool(fingerprint.get("cuda_available")),
-        memory_cap_bytes=args.memory_cap_mib * 1024**2,
+        memory_cap_bytes=cap_bytes,
         available_bytes=fingerprint.get("memory_available_bytes"),
         max_seconds=args.max_seconds,
         seq_len=args.seq_len,
@@ -660,7 +690,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         probes=probes,
         limits={
             "max_seconds": args.max_seconds,
-            "memory_cap_bytes": args.memory_cap_mib * 1024**2,
+            "memory_cap_bytes": cap_bytes,
             "network": False,
         },
         local_model=local_model_record(model_path),
@@ -733,7 +763,11 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--memory-cap-mib",
         type=int,
-        default=DEFAULT_MEMORY_CAP_BYTES // 1024**2,
+        default=None,
+        help=(
+            "process memory cap in MiB. Default: MemTotal minus 8 GiB, "
+            "at most 120 GiB, for a cleared dedicated Spark"
+        ),
     )
     parser.add_argument("--model-path", default=None)
     parser.add_argument("--seq-len", type=int, default=DEFAULT_SEQ_LEN)
@@ -759,6 +793,14 @@ def _platform_info() -> dict[str, str]:
         "python": platform.python_version(),
         "node": platform.node(),
     }
+
+
+def _memory_cap_from_cli(memory_cap_mib: int | None) -> int:
+    """Explicit MiB cap, or the dedicated-machine default from MemTotal."""
+    if memory_cap_mib is not None:
+        return memory_cap_mib * 1024**2
+    total = _parse_meminfo(_read_meminfo()).get("total_bytes")
+    return default_memory_cap_bytes(total)
 
 
 def _read_meminfo() -> str:

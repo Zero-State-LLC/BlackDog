@@ -2,7 +2,7 @@
 
 Compiler-verified Faust DSP coding model, developed on NVIDIA DGX Spark.
 
-**Status:** specification-first. The V0.1 content-addressed artifact store (T02) is implemented. No model quality or hardware compatibility claims are established yet.
+**Status:** specification-first. The V0.1 content-addressed artifact store (T02) is implemented. No model-quality claim is established. For v0.2, R-001 (amended 0.3.1) uses cited external DGX Spark benchmarks plus a per-machine fingerprint; FaustCoder throughput on the Spark is not measured yet.
 
 ## Start here
 

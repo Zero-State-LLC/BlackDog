@@ -26,6 +26,9 @@ See [docs/VERSIONING.md](docs/VERSIONING.md).
 
 ### Changed
 
+- Spec 001 to 0.3.1 (Danny yes 2026-10-17 12:54 PM PT): for v0.2, R-001 is satisfied by cited external DGX Spark benchmarks plus a per-machine environment fingerprint receipt. On-hardware throughput is deferred to T10 on the dedicated Spark cleared of other workloads before training.
+- T09 probe: the default memory cap is that dedicated machine's MemTotal minus an 8 GiB OS margin, and cannot exceed 120 GiB. The 96 GiB shared-machine ceiling is withdrawn. 7.6B full-parameter AdamW stays a no-go on 128 GB unified memory.
+
 - Spec 001 to 0.3.0 (ADR-0004, Danny yes 2026-10-16 23:39 PT): reuse Faust tooling (faustwasm compiler and renderer, impulse-test references, compiler JSON instead of a custom parser); task taxonomy by faustlibraries category, task type and target; per-function licensing (D-007); runtimes D-003r2; new target lanes for language backends, plugins (CLAP, VST3, LV2), embedded boards (Daisy, Teensy 4.x) and a V0.5-FPGA milestone with an F0 spike; new `TARGET_CHECKED` candidate state and TargetReceipt contract; tasks T17 to T22.
 - Research F10 corrected: the Faust compiler is LGPL-2.1-or-later, not GPL.
 

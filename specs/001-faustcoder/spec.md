@@ -1,7 +1,7 @@
 # FaustCoder: DAG-Compliant DSP Coding Model
 
 - Status: DRAFT / refinement-ready
-- Version: 0.3.0 (Faust-tooling assimilation and target lanes, ADR-0004; see §19). 0.2.0 training path: ADR-0002, §17
+- Version: 0.3.1 (R-001 v0.2 evidence, Danny yes 2026-10-17 12:54 PM PT). 0.3.0: Faust-tooling assimilation and target lanes, ADR-0004; see §19. 0.2.0 training path: ADR-0002, §17
 - Target: NVIDIA DGX Spark (128 GB unified memory)
 
 ## 1. Constitution
@@ -52,7 +52,7 @@ The superseded 0.2.0 text (custom typed signal-flow representation) is kept in
 
 ## 5. Requirements
 
-- R-001 (MODIFIED 0.3.0): Reproducible DGX Spark environment, pinned dependencies and hardware diagnostics. Toolchain pins follow the version set in ADR-0004 (Faust 2.88.0, a faustlibraries commit, faustwasm, target SDKs and validators); every receipt records the pin it used.
+- R-001 (MODIFIED 0.3.0; amended 0.3.1, Danny yes 2026-10-17 12:54 PM PT): Reproducible DGX Spark environment, pinned dependencies and hardware diagnostics. Toolchain pins follow the version set in ADR-0004 (Faust 2.88.0, a faustlibraries commit, faustwasm, target SDKs and validators); every receipt records the pin it used. For v0.2, cited external DGX Spark benchmarks plus a per-machine environment fingerprint receipt satisfy this requirement. On-hardware throughput measurements are deferred to T10, on the dedicated Spark cleared of other workloads before training.
 - R-002 (MODIFIED 0.3.0, D-007): Curated, license-traceable Faust corpus with source attribution and exclusion policy. License is resolved per function where a library file declares licenses per function, and per file otherwise; header-less example files inherit their repository's license.
 - R-003: Contamination-resistant splits by project, near-duplicate family and provenance.
 - R-004 (REPLACED 0.3.0): Task taxonomy has three axes: DSP category (the faustlibraries library split: oscillators, filters, envelopes, delays, reverbs, compressors and dynamics, noises, physical models, spatialization, analyzers, routing, misc effects and synths), task type (generate, repair, explain, optimize, remix) and target (host, language backend, plugin, embedded board, FPGA). Dev tasks are seeded from faustlibraries `#### Usage` blocks and tests; the sealed holdout is newly written (§9).
@@ -355,7 +355,7 @@ Execute compiler/test workers in restricted containers with no network, bounded 
 
 ## 13. Dependency-ordered implementation tasks
 
-T01 constitution + ADRs -> T02 schemas + artifact store -> T03 compiler sandbox (faustwasm worker, 0.3.0) -> T04 DSP test harness (wasm offline render, 0.3.0) -> T05 corpus rights inventory -> T06 normalization/dedup -> T07 split freeze -> T08 baseline models -> T09 Spark throughput/memory study -> T10 training path P1-P3 per ADR-0002 (amended 0.2.0) -> T11 evaluation and paired comparisons -> T12 decision gate -> T13 local serving -> T14 IDE integration -> T15 independent security/quality review -> T16 release.
+T01 constitution + ADRs -> T02 schemas + artifact store -> T03 compiler sandbox (faustwasm worker, 0.3.0) -> T04 DSP test harness (wasm offline render, 0.3.0) -> T05 corpus rights inventory -> T06 normalization/dedup -> T07 split freeze -> T08 baseline models -> T09 Spark environment fingerprint (R-001, amended 0.3.1) -> T10 training path P1-P3 per ADR-0002 (amended 0.2.0) -> T11 evaluation and paired comparisons -> T12 decision gate -> T13 local serving -> T14 IDE integration -> T15 independent security/quality review -> T16 release.
 
 Added 0.3.0 (ADR-0004): T17 language-backend lane (after T03, V0.3), T18 plugin lane (after T04, V0.3), T19 embedded lane (after T04, V0.3), T20 remix tasks and novelty metric (after T08, V0.3), T21 real-time safety checks (after T04, V0.3), T22 FPGA F0 spike (after T04, V0.5-FPGA). T17 to T19 and T22 run in parallel with T10.
 
@@ -490,3 +490,13 @@ Resolved from §17: S-1 (typed graph analysis) is removed by item 2; S-4
 §4.2 as of 0.2.0 (SUPERSEDED by item 2, Danny yes 2026-10-16 23:39 PT):
 
 > Parse Faust programs into a typed signal-flow representation. Validate sequential, parallel, split, merge, and recursive composition against Faust's compiler semantics. Feedback is permitted only when semantically legal and appropriately delayed/stateful; never reject all recursive programs merely because their raw signal graph contains cycles. For DAG-based optimization and inspection, represent legal feedback as state-transition edges or collapsed strongly connected components with explicit delay boundaries. The graph view is a derived analysis artifact; the Faust compiler remains authoritative for language validity.
+
+## 20. Amendments 0.3.1 (R-001, ACCEPTED)
+
+Approval: Danny yes 2026-10-17 12:54 PM PT. Training runs on a dedicated DGX Spark that is cleared of other workloads before training (OBSERVED, Danny 2026-10-17). Cited benchmarks are in [the feasibility study](../../docs/dgx-spark-feasibility.md).
+
+| ID | Change | Was | Label |
+|---|---|---|---|
+| A-09 | For v0.2, R-001 is satisfied by cited external DGX Spark benchmarks plus one environment-fingerprint receipt per machine. On-hardware throughput is T10, on that cleared Spark | T09 acceptance required ARM64/Blackwell throughput and memory receipts before T10 | OBSERVED (approval) |
+
+This supersedes, for the v0.2 R-001 gate only, the §17 S-6 recommendation that T09 record throughput receipts before T10. S-6's row is left as written. The `env_verified` guard in §7.3 is unchanged: it still requires pinned dependencies and hardware diagnostics, not a token rate.

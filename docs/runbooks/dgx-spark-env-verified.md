@@ -1,13 +1,17 @@
 # Runbook: env_verified on a DGX Spark
 
-Record the R-001 environment digest for one Spark, and optionally a short
-inference rate and a tiny LoRA step. The study and the go/no-go rubric are
-in [the feasibility note](../dgx-spark-feasibility.md). The transition table
-is in [the training machine](../state-machines/training.md).
+Record the R-001 environment digest for one Spark. The study and the
+go/no-go rubric are in [the feasibility note](../dgx-spark-feasibility.md).
+The transition table is in [the training machine](../state-machines/training.md).
 
-Run this on the Spark. This repository's CI does not have the machines.
-Repeat the same commands on the second Spark; the receipts are not
-interchangeable.
+Run this on the dedicated DGX Spark after that machine has been cleared of
+other workloads (OBSERVED, Danny 2026-10-17). This repository's CI does not
+have the machines. Do the fingerprint path first. The optional smoke probe
+is T10 work and is not required for the amended R-001 gate (spec §20, Danny
+yes 2026-10-17 12:54 PM PT).
+
+Repeat the fingerprint on the second Spark if that machine will train. The
+receipts are not interchangeable.
 
 ## Safety
 
@@ -15,13 +19,16 @@ interchangeable.
   the network back on.
 - Weights load only from a directory you already have. A hub id or URL is
   rejected.
-- Default memory cap is 4096 MiB. The hard maximum is 96 GiB.
+- The default memory cap is `MemTotal` minus 8 GiB, and it cannot exceed
+  120 GiB. Pass `--memory-cap-mib` only to set a lower cap. The 8 GiB margin
+  is INFERRED headroom for the OS, the driver, page cache and a CUDA
+  context. It is not an NVIDIA limit.
 - Default duration is 60 seconds. The hard maximum is 600 seconds.
 - The probe does not print environment variables, absolute paths, or
   `nvidia-smi` stderr. The stored fingerprint does include
   `platform.node()` so the two Sparks can be told apart.
-- Do not raise the cap until `MemAvailable` in `/proc/meminfo` is larger than
-  the cap plus the memory the other daily jobs need.
+- Clear the machine before training. Do not raise the cap to make room for
+  another job that is still running.
 
 ## Install
 
@@ -36,7 +43,9 @@ python -m pip install --disable-pip-version-check -e .
 
 Do not pip-install torch, transformers wheels, or model weights as part of
 this run. `pip install -e .` installs FaustCoder and its schema dependencies
-only.
+only. The NVIDIA playbook cited in the feasibility study runs newer CUDA
+from an NGC container and treats a host CUDA install as outside the
+supported stack. This runbook does not install that container.
 
 Confirm torch is the one already on the machine:
 
@@ -49,8 +58,11 @@ outside this runbook.
 
 ## Fingerprint only
 
-This can pass the `env_verified` guard on a Spark and still leave
-`stack_pin_allowed` false, because no model was loaded.
+Run this first, with no model path. It can pass the `env_verified` guard on
+a Spark and still leave `stack_pin_allowed` false, because no model was
+loaded. That is the receipt amended R-001 asks for. Cited external
+benchmarks in the feasibility study are the other half. They are not
+produced by this command.
 
 ```bash
 python -m faustcoder.spark_probe \
@@ -67,11 +79,16 @@ were written. Exit 2 means the diagnostics artifact was written and the guard
 rejected the transition. Exit 1 means the arguments were refused and nothing
 was written.
 
+Copy the digests off the machine before anyone starts T10. Do not treat a
+fingerprint-only receipt as a measured token rate.
+
 ## Throughput smoke
 
-Point `--model-path` at a local directory that already contains
-`config.json` and the weight files. The example cap is 32 GiB. Change it
-only after reading `MemAvailable`.
+Deferred to T10. Do not run this for the v0.2 R-001 gate. When T10 does run
+it, the machine is still the cleared dedicated Spark, and `--model-path` is
+a local directory that already contains `config.json` and the weight files.
+Omit `--memory-cap-mib` to keep the dedicated-machine default, or set a
+lower cap. The example below sets 32 GiB only as an explicit lower cap.
 
 ```bash
 python -m faustcoder.spark_probe \
@@ -114,9 +131,10 @@ Keep the `.envelope_digest` sidecar next to each object. `ArtifactStore.get`
 rejects an object whose sidecar does not match.
 
 Record both digests in the operations log for T09. A later training run (T10)
-cites the receipt digest as a parent. It should cite a receipt whose
-diagnostics have `stack_pin_allowed` true before anyone treats the token rate
-as measured.
+cites the receipt digest as a parent when it measures throughput. It should
+cite a receipt whose diagnostics have `stack_pin_allowed` true before anyone
+treats the token rate as measured. The fingerprint receipt alone is enough
+for the amended R-001 record, together with the benchmarks in the study.
 
 ## Read a receipt without the Spark
 
@@ -136,4 +154,5 @@ python -m pytest tests/test_training_machine.py tests/test_spark_probe.py
 ```
 
 Those tests mock the Spark fingerprint and skip the CUDA probes. A green run
-does not mean G10 passed.
+does not mean G10 passed, and it does not replace the fingerprint on the
+Spark.

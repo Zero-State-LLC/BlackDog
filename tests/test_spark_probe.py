@@ -16,12 +16,15 @@ from faustcoder.spark_probe import (
     MAX_MEMORY_CAP_BYTES,
     MAX_PROBE_SECONDS,
     MIN_UNIFIED_MEMORY_BYTES,
+    NOMINAL_UNIFIED_BYTES,
+    OS_HEADROOM_BYTES,
     ProbeRequest,
     ProbeUsageError,
     assemble_diagnostics,
     assert_local_model_path,
     collect_fingerprint,
     config_sha256,
+    default_memory_cap_bytes,
     environment_guard,
     estimate_decoder_weight_bytes,
     local_model_record,
@@ -176,8 +179,22 @@ def test_weight_estimate_matches_the_decoder_formula() -> None:
 def test_guard_accepts_a_mocked_spark_fingerprint() -> None:
     assert environment_guard(_diagnostics()) == []
     assert MIN_UNIFIED_MEMORY_BYTES == 100 * GIB
-    assert MAX_MEMORY_CAP_BYTES == 96 * GIB
+    assert NOMINAL_UNIFIED_BYTES == 128 * GIB
+    assert OS_HEADROOM_BYTES == 8 * GIB
+    assert MAX_MEMORY_CAP_BYTES == 120 * GIB
     assert MAX_PROBE_SECONDS == 600
+    assert environment_guard(_diagnostics(limits=_limits(memory_cap_bytes=120 * GIB))) == []
+    over = _diagnostics(limits=_limits(memory_cap_bytes=120 * GIB + 1))
+    assert any("memory cap is outside" in item for item in environment_guard(over))
+
+
+def test_default_memory_cap_leaves_os_headroom() -> None:
+    assert default_memory_cap_bytes(128 * GIB) == 120 * GIB
+    assert default_memory_cap_bytes(121 * GIB) == 113 * GIB
+    assert default_memory_cap_bytes(16 * GIB) == 8 * GIB
+    assert default_memory_cap_bytes(256 * GIB) == 120 * GIB
+    assert default_memory_cap_bytes(None) == 120 * GIB
+    assert default_memory_cap_bytes(OS_HEADROOM_BYTES) == 120 * GIB
 
 
 @pytest.mark.parametrize(
