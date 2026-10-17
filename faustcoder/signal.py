@@ -19,11 +19,14 @@ tool; this change did not re-read that source, so the citation is
 INFERRED. Default ``rtol`` is 1e-5, the relative term in
 ``numpy.allclose``, and that citation is INFERRED too. The rest of
 the render is a coarse check: per-block RMS and spectral band
-energies, with the same tolerance. The render follows an impulse
-reference until its tail drops below ``tail_threshold``, and it stops
-at ``max_frames`` (144000, three seconds at 48 kHz) when the tail is
-still hot. A hot impulse tail shorter than that cap fails the
-comparison. Sine and noise do not decay, so they are not tail-gated.
+energies, with the same tolerance. An impulse reference is built at
+``max_frames`` (144000, three seconds at 48 kHz) and trimmed to the
+last sample at or above ``tail_threshold``, plus a margin. The tail
+gate scans that whole reference, so a silent gap before a delay or
+echo is still late energy. The candidate render covers the reference.
+A default impulse length is that reference, or the cap, and is never
+left at 2048. Sine and noise are not tail-gated; a profile that names
+only those keeps 2048.
 
 Metrics are integers on a 1e-9 grid (RMS, peak, absolute error,
 spectral band magnitudes) plus counts of NaN, Inf and float32
@@ -62,7 +65,7 @@ import sys
 import tempfile
 import time
 from collections.abc import Callable, Mapping, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Any
 
@@ -95,6 +98,7 @@ DEFAULT_FRAMES = 2048
 DEFAULT_TOLERANCE = 2e-6
 DEFAULT_RELATIVE_TOLERANCE = 1e-5
 DEFAULT_TAIL_THRESHOLD = 1e-8
+DEFAULT_TAIL_MARGIN = 64
 MAX_FRAMES = 144_000
 STIMULI = ("impulse", "sine", "noise")
 METRIC_VERSION = 2
@@ -448,6 +452,76 @@ def reproducible_signal_digest(receipt: Mapping[str, Any]) -> str:
     return content_digest_for(body)
 
 
+def impulse_decay_frames(
+    samples: Sequence[float],
+    *,
+    threshold: float,
+    block_size: int,
+    margin: int = DEFAULT_TAIL_MARGIN,
+    cap: int = MAX_FRAMES,
+) -> int:
+    """Return a block-aligned length that includes the last hot sample.
+
+    The length is the last sample at or above ``threshold``, plus
+    ``margin``, rounded up to ``block_size`` and clamped to ``cap``.
+    A signal that is still hot at the cap stays at the cap.
+    """
+    if block_size < 1:
+        raise ValueError("block_size must be positive")
+    if margin < 0:
+        raise ValueError("margin must be non-negative")
+    last_hot = -1
+    for index, sample in enumerate(samples):
+        if abs(float(sample)) >= threshold:
+            last_hot = index
+    if last_hot < 0:
+        length = block_size
+    else:
+        length = last_hot + 1 + margin
+    if length % block_size:
+        length += block_size - (length % block_size)
+    length = max(block_size, length)
+    aligned_cap = cap - (cap % block_size)
+    return min(length, aligned_cap)
+
+
+def impulse_reference(
+    profile: SignalProfile,
+    transform: Callable[[list[float]], Sequence[float]],
+    *,
+    margin: int = DEFAULT_TAIL_MARGIN,
+) -> SignalReference:
+    """Build an impulse reference at the cap, then trim it.
+
+    ``transform`` sees the full cap-length impulse and returns the
+    same number of samples. The stored reference ends one margin after
+    the last sample at or above ``tail_threshold``.
+    """
+    cap = profile.max_frames
+    if not isinstance(cap, int):
+        raise SignalHarnessError("max_frames was not resolved")
+    impulse = impulse_samples(cap, profile.impulse_amplitude)
+    rendered = [float(sample) for sample in transform(impulse)]
+    if len(rendered) != cap:
+        raise SignalHarnessError("impulse reference transform changed the frame count")
+    length = impulse_decay_frames(
+        rendered,
+        threshold=profile.tail_threshold,
+        block_size=profile.block_size,
+        margin=margin,
+        cap=cap,
+    )
+    return SignalReference(
+        sample_rate=profile.sample_rate,
+        block_size=profile.block_size,
+        frames=length,
+        seed=profile.seed,
+        stimuli=("impulse",),
+        channels=1,
+        samples={"impulse": [rendered[:length]]},
+    )
+
+
 def run_signal(
     source: str,
     profile: SignalProfile,
@@ -456,19 +530,24 @@ def run_signal(
     options: Sequence[str] = (),
     limits: ResourceLimits | None = None,
     promotion_candidate: bool = False,
+    reward_graded: bool = False,
 ) -> SignalRun:
     """Compile and render ``source``. Return a schema-valid receipt.
 
     Raises ``SignalLibrariesUnavailable`` when ``source`` imports a
     library. Raises ``SignalHarnessError`` when the sandbox or the
     worker fails. A failed network canary raises ``SandboxError``
-    and writes no receipt. A program that renders and fails a check
-    returns a receipt with ``passed`` false.
+    and writes no receipt. The compiler canary runs first; a failure
+    there does not start the renderer. A program that renders and
+    fails a check returns a receipt with ``passed`` false.
+    ``reward_graded`` forces ``reject_nonfinite`` and
+    ``require_reference`` on before the render.
     """
     if not isinstance(source, str):
         raise TypeError("source must be a string")
-    if reference is not None:
-        _require_same_setup(profile, reference)
+    profile, reference = _prepare_render(
+        profile, reference, reward_graded=reward_graded
+    )
     if source_needs_libraries(source):
         raise SignalLibrariesUnavailable(
             "pinned faustlibraries are not staged; T03b owns that tree, "
@@ -502,6 +581,7 @@ def run_signal(
         rendered,
         promotion_candidate=promotion_candidate,
         cpu_duration_ms=wall_ms if promotion_candidate else None,
+        reward_graded=reward_graded,
     )
 
 
@@ -516,19 +596,27 @@ def run_signal_suite(
     options: Sequence[str] = (),
     limits: ResourceLimits | None = None,
     promotion_candidate: bool = False,
+    reward_graded: bool = False,
     **profile_kwargs: Any,
 ) -> SignalSuite:
-    """Run ``source`` at each sample rate. Default rates are 44.1 and 48 kHz."""
+    """Run ``source`` at each sample rate. Default rates are 44.1 and 48 kHz.
+
+    A default frame count that includes impulse is raised to the cap
+    before ``reference_for`` runs, so the reference is built for the
+    window that will actually be rendered.
+    """
     if not sample_rates:
         raise ValueError("sample_rates must not be empty")
     runs: list[SignalRun] = []
     for rate in sample_rates:
-        profile = SignalProfile(
-            sample_rate=rate,
-            block_size=block_size,
-            seed=seed,
-            frames=frames,
-            **profile_kwargs,
+        profile = _default_impulse_frames(
+            SignalProfile(
+                sample_rate=rate,
+                block_size=block_size,
+                seed=seed,
+                frames=frames,
+                **profile_kwargs,
+            )
         )
         runs.append(
             run_signal(
@@ -538,6 +626,7 @@ def run_signal_suite(
                 options=options,
                 limits=limits,
                 promotion_candidate=promotion_candidate,
+                reward_graded=reward_graded,
             )
         )
     return SignalSuite(runs=tuple(runs))
@@ -710,6 +799,7 @@ def _judge(
     *,
     promotion_candidate: bool,
     cpu_duration_ms: int | None,
+    reward_graded: bool,
 ) -> SignalRun:
     outputs = int(rendered["outputs"])
     failures: list[str] = []
@@ -741,6 +831,9 @@ def _judge(
     }
     if promotion_candidate and cpu_duration_ms is not None:
         metrics["cpu_duration_ms"] = cpu_duration_ms
+    harness = _harness_preimage()
+    metrics["unshare_path"] = harness["unshare_path"]
+    metrics["unshare_sha256"] = harness["unshare_sha256"]
     thresholds: dict[str, Any] = {
         "absolute_tolerance_nano": to_nano(profile.absolute_tolerance),
         "clip_peak_nano": to_nano(profile.clip_peak),
@@ -762,7 +855,10 @@ def _judge(
         thresholds["reject_dc"] = True
     if profile.reject_clipping:
         thresholds["reject_clipping"] = True
-    harness = _harness_preimage()
+    if profile.require_reference:
+        thresholds["require_reference"] = True
+    if reward_graded:
+        thresholds["reward_graded"] = True
     receipt: dict[str, Any] = {
         "source_sha256": hashlib.sha256(source.encode("utf-8")).hexdigest(),
         "test_suite_digest": content_digest_for(profile_payload(profile)),
@@ -920,18 +1016,91 @@ def _harness_preimage() -> dict[str, Any]:
     }
 
 
-def _require_same_setup(profile: SignalProfile, reference: SignalReference) -> None:
-    """Refuse a comparison whose reference was rendered under another setup."""
+def _default_impulse_frames(profile: SignalProfile) -> SignalProfile:
+    """Raise a default impulse window to the cap.
+
+    Sine-only and noise-only profiles keep ``DEFAULT_FRAMES``. An
+    explicit length other than that default is left alone.
+    """
+    if "impulse" not in profile.stimuli or profile.frames != DEFAULT_FRAMES:
+        return profile
+    cap = profile.max_frames
+    if not isinstance(cap, int) or cap == profile.frames:
+        return profile
+    return replace(profile, frames=cap)
+
+
+def _pad_reference(reference: SignalReference, frames: int) -> SignalReference:
+    """Extend every channel with silence so the render can cover it."""
+    if frames < reference.frames:
+        raise SignalHarnessError("candidate render is shorter than the reference")
+    if frames == reference.frames:
+        return reference
+    extra = frames - reference.frames
+    samples = {
+        name: [tuple(channel) + (0.0,) * extra for channel in reference.samples[name]]
+        for name in reference.stimuli
+    }
+    return SignalReference(
+        sample_rate=reference.sample_rate,
+        block_size=reference.block_size,
+        frames=frames,
+        seed=reference.seed,
+        stimuli=reference.stimuli,
+        channels=reference.channels,
+        samples=samples,
+    )
+
+
+def _prepare_render(
+    profile: SignalProfile,
+    reference: SignalReference | None,
+    *,
+    reward_graded: bool,
+) -> tuple[SignalProfile, SignalReference | None]:
+    """Apply reward gates and choose the impulse render length.
+
+    A reward-graded run always rejects non-finite samples and requires
+    a reference. A default impulse length becomes the cap. The
+    candidate then has to cover the reference; a shorter impulse
+    reference is silence-padded out to that render.
+    """
+    if reward_graded:
+        profile = replace(profile, reject_nonfinite=True, require_reference=True)
+    profile = _default_impulse_frames(profile)
+    if reference is None:
+        return profile, None
+    if profile.frames < reference.frames:
+        profile = replace(profile, frames=reference.frames)
+    _require_same_identity(profile, reference)
+    if profile.frames > reference.frames:
+        if profile.stimuli != ("impulse",):
+            _require_same_setup(profile, reference)
+        reference = _pad_reference(reference, profile.frames)
+    return profile, reference
+
+
+def _require_same_identity(profile: SignalProfile, reference: SignalReference) -> None:
+    """Refuse a comparison whose reference was rendered under another setup.
+
+    Frame count is checked by the caller. A longer impulse render may
+    silence-pad a shorter reference after this check.
+    """
     if reference.sample_rate != profile.sample_rate:
         raise SignalHarnessError("reference sample rate does not match the profile")
     if reference.block_size != profile.block_size:
         raise SignalHarnessError("reference block size does not match the profile")
-    if reference.frames != profile.frames:
-        raise SignalHarnessError("reference frame count does not match the profile")
     if reference.seed != profile.seed:
         raise SignalHarnessError("reference seed does not match the profile")
     if tuple(reference.stimuli) != tuple(profile.stimuli):
         raise SignalHarnessError("reference stimulus does not match the profile")
+
+
+def _require_same_setup(profile: SignalProfile, reference: SignalReference) -> None:
+    """Refuse a comparison whose reference does not match, including length."""
+    _require_same_identity(profile, reference)
+    if reference.frames != profile.frames:
+        raise SignalHarnessError("reference frame count does not match the profile")
 
 
 def _quantize_channels(channels: Sequence[Sequence[float]]) -> list[list[float]]:
@@ -945,28 +1114,37 @@ def _note_impulse_tail(
     profile: SignalProfile,
     failures: list[str],
 ) -> None:
-    """Fail an impulse window that ends while the reference is still hot.
+    """Fail an impulse window that misses late energy in the reference.
 
-    Sine and noise are sustained, so they are not gated. A hot tail at
+    The scan covers every sample, not only the last block. A silent
+    gap before a delay or echo still counts. Sine and noise are
+    sustained, so they are not gated. Energy that is still hot at
     ``max_frames`` has been followed to the cap and is left to the
     coarse check.
     """
     if name != "impulse":
         return
-    block = profile.block_size
     threshold = profile.tail_threshold
-    hot = False
+    last_hot = -1
     for channel in reference.samples[name]:
-        tail = [float(sample) for sample in channel[-block:]]
-        if any(abs(sample) >= threshold for sample in tail):
-            hot = True
+        for index, sample in enumerate(channel):
+            if abs(float(sample)) >= threshold:
+                last_hot = max(last_hot, index)
+    if last_hot < 0:
+        return
+    if last_hot >= profile.frames:
+        failures.append(f"{name}:reference_tail")
+        return
+    block = profile.block_size
+    end_hot = False
+    for channel in reference.samples[name]:
+        tail = channel[-block:] if len(channel) >= block else channel
+        if any(abs(float(sample)) >= threshold for sample in tail):
+            end_hot = True
             break
-    if not hot:
-        return
     cap = profile.max_frames
-    if isinstance(cap, int) and profile.frames >= cap:
-        return
-    failures.append(f"{name}:reference_tail")
+    if end_hot and isinstance(cap, int) and profile.frames < cap:
+        failures.append(f"{name}:reference_tail")
 
 
 def _coarse_gaps(

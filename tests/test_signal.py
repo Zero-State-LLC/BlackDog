@@ -18,7 +18,10 @@ from faustcoder.signal import (
     SignalProfile,
     SignalReference,
     SignalSuite,
+    _note_impulse_tail,
+    _prepare_render,
     commit_signal_check,
+    impulse_reference,
     compare_channels,
     f32,
     impulse_samples,
@@ -568,6 +571,165 @@ def test_render_canary_fails_closed_outside_the_namespace(
         stderr_truncated=False,
     )
     _raise_if_canary_failed(ordinary)
+
+
+def test_tail_gate_scans_past_a_silent_gap() -> None:
+    frames = 4096
+    block = 64
+    samples = [0.0] * frames
+    samples[0] = 1.0
+    samples[3000] = 1.0
+    reference = SignalReference(
+        sample_rate=48000,
+        block_size=block,
+        frames=frames,
+        seed=1,
+        stimuli=("impulse",),
+        channels=1,
+        samples={"impulse": [samples]},
+    )
+    short = SignalProfile(
+        sample_rate=48000, frames=2048, block_size=block, stimuli=("impulse",)
+    )
+    failures: list[str] = []
+    _note_impulse_tail("impulse", reference, short, failures)
+    assert failures == ["impulse:reference_tail"]
+    covered = SignalProfile(
+        sample_rate=48000, frames=frames, block_size=block, stimuli=("impulse",)
+    )
+    quiet: list[str] = []
+    _note_impulse_tail("impulse", reference, covered, quiet)
+    assert quiet == []
+
+
+def test_default_impulse_length_comes_from_the_reference_or_the_cap() -> None:
+    profile = SignalProfile(sample_rate=48000, stimuli=("impulse",))
+    assert profile.frames == DEFAULT_FRAMES
+    resolved, _ = _prepare_render(profile, None, reward_graded=False)
+    assert resolved.frames == resolved.max_frames
+    assert resolved.frames != DEFAULT_FRAMES
+    sustained = SignalProfile(sample_rate=48000, stimuli=("sine", "noise"))
+    kept, _ = _prepare_render(sustained, None, reward_graded=False)
+    assert kept.frames == DEFAULT_FRAMES
+    explicit = SignalProfile(
+        sample_rate=48000, frames=256, block_size=64, stimuli=("impulse",)
+    )
+    reference = impulse_reference(explicit, lambda samples: _echo(samples, 4000, 1.0))
+    assert reference.frames >= 4000 + 64
+    covered, aligned = _prepare_render(explicit, reference, reward_graded=False)
+    assert covered.frames == reference.frames
+    assert aligned is not None
+    assert aligned.frames == covered.frames
+
+
+def test_default_settings_reject_late_impulse_effects() -> None:
+    profile = SignalProfile(sample_rate=48000, stimuli=("impulse",))
+    assert profile.frames == DEFAULT_FRAMES
+    probes = (
+        ("delay 4000", lambda samples: _echo(samples, 4000, 1.0)),
+        ("echo 0.5s", lambda samples: _echo(samples, 24000, 0.5)),
+        ("delay 2100", lambda samples: _echo(samples, 2100, 1.0)),
+    )
+    for label, transform in probes:
+        reference = impulse_reference(profile, transform)
+        assert reference.frames > DEFAULT_FRAMES
+        run = _run("process = _;\n", profile, reference)
+        assert run.receipt["passed"] is False, label
+        assert run.receipt["metrics"]["frame_count"] == profile.max_frames
+        assert "impulse:envelope" in run.failures
+        assert "impulse:bands" in run.failures
+    late_reference = impulse_reference(profile, lambda samples: samples)
+    late = _run(_read(SIGNAL / "late_dc.dsp"), profile, late_reference)
+    assert late.receipt["passed"] is False
+    assert late.receipt["metrics"]["frame_count"] == profile.max_frames
+    impulse = late.receipt["metrics"]["renders"]["impulse"]
+    assert impulse["max_abs_error_nano"] == 0
+    assert "impulse:envelope" in late.failures
+    assert "impulse:bands" in late.failures
+
+
+def test_default_dry_and_echo_match_themselves() -> None:
+    from faustcoder.sandbox import unshare_identity
+
+    profile = SignalProfile(sample_rate=48000, stimuli=("impulse",))
+    dry = impulse_reference(profile, lambda samples: samples)
+    matched = _run("process = _;\n", profile, dry)
+    assert matched.receipt["passed"] is True
+    path, digest = unshare_identity()
+    assert matched.receipt["metrics"]["unshare_path"] == path
+    assert matched.receipt["metrics"]["unshare_sha256"] == digest
+    assert len(digest) == 64
+    echo_reference = impulse_reference(profile, lambda samples: _echo(samples, 24000, 0.5))
+    echo = _run(
+        "process = _ <: _, (@(24000) : *(0.5)) :> _;\n",
+        profile,
+        echo_reference,
+    )
+    assert echo.receipt["passed"] is True
+    assert echo.failures == ()
+
+
+def test_reward_graded_forces_finite_output_and_a_reference() -> None:
+    profile = SignalProfile(
+        sample_rate=48000,
+        frames=64,
+        block_size=64,
+        stimuli=("impulse",),
+        reject_nonfinite=False,
+        require_reference=False,
+        reject_silence=False,
+        reject_dc=False,
+    )
+    source = "process = _ * 0 + sqrt(0 - (1 - 1')) + 0.3;\n"
+    run = _run(source, profile, None, reward_graded=True)
+    assert run.receipt["passed"] is False
+    assert run.receipt["thresholds"]["reward_graded"] is True
+    assert run.receipt["thresholds"]["max_nan_count"] == 0
+    assert "impulse:nan" in run.failures
+    assert "impulse:reference_missing" in run.failures
+
+
+def test_compile_canary_raises_before_render(monkeypatch: pytest.MonkeyPatch) -> None:
+    from faustcoder.sandbox import SandboxError, SandboxRun
+
+    rendered = {"count": 0}
+
+    def fail_compile(*_args: object, **_kwargs: object) -> SandboxRun:
+        return SandboxRun(
+            returncode=2,
+            stdout=b"",
+            stderr=b"sandbox_canary_failed: network namespace has a non-loopback interface\n",
+            stop_reason="",
+            stdout_truncated=False,
+            stderr_truncated=False,
+        )
+
+    def explode(*_args: object, **_kwargs: object) -> dict[str, object]:
+        rendered["count"] += 1
+        raise AssertionError("render started")
+
+    monkeypatch.setattr("faustcoder.compiler.run_in_sandbox", fail_compile)
+    monkeypatch.setattr("faustcoder.signal._render", explode)
+    profile = SignalProfile(
+        sample_rate=48000, frames=64, block_size=64, stimuli=("impulse",)
+    )
+    with pytest.raises(SandboxError, match="network namespace canary failed"):
+        _run("process = _;\n", profile, None)
+    assert rendered["count"] == 0
+
+
+def test_signal_run_uses_unshare_executable(monkeypatch: pytest.MonkeyPatch) -> None:
+    from faustcoder.sandbox import SandboxError
+
+    def refuse() -> str:
+        raise SandboxError("unshare executable refused")
+
+    monkeypatch.setattr("faustcoder.sandbox.unshare_executable", refuse)
+    profile = SignalProfile(
+        sample_rate=48000, frames=64, block_size=64, stimuli=("impulse",)
+    )
+    with pytest.raises(SandboxError, match="unshare executable refused"):
+        _run("process = _;\n", profile, None)
 
 
 def test_unshare_identity_is_in_the_harness_digest() -> None:

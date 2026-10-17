@@ -71,9 +71,10 @@ The accepted contract (spec §8) leaves `metrics` and `thresholds` as open
 objects and does not name a frame count. T04 keeps that contract. The
 harness puts the render length, the exact-compare head, stimulus names,
 failure tokens, per-stimulus RMS, peak, NaN/Inf/denormal counts, spectral
-bands, coarse block-RMS and band-energy gaps, and the float32 sample
-digest in `metrics`. Thresholds record the gates that were enforced,
-including the absolute tolerance and the relative term. `cpu_duration_ms`
+bands, coarse block-RMS and band-energy gaps, the float32 sample
+digest, and the `unshare` path and sha256 in `metrics`. Thresholds record
+the gates that were enforced, including the absolute tolerance, the
+relative term, and `reward_graded` when that mark is set. `cpu_duration_ms`
 is present only for a promotion candidate. The reference document is a
 separate artifact (`kind = faustcoder.signal-reference`) whose content
 digest is `reference_digest`. That document carries its own sample rate,

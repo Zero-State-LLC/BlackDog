@@ -21,7 +21,7 @@ exported `unshare_executable` checks apply to that process.
 |---|---|
 | Sample rate | 44100 or 48000 (D-003). A suite runs both. |
 | Block size | Caller-fixed. Default 64 frames. |
-| Frames | Caller-fixed and a multiple of the block size. Default 2048. Cap 144000 (3 s at 48 kHz). |
+| Frames | Caller-fixed and a multiple of the block size. Sine and noise default to 2048. An impulse at that default is rendered at the cap, or at the reference when the reference is longer. Cap 144000 (3 s at 48 kHz). |
 | Head | Exact sample compare. Default 2048, or the whole render when that is shorter. |
 | Seed | Caller-fixed integer. Default 1. It feeds the noise stimulus. |
 | Stimuli | `impulse`, `sine`, `noise`, in the profile. |
@@ -48,11 +48,18 @@ per-block RMS and spectral band energies, with the same tolerance.
 Both sides are compared on the 1e-9 grid stored in the reference
 document, so the digest binds the values that were judged.
 
-An impulse reference must fall below `tail_threshold` (default 1e-8)
-in its last block. A hotter tail fails `reference_tail` unless the
-render is already at the 144000-frame cap. Sine and noise are
-sustained and are not tail-gated. A missing reference fails a profile
-that requires one.
+An impulse reference is built at the 144000-frame cap and trimmed to
+the last sample at or above `tail_threshold` (default 1e-8), plus a
+64-sample margin, rounded up to the block size. The tail gate scans
+every sample of that reference. A silent gap before a delay or echo
+is still late energy, and the candidate render has to cover it. A
+tail that is still hot at the cap is left to the coarse check. Sine
+and noise are sustained and are not tail-gated. A missing reference
+fails a profile that requires one.
+
+A receipt marked `reward_graded` forces `reject_nonfinite` and
+`require_reference` on before the render. A reference-free or
+non-finite run cannot pass that mark.
 
 The reference document carries its own sample rate, block size, frame
 count, seed and stimulus names. A comparison is refused when any of
@@ -119,9 +126,11 @@ sufficient.
   and must not be a reward term.
 
 `harness_digest` hashes `unshare_path` and `unshare_sha256` from
-`unshare_identity`, plus the sha256 of `netns-canary.mjs`. A swapped
-wrapper or canary changes the digest. The harness does not resolve
-`unshare` on its own.
+`unshare_identity`, plus the sha256 of `netns-canary.mjs`. The same
+path and sha256 are copied onto the receipt metrics. A swapped
+wrapper or canary changes the digest. Render and compile both go
+through `run_in_sandbox`, which calls `unshare_executable`. The
+compiler canary raises `SandboxError` before the renderer starts.
 
 ## Failure disposition
 
