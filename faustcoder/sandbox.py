@@ -9,9 +9,14 @@ Enforcement, in order:
    network namespace with no interfaces. A connect fails with
    ``ENETUNREACH``. Node 22's ``--permission`` model does not deny network
    and rejects ``--allow-net``; the namespace is the control that holds on
-   the Node 22 line used in CI. The scrubbed environment also drops
-   ``HTTP_PROXY``, ``HTTPS_PROXY``, ``ALL_PROXY``, ``NODE_OPTIONS`` and the
-   rest of the parent environment.
+   the Node 22 line used in CI. GitHub-hosted Ubuntu sets
+   ``kernel.apparmor_restrict_unprivileged_userns=1``, and ``unshare`` then
+   fails with ``EPERM`` writing ``/proc/self/uid_map``. The pytest job sets
+   that sysctl to 0 on the runner and checks ``unshare --net
+   --map-root-user -- true`` before the tests. The compiler still runs as
+   the unprivileged user inside the namespace. The scrubbed environment
+   also drops ``HTTP_PROXY``, ``HTTPS_PROXY``, ``ALL_PROXY``,
+   ``NODE_OPTIONS`` and the rest of the parent environment.
 2. Code generation. Node is started with
    ``--disallow-code-generation-from-strings``, which rejects ``eval`` and
    ``new Function``. faustwasm 0.19.0 still compiles under that flag.

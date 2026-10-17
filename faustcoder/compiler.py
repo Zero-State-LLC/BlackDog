@@ -16,7 +16,10 @@ pretend to succeed.
 The native Faust 2.88.0 CLI is a cross-check, not the primary compiler.
 ``compile_native`` and ``cross_check_native`` raise
 ``NativeFaustUnavailable`` when ``faust`` is absent or is not 2.88.0.
-CI does not install native Faust, so those tests skip there. Versions
+CI does not install native Faust, so those tests skip there. The same
+job clears Ubuntu's unprivileged-userns AppArmor restriction so
+``unshare --net --map-root-user`` can create the network namespace
+(see :mod:`faustcoder.sandbox`). Versions
 differ (wasm libfaust 2.90.0 versus native 2.88.0), so the cross-check
 compares ``diagnostic_class``, not output bytes.
 
