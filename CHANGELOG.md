@@ -18,6 +18,8 @@ See [docs/VERSIONING.md](docs/VERSIONING.md).
 
 - T03b follow-up: waiting for the faustlibraries share lock is bounded. A timeout raises `SandboxError` instead of blocking a cold publish. The lock file is opened with `O_NOFOLLOW` and a symlink is refused. After a tamper refusal, delete `share-<commit>` and re-stage; the harness does not delete that tree itself.
 
+- T04: offline DSP signal harness. faustwasm renders impulse, sine and noise at 44.1 and 48 kHz inside the T03 sandbox. Receipts record hash-stable RMS, peak, NaN/Inf/denormal counts and spectral bands, and compare a candidate to a reference within an absolute tolerance. Known-good fixtures include legal delayed feedback. Library imports stay with T03b. CPU wall time is stored only for a promotion candidate.
+
 - T03b follow-up: a multi-file `source_sha256` includes the selected entry path. Publishing the shared library tree takes a process-wide file lock and does not delete a live tree. A failed network canary raises `SandboxError` instead of an `internal` receipt. The worker hashes the bytes it writes into `/usr/share/faust` and that hash has to match the Python share hash.
 
 - T03b follow-up: `environment_digest` records the resolved path and sha256 of the `unshare` binary that runs, including the system binary when `FAUSTCODER_UNSHARE` is unset. A swapped wrapper changes the digest before the network canary runs.
@@ -46,6 +48,8 @@ See [docs/VERSIONING.md](docs/VERSIONING.md).
 - Training-path research and ADR-0002 (PROPOSED): adapt an open base code model through P0 corpus and harness, P1 continued pretraining, P2 SFT and P3 compiler-feedback RL.
 
 ### Changed
+
+- T04: the signal comparison keeps an exact head and a coarse whole-render check (per-block RMS and band energies). Impulse references are built at 144000 frames and trimmed to the decay plus a margin. The tail gate scans the whole reference, and a default impulse render uses that reference or the cap instead of a fixed 2048. A `reward_graded` receipt forces non-finite rejection and a reference, signs the trimmed reference (`head_frames` equals that length), and keeps coarse checks to the samples past it. An impulse reference with `max_frames` below the 144000 block-aligned cap raises `ValueError` and does not raise the cap. `thresholds.reward_graded` is always stored and is part of the reproducible digest. The renderer uses the shared netns canary. A failure raises `SandboxError` and writes no receipt. The compiler canary raises before render. `harness_digest` and the receipt metrics include `unshare_path` and `unshare_sha256`.
 
 - Spec 001 to 0.3.3 (D-013, Danny yes 2026-10-17 1:04 PM PT): STK-4.3 is other-permissive with a required notice; bare BSD is not redistributed; vendored copies are deduped by content hash and not cleared; faustlibraries is sliced per function; mixed licenses take the strictest; CC-TODO comments are stripped; GPL and LGPL stay training-only, with a near-duplicate output filter proposed for T06 and T07. See spec §22.
 - Spec 001 to 0.3.1 (Danny yes 2026-10-17 12:54 PM PT): for v0.2, R-001 is satisfied by cited external DGX Spark benchmarks plus a per-machine environment fingerprint receipt. On-hardware throughput is deferred to T10 on the dedicated Spark cleared of other workloads before training.

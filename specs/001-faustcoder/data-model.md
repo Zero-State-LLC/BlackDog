@@ -64,3 +64,33 @@ graph TD
 Arrows point from parent to child. Validation rules (OBSERVED §3, §4.1,
 ADR-0001): parents must exist before children; no cycles; a changed payload is
 a new node.
+
+## DSPTestReceipt metrics (INFERRED)
+
+The accepted contract (spec §8) leaves `metrics` and `thresholds` as open
+objects and does not name a frame count. T04 keeps that contract. The
+harness puts the render length, the exact-compare head, stimulus names,
+failure tokens, per-stimulus RMS, peak, NaN/Inf/denormal counts, spectral
+bands, coarse block-RMS and band-energy gaps, the float32 sample
+digest, the comparison window, and the `unshare` path and sha256 in
+`metrics`. Thresholds record the gates that were enforced, including
+the absolute tolerance and the relative term. `reward_graded` is
+stored on every receipt, true or false, and is part of the
+reproducible digest. A future grader and `apply_signal` must take
+the receipt and require that bit true plus the canonical profile
+digest (`test_suite_digest`). When the bit is true the signed sample
+comparison covers the trimmed reference (`head_frames` equals that
+length) and coarse checks cover only the samples past it. An impulse
+reference whose `max_frames` is below the 144000 block-aligned cap
+raises `ValueError`; the cap is not raised. `cpu_duration_ms`
+is present only for a promotion candidate. The reference document is a
+separate artifact (`kind = faustcoder.signal-reference`) whose content
+digest is `reference_digest`. That document carries its own sample rate,
+block size, frame count, seed and stimulus names, and its samples are the
+1e-9 grid used for the comparison. None of this edits the accepted spec
+text. A schema field for frames would be a Proposed amendment.
+
+Reward use of these receipts is not wired. INFERRED: controls have to be
+swept before a receipt is a reward, a reference-free DC or variance check
+is never a reward, and wall-time CPU stays informational. See the signal
+harness runbook.
