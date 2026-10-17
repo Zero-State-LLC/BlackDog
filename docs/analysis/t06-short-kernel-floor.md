@@ -7,8 +7,10 @@ clearance policy. This note counts the short rejected and
 cleared fixtures, and reports detection and extra quarantines at
 floors 40, 30, 20 and 15.
 
-The recommended floor is **40**. `TOKEN_FLOOR` stays 40. Lowering it
-catches a minority of embedded short kernels and quarantines cleared
+The recommended floor is **40**. `TOKEN_FLOOR=40` is not accepted by
+Danny. At floor 40, 0/83 embedded short-kernel copies are detected.
+The proposed follow-up is function-unit slicing. Lowering the floor
+catches a minority of those embedded copies and quarantines cleared
 files that only share a Grame `declare` header with a rejected
 example.
 
@@ -174,7 +176,9 @@ the column is only the new blobs.
 
 ## Recommendation
 
-Keep `TOKEN_FLOOR` at 40.
+Keep `TOKEN_FLOOR` at 40. `TOKEN_FLOOR=40` is not accepted by Danny.
+At floor 40, 0/83 embedded short-kernel copies are detected. The
+proposed follow-up is function-unit slicing.
 
 Floor 30 is the first step down. It detects 15 of 83 embedded verbatim
 short spans (18.1%) and none of the embedded middle edits. It also

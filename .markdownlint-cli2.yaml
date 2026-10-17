@@ -7,4 +7,4 @@ config:
   MD041: false
   MD060: false
 ignores:
-  - "node_modules/**"
+  - "**/node_modules/**"
