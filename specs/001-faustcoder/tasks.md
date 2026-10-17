@@ -62,9 +62,10 @@ Implements the dataset machine (spec §7.1) and training machine (spec §7.3).
   - Depends on: T01. Milestone: v0.2.
   - Acceptance: ARM64/Blackwell throughput and memory receipts (R-001); implements `env_verified`.
   - Workflows: production-systems.
-- [ ] T10 [J-04] LoRA training.
-  - Depends on: T08, T09. Milestone: v0.2.
-  - Acceptance: pinned reproducible training run (R-008, R-009); implements `run_started` to `COMPLETED`.
+- [ ] T10 [J-04] Training path P1 to P3 (ADR-0002).
+  - Depends on: T08, T09. Milestone: v0.2 (P1, P2) and v0.3 (P3).
+  - Acceptance: one pinned, reproducible `TrainingRun` per phase with its exit-gate result (R-008, R-009, R-015); P1 may be a recorded skip; implements `run_started` to `COMPLETED`.
+  - Sub-steps: P1 continued pretraining or skip; P2 SFT on validated pairs; P3 compiler-feedback RL (R-016).
   - Workflows: anti-slop-code, production-systems.
 - [ ] T11 [J-04] Independent DSP evaluation.
   - Depends on: T10, T04. Milestone: v0.3.

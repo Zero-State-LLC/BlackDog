@@ -12,8 +12,9 @@ anything not stated there is labeled INFERRED.
 
 Build a compiler-verified Faust coding model in milestone order V0.1 to V1.0
 (spec §12). V0.1 is infrastructure, contracts, provenance and baseline
-evaluation, not a trained model (README). Training is LoRA-first on DGX Spark
-(R-008), gated by measured baselines (R-007).
+evaluation, not a trained model (README). Training adapts an open base
+code model in phases P0 to P3 (R-015, [ADR-0002](../../docs/adr/0002-training-path.md)),
+with the method per phase in R-008 and the student chosen by the bake-off in R-007.
 
 ## Technical context
 
@@ -24,7 +25,7 @@ evaluation, not a trained model (README). Training is LoRA-first on DGX Spark
 | DSP toolchain | Faust CLI, pinned version recorded in every CompilerReceipt | OBSERVED §10, R-005 |
 | Testing | pytest; signal tests per §9 test classes | OBSERVED §9, §10 |
 | Storage | Parquet datasets; content-addressed artifact store; immutable manifests authoritative | OBSERVED §3, §10 |
-| Tracking | MLflow, tracking only | OBSERVED §10 |
+| Tracking | JSONL digest manifest; MLflow optional until V0.3 | OBSERVED §10; amended A-06 |
 | Isolation | OCI containers, no network, bounded CPU, memory and time | OBSERVED §10, §11 |
 | Target hardware | NVIDIA DGX Spark, 128 GB unified memory, ARM64/Blackwell | OBSERVED header, §10 |
 | Schema language | JSON Schema or Pydantic, with validation tests | OBSERVED §8 |
@@ -73,7 +74,7 @@ Spec artifacts:
 specs/001-faustcoder/
   spec.md         what and why, state machines (§7)
   plan.md         this file
-  research.md     open decisions and options
+  research.md     training-path research, base-model shortlist, open decisions
   data-model.md   entities, fields, relationships, states
   contracts/      JSON Schemas and API contract
   checklists/     requirement and state-machine quality checks

@@ -34,7 +34,7 @@ Model names and mutable aliases are never evidence (OBSERVED §3).
 | DSPTestReceipt | Signal-test evidence | OBSERVED §8 | — |
 | BenchmarkSuite | Frozen or development task set | INFERRED: `task_digests`, `kind` (frozen, development) | — |
 | BaseModel | Upstream model reference | INFERRED: `name`, `revision`, `license` | — |
-| Adapter | LoRA or QLoRA weights (stored outside git) | INFERRED: `base_model_revision`, `weights_digest` | — |
+| Adapter | LoRA adapter or full weights (stored outside git) | INFERRED: `base_model_revision`, `weights_digest` | — |
 | TrainingRun | One training attempt | OBSERVED §8 | §7.3 |
 | EvaluationRun | Independent evaluation | INFERRED: `subject_digest`, `suite_digest`, `metrics`, `confidence_intervals` | — |
 | DecisionRecord | Gate outcome | OBSERVED §8 | — |
