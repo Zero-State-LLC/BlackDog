@@ -12,7 +12,7 @@ All tasks are **TODO**. Dependency arrows are mandatory promotion gates.
 | T06 | v0.2 | Normalization and dedup | T05,T02 | Deterministic snapshot |
 | T07 | v0.2 | Split freeze | T06 | Leakage checks and signed split manifest |
 | T08 | v0.2 | Baseline models | T04,T07 | Frozen baseline measurements |
-| T09 | v0.2 | DGX Spark feasibility study | T01 | ARM64/Blackwell throughput and memory receipts |
+| T09 | v0.2 | DGX Spark feasibility study | T01 | Fingerprint receipt per machine (R-001, amended 0.3.1); throughput deferred to T10 |
 | T10 | v0.2 | Training path P1-P3 (ADR-0002) | T08,T09 | One pinned run and exit-gate result per phase |
 | T11 | v0.3 | Independent DSP evaluation | T10,T04 | Paired metrics and regression results |
 | T12 | v0.3 | Promotion decision | T11 | Human review and decision record |
@@ -49,3 +49,4 @@ Mirrors the decision items on the [project board](https://github.com/orgs/Zero-S
 | D-011 | Upstream Faust fixes under LGPL allowed | ACCEPTED 2026-10-16 23:39 PT | ADR-0003 |
 | D-012 | Plugin formats CLAP, VST3 (clap-wrapper), LV2; AU deferred | ACCEPTED 2026-10-16 23:39 PT | ADR-0004 |
 | ORG-002 | Board moved to org project 29; user board 8 kept, marked superseded | Done 2026-10-16 | spec §18 |
+| R-001 | v0.2 evidence: cited external Spark benchmarks plus a per-machine fingerprint; throughput is T10 on the cleared dedicated Spark | ACCEPTED 2026-10-17 12:54 PM PT | spec §20 |

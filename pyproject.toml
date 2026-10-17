@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "faustcoder"
 version = "0.0.0"
-description = "Content-addressed artifact store and JSON Schema validation for FaustCoder."
+description = "Artifact store, schema validation, and the DGX Spark env_verified probe."
 requires-python = ">=3.11"
 dependencies = [
   "jsonschema>=4.23",
@@ -19,6 +19,9 @@ test = [
 dev = [
   "pytest>=8.3",
 ]
+
+[project.scripts]
+faustcoder-spark-probe = "faustcoder.spark_probe:main"
 
 [tool.setuptools.packages.find]
 include = ["faustcoder*"]

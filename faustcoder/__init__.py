@@ -1,4 +1,4 @@
-"""FaustCoder V0.1 artifact store and JSON Schema validation."""
+"""FaustCoder artifact store, schema validation, and the training machine."""
 
 from faustcoder.canonical import (
     build_envelope,

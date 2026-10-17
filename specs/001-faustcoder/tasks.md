@@ -62,7 +62,7 @@ Implements the dataset machine (spec §7.1) and training machine (spec §7.3).
   - Workflows: production-systems.
 - [ ] T09 [P] [J-04] DGX Spark feasibility study.
   - Depends on: T01. Milestone: v0.2.
-  - Acceptance: ARM64/Blackwell throughput and memory receipts (R-001); implements `env_verified`.
+  - Acceptance: for v0.2, cited external DGX Spark benchmarks plus a per-machine environment fingerprint receipt (R-001, amended 0.3.1); implements `env_verified`. On-hardware throughput is deferred to T10 on the dedicated, cleared Spark.
   - Workflows: production-systems.
 - [ ] T10 [J-04] Training path P1 to P3 (ADR-0002).
   - Depends on: T08, T09. Milestone: v0.2 (P1, P2) and v0.3 (P3).
