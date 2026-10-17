@@ -6,15 +6,14 @@ it with the same sandbox as the compiler: `unshare --net
 --map-current-user`, Node's permission model, and no network grant. The
 compiler runbook describes that namespace.
 
-Before it compiles, `render.mjs` runs the netns canary: `/proc/net/dev`
-must list only `lo`, and a connect must fail. The read of
-`/proc/net/dev` is granted as a literal path so it is not rewritten to
-the parent's pid. A failed canary exits 2 with the marker
-`sandbox_canary_failed:` and Python raises stop reason `network`. No
-DSPTestReceipt is written. The marker matches the T03b compiler canary.
-T03b's `unshare_executable` checks are not copied here. Render already
-starts through `run_in_sandbox`, so those checks apply when that
-function replaces the system `unshare` lookup.
+Before it compiles, `render.mjs` runs the netns canary exported from
+`faust/worker/netns-canary.mjs`, the same module `compile.mjs` uses.
+`/proc/net/dev` must list only `lo`, and a connect must fail. The read
+of `/proc/net/dev` is granted as a literal path so it is not rewritten
+to the parent's pid. A failed canary exits 2 with the marker
+`sandbox_canary_failed:`. Python raises `SandboxError` and writes no
+DSPTestReceipt. Render starts through `run_in_sandbox`, so the
+exported `unshare_executable` checks apply to that process.
 
 ## What a run fixes
 
@@ -119,10 +118,10 @@ sufficient.
   informational on a promotion candidate. It is not a pass threshold
   and must not be a reward term.
 
-`harness_digest` will include the unshare binary's sha256 when
-`faustcoder.sandbox.unshare_executable` exists. That lookup is the
-sandbox-wrapper fix in T03b (PR #40). It has not landed. This harness
-does not resolve `unshare` on its own.
+`harness_digest` hashes `unshare_path` and `unshare_sha256` from
+`unshare_identity`, plus the sha256 of `netns-canary.mjs`. A swapped
+wrapper or canary changes the digest. The harness does not resolve
+`unshare` on its own.
 
 ## Failure disposition
 
@@ -130,7 +129,7 @@ does not resolve `unshare` on its own.
 |---|---|---|
 | Required check fails | `passed` false, failing metrics | `REJECTED` |
 | All checks pass | `passed` true | `SIGNAL_CHECKED` |
-| Sandbox, worker, or compile failure | none | stays `COMPILE_CHECKED` |
+| Sandbox, canary, worker, or compile failure | none | stays `COMPILE_CHECKED` |
 | Library import | none | stays where it was |
 
 The candidate table is

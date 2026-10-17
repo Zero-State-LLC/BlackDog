@@ -6,9 +6,9 @@
 
 import { createHash } from "node:crypto";
 import { writeFileSync, renameSync, readdirSync, readFileSync, statSync } from "node:fs";
-import { connect } from "node:net";
 import { join, relative } from "node:path";
 import { pathToFileURL, fileURLToPath } from "node:url";
+import { assertNetworkIsolated } from "./netns-canary.mjs";
 
 const FAUSTWASM_VERSION = "0.19.0";
 const MAX_STDIN = 2 * 1024 * 1024;
@@ -16,11 +16,6 @@ const SAFE_OPTION = /^(-[a-z][a-z0-9]*|[0-9]+)$/;
 
 function failClosed(message) {
   process.stderr.write(`${message}\n`);
-  process.exit(2);
-}
-
-function failCanary(message) {
-  process.stderr.write(`sandbox_canary_failed: ${message}\n`);
   process.exit(2);
 }
 
@@ -168,51 +163,6 @@ function mountedLibrarySha256(fs) {
   };
   walk("/usr/share/faust", "");
   return libraryTreeSha256(files);
-}
-
-function namespaceInterfaces() {
-  let text;
-  try {
-    text = readFileSync("/proc/net/dev", "utf8");
-  } catch {
-    failCanary("network namespace interfaces could not be read");
-  }
-  const names = [];
-  for (const line of text.split("\n").slice(2)) {
-    const trimmed = line.trim();
-    if (!trimmed) {
-      continue;
-    }
-    const name = trimmed.split(":")[0];
-    if (name) {
-      names.push(name);
-    }
-  }
-  return names;
-}
-
-function assertNetworkIsolated() {
-  const names = namespaceInterfaces();
-  if (names.length !== 1 || names[0] !== "lo") {
-    failCanary("network namespace has a non-loopback interface");
-  }
-  return new Promise((resolve) => {
-    const socket = connect({ host: "1.1.1.1", port: 443 });
-    const timer = setTimeout(() => {
-      socket.destroy();
-      failCanary("network connect did not fail inside the sandbox");
-    }, 1000);
-    socket.once("error", () => {
-      clearTimeout(timer);
-      socket.destroy();
-      resolve();
-    });
-    socket.once("connect", () => {
-      clearTimeout(timer);
-      socket.destroy();
-      failCanary("network connect succeeded inside the sandbox");
-    });
-  });
 }
 
 function assertSourcePath(path) {

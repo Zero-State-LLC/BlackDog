@@ -44,9 +44,10 @@ edited.
 
 Harness failures (sandbox, worker crash, compile that disagrees with
 the T03 receipt) raise ``SignalHarnessError`` and do not write a
-receipt. The candidate stays in ``COMPILE_CHECKED``. A rendered
-program that fails a required check does write a receipt with
-``passed`` false and moves to ``REJECTED``.
+receipt. A failed network canary raises ``SandboxError`` and does not
+write a receipt either. The candidate stays in ``COMPILE_CHECKED``.
+A rendered program that fails a required check does write a receipt
+with ``passed`` false and moves to ``REJECTED``.
 """
 
 from __future__ import annotations
@@ -75,9 +76,14 @@ from faustcoder.compiler import (
     store_compiler_receipt,
     worker_directory,
 )
-from faustcoder.compiler import _stage_runtime, _validate_options
-import faustcoder.sandbox as sandbox
-from faustcoder.sandbox import ResourceLimits, SandboxError, node_command, run_in_sandbox
+from faustcoder.compiler import _raise_if_canary_failed, _stage_runtime, _validate_options
+from faustcoder.sandbox import (
+    ResourceLimits,
+    SandboxError,
+    node_command,
+    run_in_sandbox,
+    unshare_identity,
+)
 from faustcoder.schemas import validate
 from faustcoder.store import ArtifactStore
 
@@ -455,8 +461,9 @@ def run_signal(
 
     Raises ``SignalLibrariesUnavailable`` when ``source`` imports a
     library. Raises ``SignalHarnessError`` when the sandbox or the
-    worker fails. A program that renders and fails a check returns a
-    receipt with ``passed`` false.
+    worker fails. A failed network canary raises ``SandboxError``
+    and writes no receipt. A program that renders and fails a check
+    returns a receipt with ``passed`` false.
     """
     if not isinstance(source, str):
         raise TypeError("source must be a string")
@@ -755,25 +762,7 @@ def _judge(
         thresholds["reject_dc"] = True
     if profile.reject_clipping:
         thresholds["reject_clipping"] = True
-    pin = runtime_pin()
-    harness = {
-        "comparison": "head-exact+coarse",
-        "faust_version": pin.faust_version,
-        "faustlibraries_version": pin.faustlibraries_version,
-        "faustwasm": FAUSTWASM_VERSION,
-        "metric_version": METRIC_VERSION,
-        "node": pin.node,
-        "renderer": "faustwasm",
-        "render_worker_sha256": _file_sha256(worker_directory() / "render.mjs"),
-        "runtime_sha256": {
-            "libfaust-wasm.data": pin.data_sha256,
-            "libfaust-wasm.js": pin.js_sha256,
-            "libfaust-wasm.wasm": pin.wasm_sha256,
-        },
-    }
-    unshare_sha = _unshare_sha256()
-    if unshare_sha is not None:
-        harness["unshare_sha256"] = unshare_sha
+    harness = _harness_preimage()
     receipt: dict[str, Any] = {
         "source_sha256": hashlib.sha256(source.encode("utf-8")).hexdigest(),
         "test_suite_digest": content_digest_for(profile_payload(profile)),
@@ -900,26 +889,35 @@ def _measure_stimulus(
     return summary, failures, peak_error
 
 
-def _refuse_renderer_canary(run: sandbox.SandboxRun) -> None:
-    """A failed netns canary is stop reason ``network``, not an internal error.
+def _harness_preimage() -> dict[str, Any]:
+    """Return the object hashed into ``harness_digest``.
 
-    ``render.mjs`` writes ``sandbox_canary_failed:`` and exits 2. That
-    marker is the same one T03b uses. No DSPTestReceipt is written.
-    ``run_in_sandbox`` still starts ``unshare``; T03b's
-    ``unshare_executable`` checks apply when that function replaces the
-    system lookup inside the sandbox.
+    ``unshare_path`` and ``unshare_sha256`` are the identity
+    ``unshare_identity`` reports. A swapped wrapper changes the digest
+    before the network canary runs. The canary itself is the module
+    shared with the compiler.
     """
-    marker = "sandbox_canary_failed:"
-    text = run.stderr.decode("utf-8", errors="replace")
-    if marker not in text:
-        return
-    detail = ""
-    for line in text.splitlines():
-        if marker in line:
-            detail = line.split(marker, 1)[1].strip()
-            break
-    message = f"renderer stopped: network: {detail}" if detail else "renderer stopped: network"
-    raise SignalHarnessError(message)
+    pin = runtime_pin()
+    unshare_path, unshare_sha256 = unshare_identity()
+    worker = worker_directory()
+    return {
+        "comparison": "head-exact+coarse",
+        "faust_version": pin.faust_version,
+        "faustlibraries_version": pin.faustlibraries_version,
+        "faustwasm": FAUSTWASM_VERSION,
+        "metric_version": METRIC_VERSION,
+        "netns_canary_sha256": _file_sha256(worker / "netns-canary.mjs"),
+        "node": pin.node,
+        "renderer": "faustwasm",
+        "render_worker_sha256": _file_sha256(worker / "render.mjs"),
+        "runtime_sha256": {
+            "libfaust-wasm.data": pin.data_sha256,
+            "libfaust-wasm.js": pin.js_sha256,
+            "libfaust-wasm.wasm": pin.wasm_sha256,
+        },
+        "unshare_path": unshare_path,
+        "unshare_sha256": unshare_sha256,
+    }
 
 
 def _require_same_setup(profile: SignalProfile, reference: SignalReference) -> None:
@@ -934,20 +932,6 @@ def _require_same_setup(profile: SignalProfile, reference: SignalReference) -> N
         raise SignalHarnessError("reference seed does not match the profile")
     if tuple(reference.stimuli) != tuple(profile.stimuli):
         raise SignalHarnessError("reference stimulus does not match the profile")
-
-
-def _unshare_sha256() -> str | None:
-    """Hash the unshare binary when T03b exports ``unshare_executable``.
-
-    PR #40 owns that lookup and the wrapper check. This harness does not
-    resolve ``unshare`` itself. The digest omits the hash until the
-    function exists.
-    """
-    resolver = getattr(sandbox, "unshare_executable", None)
-    if resolver is None:
-        return None
-    path = Path(resolver())
-    return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
 def _quantize_channels(channels: Sequence[Sequence[float]]) -> list[list[float]]:
@@ -1111,7 +1095,7 @@ def _render(
             literal_reads=("/proc/net/dev",),
         )
         run = run_in_sandbox(command, stdin=request, workdir=workdir, limits=limits)
-        _refuse_renderer_canary(run)
+        _raise_if_canary_failed(run)
         if run.stop_reason:
             raise SignalHarnessError(f"renderer stopped: {run.stop_reason}")
         result_path = workdir / "result.json"

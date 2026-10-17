@@ -18,7 +18,6 @@ from faustcoder.signal import (
     SignalProfile,
     SignalReference,
     SignalSuite,
-    _unshare_sha256,
     commit_signal_check,
     compare_channels,
     f32,
@@ -514,12 +513,14 @@ def test_staged_inputs_count_toward_the_output_cap(tmp_path: Path) -> None:
     assert _produced_bytes(tmp_path) == 4096
 
 
-def test_render_canary_fails_closed_outside_the_namespace(tmp_path: Path) -> None:
+def test_render_canary_fails_closed_outside_the_namespace(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     import subprocess
 
-    from faustcoder.compiler import worker_directory
-    from faustcoder.sandbox import SandboxRun, node_command
-    from faustcoder.signal import _refuse_renderer_canary
+    from faustcoder.compiler import _raise_if_canary_failed, worker_directory
+    from faustcoder.sandbox import ResourceLimits, SandboxError, SandboxRun, node_command
+    from faustcoder.signal import _render
 
     worker = worker_directory()
     command = node_command(
@@ -550,8 +551,14 @@ def test_render_canary_fails_closed_outside_the_namespace(tmp_path: Path) -> Non
         stdout_truncated=False,
         stderr_truncated=False,
     )
-    with pytest.raises(SignalHarnessError, match=r"renderer stopped: network"):
-        _refuse_renderer_canary(observed)
+    monkeypatch.setattr("faustcoder.signal.run_in_sandbox", lambda *args, **kwargs: observed)
+    with pytest.raises(SandboxError, match="network namespace canary failed"):
+        _render(
+            "process = _;\n",
+            _profile(frames=64, block_size=64, stimuli=("impulse",)),
+            options=(),
+            limits=ResourceLimits(),
+        )
     ordinary = SandboxRun(
         returncode=2,
         stdout=b"",
@@ -560,15 +567,22 @@ def test_render_canary_fails_closed_outside_the_namespace(tmp_path: Path) -> Non
         stdout_truncated=False,
         stderr_truncated=False,
     )
-    _refuse_renderer_canary(ordinary)
+    _raise_if_canary_failed(ordinary)
 
 
-def test_unshare_identity_follows_the_sandbox_export() -> None:
-    import faustcoder.sandbox as sandbox
+def test_unshare_identity_is_in_the_harness_digest() -> None:
+    from faustcoder.canonical import content_digest_for
+    from faustcoder.sandbox import unshare_identity
+    from faustcoder.signal import _harness_preimage
 
-    digest = _unshare_sha256()
-    if hasattr(sandbox, "unshare_executable"):
-        assert digest is not None
-        assert len(digest) == 64
-    else:
-        assert digest is None
+    path, digest = unshare_identity()
+    preimage = _harness_preimage()
+    assert preimage["unshare_path"] == path
+    assert preimage["unshare_sha256"] == digest
+    assert len(digest) == 64
+    swapped = dict(preimage)
+    swapped["unshare_sha256"] = "0" * 64
+    assert content_digest_for(preimage) != content_digest_for(swapped)
+    moved = dict(preimage)
+    moved["unshare_path"] = f"{path}-other"
+    assert content_digest_for(preimage) != content_digest_for(moved)
