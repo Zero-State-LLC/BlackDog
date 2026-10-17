@@ -224,6 +224,17 @@ an excerpt. A rejected blob under 40 tokens cannot supply a 40-token
 run, so own code plus one rejected function shorter than 40 tokens
 stays admitted. Containment uses the same floor on the cleared side.
 
+On the pinned corpus, dropping the length guard newly quarantines 11
+cleared STK examples. Each shares an 89-token `nonLinearity` block
+with `needs_human` `NLFfm.dsp` (`faust-examples-copyright-only`),
+which is shorter, so containment stays under 1/2. The files are
+`bowed.dsp`, `flute.dsp`, `glassHarmonica.dsp`, `modalBar.dsp`,
+`piano.dsp`, `piano1.dsp`, `saxophony.dsp`, `tibetanBowl.dsp`,
+`tunedBar.dsp`, `uniBar.dsp` and `voiceForm.dsp`, all under
+`examples/physicalModeling/faust-stk/`. The four syfala originals
+are not in that set. `interpolators.lib` shares a 52-token series
+with `signals.lib` and was already quarantined.
+
 `faustplayground` `InstrReverb.dsp` is cleared LGPL-2.1 and is an
 excerpt of rejected `instrReverb` in `faustlibraries-undeclared`
 `instruments.lib`. The pair is `needs-human`. The playground bytes
