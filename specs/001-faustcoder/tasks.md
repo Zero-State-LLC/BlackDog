@@ -32,10 +32,12 @@ spec-kit; security-relevant tasks add ADVERSARY review.
 - [ ] T03 [Found] Sandboxed Faust compiler harness.
   - Depends on: T02. Milestone: v0.1.
   - Acceptance: reproducible compiler receipts (R-005); no network, bounded resources (R-013).
+  - Amended 0.3.0 (ADR-0004): wrap libfaust from faustwasm 0.19.0 in a Node.js worker; cross-check with the native Faust 2.88.0 CLI; classify diagnostics.
   - Workflows: production-systems, ADVERSARY review. Evidence: `receipts/T03/` (INFERRED).
 - [ ] T04 [Found] DSP signal test harness.
   - Depends on: T03. Milestone: v0.1.
   - Acceptance: known-good and known-bad fixtures; legal delayed feedback passes (ADR-0001, V0.3).
+  - Amended 0.3.0 (ADR-0004): offline render with faustwasm at 44.1 and 48 kHz; reference comparison in the style of Faust `tests/impulse-tests`; CPU only on promotion candidates.
   - Workflows: anti-slop-code, production-systems. Evidence: `receipts/T04/` (INFERRED).
 
 ## Phase 3: User story J-04, maintainer ingests examples through to a release decision
@@ -76,6 +78,36 @@ Implements the dataset machine (spec §7.1) and training machine (spec §7.3).
   - Acceptance: human review and DecisionRecord; implements `admit` and `reject`.
   - Workflows: spec-kit, google-developer-style.
 
+## Phase 3b: Target lanes (ADD 0.3.0, ADR-0004)
+
+Each lane emits a `TargetReceipt` and has known-good and known-bad fixtures.
+Lanes run in parallel with T10.
+
+- [ ] T17 [P] [Lane] Language-backend lane (R-024).
+  - Depends on: T03. Milestone: v0.3.
+  - Acceptance: `-lang cpp`, `c`, `rust` and `cmajor` output compiles in pinned toolchains, and compiled runs match the host render.
+  - Workflows: anti-slop-code, production-systems.
+- [ ] T18 [P] [Lane] Plugin lane (R-023, D-012).
+  - Depends on: T04. Milestone: v0.3.
+  - Acceptance: CLAP (`faust2clap`), VST3 (clap-wrapper) and LV2 (`faust2lv2`) build in a Linux container; `clap-validator`, `pluginval` and `lv2lint` pass on known-good fixtures and fail on known-bad ones; parameter-map check passes. AU deferred to macOS CI.
+  - Workflows: anti-slop-code, production-systems, ADVERSARY review (container and SDK supply chain).
+- [ ] T19 [P] [Lane] Embedded lane (R-019, D-008).
+  - Depends on: T04. Milestone: v0.3.
+  - Acceptance: `faust2daisy` and `faust2teensy` builds with pinned SDKs; flash and RAM budgets from linker maps; CPU proxy budget; real-time checks (R-021). No board purchase.
+  - Workflows: anti-slop-code, production-systems.
+- [ ] T20 [Lane] Remix tasks and novelty metric (R-020, D-010).
+  - Depends on: T08. Milestone: v0.3.
+  - Acceptance: remix tasks in the dev suite with two or more source demos; novelty reported as a dev metric; correctness uses the normal gates.
+  - Workflows: anti-slop-code.
+- [ ] T21 [P] [Lane] Real-time safety checks (R-021).
+  - Depends on: T04. Milestone: v0.3.
+  - Acceptance: fixtures with NaN, denormals, unbounded delay memory and allocation in the callback are rejected on every lane.
+  - Workflows: anti-slop-code, production-systems.
+- [ ] T22 [P] [Lane] FPGA F0 spike (R-022, D-009).
+  - Depends on: T04. Milestone: v0.5-fpga. Timebox: 1 week.
+  - Acceptance: DecisionRecord comparing three lowerings for a one-pole low-pass and a sine oscillator: Verilator sim vs Faust render, Yosys and nextpnr results for iCE40 and ECP5, audio-rate throughput.
+  - Workflows: production-systems, spec-kit (DecisionRecord).
+
 ## Phase 4: User stories J-01, J-02, J-03 (generate, repair, optimize)
 
 Implements the candidate machine (spec §7.2).
@@ -114,6 +146,12 @@ graph LR
     T08 --> T10
     T09 --> T10 --> T11
     T04 --> T11 --> T12 --> T13 --> T14 --> T15 --> T16
+    T03 --> T17
+    T04 --> T18
+    T04 --> T19
+    T08 --> T20
+    T04 --> T21
+    T04 --> T22
 ```
 
-Parallel starts after T01: T02, T05 and T09.
+Parallel starts after T01: T02, T05 and T09. Lanes T17 to T19, T21 and T22 run in parallel with T10.

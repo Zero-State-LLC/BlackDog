@@ -39,6 +39,29 @@ Status: ACCEPTED
 - Each synthetic item records its teacher model id in its `SourceRecord`, so
   items from a disallowed source can be found and removed. INFERRED.
 
+### D-007: per-function licensing (Danny yes 2026-10-16 23:39 PT)
+
+- Refines D-004. A license is resolved per function where a library declares
+  one per function (faustlibraries), and per file otherwise.
+- Header-less example files inherit their repository's license. For the Faust
+  repository that is LGPL-2.1-or-later, so those files are training-only.
+- AGPL stays excluded.
+
+### D-011: upstream contributions (Danny yes 2026-10-16 23:39 PT)
+
+- Fixes to the Faust compiler or libraries found while building FaustCoder
+  may be contributed upstream under the upstream LGPL license. They are not
+  under the Zero State license.
+
+### Target SDKs and tools (ADR-0004, INFERRED, not legal advice)
+
+- CLAP SDK, clap-wrapper and the VST 3 SDK (3.8 and later) are MIT. JUCE
+  (AGPLv3 or commercial) is not used by default.
+- `pluginval` (GPL-3.0) and `lv2lint` (Artistic-2.0) run as separate tools and
+  are never linked into or shipped with FaustCoder output.
+- Faust architecture files compiled into a generated plugin carry their own
+  license terms; a plugin release would need its own review (out of scope, §2).
+
 ## Consequences
 
 - Every `SourceRecord` carries a license claim; `RightsRecord.eligible_for`
@@ -56,7 +79,7 @@ These are INFERRED readings, not part of the approval. Not legal advice.
 - "Other permissive" is read as ISC, Zlib, BSL-1.0, 0BSD, MIT-0, CC0-1.0,
   Unlicense and STK-4.3 (the STK license used in faustlibraries).
 - LGPL, including the Faust library exception, is treated like GPL: training
-  only. AGPL, MPL and other copyleft licenses are not covered by the approval
+  only. (Confirmed by D-007 for header-less files.) AGPL, MPL and other copyleft licenses are not covered by the approval
   and stay excluded until decided.
 - Resolved (Danny yes 2026-10-16 22:25 PT): the repository was transferred to the Zero-State-LLC
   organization, so ownership matches the proprietary license. It stays public

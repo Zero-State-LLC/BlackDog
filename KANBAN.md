@@ -20,6 +20,14 @@ All tasks are **TODO**. Dependency arrows are mandatory promotion gates.
 | T14 | v0.4 | IDE integration | T13 | End-to-end journey tests |
 | T15 | v1.0 | Security and quality review | T14 | Independent audit |
 | T16 | v1.0 | Release | T15 | Signed release manifest and rollback test |
+| T17 | v0.3 | Language-backend lane (ADR-0004) | T03 | cpp, c, rust, cmajor output compiles and matches host render |
+| T18 | v0.3 | Plugin lane: CLAP, VST3, LV2 (ADR-0004) | T04 | Validators and parameter-map check on good and bad fixtures |
+| T19 | v0.3 | Embedded lane: Daisy, Teensy 4.x (ADR-0004) | T04 | Builds, memory and CPU budgets, real-time checks |
+| T20 | v0.3 | Remix tasks and novelty metric | T08 | Remix dev tasks; novelty reported, not gated |
+| T21 | v0.3 | Real-time safety checks | T04 | Bad fixtures rejected on every lane |
+| T22 | v0.5-fpga | FPGA F0 spike | T04 | DecisionRecord on the lowering path |
+
+Lane issues (ADR-0004): T17 #25, T18 #26, T19 #27, T20 #28, T21 #29, T22 #30.
 
 ## Decisions
 
@@ -28,9 +36,16 @@ Mirrors the decision items on the [project board](https://github.com/orgs/Zero-S
 | ID | Decision | Status | Record |
 |---|---|---|---|
 | LIC-001 | Split license: Apache-2.0 for specs/ and docs/, Zero State proprietary for the rest | Done (ACCEPTED 2026-10-16) | ADR-0003, #20 |
-| D-003 | Sample rates 44.1 and 48 kHz | ACCEPTED 2026-10-16 | spec §14 |
+| D-003 | Sample rates 44.1 and 48 kHz (runtime clause superseded by D-003r2) | ACCEPTED 2026-10-16 | spec §14 |
 | D-004 | Corpus allowlist; GPL training-only; unlicensed excluded | ACCEPTED 2026-10-16 | ADR-0003 |
 | D-006 | Teacher: Opus via OpenRouter, per-run spend cap | SUPERSEDED 2026-10-16 22:25 PT | ADR-0002 |
 | D-006r2 | Teacher: open-weight deepseek-v4.1-flash via OpenRouter, per-run cap; Opus for review and judging only | ACCEPTED 2026-10-16 | ADR-0002, ADR-0003 |
 | ORG-001 | Repo moved to Zero-State-LLC; repo and board public for now (revisitable) | Done 2026-10-16 22:32 PT | spec §18 |
+| D-003r2 | Runtimes: wasm for eval, native C++ 2.88.0 cross-check, target lanes | ACCEPTED 2026-10-16 23:39 PT | spec §14, ADR-0004 |
+| D-007 | Per-function licensing; header-less files inherit repo license; AGPL excluded | ACCEPTED 2026-10-16 23:39 PT | ADR-0003 |
+| D-008 | First boards Daisy and Teensy 4.x; no purchase yet | ACCEPTED 2026-10-16 23:39 PT | ADR-0004 |
+| D-009 | FPGA path after F0 spike; iCE40 and ECP5; audio-rate throughput | ACCEPTED 2026-10-16 23:39 PT | ADR-0004 |
+| D-010 | Remix novelty is a dev metric; faust-rs primitives out | ACCEPTED 2026-10-16 23:39 PT | ADR-0004 |
+| D-011 | Upstream Faust fixes under LGPL allowed | ACCEPTED 2026-10-16 23:39 PT | ADR-0003 |
+| D-012 | Plugin formats CLAP, VST3 (clap-wrapper), LV2; AU deferred | ACCEPTED 2026-10-16 23:39 PT | ADR-0004 |
 | ORG-002 | Board moved to org project 29; user board 8 kept, marked superseded | Done 2026-10-16 | spec §18 |

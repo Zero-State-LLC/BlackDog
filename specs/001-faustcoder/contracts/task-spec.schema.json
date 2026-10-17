@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://github.com/Zero-State-LLC/FaustCoder/specs/001-faustcoder/contracts/TaskSpec.schema.json",
   "title": "TaskSpec",
-  "description": "Spec §8 TaskSpec. Field types are INFERRED.",
+  "description": "Spec §8 TaskSpec. Field types are INFERRED. category, target and remix_sources added in spec 0.3.0 (R-004, R-020).",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -20,7 +20,7 @@
     },
     "task_type": {
       "type": "string",
-      "description": "INFERRED examples: generate, repair, explain, optimize"
+      "description": "generate, repair, explain, optimize, remix (R-004, 0.3.0)"
     },
     "prompt": {
       "type": "string"
@@ -37,6 +37,45 @@
     },
     "schema_version": {
       "type": "string"
+    },
+    "category": {
+      "type": "string",
+      "description": "faustlibraries library name, for example oscillators, filters, reverbs"
+    },
+    "target": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "target_class",
+          "target"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "target_class": {
+            "type": "string",
+            "enum": [
+              "host",
+              "language",
+              "plugin",
+              "embedded",
+              "fpga"
+            ]
+          },
+          "target": {
+            "type": "string",
+            "description": "for example cpp, clap, vst3, lv2, daisy-seed, teensy41, ice40"
+          }
+        }
+      }
+    },
+    "remix_sources": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^sha256:[0-9a-f]{64}$"
+      },
+      "minItems": 2
     }
   }
 }

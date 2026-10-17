@@ -30,8 +30,9 @@ Model names and mutable aliases are never evidence (OBSERVED §3).
 | SplitManifest | Train, development and holdout assignment | INFERRED: `splits`, `grouping` (project, near-duplicate family, provenance per R-003), `signature` | — |
 | TaskSpec | One benchmark task | OBSERVED §8 | — |
 | CandidateProgram | A generated or repaired program | INFERRED: `task_id`, `faust_source`, `source_sha256`, `repair_attempt` | §7.2 |
-| CompilerReceipt | Compile evidence | OBSERVED §8 | — |
-| DSPTestReceipt | Signal-test evidence | OBSERVED §8 | — |
+| CompilerReceipt | Compile evidence | OBSERVED §8 (fields added 0.3.0) | — |
+| DSPTestReceipt | Signal-test evidence | OBSERVED §8 (fields added 0.3.0) | — |
+| TargetReceipt | Target-lane evidence (ADD 0.3.0, ADR-0004) | OBSERVED §8 | — |
 | BenchmarkSuite | Frozen or development task set | INFERRED: `task_digests`, `kind` (frozen, development) | — |
 | BaseModel | Upstream model reference | INFERRED: `name`, `revision`, `license` | — |
 | Adapter | LoRA adapter or full weights (stored outside git) | INFERRED: `base_model_revision`, `weights_digest` | — |
@@ -57,6 +58,7 @@ graph TD
     BenchmarkSuite --> EvaluationRun --> DecisionRecord --> ReleaseManifest
     TaskSpec --> CandidateProgram --> CompilerReceipt
     CandidateProgram --> DSPTestReceipt
+    CandidateProgram --> TargetReceipt
 ```
 
 Arrows point from parent to child. Validation rules (OBSERVED §3, §4.1,
