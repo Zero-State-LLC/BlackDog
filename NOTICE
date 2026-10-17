@@ -19,3 +19,6 @@ applies here only to the paths in item 2.
 
 Third-party materials keep their own licenses. GPL-licensed source code used
 for training is never stored in this repository or in released data (ADR-0003).
+
+The compiler worker installs `@grame/faustwasm` 0.19.0 from npm (LGPL-3.0).
+That package is not vendored in this repository. A lockfile pins the tarball.

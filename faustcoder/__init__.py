@@ -1,4 +1,4 @@
-"""FaustCoder artifact store, schema validation, and the training machine."""
+"""FaustCoder artifact store, schema validation, training machine, and sandboxed Faust compiler."""
 
 from faustcoder.canonical import (
     build_envelope,
@@ -22,6 +22,28 @@ from faustcoder.errors import (
     SchemaValidationError,
     TamperError,
 )
+from faustcoder.compiler import (
+    EXCLUDED_TIMING_FIELDS,
+    FAUSTWASM_VERSION,
+    NATIVE_FAUST_VERSION,
+    Compilation,
+    CompilerHarnessError,
+    CrossCheck,
+    NativeFaustUnavailable,
+    classify_diagnostic,
+    compile_native,
+    compile_source,
+    cross_check_native,
+    reproducible_receipt_digest,
+    store_compiler_receipt,
+)
+from faustcoder.sandbox import (
+    NODE_SANDBOX_FLAGS,
+    ResourceLimits,
+    SandboxError,
+    node_command,
+    run_in_sandbox,
+)
 from faustcoder.schemas import schema_directory, schema_names, validate
 from faustcoder.store import ArtifactStore
 
@@ -30,22 +52,40 @@ __all__ = [
     "ArtifactStore",
     "ArtifactStoreError",
     "CanonicalError",
+    "Compilation",
+    "CompilerHarnessError",
+    "CrossCheck",
     "CycleError",
     "DigestMismatchError",
+    "EXCLUDED_TIMING_FIELDS",
+    "FAUSTWASM_VERSION",
     "InvalidReferenceError",
     "MissingParentError",
     "MutationError",
+    "NATIVE_FAUST_VERSION",
+    "NODE_SANDBOX_FLAGS",
+    "NativeFaustUnavailable",
+    "ResourceLimits",
+    "SandboxError",
     "SchemaError",
     "SchemaValidationError",
     "TamperError",
     "build_envelope",
     "canonical_bytes",
+    "classify_diagnostic",
+    "compile_native",
+    "compile_source",
     "content_digest_for",
+    "cross_check_native",
     "digest_hex",
     "envelope_digest_for",
     "loads_strict",
+    "node_command",
     "parse_reference",
+    "reproducible_receipt_digest",
+    "run_in_sandbox",
     "schema_directory",
     "schema_names",
+    "store_compiler_receipt",
     "validate",
 ]
