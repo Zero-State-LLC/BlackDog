@@ -1,7 +1,7 @@
 # FaustCoder: DAG-Compliant DSP Coding Model
 
 - Status: DRAFT / refinement-ready
-- Version: 0.3.0 (Faust-tooling assimilation and target lanes, ADR-0004; see §19). 0.2.0 training path: ADR-0002, §17
+- Version: 0.3.1 (D-012 VST3 route evidence, Danny yes 2026-10-16 23:56 PT). 0.3.0: Faust-tooling assimilation and target lanes, ADR-0004; see §19. 0.2.0 training path: ADR-0002, §17
 - Target: NVIDIA DGX Spark (128 GB unified memory)
 
 ## 1. Constitution
@@ -374,7 +374,7 @@ Parallelism permitted only where declared dependencies allow it. Every task requ
 - D-009 ACCEPTED: The FPGA lowering path is decided after the F0 spike. Targets are iCE40 and ECP5 with the open toolchain. "Pipelined" means the design meets audio-rate throughput (one sample per channel per sample period at 48 kHz). Provenance: Danny yes 2026-10-16 23:39 PT.
 - D-010 ACCEPTED: Remix novelty is a dev metric, not a gate. faust-rs experimental primitives are out of scope. Provenance: Danny yes 2026-10-16 23:39 PT.
 - D-011 ACCEPTED: Fixes to the upstream Faust compiler or libraries may be contributed upstream under their LGPL license. Provenance: Danny yes 2026-10-16 23:39 PT.
-- D-012 ACCEPTED: First plugin formats: CLAP (`faust2clap`) and VST3, both built on Linux in a container, plus LV2 (`faust2lv2`) on Linux. AU is deferred to a macOS CI runner. VST3 is built from the CLAP build with `clap-wrapper` (MIT) by default; `faust2juce` is the fallback and needs a JUCE license decision first, because JUCE is AGPLv3 or commercial (ADR-0004, INFERRED choice within Danny's "JUCE or native scripts"). Provenance: Danny yes 2026-10-16 23:39 PT.
+- D-012 ACCEPTED: First plugin formats: CLAP (`faust2clap`) and VST3, both built on Linux in a container, plus LV2 (`faust2lv2`) on Linux. AU is deferred to a macOS CI runner. VST3 route (amended 0.3.1): default `faust2clap` then `clap-wrapper` (MIT), shipped in clap-wrapper's linked, self-contained mode; fallback `faust2juce` with JUCE, only after a commercial JUCE licence decision, because JUCE is AGPLv3 or commercial; second fallback a DPF spike. The default is OBSERVED to build and validate on Linux (faust 2.90.10 arch files, faust 2.79.3 compiler), with known bugs (research F26, F27; ADR-0004 "VST3 route evidence"). Provenance: Danny yes 2026-10-16 23:39 PT; route evidence Danny yes 2026-10-16 23:56 PT.
 - D-006 SUPERSEDED by D-006r2 (Danny yes 2026-10-16 22:25 PT). Original: Teacher model is Opus via OpenRouter, with a per-run spend cap approved for each run before it starts. Provenance: Danny yes 2026-10-16 22:20 PT. See ADR-0002.
 - D-006r2 ACCEPTED: Training-data teacher is an open-weight model: default `deepseek/deepseek-v4.1-flash` (DeepSeek-V4.1-Flash, MIT license) via OpenRouter with high reasoning effort, under a per-run spend cap approved for each run. Opus via OpenRouter is used only for review, grading and eval judging, never as a source of training targets, because Anthropic's usage terms restrict using outputs to train competing models. Provenance: Danny yes 2026-10-16 22:25 PT. Supersedes D-006. See ADR-0002 and ADR-0003.
 
@@ -448,6 +448,7 @@ never from scratch, in weeks rather than months. Evidence is in
 | D-010 | Remix novelty is a dev metric, not a gate; faust-rs experimental primitives out | ACCEPTED | Danny yes 2026-10-16 23:39 PT | ADR-0004 |
 | D-011 | Upstream Faust compiler and library fixes under LGPL are allowed | ACCEPTED | Danny yes 2026-10-16 23:39 PT | ADR-0003 |
 | D-012 | First plugin formats CLAP, VST3 (via clap-wrapper), LV2 on Linux; AU deferred to macOS CI | ACCEPTED | Danny yes 2026-10-16 23:39 PT | ADR-0004 |
+| D-012 (route evidence) | VST3 default faust2clap + clap-wrapper (self-contained) OBSERVED to build and validate on Linux, with known bugs; fallback faust2juce after JUCE licence decision; second fallback DPF spike | ACCEPTED | Danny yes 2026-10-16 23:56 PT | ADR-0004, research F26, F27 |
 
 ## 19. Amendments 0.3.0 (ADR-0004, ACCEPTED)
 
@@ -478,7 +479,7 @@ Item numbers match the proposal Danny approved and ADR-0004.
 | 14 | MODIFY | D-003 runtimes open | D-003r2 | §14 | OBSERVED (decision) |
 | 15 | DEFERRED | T14 custom IDE integration | Reuse faustlsp or the Faust IDE; decide at V0.4 | — | INFERRED; not applied |
 | 16 | DEFERRED | Custom CPU benchmarking | Reuse `faustbench` and `faust2bench`; decide when CPU gates are set | — | INFERRED; not applied |
-| 17 | ADD | No plugin target | Plugin lane: CLAP, VST3, LV2; validators and parameter-map check | R-023, T18 | OBSERVED tooling (F20 to F23) |
+| 17 | ADD | No plugin target | Plugin lane: CLAP, VST3, LV2; validators and parameter-map check | R-023, T18 | OBSERVED tooling (F20 to F23); VST3 route OBSERVED to build and validate on Linux, with known bugs (F26, F27) |
 | 18 | ADD | No language-backend target | Language lane: compile `-lang` output in that language | R-024, T17 | OBSERVED backends (F19) |
 | 19 | MODIFY | Candidate machine: signal check then review | `TARGET_CHECKED` state between them | §7.2 | INFERRED |
 

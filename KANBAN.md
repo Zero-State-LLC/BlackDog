@@ -47,5 +47,5 @@ Mirrors the decision items on the [project board](https://github.com/orgs/Zero-S
 | D-009 | FPGA path after F0 spike; iCE40 and ECP5; audio-rate throughput | ACCEPTED 2026-10-16 23:39 PT | ADR-0004 |
 | D-010 | Remix novelty is a dev metric; faust-rs primitives out | ACCEPTED 2026-10-16 23:39 PT | ADR-0004 |
 | D-011 | Upstream Faust fixes under LGPL allowed | ACCEPTED 2026-10-16 23:39 PT | ADR-0003 |
-| D-012 | Plugin formats CLAP, VST3 (clap-wrapper), LV2; AU deferred | ACCEPTED 2026-10-16 23:39 PT | ADR-0004 |
+| D-012 | Plugin formats CLAP, VST3 (clap-wrapper), LV2; AU deferred; VST3 route OBSERVED on Linux with known bugs (23:56 PT) | ACCEPTED 2026-10-16 23:39 PT | ADR-0004 |
 | ORG-002 | Board moved to org project 29; user board 8 kept, marked superseded | Done 2026-10-16 | spec §18 |

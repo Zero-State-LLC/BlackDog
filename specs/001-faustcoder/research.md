@@ -64,6 +64,8 @@ Survey of <https://faust.grame.fr>, `grame-cncm/faust` (branch `master-dev`),
 | F23 | Validators: `clap-validator` 0.4.1 (MIT, free-audio); `pluginval` 1.0.4 stable, 2.0.0-beta3 (GPL-3.0, Tracktion; VST3 and AU); `lv2lint` 0.16.2 (Artistic-2.0, Open Music Kontrollers; packaged in Arch and nixpkgs, not in this box's Debian sources); `auval` ships only with macOS. AU builds need macOS and Xcode; distribution needs Apple code signing and notarization. | OBSERVED (versions, licenses); INFERRED (Apple distribution requirement, from Apple developer docs, not re-read) | GitHub releases; archlinux.org lv2lint package; ventosus.ch/lv2lint |
 | F24 | Faust's VHDL backend output from Faust 2.79.3 (Debian package) failed GHDL analysis on a one-pole low-pass: missing `;` before `begin`, `integer(32 downto 0)` and broken component wiring; its I/O is shaped for Syfala. The VHDL generator's last change is 2024-12, so 2.88.0 is likely similar but was not tested. | OBSERVED (2.79.3); INFERRED (2.88.0) | Local test with GHDL 5.0.1 |
 | F25 | The working FPGA path is Syfala (GRAME, Faust to C++ to AMD/Xilinx Vitis HLS on Zynq boards), which is vendor-specific. A hand-written VHDL accumulator went through `ghdl synth` to Verilog, then Yosys 0.52 and Verilator 5.032 on this box, so the open toolchain itself works. `-fx` emits fixed-point C/C++ (`sfx_t`, mapping to `ap_fixed`), aimed at HLS. | OBSERVED | <https://github.com/inria-emeraude/syfala>; local test |
+| F26 | VST3 route A built on Linux: `faust2clap` (faust checkout 2.90.10, compiler 2.79.3) built a stereo gain CLAP after `CXXFLAGS="-include cstring -include cwchar"` (without it: `'strcmp' is not a member of 'std'`); clap-wrapper built a VST3 against VST 3 SDK v3.8.0_build_66 in about 12 s. pluginval 1.0.4 strictness 5 and 10: SUCCESS. clap-validator 0.4.1: 33 passed, 2 failed (uninitialised parameter default; foreign-namespace parameter events applied), 1 warning (denormals, 4x slowdown), 8 skipped. | OBSERVED | Local test 2026-10-16; ADR-0004 "VST3 route evidence" |
+| F27 | Alternatives: JUCE AGPLv3 or commercial; DPF ISC, active (2026-10-04) but Faust glue stale (faustpp 2022-09, cookiecutter-dpf-faust 2024-11); iPlug2 has no faust script; no native Faust VST3 architecture file exists (`faust2vst` is VST2). faust `architecture/clap/*.cpp` carry no license header. | OBSERVED | GitHub API; repository files |
 | F26 | Versions on 2026-10-16: Faust 2.88.0 is the latest release (2026-09-09; `master-dev` reports 2.90.10); faustlibraries `master` at `2edec0537f53` (2026-10-15); faustwasm 0.19.0; Yosys 0.70 (2026-10-13); nextpnr 0.11.1 (2026-08-11); this box has Verilator 5.032, Yosys 0.52, GHDL 5.0.1. | OBSERVED | GitHub releases; npm; local `--version` |
 | F27 | Embedded scripts: `faust2daisy` has `-sram`, `-qspi`, `-sdram` and `-mem-thresh` for memory placement plus `-sr` and `-bs`; `faust2teensy` builds for the Teensy Audio Library (`-lib`, `-midi`, `-nvoices`); `faust2esp32` picks a codec driver. All pass through Faust options such as `-vec`, `-fx` and `-mem`. | OBSERVED | Script `usage` text |
 
@@ -98,7 +100,9 @@ Survey of <https://faust.grame.fr>, `grame-cncm/faust` (branch `master-dev`),
   clap-wrapper keep every plugin SDK dependency MIT (F20 to F22). JUCE would add an
   AGPLv3-or-commercial dependency, so it is the fallback. LV2 has a current
   architecture file but an older script (F19). AU waits for macOS CI (F23).
-  INFERRED.
+  INFERRED. Route A is now OBSERVED to build and validate on Linux, with
+  known bugs (F26); JUCE fallback after a licence decision, DPF spike second
+  (F27; Danny yes 2026-10-16 23:56 PT).
 - **I9. FPGA (0.3.0).** No vendor-neutral Faust-to-Verilog path works today
   (F24, F25). Schedule a short spike that compares (a) repairing the VHDL
   backend upstream (D-011), (b) `-fx` C into an open HLS tool such as Bambu,
