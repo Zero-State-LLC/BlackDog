@@ -156,8 +156,11 @@ here.
 header beats the LGPL declare. It is training-only. Do not emit it.
 
 STK-4.3 is other-permissive under D-013. Cleared STK rows redistribute
-only when the row is not an impulse test. Impulse rows, including
-`effect.lib` functions, are training only.
+only when the row is not an impulse test. A redistributed STK unit
+bundles the STK-4.3 permission notice: each notice row says so, and
+the licence text is stored once under `license_texts`. Impulse rows,
+including `effect.lib` functions, are training only and do not carry
+that redistribution duty.
 
 Bare BSD rows in `examples/` may train and eval. They may not be
 redistributed. Impulse BSD is training only.

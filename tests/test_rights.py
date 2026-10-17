@@ -34,13 +34,24 @@ COMMIT = "a" * 40
 BLOB = "b" * 40
 
 
-def _source(claim: str = "MIT", commit: str = COMMIT) -> dict:
-    return {
+def _source(
+    claim: str = "MIT",
+    commit: str = COMMIT,
+    path: str = "example.dsp",
+    blob: str = BLOB,
+    function: str = "",
+    repo: str = "example/faust",
+) -> dict:
+    fragment = f"#{function}" if function else ""
+    payload = {
         "record_type": "SourceRecord",
-        "uri": f"https://example.com/faust/blob/{commit}/example.dsp",
+        "uri": f"https://github.com/{repo}/blob/{commit}/{path}{fragment}",
         "retrieved_at": WHEN,
         "license_claim": claim,
     }
+    if blob:
+        payload["blob_sha"] = blob
+    return payload
 
 
 def _evidence(license_name: str = "MIT", **overrides: object) -> dict:
@@ -393,19 +404,92 @@ def test_source_payload_rejects_program_text(store: ArtifactStore) -> None:
     assert store.list() == []
 
 
+def _entry(inventory: dict, entry_id: str) -> dict:
+    return next(item for item in inventory["entries"] if item["id"] == entry_id)
+
+
+def _row_evidence(entry: dict, **overrides: object) -> dict:
+    payload: dict = {
+        "record_type": "LicenseEvidence",
+        "license": entry["license"],
+        "evidence_label": entry["evidence_label"],
+        "evidence_uri": entry["evidence_uri"],
+        "attribution": entry["attribution"],
+        "eligible_for": list(entry["eligible_for"]),
+        "reason": entry["reason"],
+        "inventory_id": entry["id"],
+    }
+    if entry.get("reviewer"):
+        payload["reviewer"] = entry["reviewer"]
+    payload.update(overrides)
+    return payload
+
+
+def _refuse_clearance(
+    store: ArtifactStore,
+    inventory: dict,
+    notice: dict,
+    row: dict,
+    unit: dict,
+    claim: str,
+    *,
+    repo: str | None = None,
+    match: str = "source path is not a unit",
+) -> None:
+    source = register_source(
+        store,
+        _source(
+            claim,
+            commit=row["pin"]["commit"],
+            path=unit["path"],
+            blob=unit["blob_sha"],
+            function=str(unit.get("function") or ""),
+            repo=repo or row["pin"]["repo"],
+        ),
+        created_at=WHEN,
+    )
+    before = set(store.list())
+    with pytest.raises(LicenseEvidenceError, match=match):
+        apply_transition(
+            store,
+            source["artifact_id"],
+            "rights_cleared",
+            _row_evidence(row),
+            actor="t05-inventory",
+            timestamp=WHEN,
+            inventory=inventory,
+            notice=notice,
+        )
+    assert set(store.list()) == before
+    assert current_state(store, source["artifact_id"]) == "DISCOVERED"
+
+
 def test_inventory_rows_match_policy_and_transition(store: ArtifactStore) -> None:
     inventory = load_inventory(INVENTORY)
     counts = {"rights_cleared": 0, "rights_rejected": 0, "needs_human": 0}
     for entry in inventory["entries"]:
         counts[entry["decision"]] += 1
-        source = register_source(
-            store,
-            {
+        if entry["decision"] == "rights_cleared":
+            units = list(entry.get("files") or []) + list(entry.get("functions") or [])
+            unit = units[0]
+            payload = _source(
+                entry["license"][:400],
+                commit=entry["pin"]["commit"],
+                path=unit["path"],
+                blob=unit["blob_sha"],
+                function=str(unit.get("function") or ""),
+                repo=entry["pin"]["repo"],
+            )
+        else:
+            payload = {
                 "record_type": "SourceRecord",
                 "uri": entry["url"].rstrip("/") + "/" + entry["id"],
                 "retrieved_at": WHEN,
                 "license_claim": entry["license"][:400],
-            },
+            }
+        source = register_source(
+            store,
+            payload,
             created_at=WHEN,
         )
         evidence = {
@@ -565,3 +649,192 @@ def test_clearance_rejects_each_evidence_mismatch(store: ArtifactStore) -> None:
             notice=notice,
         )
     assert current_state(store, source["artifact_id"]) == "DISCOVERED"
+
+
+def test_clearance_binds_the_source_to_one_unit(store: ArtifactStore) -> None:
+    """A pinned commit cannot borrow another row's files or redistribute rights."""
+    inventory = load_inventory(INVENTORY)
+    notice = json.loads((ROOT / "corpus" / "notice-manifest.v1.json").read_text())
+    headerless = _entry(inventory, "faust-examples-headerless")
+    mit = _entry(inventory, "faust-examples-mit")
+    nlffm = _entry(inventory, "faust-examples-copyright-only")["files"][0]
+    guitarix = _entry(inventory, "faust-examples-guitarix")["files"][0]
+    impulse = _entry(inventory, "faust-impulse-headerless")["files"][0]
+    owned = headerless["files"][0]
+    assert nlffm["path"].endswith("NLFfm.dsp")
+    assert guitarix["path"].endswith("guitarix.dsp")
+    assert owned["path"] == "examples/SAM/16_channel_volume/16_channel_volume.dsp"
+    assert "impulse-tests" in impulse["path"]
+    cases = [
+        (headerless, nlffm, headerless["license"]),
+        (headerless, guitarix, headerless["license"]),
+        (
+            headerless,
+            {"path": "examples/not/a/real/file.dsp", "blob_sha": "c" * 40},
+            headerless["license"],
+        ),
+        (mit, owned, mit["license"]),
+        (mit, impulse, mit["license"]),
+    ]
+    for row, unit, claim in cases:
+        _refuse_clearance(store, inventory, notice, row, unit, claim)
+    _refuse_clearance(
+        store,
+        inventory,
+        notice,
+        headerless,
+        {"path": owned["path"], "blob_sha": "d" * 40},
+        headerless["license"],
+        match="blob_sha does not match",
+    )
+    _refuse_clearance(
+        store,
+        inventory,
+        notice,
+        headerless,
+        owned,
+        headerless["license"],
+        repo="other/faust",
+        match="inventory repo and commit",
+    )
+    sliced = _entry(inventory, "faustlibraries-stk-4.3")
+    bare = dict(sliced["functions"][0])
+    bare["function"] = ""
+    _refuse_clearance(store, inventory, notice, sliced, bare, sliced["license"])
+
+
+def test_eval_guard_uses_the_source_path(store: ArtifactStore) -> None:
+    """An impulse path cannot take eval, including on a row that also lists it."""
+    impulse = "tests/impulse-tests/dsp/borrowed.dsp"
+    entry = {
+        "id": "row-mixed",
+        "decision": "rights_cleared",
+        "license": "MIT",
+        "evidence_label": "OBSERVED",
+        "eligible_for": ["train", "eval", "redistribute"],
+        "attribution_complete": True,
+        "pin": {"repo": "example/faust", "commit": COMMIT, "ref": "test"},
+        "path": "examples/",
+        "reviewer": None,
+        "redistribute": True,
+        "files": [
+            {"path": "example.dsp", "blob_sha": BLOB},
+            {"path": impulse, "blob_sha": "c" * 40},
+        ],
+    }
+    notice = {
+        "entries": [
+            {
+                "commit": COMMIT,
+                "path": "example.dsp",
+                "blob_sha": BLOB,
+                "function": None,
+                "copyright": "Copyright 2020 Example Author",
+                "license": "MIT",
+            },
+            {
+                "commit": COMMIT,
+                "path": impulse,
+                "blob_sha": "c" * 40,
+                "function": None,
+                "copyright": "Copyright 2020 Example Author",
+                "license": "MIT",
+            },
+        ]
+    }
+    inventory = {"entries": [entry]}
+    evidence = _evidence(inventory_id="row-mixed")
+    blocked = register_source(
+        store,
+        _source(path=impulse, blob="c" * 40),
+        created_at=WHEN,
+    )
+    before = set(store.list())
+    with pytest.raises(LicenseEvidenceError, match="impulse-test"):
+        apply_transition(
+            store,
+            blocked["artifact_id"],
+            "rights_cleared",
+            evidence,
+            actor=ACTOR,
+            timestamp=WHEN,
+            inventory=inventory,
+            notice=notice,
+        )
+    assert set(store.list()) == before
+    assert current_state(store, blocked["artifact_id"]) == "DISCOVERED"
+    allowed = register_source(store, _source(), created_at=WHEN)
+    result = apply_transition(
+        store,
+        allowed["artifact_id"],
+        "rights_cleared",
+        evidence,
+        actor=ACTOR,
+        timestamp=WHEN,
+        inventory=inventory,
+        notice=notice,
+    )
+    assert result.state == "RIGHTS_CLEARED"
+
+
+def test_inferred_reviewer_is_the_evidence_or_the_unit(
+    store: ArtifactStore,
+) -> None:
+    source = _register(store)
+    inventory, notice, evidence = _clearance(
+        evidence_label="INFERRED", reviewer=None
+    )
+    inventory["entries"][0]["reviewer"] = "Boof (delegated by Danny 2026-10-17)"
+    before = set(store.list())
+    with pytest.raises(LicenseEvidenceError, match="named reviewer"):
+        apply_transition(
+            store,
+            source["artifact_id"],
+            "rights_cleared",
+            evidence,
+            actor=ACTOR,
+            timestamp=WHEN,
+            inventory=inventory,
+            notice=notice,
+        )
+    assert set(store.list()) == before
+    inventory["entries"][0]["files"][0]["reviewer"] = "Unit Reviewer"
+    result = apply_transition(
+        store,
+        source["artifact_id"],
+        "rights_cleared",
+        evidence,
+        actor=ACTOR,
+        timestamp=WHEN,
+        inventory=inventory,
+        notice=notice,
+    )
+    assert result.state == "RIGHTS_CLEARED"
+
+
+def test_stk_redistribution_bundles_the_permission_notice() -> None:
+    inventory = load_inventory(INVENTORY)
+    notice = json.loads((ROOT / "corpus" / "notice-manifest.v1.json").read_text())
+    body = " ".join(notice["license_texts"]["STK-4.3"].split())
+    assert "Permission is hereby granted" in body
+    assert "this permission notice shall be included" in body
+    assert "Perry R. Cook" in body
+    index = {
+        (row["commit"], row["path"], row.get("function") or ""): row
+        for row in notice["entries"]
+    }
+    seen = 0
+    for entry in inventory["entries"]:
+        if entry["license"] != "STK-4.3":
+            continue
+        units = list(entry.get("files") or []) + list(entry.get("functions") or [])
+        for unit in units:
+            row = index[
+                (entry["pin"]["commit"], unit["path"], unit.get("function") or "")
+            ]
+            seen += 1
+            if "redistribute" in entry["eligible_for"]:
+                assert "bundles the STK-4.3 permission notice" in row["license_notice"]
+            else:
+                assert "license_notice" not in row
+    assert seen > 0

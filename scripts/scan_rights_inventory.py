@@ -14,6 +14,7 @@ from pathlib import Path
 
 from faustcoder.rights_policy import (
     REVIEWER_BOOF,
+    STK_BUNDLE_NOTICE,
     classify_faust_file,
     content_sha256,
     dedupe_content,
@@ -123,8 +124,18 @@ def entry(
     return row
 
 
-def notice_row(repo: str, path: str, blob: str, copyright: str, license_name: str, function: str | None, label: str) -> dict:
-    return {
+def notice_row(
+    repo: str,
+    path: str,
+    blob: str,
+    copyright: str,
+    license_name: str,
+    function: str | None,
+    label: str,
+    *,
+    bundle_stk: bool = False,
+) -> dict:
+    row = {
         "repo": REPOS[repo][0],
         "commit": REPOS[repo][1],
         "path": path,
@@ -134,6 +145,9 @@ def notice_row(repo: str, path: str, blob: str, copyright: str, license_name: st
         "license": license_name,
         "evidence_label": label,
     }
+    if bundle_stk:
+        row["license_notice"] = STK_BUNDLE_NOTICE
+    return row
 
 
 def main() -> None:
@@ -168,8 +182,13 @@ def main() -> None:
         license_name = str(kwargs["license_name"])
         label = str(kwargs["label"])
         if decision == "rights_cleared":
+            bundle = license_name == "STK-4.3" and kwargs.get("redistribute") is True
             for path, sha, copy in items:
-                notice.append(notice_row("faust", path, sha, copy, license_name, None, label))
+                notice.append(
+                    notice_row(
+                        "faust", path, sha, copy, license_name, None, label, bundle_stk=bundle
+                    )
+                )
         kwargs["files"] = files
         rows.append(entry(bucket, repo="faust", url=_faust_url(files[0]["path"] if files else "examples"), **kwargs))  # type: ignore[arg-type]
 
@@ -352,7 +371,13 @@ def main() -> None:
         "policy": "ADR-0003 D-004 and D-007, plus D-013. Not legal advice. A row may be stricter than the license class.",
         "entries": rows,
     }
-    manifest = {"schema_version": "notice-manifest.v1", "generated_at": GENERATED, "entries": notice}
+    stk_text = (LIBS / "licenses" / "stk-4.3.0.md").read_text(encoding="utf-8").strip()
+    manifest = {
+        "schema_version": "notice-manifest.v1",
+        "generated_at": GENERATED,
+        "license_texts": {"STK-4.3": stk_text},
+        "entries": notice,
+    }
     OUT_INVENTORY.write_text(json.dumps(inventory, indent=2) + "\n", encoding="utf-8")
     OUT_NOTICE.write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
     counts: dict[str, int] = defaultdict(int)
@@ -412,7 +437,18 @@ def _libraries(rows: list[dict], notice: list[dict], lib_blobs: dict[str, str]) 
                 undeclared.append(unit)
             else:
                 groups[(sl.license, "yes" if sl.redistribute else "no")].append(unit)
-                notice.append(notice_row("libs", path, sha, sl.copyright, sl.license, ident, "OBSERVED"))
+                notice.append(
+                    notice_row(
+                        "libs",
+                        path,
+                        sha,
+                        sl.copyright,
+                        sl.license,
+                        ident,
+                        "OBSERVED",
+                        bundle_stk=sl.license == "STK-4.3" and bool(sl.redistribute),
+                    )
+                )
     commit = REPOS["libs"][1]
     base = f"https://github.com/grame-cncm/faustlibraries/blob/{commit}/"
     for (license_name, redist), functions in sorted(groups.items()):
@@ -605,8 +641,20 @@ def _play_row(rows, notice, entry_id, _kind, items, license_name, decision, elig
         return
     files = [{"path": path, "blob_sha": sha} for path, sha, _copy in items]
     if decision == "rights_cleared":
+        bundle = license_name == "STK-4.3" and bool(redistribute)
         for path, sha, copy in items:
-            notice.append(notice_row("play", path, sha, copy, license_name, None, "OBSERVED"))
+            notice.append(
+                notice_row(
+                    "play",
+                    path,
+                    sha,
+                    copy,
+                    license_name,
+                    None,
+                    "OBSERVED",
+                    bundle_stk=bundle,
+                )
+            )
     rows.append(entry(
         entry_id,
         repo="play",

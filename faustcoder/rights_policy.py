@@ -15,6 +15,10 @@ from dataclasses import dataclass
 from faustcoder.errors import LicenseEvidenceError
 
 REVIEWER_BOOF = "Boof (delegated by Danny 2026-10-17)"
+STK_BUNDLE_NOTICE = (
+    "Redistribution bundles the STK-4.3 permission notice "
+    "recorded in license_texts."
+)
 _PLACEHOLDERS = frozenset(
     {
         "n/a",
@@ -32,8 +36,13 @@ _PLACEHOLDERS = frozenset(
         "placeholder",
     }
 )
-_COMMIT_IN_URI = re.compile(r"(?:^|[/=])([0-9a-f]{40})(?:[/=]|$)")
 _BRANCH_URI = re.compile(r"/tree/(?:main|master)(?:/|$)")
+_BLOB_URI = re.compile(
+    r"^https://github\.com/"
+    r"(?P<owner>[A-Za-z0-9_.-]+)/(?P<repo>[A-Za-z0-9_.-]+)"
+    r"/blob/(?P<commit>[0-9a-f]{40})/(?P<path>[^#?]+)"
+    r"(?:#(?P<function>[^#?]*))?$"
+)
 _DECLARE = re.compile(
     r'(?m)^[ \t]*declare[ \t]+([A-Za-z_][A-Za-z0-9_]*)'
     r'(?:[ \t]+(licen[cs]e|copyright|author))?[ \t]+"(.*?)"[ \t]*;'
@@ -254,16 +263,36 @@ def valid_actor(actor: object) -> bool:
     return re.search(r"[A-Za-z]", text) is not None
 
 
-def commit_in_uri(uri: object) -> str | None:
-    """Return the 40-hex commit in ``uri``, or None for a branch URL."""
-    if not isinstance(uri, str):
+@dataclass(frozen=True)
+class SourceUri:
+    """Repo, commit, path, and optional function parsed from a blob URL."""
+
+    repo: str
+    commit: str
+    path: str
+    function: str
+
+
+def parse_source_uri(uri: object) -> SourceUri | None:
+    """Parse a GitHub blob URL into the unit it names.
+
+    The function name, when the row is a library slice, is the URI
+    fragment. A branch URL and any other shape return None.
+    """
+    if not isinstance(uri, str) or _BRANCH_URI.search(uri):
         return None
-    if _BRANCH_URI.search(uri):
-        return None
-    match = _COMMIT_IN_URI.search(uri)
+    match = _BLOB_URI.fullmatch(uri)
     if match is None:
         return None
-    return match.group(1)
+    path = match.group("path")
+    parts = path.split("/")
+    if not parts or any(part in {"", ".", ".."} for part in parts):
+        return None
+    function = match.group("function") or ""
+    if "/" in function or "\\" in function:
+        return None
+    repo = f"{match.group('owner')}/{match.group('repo')}"
+    return SourceUri(repo, match.group("commit"), path, function)
 
 
 def is_impulse_path(path: str = "", entry_id: str = "") -> bool:

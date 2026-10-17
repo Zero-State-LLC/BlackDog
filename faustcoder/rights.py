@@ -37,12 +37,13 @@ from faustcoder.errors import (
 )
 from faustcoder.rights_policy import (
     LicenseClassification,
+    STK_BUNDLE_NOTICE,
     assert_eval_split_allowed,
     classify_license,
-    commit_in_uri,
     is_impulse_path,
     is_placeholder,
     overlay_eligible,
+    parse_source_uri,
     same_license,
     valid_actor,
 )
@@ -89,7 +90,7 @@ _TIME = re.compile(
 )
 _GIT_COMMIT = re.compile(r"^[0-9a-f]{40}$")
 _SOURCE_FIELDS = frozenset(
-    {"record_type", "uri", "retrieved_at", "license_claim"}
+    {"record_type", "uri", "retrieved_at", "license_claim", "blob_sha"}
 )
 _RIGHTS_FIELDS = frozenset(
     {"record_type", "license", "eligible_for", "attribution", "reviewer"}
@@ -240,7 +241,8 @@ def apply_transition(
     """Append one rights transition, or raise without writing.
 
     ``rights_cleared`` stores a RightsRecord and a receipt. It requires
-    an inventory row, a pinned commit, and a notice manifest entry.
+    an inventory row and a notice manifest entry. The source URL's repo,
+    commit, path, and blob must be one unit on that row.
     ``rights_rejected`` stores the license evidence and an exclusion
     receipt. The source payload is not copied into either.
     """
@@ -402,8 +404,8 @@ def _guard(
         )
     if is_placeholder(evidence.get("attribution")):
         raise LicenseEvidenceError("rights_cleared requires attribution")
-    pinned = commit_in_uri(source_payload.get("uri"))
-    if pinned is None:
+    parsed = parse_source_uri(source_payload.get("uri"))
+    if parsed is None:
         raise LicenseEvidenceError(
             "source URL is not pinned to an immutable commit"
         )
@@ -415,8 +417,14 @@ def _guard(
     if not same_license(str(entry.get("license")), str(evidence["license"])):
         raise LicenseEvidenceError("inventory license does not match the evidence")
     pin = entry.get("pin")
-    if not isinstance(pin, dict) or pin.get("commit") != pinned:
-        raise LicenseEvidenceError("source URL is not pinned to the inventory commit")
+    if (
+        not isinstance(pin, dict)
+        or pin.get("commit") != parsed.commit
+        or pin.get("repo") != parsed.repo
+    ):
+        raise LicenseEvidenceError(
+            "source URL is not pinned to the inventory repo and commit"
+        )
     if list(evidence["eligible_for"]) != list(entry.get("eligible_for") or []):
         raise LicenseEvidenceError("eligible_for does not match the inventory row")
     allowed = set(
@@ -434,17 +442,26 @@ def _guard(
         raise LicenseEvidenceError(
             "incomplete attribution needs a named reviewer"
         )
-    reviewer = evidence.get("reviewer") or entry.get("reviewer")
-    if evidence["evidence_label"] == "INFERRED" and not valid_actor(reviewer):
+    unit = _matching_unit(entry, parsed.path, parsed.function)
+    blob = source_payload.get("blob_sha")
+    if not isinstance(blob, str) or _GIT_COMMIT.fullmatch(blob) is None:
+        raise LicenseEvidenceError("source blob_sha is not a git blob id")
+    if unit.get("blob_sha") != blob:
+        raise LicenseEvidenceError(
+            "source blob_sha does not match the inventory unit"
+        )
+    if evidence["evidence_label"] == "INFERRED" and not valid_actor(
+        _inferred_reviewer(evidence, unit)
+    ):
         raise LicenseEvidenceError(
             "an inferred clearance requires a named reviewer"
         )
     if "redistribute" in evidence["eligible_for"] and not classification.redistribute:
         raise LicenseEvidenceError("this license cannot be redistributed")
     _require_notice(entry, notice)
-    for unit_path in _unit_paths(entry):
-        if "eval" in evidence["eligible_for"]:
-            assert_eval_split_allowed(unit_path, str(entry.get("id")), "eval")
+    for split in evidence["eligible_for"]:
+        if split in {"eval", "holdout"}:
+            assert_eval_split_allowed(parsed.path, "", split)
     return entry
 
 
@@ -648,6 +665,11 @@ def _check_source_payload(payload: Mapping[str, Any]) -> None:
     claim = payload.get("license_claim")
     if not isinstance(claim, str) or not claim.strip() or len(claim) > 400:
         raise LicenseEvidenceError("license_claim is missing or too long")
+    blob = payload.get("blob_sha")
+    if blob is not None and (
+        not isinstance(blob, str) or _GIT_COMMIT.fullmatch(blob) is None
+    ):
+        raise LicenseEvidenceError("source blob_sha is not a git blob id")
 
 
 def _check_evidence(evidence: Mapping[str, Any]) -> dict[str, Any]:
@@ -723,6 +745,35 @@ def _matching_entry(
     return matches[0]
 
 
+def _matching_unit(
+    entry: Mapping[str, Any], path: str, function: str
+) -> dict[str, Any]:
+    """Return the one unit whose path and function the source URL names."""
+    matches = [
+        unit
+        for unit in _units(entry)
+        if unit.get("path") == path and str(unit.get("function") or "") == function
+    ]
+    if len(matches) != 1:
+        raise LicenseEvidenceError(
+            "source path is not a unit on the inventory row"
+        )
+    return matches[0]
+
+
+def _inferred_reviewer(
+    evidence: Mapping[str, Any], unit: Mapping[str, Any]
+) -> object:
+    """Reviewer for an inferred clearance: the evidence, or the unit.
+
+    The inventory row's reviewer does not satisfy this check.
+    """
+    named = evidence.get("reviewer")
+    if named:
+        return named
+    return unit.get("reviewer")
+
+
 def _units(entry: Mapping[str, Any]) -> list[dict[str, Any]]:
     units: list[dict[str, Any]] = []
     files = entry.get("files") or []
@@ -732,24 +783,21 @@ def _units(entry: Mapping[str, Any]) -> list[dict[str, Any]]:
     for item in files:
         if not isinstance(item, dict):
             raise LicenseEvidenceError(f"{entry.get('id')}: file entry must be an object")
-        units.append({"path": item.get("path"), "blob_sha": item.get("blob_sha")})
+        units.append(_unit_record(item))
     for item in functions:
         if not isinstance(item, dict):
             raise LicenseEvidenceError(f"{entry.get('id')}: function entry must be an object")
-        units.append(
-            {
-                "path": item.get("path"),
-                "blob_sha": item.get("blob_sha"),
-                "function": item.get("function"),
-            }
-        )
+        units.append(_unit_record(item, function=item.get("function")))
     return units
 
 
-def _unit_paths(entry: Mapping[str, Any]) -> list[str]:
-    paths = [str(entry.get("path") or "")]
-    paths.extend(str(unit.get("path") or "") for unit in _units(entry))
-    return paths
+def _unit_record(item: Mapping[str, Any], function: object | None = None) -> dict[str, Any]:
+    unit: dict[str, Any] = {"path": item.get("path"), "blob_sha": item.get("blob_sha")}
+    if function is not None:
+        unit["function"] = function
+    if "reviewer" in item:
+        unit["reviewer"] = item.get("reviewer")
+    return unit
 
 
 def _check_units(entry: Mapping[str, Any], seen: set[tuple[str, str, str]]) -> None:
@@ -780,6 +828,35 @@ def _check_units(entry: Mapping[str, Any], seen: set[tuple[str, str, str]]) -> N
             raise LicenseEvidenceError(f"{entry_id}: file_count does not match the file list")
 
 
+def _redistributes_stk(entry: Mapping[str, Any]) -> bool:
+    eligible = entry.get("eligible_for") or []
+    return (
+        same_license(str(entry.get("license") or ""), "STK-4.3")
+        and isinstance(eligible, list)
+        and "redistribute" in eligible
+    )
+
+
+def _stk_notice_bundled(
+    row: Mapping[str, Any], notice: Mapping[str, Any]
+) -> bool:
+    """A redistributed STK unit points at the permission notice text."""
+    if row.get("license_notice") != STK_BUNDLE_NOTICE:
+        return False
+    texts = notice.get("license_texts")
+    if not isinstance(texts, Mapping):
+        return False
+    body = texts.get("STK-4.3")
+    if not isinstance(body, str):
+        return False
+    collapsed = " ".join(body.split())
+    return (
+        "Permission is hereby granted" in collapsed
+        and "this permission notice shall be included" in collapsed
+        and "Perry R. Cook" in collapsed
+    )
+
+
 def _require_notice(entry: Mapping[str, Any], notice: Mapping[str, Any] | None) -> None:
     if not isinstance(notice, Mapping):
         raise LicenseEvidenceError("rights_cleared requires a notice manifest")
@@ -802,3 +879,7 @@ def _require_notice(entry: Mapping[str, Any], notice: Mapping[str, Any] | None) 
             raise LicenseEvidenceError(f"{entry_id}: notice row has no copyright")
         if not same_license(str(row.get("license")), str(entry.get("license"))):
             raise LicenseEvidenceError(f"{entry_id}: notice license does not match the row")
+        if _redistributes_stk(entry) and not _stk_notice_bundled(row, notice):
+            raise LicenseEvidenceError(
+                f"{entry_id}: redistributed STK requires the bundled permission notice"
+            )

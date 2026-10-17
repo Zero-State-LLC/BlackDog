@@ -24,10 +24,14 @@ OBSERVED or INFERRED. A SPECULATIVE label is not evidence. An
 unrecognized license stays `DISCOVERED` until a human decides.
 STK-4.3 is allowlisted by D-013 and is not unrecognized. Program text
 is not stored on the source, the evidence, the rights record, or the
-receipt. A clearance also needs a row in `corpus/notice-manifest.v1.json`
-for the same commit, path, function, and blob id. An inferred clearance
-without a named reviewer is refused. Impulse-test paths and ids cannot
-take `eval` or `holdout`.
+receipt. A clearance binds the source to one unit on a cleared inventory row.
+The source URL is a GitHub blob URL whose repo and commit equal the
+row pin. The path, the function name on a library slice, and
+`blob_sha` must equal that unit. The notice manifest must have the
+same commit, path, function, and blob id. An inferred clearance names
+a reviewer on the evidence or on that unit. The row reviewer does not
+satisfy the check. Impulse-test paths cannot take `eval` or `holdout`.
+The guard applies that rule to the source path.
 
 ## Transition table
 
