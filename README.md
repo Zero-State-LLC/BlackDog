@@ -9,7 +9,9 @@ Compiler-verified Faust DSP coding model, developed on NVIDIA DGX Spark.
 - [Canonical specification](specs/001-faustcoder/spec.md)
 - [Implementation backlog](KANBAN.md)
 - [Architecture decision](docs/adr/0001-dag-evidence.md)
-- [Contribution and security guidelines](CONTRIBUTING.md)
+- [Constitution](.specify/memory/constitution.md)
+- [Contribution guidelines](CONTRIBUTING.md) and [security policy](SECURITY.md)
+- [Changelog](CHANGELOG.md) and [versioning](docs/VERSIONING.md)
 
 ## Principles
 
@@ -22,3 +24,7 @@ Compiler-verified Faust DSP coding model, developed on NVIDIA DGX Spark.
 ## Scope
 
 The v0.1 milestone is infrastructure, contracts, provenance and baseline evaluation, not a trained model.
+
+## License
+
+No license has been chosen yet. Until one is added, default copyright applies and no reuse rights are granted.

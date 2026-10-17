@@ -1,0 +1,34 @@
+name: Spec change
+description: Change a spec, contract, state machine, ADR or the constitution.
+labels: ["type:spec-change"]
+body:
+  - type: input
+    id: spec
+    attributes:
+      label: Spec and section
+      description: For example specs/001-faustcoder/spec.md §7.2
+    validations:
+      required: true
+  - type: textarea
+    id: change
+    attributes:
+      label: Proposed change
+      description: Exact text, transition rows, or schema fields to add, change or remove.
+    validations:
+      required: true
+  - type: textarea
+    id: rationale
+    attributes:
+      label: Rationale and evidence
+      description: Label claims OBSERVED, INFERRED or SPECULATIVE.
+    validations:
+      required: true
+  - type: checkboxes
+    id: impact
+    attributes:
+      label: Impact
+      options:
+        - label: Changes a contract (needs schema tests and an ADR)
+        - label: Changes a state machine transition table
+        - label: Changes the constitution (needs a version bump)
+        - label: Changes plan.md or tasks.md
