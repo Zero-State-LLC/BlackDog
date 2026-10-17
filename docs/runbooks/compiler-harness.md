@@ -61,6 +61,17 @@ the mounted tree changes `environment_digest`, and a mismatch is refused
 before a receipt is written. A checkout that does not match the pinned
 hash is refused the same way.
 
+A tamper refusal leaves the staged share in place. The harness does not
+delete it. Delete `faust/libraries/share-2edec0537f53` (the
+`share-<commit>` directory, not the checkout
+`faust/libraries/2edec0537f53`) and compile again. The next call
+re-stages that share from the verified checkout. Do not repair
+`.tree-sha256` by hand.
+
+The first publish waits at most 30 seconds for `share-<commit>.lock`.
+That file is opened with `O_NOFOLLOW`. A symlink is refused. A hung
+holder raises `SandboxError` instead of blocking the caller.
+
 `scripts/fetch-faustlibraries.sh` downloads the commit on the host. The
 sandbox does not. Before every wasm compile the worker deletes
 `/usr/share/faust` in the Emscripten filesystem and writes that share.

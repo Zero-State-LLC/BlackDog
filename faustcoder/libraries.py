@@ -25,13 +25,16 @@ left in place: it is not rebuilt and then compiled.
 
 from __future__ import annotations
 
+import errno
 import fcntl
 import hashlib
 import os
 import re
 import shutil
+import stat
 import tempfile
 import threading
+import time
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -52,6 +55,10 @@ _VERSION = re.compile(
 )
 _FLAT_DIRS = frozenset({"old", "dx7"})
 _LOCK = threading.Lock()
+# A hung holder must not stall a cold publish. Long enough for several
+# processes to copy the pinned tree, short enough that a stuck lock fails.
+SHARE_LOCK_TIMEOUT_S = 30.0
+_LOCK_POLL_S = 0.05
 
 
 @dataclass(frozen=True)
@@ -138,8 +145,11 @@ def share_directory(tree: LibraryTree | None = None) -> Path:
     The directory is hashed on every call, including when it already
     exists. The hash has to equal ``FAUSTLIBRARIES_SHARE_SHA256``. A stamp
     file is not consulted. A mismatch raises ``SandboxError`` and does not
-    replace the directory. The first publish is serialized with a lock
-    file beside the share (``fcntl.flock``) plus a thread lock, and it
+    replace the directory. Delete that ``share-<commit>`` directory and
+    call again to re-stage it from the checkout. The first publish is
+    serialized with a lock file beside the share (``fcntl.flock``) plus a
+    thread lock. The wait is bounded by ``SHARE_LOCK_TIMEOUT_S``. The lock
+    file is opened with ``O_NOFOLLOW`` and a symlink is refused. Publish
     never deletes a tree another caller is already using. Native Faust
     receives this path as ``-I``. The
     worker reads it and copies it into the Emscripten filesystem. The path
@@ -164,15 +174,17 @@ def share_directory(tree: LibraryTree | None = None) -> Path:
 def _publish_share(root: Path, dest: Path, expected: str) -> None:
     """Install ``dest`` once. Concurrent publishers share one lock file.
 
-    ``fcntl.flock`` covers other processes. ``_LOCK`` covers other threads
-    in this process, because a Linux flock does not block them. An existing
-    tree is hashed and kept. It is not deleted to make room for a new one.
+    ``fcntl.flock`` serializes other processes. ``_LOCK`` serializes other
+    threads in this process before they open the lock. The exclusive wait
+    is bounded by ``SHARE_LOCK_TIMEOUT_S``. The lock file is opened with
+    ``O_NOFOLLOW``; a symlink is refused. An existing tree is hashed and
+    kept. It is not deleted to make room for a new one.
     """
     lock_path = dest.parent / f"{dest.name}.lock"
     lock_path.parent.mkdir(parents=True, exist_ok=True)
-    fd = os.open(lock_path, os.O_CREAT | os.O_RDWR, 0o644)
+    fd = _open_share_lock(lock_path)
     try:
-        fcntl.flock(fd, fcntl.LOCK_EX)
+        _acquire_share_lock(fd, lock_path)
         if dest.exists():
             _require_mounted_hash(dest, expected)
             return
@@ -202,6 +214,68 @@ def _publish_share(root: Path, dest: Path, expected: str) -> None:
     finally:
         fcntl.flock(fd, fcntl.LOCK_UN)
         os.close(fd)
+
+
+def _open_share_lock(lock_path: Path) -> int:
+    """Open ``lock_path`` without following a symlink.
+
+    ``O_NOFOLLOW`` covers the final path component. Some kernels ignore it
+    when ``O_CREAT`` is also set and would open the symlink target. The
+    ``lstat`` check after a successful open refuses that too.
+    """
+    if lock_path.is_symlink():
+        raise SandboxError(f"faustlibraries share lock is a symlink: {lock_path}")
+    try:
+        fd = os.open(lock_path, os.O_CREAT | os.O_RDWR | os.O_NOFOLLOW, 0o644)
+    except OSError as exc:
+        if exc.errno == errno.ELOOP or lock_path.is_symlink():
+            raise SandboxError(
+                f"faustlibraries share lock is a symlink: {lock_path}"
+            ) from exc
+        raise
+    try:
+        _refuse_followed_lock(fd, lock_path)
+    except Exception:
+        os.close(fd)
+        raise
+    return fd
+
+
+def _refuse_followed_lock(fd: int, lock_path: Path) -> None:
+    info = os.fstat(fd)
+    if not stat.S_ISREG(info.st_mode):
+        raise SandboxError(
+            f"faustlibraries share lock is not a regular file: {lock_path}"
+        )
+    try:
+        linked = os.lstat(lock_path)
+    except OSError as exc:
+        raise SandboxError(
+            f"faustlibraries share lock disappeared: {lock_path}"
+        ) from exc
+    if (
+        stat.S_ISLNK(linked.st_mode)
+        or linked.st_ino != info.st_ino
+        or linked.st_dev != info.st_dev
+    ):
+        raise SandboxError(f"faustlibraries share lock is a symlink: {lock_path}")
+
+
+def _acquire_share_lock(fd: int, lock_path: Path) -> None:
+    """Take an exclusive flock, or raise once ``SHARE_LOCK_TIMEOUT_S`` elapses."""
+    deadline = time.monotonic() + SHARE_LOCK_TIMEOUT_S
+    while True:
+        try:
+            fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            return
+        except (InterruptedError, BlockingIOError):
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                raise SandboxError(
+                    "timed out waiting for the faustlibraries share lock; "
+                    f"another process holds {lock_path}"
+                ) from None
+            time.sleep(min(_LOCK_POLL_S, remaining))
 
 
 def _require_mounted_hash(dest: Path, expected: str) -> None:

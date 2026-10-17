@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import fcntl
 import hashlib
 import os
+import selectors
 import shutil
 import subprocess
 import sys
@@ -604,6 +606,98 @@ def test_concurrent_processes_publish_one_share(tmp_path: Path) -> None:
     assert len(paths) == 1
     assert (tmp_path / "share-2edec0537f53").is_dir()
     assert (tmp_path / "share-2edec0537f53.lock").is_file()
+    assert not (tmp_path / "share-2edec0537f53.lock").is_symlink()
+
+
+def test_hung_share_lock_times_out(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    checkout = tmp_path / "2edec0537f53"
+    _copy_library_checkout(checkout)
+    lock_path = tmp_path / "share-2edec0537f53.lock"
+    holder = subprocess.Popen(
+        [
+            sys.executable,
+            "-c",
+            "import fcntl, os, sys, time\n"
+            "fd = os.open(sys.argv[1], os.O_CREAT | os.O_RDWR, 0o644)\n"
+            "fcntl.flock(fd, fcntl.LOCK_EX)\n"
+            "print('held', flush=True)\n"
+            "time.sleep(8)\n",
+            str(lock_path),
+        ],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+    try:
+        assert _read_line(holder, 5) == b"held\n"
+        monkeypatch.setenv("FAUSTCODER_LIBRARIES", str(checkout))
+        monkeypatch.setattr("faustcoder.libraries.SHARE_LOCK_TIMEOUT_S", 0.4)
+        started = time.monotonic()
+        with pytest.raises(
+            SandboxError, match="timed out waiting for the faustlibraries share lock"
+        ):
+            share_directory()
+        assert time.monotonic() - started < 3
+        assert not (tmp_path / "share-2edec0537f53").exists()
+    finally:
+        holder.kill()
+        holder.wait(timeout=5)
+
+
+def test_share_lock_symlink_is_refused(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    checkout = tmp_path / "2edec0537f53"
+    _copy_library_checkout(checkout)
+    target = tmp_path / "lock-target"
+    fd = os.open(target, os.O_CREAT | os.O_RDWR, 0o644)
+    fcntl.flock(fd, fcntl.LOCK_EX)
+    lock_path = tmp_path / "share-2edec0537f53.lock"
+    lock_path.symlink_to(target)
+    monkeypatch.setenv("FAUSTCODER_LIBRARIES", str(checkout))
+    # A follow of this symlink would block on the held target, then time out.
+    monkeypatch.setattr("faustcoder.libraries.SHARE_LOCK_TIMEOUT_S", 0.4)
+    real_open = os.open
+    real_is_symlink = Path.is_symlink
+    opened: list[int] = []
+
+    def spy_open(
+        path: object, flags: int, mode: int = 0o777, *, dir_fd: int | None = None
+    ) -> int:
+        if Path(str(path)) == lock_path:
+            opened.append(flags)
+        return real_open(path, flags, mode, dir_fd=dir_fd)
+
+    def hide_lock_symlink(self: Path) -> bool:
+        if self == lock_path:
+            return False
+        return real_is_symlink(self)
+
+    monkeypatch.setattr(os, "open", spy_open)
+    monkeypatch.setattr(Path, "is_symlink", hide_lock_symlink)
+    started = time.monotonic()
+    try:
+        with pytest.raises(SandboxError, match="share lock is a symlink"):
+            share_directory()
+        assert time.monotonic() - started < 2
+        assert not (tmp_path / "share-2edec0537f53").exists()
+        assert opened
+        assert all(flags & os.O_NOFOLLOW for flags in opened)
+    finally:
+        fcntl.flock(fd, fcntl.LOCK_UN)
+        os.close(fd)
+
+
+def _read_line(process: subprocess.Popen[bytes], timeout: float) -> bytes:
+    assert process.stdout is not None
+    selector = selectors.DefaultSelector()
+    selector.register(process.stdout, selectors.EVENT_READ)
+    if not selector.select(timeout):
+        process.kill()
+        err = process.stderr.read() if process.stderr is not None else b""
+        raise AssertionError(err.decode() or "share-lock holder produced no output")
+    return process.stdout.readline()
 
 
 def test_sibling_import_from_the_same_directory_compiles() -> None:
@@ -704,6 +798,24 @@ def test_tampered_share_is_refused(tmp_path: Path, monkeypatch: pytest.MonkeyPat
     assert (share / ".tree-sha256").is_file()
     with pytest.raises(SandboxError, match="share"):
         compile_source("process = ma.PWNED;\n")
+    assert share.is_dir()
+
+
+def test_deleting_a_tampered_share_restages_it(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    checkout = tmp_path / "2edec0537f53"
+    _copy_library_checkout(checkout)
+    monkeypatch.setenv("FAUSTCODER_LIBRARIES", str(checkout))
+    share = share_directory()
+    maths = share / "maths.lib"
+    maths.write_bytes(maths.read_bytes() + b"PWNED = 42;\n")
+    with pytest.raises(SandboxError, match="share"):
+        share_directory()
+    shutil.rmtree(share)
+    restored = share_directory()
+    assert canonical_tree_sha256(restored) == FAUSTLIBRARIES_SHARE_SHA256
+    assert b"PWNED" not in (restored / "maths.lib").read_bytes()
 
 
 def test_compiler_exclusion_of_model_output_is_a_failure_not_a_pass() -> None:
