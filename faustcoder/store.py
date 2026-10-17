@@ -1,21 +1,23 @@
 """Write-once, content-addressed artifact store on the local filesystem.
 
-Layout: ``<root>/sha256/<artifact_id>.json``. Each file is the canonical
-encoding of one envelope (see ``faustcoder.canonical``). Writes create a
-temporary file in the same directory, ``fsync`` it, then hard-link it
-into place so a crash cannot publish a partial object. An id that
-already exists is returned unchanged when the bytes match and rejected
-when they do not. Existing bytes are never overwritten.
+Layout: ``<root>/sha256/<artifact_id>.json`` plus
+``<artifact_id>.envelope_digest``. The object file is the canonical
+encoding of one envelope (see ``faustcoder.canonical``). The sidecar is
+``sha256:`` plus the hex SHA-256 of those exact bytes. ``artifact_id``
+remains the payload hash. Writes create a temporary file in the same
+directory, ``fsync`` it, then hard-link it into place so a crash cannot
+publish a partial object. An id that already exists is returned
+unchanged when the bytes match and rejected when they do not. Existing
+object bytes are never overwritten. A missing sidecar for an unchanged
+object is written on ``put``. A sidecar that does not match is rejected
+and left in place.
 
 ``put``, ``get`` and ``list`` reject parent cycles. Parents are
 ``content_digest`` values (``sha256:<hex>``) and must already exist.
-``get`` and ``list`` recompute the payload digest and require the file
-bytes to be the canonical encoding, so a payload edit or a non-canonical
-rewrite is detected. A canonical rewrite of envelope fields other than
-``payload`` keeps the same digest; the spec binds the digest to the
-payload, so that case is not detectable from ``content_digest`` alone.
-``exists`` reports whether a file or symlink is present and does not
-verify the hash.
+``get`` and ``list`` require canonical object bytes, a matching envelope
+digest, and a payload hash that matches the filename. ``exists`` reports
+whether the object file or a symlink is present and does not verify
+either digest.
 """
 
 from __future__ import annotations
@@ -32,6 +34,7 @@ from faustcoder.canonical import (
     CONTENT_DIGEST_RE,
     canonical_bytes,
     digest_hex,
+    envelope_digest_for,
     loads_strict,
     parse_reference,
 )
@@ -49,6 +52,7 @@ from faustcoder.schemas import validate
 
 _ENVELOPE_SCHEMA = "artifact-envelope.schema.json"
 _OBJECT_NAME = re.compile(r"^([0-9a-f]{64})\.json$")
+_WITNESS_NAME = re.compile(r"^([0-9a-f]{64})\.envelope_digest$")
 _WHITE = 0
 _GRAY = 1
 _BLACK = 2
@@ -84,8 +88,10 @@ class ArtifactStore:
         path = self.path_for(digest)
         if _present(path):
             self._require_same_bytes(path, data, digest)
+            self._ensure_witness(digest, data)
             return digest
         self._atomic_create(path, data, digest)
+        self._ensure_witness(digest, data)
         return digest
 
     def get(self, reference: str) -> dict[str, Any]:
@@ -123,6 +129,11 @@ class ArtifactStore:
         artifact_id = parse_reference(reference)
         return self.root / "sha256" / f"{artifact_id}.json"
 
+    def envelope_digest_path_for(self, reference: str) -> Path:
+        """Return the sidecar path for an artifact reference."""
+        artifact_id = parse_reference(reference)
+        return self.root / "sha256" / f"{artifact_id}.envelope_digest"
+
     def _read_envelope(self, artifact_id: str) -> dict[str, Any]:
         path = self.path_for(artifact_id)
         if path.is_symlink():
@@ -146,6 +157,7 @@ class ArtifactStore:
             validate(parsed, _ENVELOPE_SCHEMA)
         except SchemaValidationError as exc:
             raise TamperError(artifact_id, "object failed envelope schema") from exc
+        self._verify_witness(artifact_id, raw)
         payload_digest = digest_hex(parsed["payload"])
         if parsed.get("artifact_id") != payload_digest:
             raise TamperError(artifact_id, "artifact_id does not match payload")
@@ -192,18 +204,62 @@ class ArtifactStore:
         if directory.is_symlink() or not directory.is_dir():
             raise TamperError("sha256", "object directory is not a real directory")
         artifact_ids: list[str] = []
+        seen: set[str] = set()
+        witnesses: list[str] = []
         for entry in directory.iterdir():
             name = entry.name
             if name.startswith("."):
                 continue
             if entry.is_symlink():
                 raise TamperError(name, "symlink in the object directory")
-            match = _OBJECT_NAME.fullmatch(name)
-            if match is None or not entry.is_file():
+            object_match = _OBJECT_NAME.fullmatch(name)
+            witness_match = _WITNESS_NAME.fullmatch(name)
+            if object_match is not None and entry.is_file():
+                artifact_ids.append(object_match.group(1))
+                seen.add(object_match.group(1))
+            elif witness_match is not None and entry.is_file():
+                witnesses.append(witness_match.group(1))
+            else:
                 raise TamperError(name, "unexpected entry in the object directory")
-            artifact_ids.append(match.group(1))
+        for witness_id in witnesses:
+            if witness_id not in seen:
+                raise TamperError(
+                    witness_id, "envelope digest without an object"
+                )
         artifact_ids.sort()
         return artifact_ids
+
+    def _ensure_witness(self, artifact_id: str, envelope_bytes: bytes) -> None:
+        path = self.envelope_digest_path_for(artifact_id)
+        expected = envelope_digest_for(envelope_bytes).encode("ascii")
+        if path.is_symlink():
+            raise TamperError(artifact_id, "envelope digest path is a symlink")
+        if not path.exists():
+            self._atomic_create(path, expected, artifact_id, conflict="tamper")
+            return
+        self._require_witness_bytes(path, expected, artifact_id)
+
+    def _verify_witness(self, artifact_id: str, envelope_bytes: bytes) -> None:
+        path = self.envelope_digest_path_for(artifact_id)
+        if path.is_symlink():
+            raise TamperError(artifact_id, "envelope digest path is a symlink")
+        try:
+            stored = _read_nofollow(path)
+        except FileNotFoundError as exc:
+            raise TamperError(artifact_id, "missing envelope digest") from exc
+        expected = envelope_digest_for(envelope_bytes).encode("ascii")
+        if stored != expected:
+            raise TamperError(artifact_id, "envelope digest mismatch")
+
+    def _require_witness_bytes(
+        self, path: Path, expected: bytes, artifact_id: str
+    ) -> None:
+        try:
+            existing = _read_nofollow(path)
+        except FileNotFoundError as exc:
+            raise TamperError(artifact_id, "missing envelope digest") from exc
+        if existing != expected:
+            raise TamperError(artifact_id, "envelope digest mismatch")
 
     def _require_same_bytes(self, path: Path, data: bytes, artifact_id: str) -> None:
         if path.is_symlink():
@@ -215,7 +271,14 @@ class ArtifactStore:
         if existing != data:
             raise MutationError(artifact_id)
 
-    def _atomic_create(self, path: Path, data: bytes, artifact_id: str) -> None:
+    def _atomic_create(
+        self,
+        path: Path,
+        data: bytes,
+        artifact_id: str,
+        *,
+        conflict: str = "mutation",
+    ) -> None:
         directory = path.parent
         directory.mkdir(parents=True, exist_ok=True)
         temporary = directory / f".tmp-{os.getpid()}-{uuid.uuid4().hex}"
@@ -233,7 +296,10 @@ class ArtifactStore:
             try:
                 os.link(temporary, path)
             except FileExistsError:
-                self._require_same_bytes(path, data, artifact_id)
+                if conflict == "tamper":
+                    self._require_witness_bytes(path, data, artifact_id)
+                else:
+                    self._require_same_bytes(path, data, artifact_id)
                 return
             _fsync_dir(directory)
         finally:

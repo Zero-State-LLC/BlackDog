@@ -11,8 +11,20 @@ from faustcoder import (
     canonical_bytes,
     content_digest_for,
     digest_hex,
+    envelope_digest_for,
     loads_strict,
 )
+
+
+def test_envelope_digest_covers_the_whole_file() -> None:
+    payload = {"n": 1}
+    first = canonical_bytes({"payload": payload, "producer": "a"})
+    second = canonical_bytes({"payload": payload, "producer": "b"})
+    assert envelope_digest_for(first) == (
+        "sha256:" + hashlib.sha256(first).hexdigest()
+    )
+    assert envelope_digest_for(first) != envelope_digest_for(second)
+    assert digest_hex(payload) == hashlib.sha256(canonical_bytes(payload)).hexdigest()
 
 
 def test_empty_object_is_pinned() -> None:

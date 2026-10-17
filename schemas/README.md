@@ -43,7 +43,12 @@ not require it to equal the payload. This store uses the minimal reading:
   new artifact, including a self-parent, is rejected.
 
 Envelope fields other than `payload` are not covered by `content_digest`.
-An in-place edit of the payload, or any rewrite that is not canonical JSON,
-fails the hash check on read. A canonical rewrite of `producer`,
-`created_at`, `parents` or `schema_version` that leaves `payload` unchanged
-keeps the same digest.
+`artifact_id` stays the payload hash: data-model.md does not say otherwise,
+and the envelope schema rejects additional properties, so the integrity
+digest is not an envelope field. The store writes
+`<artifact_id>.envelope_digest` beside the object. That file is
+`sha256:` plus the hex SHA-256 of the canonical envelope bytes, with
+nothing excluded. `get` and `list` recompute it and reject a mismatch,
+including a rewrite of `producer`, `created_at`, `parents`,
+`schema_version`, `artifact_id`, `content_digest` or `payload` that
+leaves the sidecar unchanged.

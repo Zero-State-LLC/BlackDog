@@ -44,6 +44,19 @@ for a payload wins; a later envelope with the same payload and
 different bytes is a mutation and is rejected.
 
 The file on disk is the canonical encoding of the whole envelope.
+
+Envelope integrity
+------------------
+``artifact_id`` stays the payload hash. data-model.md does not define a
+digest over the rest of the envelope, and the envelope schema rejects
+extra fields. The store therefore writes a sidecar,
+``<artifact_id>.envelope_digest``, whose contents are ``sha256:`` plus
+the hex SHA-256 of the canonical envelope file bytes. Nothing is
+excluded: the digest is not inside the hashed bytes. ``get`` and
+``list`` recompute it and reject a mismatch, so a rewrite of
+``producer``, ``created_at``, ``parents``, ``schema_version``,
+``artifact_id``, ``content_digest`` or ``payload`` is detected when the
+sidecar is left unchanged.
 """
 
 from __future__ import annotations
@@ -85,6 +98,16 @@ def digest_hex(payload: object) -> str:
 def content_digest_for(payload: object) -> str:
     """Return ``sha256:<hex>`` for a canonical payload."""
     return f"sha256:{digest_hex(payload)}"
+
+
+def envelope_digest_for(envelope_bytes: bytes) -> str:
+    """Return ``sha256:<hex>`` of the canonical envelope file bytes.
+
+    This is not the artifact id. The id remains the payload hash.
+    """
+    if not isinstance(envelope_bytes, (bytes, bytearray)):
+        raise CanonicalError("envelope digest input must be bytes")
+    return "sha256:" + hashlib.sha256(bytes(envelope_bytes)).hexdigest()
 
 
 def loads_strict(text: str) -> Any:
