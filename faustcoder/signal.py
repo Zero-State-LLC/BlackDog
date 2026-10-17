@@ -900,6 +900,28 @@ def _measure_stimulus(
     return summary, failures, peak_error
 
 
+def _refuse_renderer_canary(run: sandbox.SandboxRun) -> None:
+    """A failed netns canary is stop reason ``network``, not an internal error.
+
+    ``render.mjs`` writes ``sandbox_canary_failed:`` and exits 2. That
+    marker is the same one T03b uses. No DSPTestReceipt is written.
+    ``run_in_sandbox`` still starts ``unshare``; T03b's
+    ``unshare_executable`` checks apply when that function replaces the
+    system lookup inside the sandbox.
+    """
+    marker = "sandbox_canary_failed:"
+    text = run.stderr.decode("utf-8", errors="replace")
+    if marker not in text:
+        return
+    detail = ""
+    for line in text.splitlines():
+        if marker in line:
+            detail = line.split(marker, 1)[1].strip()
+            break
+    message = f"renderer stopped: network: {detail}" if detail else "renderer stopped: network"
+    raise SignalHarnessError(message)
+
+
 def _require_same_setup(profile: SignalProfile, reference: SignalReference) -> None:
     """Refuse a comparison whose reference was rendered under another setup."""
     if reference.sample_rate != profile.sample_rate:
@@ -1085,8 +1107,11 @@ def _render(
             [str(workdir)],
             read_paths=[worker_directory(), workdir],
             write_paths=[workdir],
+            # Literal: realpath(/proc/net) is the parent's namespace.
+            literal_reads=("/proc/net/dev",),
         )
         run = run_in_sandbox(command, stdin=request, workdir=workdir, limits=limits)
+        _refuse_renderer_canary(run)
         if run.stop_reason:
             raise SignalHarnessError(f"renderer stopped: {run.stop_reason}")
         result_path = workdir / "result.json"

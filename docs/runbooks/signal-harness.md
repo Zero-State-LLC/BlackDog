@@ -6,6 +6,16 @@ it with the same sandbox as the compiler: `unshare --net
 --map-current-user`, Node's permission model, and no network grant. The
 compiler runbook describes that namespace.
 
+Before it compiles, `render.mjs` runs the netns canary: `/proc/net/dev`
+must list only `lo`, and a connect must fail. The read of
+`/proc/net/dev` is granted as a literal path so it is not rewritten to
+the parent's pid. A failed canary exits 2 with the marker
+`sandbox_canary_failed:` and Python raises stop reason `network`. No
+DSPTestReceipt is written. The marker matches the T03b compiler canary.
+T03b's `unshare_executable` checks are not copied here. Render already
+starts through `run_in_sandbox`, so those checks apply when that
+function replaces the system `unshare` lookup.
+
 ## What a run fixes
 
 | Knob | Value |

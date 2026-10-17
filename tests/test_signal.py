@@ -514,6 +514,55 @@ def test_staged_inputs_count_toward_the_output_cap(tmp_path: Path) -> None:
     assert _produced_bytes(tmp_path) == 4096
 
 
+def test_render_canary_fails_closed_outside_the_namespace(tmp_path: Path) -> None:
+    import subprocess
+
+    from faustcoder.compiler import worker_directory
+    from faustcoder.sandbox import SandboxRun, node_command
+    from faustcoder.signal import _refuse_renderer_canary
+
+    worker = worker_directory()
+    command = node_command(
+        worker / "render.mjs",
+        [str(tmp_path)],
+        read_paths=[worker],
+        write_paths=[tmp_path],
+        literal_reads=("/proc/net/dev",),
+    )
+    assert "--allow-fs-read=/proc/net/dev" in command
+    assert "--allow-net" not in " ".join(command)
+    completed = subprocess.run(
+        command,
+        input=b"",
+        capture_output=True,
+        timeout=5,
+        env={"FAUSTCODER_SANDBOX": "1", "PATH": "/usr/bin:/bin"},
+        check=False,
+    )
+    assert completed.returncode == 2
+    assert b"sandbox_canary_failed:" in completed.stderr
+    assert b"non-loopback" in completed.stderr
+    observed = SandboxRun(
+        returncode=completed.returncode,
+        stdout=completed.stdout,
+        stderr=completed.stderr,
+        stop_reason="",
+        stdout_truncated=False,
+        stderr_truncated=False,
+    )
+    with pytest.raises(SignalHarnessError, match=r"renderer stopped: network"):
+        _refuse_renderer_canary(observed)
+    ordinary = SandboxRun(
+        returncode=2,
+        stdout=b"",
+        stderr=b"request is not JSON\n",
+        stop_reason="",
+        stdout_truncated=False,
+        stderr_truncated=False,
+    )
+    _refuse_renderer_canary(ordinary)
+
+
 def test_unshare_identity_follows_the_sandbox_export() -> None:
     import faustcoder.sandbox as sandbox
 
