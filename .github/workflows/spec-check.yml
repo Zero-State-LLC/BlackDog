@@ -61,7 +61,7 @@ jobs:
           fi
       - name: Check the compiler network namespace
         run: unshare --net --map-current-user -- true
-      # Compiler only, no LLVM. The planted-prefix import test needs 2.88.0.
+      # Faust 2.88.0 compiler only (no LLVM). The planted-prefix import test needs it.
       - name: Install Faust 2.88.0
         run: ./scripts/install-faust-2.88.0.sh
       - name: Test
