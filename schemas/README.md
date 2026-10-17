@@ -14,6 +14,8 @@ unchanged, so each schema keeps the identity of its spec contract.
 
 Do not edit a file here without editing the source file in the same change.
 `tests/test_schemas.py` fails when any `*.schema.json` pair differs.
+`compiler-receipt.schema.json` is schema_version 0.3.2 (ADR-0005); the copy
+matches `contracts/`.
 
 ## Canonical payload
 

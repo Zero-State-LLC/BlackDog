@@ -2,7 +2,8 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://github.com/Zero-State-LLC/FaustCoder/specs/001-faustcoder/contracts/CompilerReceipt.schema.json",
   "title": "CompilerReceipt",
-  "description": "Spec §8 CompilerReceipt (R-005). Fields compiler, lang, options and diagnostic_class added in spec 0.3.0 (ADR-0004); optional until T03 implements them.",
+  "$comment": "schema_version 0.3.2",
+  "description": "Spec §8 CompilerReceipt (R-005). Fields compiler, lang, options and diagnostic_class added in spec 0.3.0 (ADR-0004). diagnostic_class values unbound_symbol, resource_limit and internal added in spec 0.3.2 (ADR-0005, Danny yes 2026-10-17 1:13 PM PT). schema_version 0.3.2.",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -74,7 +75,10 @@
         "arity_error",
         "parse_error",
         "timeout",
-        "other"
+        "other",
+        "unbound_symbol",
+        "resource_limit",
+        "internal"
       ]
     }
   }

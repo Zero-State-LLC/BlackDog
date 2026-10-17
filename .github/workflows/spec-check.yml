@@ -30,7 +30,31 @@ jobs:
       - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: faust/worker/package-lock.json
       - name: Install
         run: python -m pip install --disable-pip-version-check -e ".[test]"
+      # npm downloads faustwasm. The compiler subprocess is started with
+      # unshare --net and cannot use that network. Native Faust is not
+      # installed; the 2.88.0 cross-check skips.
+      - name: Install Faust worker
+        working-directory: faust/worker
+        run: npm ci --ignore-scripts
+      # GitHub-hosted Ubuntu blocks unprivileged user namespaces, so
+      # `unshare --net --map-current-user` fails with EPERM on uid_map.
+      # The sysctl is host-wide. Set it only on ephemeral github-hosted
+      # runners. Sparks and self-hosted runners use a per-binary AppArmor
+      # profile (docs/runbooks/compiler-harness.md), never this sysctl.
+      - name: Allow the compiler network namespace
+        if: runner.environment == 'github-hosted'
+        run: |
+          if [ -f /proc/sys/kernel/apparmor_restrict_unprivileged_userns ]; then
+            sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+          fi
+      - name: Check the compiler network namespace
+        run: unshare --net --map-current-user -- true
       - name: Test
         run: python -m pytest
