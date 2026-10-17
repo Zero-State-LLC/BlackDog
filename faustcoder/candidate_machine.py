@@ -303,8 +303,10 @@ def apply_signal(
     The caller has already evaluated R-006. This does not write the
     receipt; ``faustcoder.signal.commit_signal_check`` does.
     ``reward_graded`` is the receipt's ``thresholds.reward_graded``
-    bit. A future grader must refuse ``signal_passed`` unless that bit
-    is true. This function records the bit and does not yet enforce it.
+    bit. A future grader and this function must take the receipt and
+    require that bit true plus the canonical profile digest
+    (``test_suite_digest``). This function records the bit and does
+    not yet enforce that check.
     """
     if not isinstance(reward_graded, bool):
         raise TypeError("reward_graded must be a bool")
@@ -348,9 +350,10 @@ def render_candidate_machine_markdown() -> str:
         "T04 persists the `signal_passed` and `signal_failed` effects",
         "(a DSPTestReceipt). The other effects stay in the table so illegal",
         "edges are rejected; later tasks write their artifacts.",
-        "A future grader must require `thresholds.reward_graded` true",
-        "before `signal_passed`. `apply_signal` receives that bit and",
-        "does not yet refuse a pass without it.",
+        "A future grader and `apply_signal` must take the receipt and",
+        "require `thresholds.reward_graded` true plus the canonical",
+        "profile digest (`test_suite_digest`). This function receives",
+        "the bit and does not yet enforce that check.",
         "",
         f"Initial state: `{INITIAL_STATE.value}`.",
         "",

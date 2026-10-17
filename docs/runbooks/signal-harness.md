@@ -64,17 +64,20 @@ and noise are sustained and are not tail-gated. A missing reference
 fails a profile that requires one.
 
 A receipt marked `reward_graded` forces `reject_nonfinite` and
-`require_reference` on before the render, and it refuses a
-`max_frames` other than the 144000 block-aligned cap. The exact
-signed comparison then covers every sample of that render, not only
-the 2048-frame head. `thresholds.reward_graded` is always present, so
-the reproducible digest changes with the mark. A future grader must
-require that mark before `signal_passed`. A reference-free or
-non-finite run cannot pass the mark.
+`require_reference` on before the render. With an impulse reference,
+`max_frames` below the 144000 block-aligned cap raises `ValueError`.
+The harness does not raise that cap. `head_frames` becomes the
+trimmed reference length, and the exact signed comparison covers
+that reference. Coarse checks cover only the samples past it.
+`thresholds.reward_graded` is always present, so the reproducible
+digest changes with the mark. A future grader and `apply_signal`
+must take the receipt and require `thresholds.reward_graded` true
+plus the canonical profile digest (`test_suite_digest`). A
+reference-free or non-finite run cannot pass the mark.
 
-`reject_dc` is skipped when the reference itself is a non-silent
-constant. A candidate that is DC against a moving reference still
-fails. A reference-free DC check is unchanged.
+`reject_dc` is skipped when the reference carries the same DC. A
+different constant, or a candidate that is DC against a moving
+reference, still fails. A reference-free DC check is unchanged.
 
 The reference document carries its own sample rate, block size, frame
 count, seed and stimulus names. A comparison is refused when any of
@@ -135,9 +138,10 @@ sufficient.
 - A reference-free DC or variance check must never be rewarded.
   `reject_dc` is exact zero variance. An offset on a moving signal
   gets through it, and a suite with `require_reference` false has no
-  sample comparison. The future grader must require
-  `thresholds.reward_graded` true. That field is part of the receipt
-  and of `reproducible_digest`.
+  sample comparison. The future grader and `apply_signal` must take
+  the receipt and require `thresholds.reward_graded` true plus the
+  canonical profile digest (`test_suite_digest`). That bit is part
+  of the receipt and of `reproducible_digest`.
 - `cpu_duration_ms` is the wall time of compile plus render. It is
   informational on a promotion candidate. It is not a pass threshold
   and must not be a reward term.

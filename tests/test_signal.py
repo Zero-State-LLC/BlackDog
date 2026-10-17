@@ -18,6 +18,7 @@ from faustcoder.signal import (
     SignalProfile,
     SignalReference,
     SignalSuite,
+    _measure_stimulus,
     _note_impulse_tail,
     _prepare_render,
     _rms,
@@ -772,7 +773,7 @@ def test_sample_floor_catches_a_spike_a_block_rms_hides() -> None:
     assert abs(_rms(spike) - _rms(silence)) <= DEFAULT_TOLERANCE
 
 
-def test_reward_graded_refuses_a_short_cap(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_reward_graded_refuses_a_short_impulse_cap(monkeypatch: pytest.MonkeyPatch) -> None:
     started = {"count": 0}
 
     def explode(*_args: object, **_kwargs: object) -> None:
@@ -781,31 +782,65 @@ def test_reward_graded_refuses_a_short_cap(monkeypatch: pytest.MonkeyPatch) -> N
 
     monkeypatch.setattr("faustcoder.signal.compile_source", explode)
     monkeypatch.setattr("faustcoder.signal._render", explode)
-    for max_frames in (2048, 4096):
-        profile = SignalProfile(
-            sample_rate=48000,
-            frames=2048,
-            max_frames=max_frames,
-            stimuli=("impulse",),
-        )
-        with pytest.raises(SignalHarnessError, match="144000"):
-            _run("process = _;\n", profile, None, reward_graded=True)
+    profile = SignalProfile(
+        sample_rate=48000,
+        frames=2048,
+        max_frames=2048,
+        stimuli=("impulse",),
+    )
+    gold_profile = SignalProfile(sample_rate=48000, stimuli=("impulse",))
+    gold = impulse_reference(gold_profile, lambda samples: _delayed(samples, 4000, 1.0))
+    assert gold.frames > 4000
+    with pytest.raises(ValueError, match="144000"):
+        _run("process = _;\n", profile, gold, reward_graded=True)
     assert started["count"] == 0
+    sine = SignalProfile(
+        sample_rate=48000, frames=256, max_frames=2048, stimuli=("sine",)
+    )
+    prepared, _ = _prepare_render(
+        sine, _reference(sine, lambda samples: samples), reward_graded=True
+    )
+    assert prepared.max_frames == 2048
 
 
-def test_reward_graded_signs_the_whole_render() -> None:
+def test_reward_graded_coarse_check_starts_after_the_reference() -> None:
+    profile = _profile(frames=256, max_frames=256, head_frames=128, stimuli=("impulse",))
+    inside = [0.0] * 256
+    inside[20] = 1.0
+    reference = _reference(profile, lambda _samples: inside)
+    missed = [0.0] * 256
+    _summary, failures, _peak = _measure_stimulus(
+        "impulse", [missed], profile, reference, reward_graded=True
+    )
+    assert "impulse:reference" in failures
+    assert "impulse:envelope" not in failures
+    assert "impulse:bands" not in failures
+    _summary, open_failures, _peak = _measure_stimulus(
+        "impulse", [missed], profile, reference, reward_graded=False
+    )
+    assert "impulse:envelope" in open_failures
+    tail = list(inside)
+    tail[200] = 1.0
+    _summary, tail_failures, _peak = _measure_stimulus(
+        "impulse", [tail], profile, reference, reward_graded=True
+    )
+    assert "impulse:reference" not in tail_failures
+    assert "impulse:envelope" in tail_failures
+
+
+def test_reward_graded_signs_the_trimmed_reference() -> None:
     profile = SignalProfile(sample_rate=48000, stimuli=("impulse",))
-    echo = impulse_reference(profile, lambda samples: _echo(samples, 24000, 0.5))
+    echo = impulse_reference(profile, lambda samples: _delayed(samples, 24000, 0.5))
     delayed = impulse_reference(profile, lambda samples: _delayed(samples, 2100, 1.0))
     cases = (
         (
-            "sign-flipped echo",
-            "process = _ <: _, (@(24000) : *( (-0.5) )) :> _;\n",
+            "sign-flipped delay",
+            "process = @(24000) : *( (-0.5) );\n",
             echo,
         ),
         (
-            "shifted echo",
-            "process = _ <: _, (@(24010) : *(0.5)) :> _;\n",
+            "shifted delay",
+            "process = @(24010) : *(0.5);\n",
             echo,
         ),
         (
@@ -822,9 +857,11 @@ def test_reward_graded_signs_the_whole_render() -> None:
         assert "impulse:envelope" not in run.failures, (label, run.failures)
         assert "impulse:bands" not in run.failures, (label, run.failures)
         assert run.receipt["metrics"]["comparison"] == "reward-graded-signed"
-        assert run.receipt["metrics"]["head_frames"] == DEFAULT_FRAMES
-        assert impulse["compared_frames"] == run.receipt["metrics"]["frame_count"]
-        assert impulse["compared_frames"] > DEFAULT_FRAMES
+        assert run.receipt["metrics"]["head_frames"] == reference.frames
+        assert run.receipt["thresholds"]["head_frames"] == reference.frames
+        assert impulse["compared_frames"] == reference.frames
+        assert reference.frames > DEFAULT_FRAMES
+        assert run.receipt["metrics"]["frame_count"] > reference.frames
         assert run.receipt["thresholds"]["reward_graded"] is True
 
 
@@ -848,3 +885,5 @@ def test_matching_dc_reference_is_compared_not_rejected() -> None:
     moving = _reference(profile, lambda samples: samples)
     against_dry = _run("process = + ~ _;\n", profile, moving)
     assert "impulse:dc" in against_dry.failures
+    other = _run("process = 0.2;\n", profile, reference)
+    assert "impulse:dc" in other.failures

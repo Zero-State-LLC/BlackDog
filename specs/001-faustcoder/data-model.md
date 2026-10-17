@@ -76,9 +76,13 @@ digest, the comparison window, and the `unshare` path and sha256 in
 `metrics`. Thresholds record the gates that were enforced, including
 the absolute tolerance and the relative term. `reward_graded` is
 stored on every receipt, true or false, and is part of the
-reproducible digest. A future grader must require that bit true.
-When it is true the signed sample comparison covers the whole render
-and `max_frames` is the 144000 block-aligned cap. `cpu_duration_ms`
+reproducible digest. A future grader and `apply_signal` must take
+the receipt and require that bit true plus the canonical profile
+digest (`test_suite_digest`). When the bit is true the signed sample
+comparison covers the trimmed reference (`head_frames` equals that
+length) and coarse checks cover only the samples past it. An impulse
+reference whose `max_frames` is below the 144000 block-aligned cap
+raises `ValueError`; the cap is not raised. `cpu_duration_ms`
 is present only for a promotion candidate. The reference document is a
 separate artifact (`kind = faustcoder.signal-reference`) whose content
 digest is `reference_digest`. That document carries its own sample rate,

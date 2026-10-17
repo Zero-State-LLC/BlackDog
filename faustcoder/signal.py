@@ -22,11 +22,14 @@ the render is a coarse check: per-block RMS and spectral band
 energies, with the same tolerance. That coarse check is
 magnitude-only, and the 2e-6 floor is per sample, so one 1e-5 spike
 inside a 64-sample block can hide in the block RMS. A
-``reward_graded`` run refuses a ``max_frames`` other than the 144000
-block-aligned cap and compares every sample of the render with its
-sign. ``thresholds.reward_graded`` is stored on every receipt and is
-part of the reproducible digest. ``reject_dc`` does not fire when
-the reference is itself a non-silent constant. An impulse reference is built at
+``reward_graded`` run sets ``head_frames`` to the trimmed reference
+length and signs every sample of that reference. Coarse checks then
+cover only the samples past the reference. An impulse reference whose
+``max_frames`` is below the 144000 block-aligned cap raises
+``ValueError``; the cap is not raised. ``thresholds.reward_graded``
+is stored on every receipt and is part of the reproducible digest.
+``reject_dc`` does not fire when the reference carries the same DC.
+An impulse reference is built at
 ``max_frames`` (144000, three seconds at 48 kHz) and trimmed to the
 last sample at or above ``tail_threshold``, plus a margin. The tail
 gate scans that whole reference, so a silent gap before a delay or
@@ -548,10 +551,13 @@ def run_signal(
     there does not start the renderer. A program that renders and
     fails a check returns a receipt with ``passed`` false.
     ``reward_graded`` forces ``reject_nonfinite`` and
-    ``require_reference`` on, refuses a ``max_frames`` other than the
-    144000 block-aligned cap, and compares every sample of the
-    reference with its sign. The head stays the only exact window
-    when the run is not reward-graded.
+    ``require_reference`` on. With an impulse reference it raises
+    ``ValueError`` when ``max_frames`` is below the 144000
+    block-aligned cap, and it does not raise that cap. The exact
+    signed comparison then covers the trimmed reference
+    (``head_frames`` equals ``reference.frames``). Coarse checks
+    cover only the samples past that reference. The head stays the
+    only exact window when the run is not reward-graded.
     """
     if not isinstance(source, str):
         raise TypeError("source must be a string")
@@ -914,6 +920,19 @@ def _channels_are_dc(channels: Sequence[Sequence[float]], profile: SignalProfile
     return variance == 0.0
 
 
+def _same_dc(
+    candidate: Sequence[Sequence[float]],
+    reference: Sequence[Sequence[float]],
+    profile: SignalProfile,
+) -> bool:
+    """Return whether both sides are the same non-silent constant."""
+    if not _channels_are_dc(candidate, profile) or not _channels_are_dc(reference, profile):
+        return False
+    cand_level = float(candidate[0][0])
+    ref_level = float(reference[0][0])
+    return cand_level == ref_level
+
+
 def _measure_stimulus(
     name: str,
     channels: Sequence[Sequence[float]],
@@ -980,7 +999,7 @@ def _measure_stimulus(
     if len(channels) != len(expected):
         failures.append(f"{name}:channels")
         return summary, failures, peak_error
-    if profile.reject_dc and dc and not _channels_are_dc(expected, profile):
+    if profile.reject_dc and dc and not _same_dc(channels, expected, profile):
         failures.append(f"{name}:dc")
     if not finite:
         failures.append(f"{name}:nonfinite")
@@ -991,10 +1010,11 @@ def _measure_stimulus(
     head = profile.head_frames
     if not isinstance(head, int):
         raise SignalHarnessError("head_frames was not resolved")
-    # Reward grading signs every sample of the render, which covers the
-    # trimmed reference. The coarse check is magnitude-only and stays
-    # as a backstop. Other runs keep the exact check on the head.
-    compared = len(quantized_candidate[0]) if reward_graded else head
+    # Reward grading has already set the head to the trimmed reference.
+    # Sign that window. Coarse checks, which ignore sign, cover only
+    # the samples past it. Other runs keep the exact check on the head
+    # and the coarse check on the whole render.
+    compared = head
     summary["compared_frames"] = compared
     peak_error, token = compare_channels(
         [channel[:compared] for channel in quantized_candidate],
@@ -1010,8 +1030,14 @@ def _measure_stimulus(
         failures.append(f"{name}:nonfinite")
     elif token == "channels":
         failures.append(f"{name}:channels")
+    if reward_graded:
+        coarse_candidate = [channel[compared:] for channel in quantized_candidate]
+        coarse_reference = [channel[compared:] for channel in quantized_reference]
+    else:
+        coarse_candidate = quantized_candidate
+        coarse_reference = quantized_reference
     rms_gap, band_gap, rms_fail, band_fail = _coarse_gaps(
-        quantized_candidate, quantized_reference, profile
+        coarse_candidate, coarse_reference, profile
     )
     summary["coarse"] = {
         "band_max_abs_error_nano": to_nano(band_gap),
@@ -1101,25 +1127,34 @@ def _prepare_render(
     """Apply reward gates and choose the impulse render length.
 
     A reward-graded run always rejects non-finite samples and requires
-    a reference. Its ``max_frames`` must be the 144000 block-aligned
-    cap; a shorter cap is refused before render. A default impulse
-    length becomes the cap. The candidate then has to cover the
-    reference; a shorter impulse reference is silence-padded out to
-    that render.
+    a reference. With an impulse reference, ``max_frames`` below the
+    144000 block-aligned cap raises ``ValueError`` before render. The
+    cap is not raised. ``head_frames`` becomes the trimmed reference
+    length, and a shorter impulse reference is silence-padded out to
+    the render so the coarse tail has samples to judge.
     """
-    if reward_graded:
+    if (
+        reward_graded
+        and reference is not None
+        and "impulse" in reference.stimuli
+    ):
         aligned = MAX_FRAMES - (MAX_FRAMES % profile.block_size)
-        if profile.max_frames != aligned:
-            raise SignalHarnessError(
-                "reward_graded requires max_frames to be the 144000 block-aligned cap"
+        if profile.max_frames < aligned:
+            raise ValueError(
+                "reward_graded impulse reference requires max_frames "
+                "of at least the 144000 block-aligned cap"
             )
+    if reward_graded:
         profile = replace(profile, reject_nonfinite=True, require_reference=True)
     profile = _default_impulse_frames(profile)
     if reference is None:
         return profile, None
+    trimmed = reference.frames
     if profile.frames < reference.frames:
         profile = replace(profile, frames=reference.frames)
     _require_same_identity(profile, reference)
+    if reward_graded:
+        profile = replace(profile, head_frames=trimmed)
     if profile.frames > reference.frames:
         if profile.stimuli != ("impulse",):
             _require_same_setup(profile, reference)
