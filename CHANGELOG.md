@@ -10,6 +10,8 @@ See [docs/VERSIONING.md](docs/VERSIONING.md).
 
 ### Added
 
+- Spec §17 proposed amendments 0.2.1 (P-01 to P-09, PROPOSED): P1 skip, pass@1 selection, Qwen3.5-2B-Base, teacher bake-off, no Claude-authored training inputs, human-written holdout, S-2 resolution, harness licensing, GRPO smoke test.
+- CI: contract schemas validated against the JSON Schema 2020-12 metaschema.
 - Starter package: README, CONTRIBUTING, KANBAN, spec 001, ADR-0001 and the spec-structure CI check (#1).
 - Spec Kit artifacts for spec 001: constitution, plan, tasks, data model, contracts, research, checklists and explicit state machines (#2).
 - Repository hygiene: security policy, code of conduct, CODEOWNERS, issue and PR templates, changelog, versioning policy, EditorConfig, pre-commit with gitleaks.
@@ -18,6 +20,9 @@ See [docs/VERSIONING.md](docs/VERSIONING.md).
 
 ### Changed
 
+- Spec §7.3: `evaluation_recorded` uses the development suite only; the sealed holdout runs once after P3, matching ADR-0002 and constitution IV.
+- Spec §17 S-5 updated to the accepted decisions (stale "local Apache-2.0 teacher" removed).
+- GitHub Actions pinned to commit SHAs; Dependabot keeps them current.
 - Project board moved to the public [org project 29](https://github.com/orgs/Zero-State-LLC/projects/29); KANBAN.md link updated. Repository and board are public for now (ORG-001 resolved, revisitable).
 
 - Repository transferred to the Zero-State-LLC organization; repository URLs updated. It stays public.

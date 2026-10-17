@@ -9,7 +9,7 @@ jobs:
   structure:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Check required docs
         run: |
           test -s README.md
@@ -19,6 +19,14 @@ jobs:
   spec-kit:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Check Spec Kit structure
         run: ./scripts/check-spec-kit.sh
+  contracts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Validate contract schemas against the 2020-12 metaschema
+        run: |
+          pipx run check-jsonschema==0.38.2 --check-metaschema \
+            specs/001-faustcoder/contracts/*.schema.json

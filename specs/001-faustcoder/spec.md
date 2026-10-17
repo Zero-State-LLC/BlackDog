@@ -186,7 +186,7 @@ Subject: a `TrainingRun` producing an `Adapter` or full weights (R-008), for one
 | ENV_VERIFIED | run_started | Dataset snapshot is `FROZEN`; split, config and code revision digests pinned (R-009) | RUNNING | Write TrainingRun with parents |
 | RUNNING | run_finished | Training exited cleanly | COMPLETED | Record `checkpoint_digests` |
 | RUNNING | run_failed | Crash, OOM or timeout (INFERRED) | FAILED | Append failure receipt; a retry is a new TrainingRun (§4.1) |
-| COMPLETED | evaluation_recorded | Independent EvaluationRun on the development suite and sealed holdout (§9, R-011) | EVALUATED | Write EvaluationRun with paired comparison and confidence intervals |
+| COMPLETED | evaluation_recorded | Independent EvaluationRun on the development suite (§9, R-011). The sealed holdout is not used here; it runs once, after P3 (ADR-0002 step 6) | EVALUATED | Write EvaluationRun with paired comparison and confidence intervals |
 | EVALUATED | admit | Gates met against the frozen baseline (D-005) | ADMITTED | Write DecisionRecord (admitted) |
 | EVALUATED | reject | Gates not met | REJECTED | Write DecisionRecord (rejected) |
 | COMPLETED, EVALUATED, ADMITTED | upstream_invalidated | An ancestor (dataset, split, base model, code) was invalidated | INVALIDATED | Mark dependent attestations invalid until rerun (INFERRED) |
@@ -371,8 +371,25 @@ never from scratch, in weeks rather than months. Evidence is in
 | S-2 | §7.2 human `REVIEWED` step per candidate | Impossible at RL and synthetic-data volume | In training and evaluation loops, use automated independent gates (R-011); human review at promotion only | INFERRED |
 | S-3 | R-010 four API verbs and V0.4 IDE integration | Product scope before the model is proven | Keep after P3; T13 and T14 stay off the critical path | INFERRED |
 | S-4 | R-006 latency and CPU checks on every candidate | Slows data validation | Run on promotion candidates only | INFERRED |
-| S-5 | D-003, D-004, D-006 open (resolved 2026-10-16: ACCEPTED in §14, ADR-0002, ADR-0003) | Block corpus clearing, harness and synthetic data | Defaults: 48 kHz, C++ backend; training-only use with a permissive allowlist; local Apache-2.0 teacher. Owner to confirm | INFERRED; not legal advice |
+| S-5 | D-003, D-004, D-006 open (resolved 2026-10-16: ACCEPTED in §14, ADR-0002, ADR-0003) | Block corpus clearing, harness and synthetic data | Resolved: 44.1 and 48 kHz (D-003); permissive allowlist, GPL training-only (D-004); open-weight teacher via OpenRouter (D-006r2). C++ backend still a suggestion | OBSERVED (decisions); not legal advice |
 | S-6 | T09 as a full study | Delays T10 | One-day smoke test that records throughput and memory receipts | INFERRED |
+
+### Proposed amendments 0.2.1 (audit 2026-10-16, PROPOSED)
+
+None of these is accepted. Each needs the owner's yes before it is moved into
+§14 or §18.
+
+| ID | Proposal | Reason | Label |
+|---|---|---|---|
+| P-01 | Record the P1 skip now | The measured corpus is about 1.4M tokens (research F9), far under the 5M skip threshold in ADR-0002; the 3-day P1 timebox can be released. Revisit only if P0's licensable GitHub count changes the total | INFERRED |
+| P-02 | Select the student on dev pass@1, not compile@10; run the full P2 recipe on 1.5B, then on one finalist from 2B to 7B | Users get one sample; RL improves @1, not @k (research F5); the current selection rule requires P2 on every model, which ADR-0002 does not plan | INFERRED |
+| P-03 | Add Qwen3.5-2B-Base to the shortlist. Qwen3.5-9B-Base (9.7B) is outside the R-007 range; include only if the owner widens it | Fills the gap between 1.5B and 4B; both Apache-2.0 (OBSERVED, Hugging Face API 2026-10-16); same multimodal-architecture tooling risk as Qwen3.5-4B | OBSERVED license; INFERRED fit |
+| P-04 | Teacher bake-off in P0: measure validated programs per dollar on the dev suite for the D-006r2 default and Qwen3-Coder-30B-A3B (Apache-2.0), with faustlibraries `#### Usage` blocks retrieved into the prompt | Faust is niche, so teacher yield is unknown and drives synthetic-data cost | INFERRED |
+| P-05 | No Claude-authored content in any training input: answers, RL prompts, task specs or repair pairs. Claude may write harness code and review | D-006r2 covers outputs; RL prompts and task specs are also training inputs | INFERRED; not legal advice |
+| P-06 | The sealed holdout is written by humans, not by the teacher model | A teacher-written holdout measures the teacher's habits rather than user tasks | INFERRED |
+| P-07 | Resolve S-2: automated independent gates (R-011) inside training and evaluation loops; human `REVIEWED` only at promotion (§7.2, §7.3) | RL and synthetic-data volume rule out per-candidate human review | INFERRED |
+| P-08 | Signal harness runs Faust's C++ output through an in-house architecture file; no GPL Python bindings (for example DawDreamer) linked into proprietary code | Code here is under the proprietary license (ADR-0003) | INFERRED; not legal advice |
+| P-09 | T09 smoke test includes one GRPO step with fast generation (vLLM or Unsloth) on GB10, not only SFT throughput | No official TRL or vLLM support statement for GB10 (aarch64, sm_121) was found; P3 depends on it | INFERRED |
 
 ## 18. Decision log
 

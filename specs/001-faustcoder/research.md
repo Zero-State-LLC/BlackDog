@@ -78,6 +78,7 @@ All are adapted, never trained from scratch.
 | Qwen2.5-Coder-7B (base) | 7.6B | apache-2.0 | Upper bound for "small" | OBSERVED license |
 | Qwen3.5-4B-Base | 4.7B | apache-2.0 | Released 2026-02; multimodal architecture, so check TRL/vLLM support on ARM64 first | OBSERVED license; INFERRED risk |
 | Qwen3-4B-Base | 4.0B | apache-2.0 | Text-only fallback | OBSERVED license |
+| Qwen3.5-2B-Base (PROPOSED, spec §17 P-03) | 2.3B | apache-2.0 | Fills the 1.5B to 4B gap; multimodal architecture, same tooling check as Qwen3.5-4B | OBSERVED license (2026-10-16) |
 | Excluded by default | — | — | Qwen2.5-Coder-3B (license "other"), DeepSeek-Coder (license "other"), StarCoder2 (OpenRAIL-M use restrictions); include only if Danny accepts those terms | OBSERVED tags |
 
 Selection rule (INFERRED): pick the smallest model whose few-shot dev
