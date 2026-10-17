@@ -3,8 +3,10 @@
 T06 does not keep a parallel inventory schema. A unit is one file or
 one function of a ``rights-inventory.v1`` entry: ``path``, ``function``
 and ``blob_sha``. A cleared unit also needs a ``notice-manifest.v1``
-row at the same commit. ``rights_rejected`` and ``needs_human`` rows
-are exclusions. They are not fetched.
+row at the same commit. ``rights_rejected`` and ``needs_human`` rows that name a blob are
+comparison-only. The snapshot fetches them for near-duplicate
+clustering and does not admit them. A row with no blob is an
+exclusion and is not fetched.
 
 ``generated_at`` is not part of the content digest. Re-signing an
 inventory without changing entries does not change the snapshot.
@@ -98,12 +100,18 @@ class InventoryExclusion:
 
 @dataclass(frozen=True)
 class Corpus:
-    """Admitted units plus inventory exclusions, and the content digests."""
+    """Admitted units, comparison-only units, and the content digests.
+
+    ``comparisons`` are ``rights_rejected`` and ``needs_human`` units that
+    name a real blob. They are fetched for near-duplicate clustering and
+    are never admitted.
+    """
 
     units: tuple[Unit, ...]
     excluded: tuple[InventoryExclusion, ...]
     inventory_digest: str
     notice_digest: str
+    comparisons: tuple[Unit, ...] = ()
 
 
 def content_digest(document: Mapping[str, Any]) -> str:
@@ -143,6 +151,7 @@ def parse_corpus(
     notices = _notice_index(rows)
     admitted: list[Unit] = []
     excluded: list[InventoryExclusion] = []
+    comparisons: list[Unit] = []
     pending: list[tuple[Unit, tuple[str, str, str, str]]] = []
     blocked: set[tuple[str, str, str, str]] = set()
     seen: set[tuple[str, str, str, str]] = set()
@@ -164,6 +173,8 @@ def parse_corpus(
                 pending.append((unit, blob_key))
             else:
                 excluded.append(_exclude(unit, unit.reason or unit.decision, "inventory"))
+                if unit.blob_sha != "0" * 40:
+                    comparisons.append(unit)
     for unit, blob_key in pending:
         if blob_key in blocked:
             excluded.append(
@@ -186,12 +197,14 @@ def parse_corpus(
             continue
         admitted.append(unit)
     admitted.sort(key=lambda item: (item.repo, item.pin, item.path, item.function, item.unit_id))
+    comparisons.sort(key=lambda item: (item.repo, item.pin, item.path, item.function, item.unit_id))
     excluded.sort(key=lambda item: item.unit_id)
     return Corpus(
         units=tuple(admitted),
         excluded=tuple(excluded),
         inventory_digest=inventory_digest,
         notice_digest=notice_digest,
+        comparisons=tuple(comparisons),
     )
 
 

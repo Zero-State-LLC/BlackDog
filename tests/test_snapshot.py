@@ -289,20 +289,22 @@ def test_mixed_license_near_duplicate_is_quarantined(tmp_path: Path) -> None:
         assert "redistribute" not in flags
 
 
-def test_rejected_row_is_not_fetched(tmp_path: Path) -> None:
+def test_rejected_row_without_a_blob_is_not_fetched() -> None:
     class _Boom:
         def fetch(self, repo: str, pin: str, path: str, blob_sha: str) -> bytes:
-            raise AssertionError("fetched a rejected unit")
+            raise AssertionError("fetched a row that names no blob")
 
-    rejected = entry(
-        "stk",
-        b"ffunction FOREIGN = 1;\n",
-        decision="rights_rejected",
-        eligible_for=[],
-        license_name="unknown",
-        reason="faust-stk ffunction files are not cleared",
-        reviewer="",
-    )
+    rejected = {
+        "id": "syfala-examples",
+        "decision": "rights_rejected",
+        "license": "unknown",
+        "eligible_for": [],
+        "pin": {"repo": REPO, "commit": PIN, "ref": "fixture"},
+        "evidence_label": "OBSERVED",
+        "attribution": "Acme Example",
+        "reviewer": "",
+        "reason": "no file list on the row",
+    }
     inventory = inventory_doc([rejected])
     notice = notice_doc([])
     with pins_for(inventory, notice):
@@ -314,10 +316,20 @@ def test_rejected_row_is_not_fetched(tmp_path: Path) -> None:
             created_at=CREATED_AT,
         )
     row = _manifest(compiled)["excluded"][0]  # type: ignore[index]
-    assert row["entry_id"] == "stk"
+    assert row["entry_id"] == "syfala-examples"
     assert row["origin"] == "inventory"
-    assert row["reason"] == "faust-stk ffunction files are not cleared"
+    assert row["reason"] == "no file list on the row"
     assert _manifest(compiled)["units"] == []
+
+
+def test_rejected_near_copy_launders_nothing(tmp_path: Path) -> None:
+    """P3: a rejected GPL file and a one-token MIT copy keep neither eval nor the text."""
+    _assert_uncleared_near_copy_is_not_admitted(tmp_path, decision="rights_rejected")
+
+
+def test_needs_human_near_copy_launders_nothing(tmp_path: Path) -> None:
+    """P4: the same attack with the GPL file at needs_human."""
+    _assert_uncleared_near_copy_is_not_admitted(tmp_path, decision="needs_human")
 
 
 def test_ffunction_token_scan_drops_the_unit(tmp_path: Path) -> None:
@@ -342,11 +354,14 @@ def test_ffunction_token_scan_drops_the_unit(tmp_path: Path) -> None:
 
 
 def test_uncleared_function_blocks_the_shared_blob(tmp_path: Path) -> None:
-    class _Boom:
-        def fetch(self, repo: str, pin: str, path: str, blob_sha: str) -> bytes:
-            raise AssertionError("fetched a blob that shares an uncleared function")
-
     data = b"gain = 1;\nagpl = 2;\n"
+    fetched: list[str] = []
+
+    class _Record:
+        def fetch(self, repo: str, pin: str, path: str, blob_sha: str) -> bytes:
+            fetched.append(path)
+            return data
+
     cleared_row = entry(
         "mit-fn",
         data,
@@ -372,7 +387,7 @@ def test_uncleared_function_blocks_the_shared_blob(tmp_path: Path) -> None:
         compiled = compile_snapshot(
             inventory,
             notices,
-            _Boom(),
+            _Record(),
             actor=ACTOR,
             created_at=CREATED_AT,
         )
@@ -381,6 +396,11 @@ def test_uncleared_function_blocks_the_shared_blob(tmp_path: Path) -> None:
     assert excluded["mit-fn"]["function"] == "gain"
     assert excluded["agpl-fn"]["origin"] == "inventory"
     assert _manifest(compiled)["units"] == []
+    assert fetched == ["vaeffects.lib"]
+    store = ArtifactStore(tmp_path / "store")
+    commit_snapshot(store, compiled)
+    blob = b"".join(path.read_bytes() for path in store.root.rglob("*") if path.is_file())
+    assert b"gain = 1" not in blob
 
 
 def test_function_units_stay_separate(tmp_path: Path) -> None:
@@ -587,6 +607,63 @@ def test_production_corpus_is_pinned_and_foreign_units_are_refused() -> None:
     specs[0]["blob_sha"] = "d" * 40
     with pytest.raises(InventoryError, match="digest"):
         parse_corpus(swapped, notice)
+
+
+def _assert_uncleared_near_copy_is_not_admitted(tmp_path: Path, *, decision: str) -> None:
+    root = tmp_path / "fixtures"
+    original = long_text("alpha").encode()
+    edited = long_text("alpha", replacement="renamed").encode()
+    other = long_text("gamma").encode()
+    assert is_near_duplicate(original.decode(), edited.decode()) is True
+    assert is_near_duplicate(original.decode(), other.decode()) is False
+    stage(root, REPO, PIN, "gpl.dsp", original)
+    stage(root, REPO, PIN, "mit.dsp", edited)
+    stage(root, REPO, PIN, "other.dsp", other)
+    refused = entry(
+        "gpl",
+        original,
+        path="gpl.dsp",
+        decision=decision,
+        license_name="GPL-2.0-or-later",
+        eligible_for=[],
+        reason="GPL source is not cleared",
+        reviewer="",
+    )
+    mit, mit_notice = cleared("mit", edited, path="mit.dsp", license_name="MIT")
+    kept, kept_notice = cleared("other", other, path="other.dsp")
+    fetched: list[str] = []
+
+    class _Record:
+        def fetch(self, repo: str, pin: str, path: str, blob_sha: str) -> bytes:
+            fetched.append(path)
+            target = root.joinpath(*repo.split("/"), pin, *path.split("/"))
+            return target.read_bytes()
+
+    inventory = inventory_doc([refused, mit, kept])
+    notices = notice_doc([mit_notice, kept_notice])
+    with pins_for(inventory, notices):
+        compiled = compile_snapshot(
+            inventory,
+            notices,
+            _Record(),
+            actor=ACTOR,
+            created_at=CREATED_AT,
+        )
+    payload = _manifest(compiled)
+    assert [row["entry_id"] for row in payload["units"]] == ["other"]  # type: ignore[index]
+    assert payload["units"][0]["eligible_for"] == ["train", "eval", "redistribute"]  # type: ignore[index]
+    excluded = _by_entry(payload["excluded"])  # type: ignore[arg-type]
+    assert excluded["mit"]["reason"] == "needs-human"
+    assert excluded["mit"]["origin"] == "dedup"
+    assert excluded["gpl"]["origin"] == "inventory"
+    assert excluded["gpl"]["duplicate_family"] == excluded["mit"]["duplicate_family"]
+    assert "gpl.dsp" in fetched
+    store = ArtifactStore(tmp_path / "store")
+    commit_snapshot(store, compiled)
+    blob = b"".join(path.read_bytes() for path in store.root.rglob("*") if path.is_file())
+    assert b"renamed" not in blob
+    assert b"alpha0" not in blob
+    assert b"gamma0" in blob
 
 
 def _two(root: Path) -> tuple[list[dict[str, object]], list[dict[str, object]]]:

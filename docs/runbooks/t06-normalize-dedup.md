@@ -104,17 +104,26 @@ unit:
 - one function, `{path, blob_sha, function}`.
 
 The whole blob is fetched. T05 function rows do not carry line ranges,
-and this task does not invent a Faust parser to slice them (spec §4.2).
+and this task does not slice `.lib` files (spec §4.2 forbids a Faust
+parser). Slicing a function out of a multi-license library is a
+follow-up. Until then a cleared function unit normalizes the whole
+file, so a library file with more than one license collapses into one
+family and is over-excluded rather than emitted in pieces.
+
 If any non-cleared unit shares `(repo, commit, path, blob_sha)` with a
 cleared unit, every cleared unit of that blob is excluded with reason
 `needs-human`. That fails closed when an AGPL function sits in a file
-that also has a cleared function.
+that also has a cleared function. The blob is still fetched once, as a
+comparison member, and is not stored.
 
 A cleared unit also needs a `notice-manifest.v1` row at the same
 commit, path, function and blob sha, whose license equals the entry
-license. A miss is `notice-missing` and the blob is not fetched.
-`rights_rejected` and `needs_human` rows are exclusions. They are not
-fetched.
+license. A miss is `notice-missing` and that cleared unit is not fetched.
+`rights_rejected` and `needs_human` rows that name a blob are fetched,
+hash-checked, and clustered. They are never emitted. A row that names
+no files and no functions has no blob to compare, so it stays an
+exclusion and is not fetched. Seven pinned rows are in that shape,
+including `syfala-examples`.
 
 ## Exclusions carry a reason
 
@@ -186,6 +195,17 @@ member is excluded with reason `needs-human` and origin `dedup`, and
 the program text is not stored. A GPL training-only unit and a
 one-token edit declared MIT therefore keep neither eval nor
 redistribute.
+
+The same quarantine applies when the GPL side was never cleared.
+Rejected and `needs_human` blobs are comparison-only members of the
+cluster. A cleared unit that joins one of those families is
+`needs-human` with empty flags, which is also what the flag
+intersection produces, because the non-cleared member contributes no
+flags. The non-cleared text is not stored. Clustering is across repos,
+so the 90 cleared faustplayground blobs are compared with every
+rejected and `needs_human` blob that names a sha. Those playground
+files are not in this repository, so CI does not byte-compare them.
+The snapshot does, once the pinned commits are checked out.
 
 `memorization_hits` is the same comparison for T07 leakage checks and
 the proposed output memorization gate. It does not write artifacts.
@@ -260,5 +280,5 @@ artifact. It is not a field of the manifest.
 ## Labels
 
 - OBSERVED: the §7.1 table and diagram; T02 digest rules; ADR-0003; the 2026-10-17 defaults; spec §4.2 (no custom parser); `DatasetSnapshot` is the `split_frozen` effect; the T03 harness does not stage faustlibraries `2edec0537f53`; T05's inventory uses `rights_cleared`, `rights_rejected` and `needs_human`, with `files[]` or `functions[]` and a notice manifest keyed by commit, path, function and blob sha.
-- INFERRED: T06 stops at `normalized` and admits through T05's guard against the pinned inventory and notice digests; `generated_at` is outside that digest; the ingested blob is hashed before normalization; a mixed-license family is `needs-human` rather than an intersection; a shared blob with any non-cleared unit is `needs-human` because function rows have no line range; character 5-gram Jaccard for texts under 40 tokens; the 32-character and 1/3 skeleton thresholds; `ffunction` as a token backstop; `DedupManifest` rather than `DatasetSnapshot`; receipt time is `--created-at`; the compiler flag refuses instead of compiling.
+- INFERRED: T06 stops at `normalized` and admits through T05's guard against the pinned inventory and notice digests; `generated_at` is outside that digest; the ingested blob is hashed before normalization; a mixed-license family, and a family that contains a rejected or `needs_human` member, is `needs-human` rather than an intersection that still stores the text; a shared blob with any non-cleared unit is `needs-human` because function rows have no line range; character 5-gram Jaccard for texts under 40 tokens; the 32-character and 1/3 skeleton thresholds; `ffunction` as a token backstop; `DedupManifest` rather than `DatasetSnapshot`; receipt time is `--created-at`; the compiler flag refuses instead of compiling. Slicing `.lib` function units is a follow-up.
 - SPECULATIVE: the 4/5 threshold, the 40-token floor, and the short-text 1/3 skeleton threshold need a real corpus before they are treated as tuned; full commit hashes are not in the approval note.

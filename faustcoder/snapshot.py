@@ -11,6 +11,11 @@ the fetched bytes. ``generated_at`` and ``created_at`` are not in it.
 Near-duplicate families share rights. Every member gets the intersection
 of the family's flags. A family whose licenses differ is quarantined
 with reason ``needs-human``.
+
+``rights_rejected`` and ``needs_human`` units that name a blob are
+fetched and clustered, and never emitted. A cleared unit in a family
+with one of them is ``needs-human`` as well. Intersection with a
+rejected member's empty flags is the same outcome: nothing is stored.
 """
 
 from __future__ import annotations
@@ -110,7 +115,7 @@ def compile_snapshot(
     corpus = parse_corpus(inventory, notice)
     sealed_keys = _sealed_keys(sealed)
     units = tuple(_mark_sealed(unit, sealed_keys) for unit in corpus.units)
-    blobs = _fetch(units, fetcher)
+    blobs = _fetch(units + corpus.comparisons, fetcher)
     prepared = [_prepare(unit, blobs) for unit in units]
     comparable = [
         item
@@ -120,14 +125,20 @@ def compile_snapshot(
     for item in prepared:
         if item.unit.holdout and item.failure is not None:
             raise NormalizeError(item.failure)
+    compared = _comparison_norms(corpus.comparisons, blobs)
     families = cluster_families(
-        [(item.unit.unit_id, item.text or "") for item in comparable if item.text]
+        [
+            (item.unit.unit_id, item.text or "")
+            for item in comparable + compared
+            if item.text
+        ]
     )
     sealed_ids = {item.unit.unit_id for item in comparable if item.unit.holdout}
     tainted = {families[item_id] for item_id in sealed_ids}
     members = _members(comparable, families, tainted)
     _narrow(members)
-    excluded = _excluded(corpus, prepared, members)
+    _quarantine_uncleared_families(members, compared, families)
+    excluded = _excluded(corpus, prepared, members, compared, families)
     return _assemble(
         members, excluded, comparable, prepared, families, corpus, actor, created_at
     )
@@ -184,6 +195,40 @@ def _prepare(unit: Unit, blobs: dict[tuple[str, str, str, str], bytes]) -> _Norm
     )
 
 
+def _comparison_norms(
+    comparisons: tuple[Unit, ...], blobs: dict[tuple[str, str, str, str], bytes]
+) -> list[_Norm]:
+    """Normalize non-cleared blobs for clustering. Never a stored example.
+
+    A failure here aborts the run. Skipping the blob would let a cleared
+    near-copy through uncompared.
+    """
+    prepared: list[_Norm] = []
+    for unit in comparisons:
+        item = _prepare(unit, blobs)
+        if item.failure is not None or item.text is None:
+            raise NormalizeError(item.failure or "comparison unit did not normalize")
+        prepared.append(replace(item, exclusion=None))
+    return prepared
+
+
+def _quarantine_uncleared_families(
+    members: list[_Member], compared: list[_Norm], families: dict[str, str]
+) -> None:
+    """A family that contains a non-cleared member admits nothing.
+
+    The rejected member's flags are empty, so the intersection is empty.
+    The cleared members are ``needs-human`` and are not emitted.
+    """
+    tainted = {families[item.unit.unit_id] for item in compared}
+    for member in members:
+        if member.family not in tainted:
+            continue
+        member.mixed = True
+        member.effective = ()
+        member.narrowed = True
+
+
 def _members(
     comparable: list[_Norm], families: dict[str, str], tainted: set[str]
 ) -> list[_Member]:
@@ -233,8 +278,16 @@ def _excluded(
     corpus: Corpus,
     prepared: list[_Norm],
     members: list[_Member],
+    compared: list[_Norm],
+    families: dict[str, str],
 ) -> list[dict[str, Any]]:
-    rows = [_inventory_exclusion(item) for item in corpus.excluded]
+    comparison_family = {item.unit.unit_id: families[item.unit.unit_id] for item in compared}
+    rows = []
+    for item in corpus.excluded:
+        row = _inventory_exclusion(item)
+        if item.unit_id in comparison_family:
+            row["duplicate_family"] = comparison_family[item.unit_id]
+        rows.append(row)
     for item in prepared:
         if item.exclusion is not None and not item.unit.holdout:
             rows.append(_exclusion(item.unit, item.exclusion, None, "scan"))
