@@ -20,11 +20,9 @@ Exit codes 124 and above are ungraded. They are not rungs on the ladder.
 Do not score `internal` or `resource_limit` as `other`. `unbound_symbol`
 is a compiler result (exit 1), the class for libfaust `undefined symbol`.
 
-[ADR-0006](../adr/0006-source-attributable-failures.md) proposes grading
-source-attributable failures (remote import, recursion, a source-caused
-timeout or resource kill) at or below `parse_error`, leaving ungraded only
-an infrastructure fault, and alerting on the ungraded rate per policy. It
-is Proposed and awaiting Danny. It does not change this table.
+[ADR-0006](../adr/0006-source-attributable-failures.md) is Accepted
+(2026-10-17, Danny), but ADR-0005 behaviour stays in force until the
+A1–A7 grader changes land. This table is unchanged.
 
 A receipt with exit 124 or above records the same compiler pin as a
 successful compile (`faust_version`, `environment_digest`). It is not

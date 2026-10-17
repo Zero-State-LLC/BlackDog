@@ -94,6 +94,8 @@ specs/001-faustcoder/
 2. **Compiler sandbox** (T03): runs libfaust from faustwasm in a Node.js worker
    with no network and resource limits, cross-checks with the native Faust
    2.88.0 CLI, and emits a CompilerReceipt with classified diagnostics.
+   The R-005 reward ladder is amended 0.3.4 (ADR-0006, A1–A7); reward code
+   keeps ADR-0005 behavior until the grader PR lands.
 3. **Signal harness** (T04): renders with faustwasm at fixed sample rate, block
    size and seed, compares against stored references in the style of Faust's
    impulse tests, and emits a DSPTestReceipt. INFERRED: metric numbers live in
