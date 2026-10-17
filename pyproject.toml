@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "faustcoder"
 version = "0.0.0"
-description = "Artifact store, sandboxed Faust compiler harness, and the DGX Spark env_verified probe."
+description = "Artifact store, sandboxed Faust compiler harness, dataset rights transitions, and the DGX Spark env_verified probe."
 requires-python = ">=3.11"
 dependencies = [
   "jsonschema>=4.23",

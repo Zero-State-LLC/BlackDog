@@ -77,3 +77,39 @@ class ArtifactNotFoundError(ArtifactStoreError):
 
 class InvalidReferenceError(ArtifactStoreError):
     """Reference is not a lowercase hex id or a sha256 content digest."""
+
+
+class RightsError(ArtifactStoreError):
+    """Base class for dataset rights-transition failures."""
+
+
+class IllegalTransitionError(RightsError):
+    """The dataset table has no edge for this state and event."""
+
+    def __init__(self, from_state: str, event: str) -> None:
+        self.from_state = from_state
+        self.event = event
+        super().__init__(f"no dataset transition from {from_state} on {event}")
+
+
+class TransitionNotImplemented(RightsError):
+    """The edge is in the spec table and is not executed by this task."""
+
+    def __init__(self, from_state: str, event: str) -> None:
+        self.from_state = from_state
+        self.event = event
+        super().__init__(
+            f"dataset transition {from_state} on {event} is not implemented"
+        )
+
+
+class LicenseEvidenceError(RightsError):
+    """The rights guard refused the transition for lack of license evidence."""
+
+
+class NeedsHumanDecision(RightsError):
+    """The license is ambiguous. The item stays in its current state."""
+
+
+class SourceContentError(RightsError):
+    """A rights artifact included program text or an unknown field."""

@@ -51,10 +51,12 @@ Implements the dataset machine (spec §7.1) and training machine (spec §7.3).
 - [ ] T06 [J-04] Normalization and dedup.
   - Depends on: T05, T02. Milestone: v0.2.
   - Acceptance: deterministic snapshot; implements `normalized` and `dedup_passed` transitions.
+  - Proposed (D-013, Danny yes 2026-10-17 1:04 PM PT): an n-gram or AST near-duplicate filter on generated `.dsp` against the training-only set, including vendored near-copies of `faust/examples`. The threshold is not set. This is a requirement to carry into the task, not an implementation in T05.
   - Workflows: anti-slop-code, production-systems.
 - [ ] T07 [J-04] Split freeze.
   - Depends on: T06. Milestone: v0.2.
   - Acceptance: leakage checks and signed split manifest; implements `split_frozen` (R-003).
+  - Proposed (D-013): the same near-duplicate filter is a split gate, so training-only and impulse-test families cannot land in eval or the sealed holdout. The threshold is not set.
   - Workflows: production-systems.
 - [ ] T08 [J-04] Baseline models.
   - Depends on: T04, T07. Milestone: v0.2.

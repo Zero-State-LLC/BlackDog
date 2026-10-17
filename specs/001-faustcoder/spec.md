@@ -1,7 +1,7 @@
 # FaustCoder: DAG-Compliant DSP Coding Model
 
 - Status: DRAFT / refinement-ready
-- Version: 0.3.2 (CompilerReceipt diagnostic classes, ADR-0005, Danny yes 2026-10-17 1:13 PM PT). 0.3.1: R-001 v0.2 evidence, Danny yes 2026-10-17 12:54 PM PT; see §20. 0.3.0: Faust-tooling assimilation and target lanes, ADR-0004; see §19. 0.2.0 training path: ADR-0002, §17
+- Version: 0.3.3 (D-013 rights defaults, Danny yes 2026-10-17 1:04 PM PT). 0.3.2: CompilerReceipt diagnostic classes, ADR-0005, Danny yes 2026-10-17 1:13 PM PT; see §21. 0.3.1: R-001 v0.2 evidence, Danny yes 2026-10-17 12:54 PM PT; see §20. 0.3.0: Faust-tooling assimilation and target lanes, ADR-0004; see §19. 0.2.0 training path: ADR-0002, §17
 - Target: NVIDIA DGX Spark (128 GB unified memory)
 
 ## 1. Constitution
@@ -53,7 +53,7 @@ The superseded 0.2.0 text (custom typed signal-flow representation) is kept in
 ## 5. Requirements
 
 - R-001 (MODIFIED 0.3.0; amended 0.3.1, Danny yes 2026-10-17 12:54 PM PT): Reproducible DGX Spark environment, pinned dependencies and hardware diagnostics. Toolchain pins follow the version set in ADR-0004 (Faust 2.88.0, a faustlibraries commit, faustwasm, target SDKs and validators); every receipt records the pin it used. For v0.2, cited external DGX Spark benchmarks plus a per-machine environment fingerprint receipt satisfy this requirement. On-hardware throughput measurements are deferred to T10, on the dedicated Spark cleared of other workloads before training.
-- R-002 (MODIFIED 0.3.0, D-007): Curated, license-traceable Faust corpus with source attribution and exclusion policy. License is resolved per function where a library file declares licenses per function, and per file otherwise; header-less example files inherit their repository's license.
+- R-002 (MODIFIED 0.3.0, D-007; amended 0.3.3, D-013): Curated, license-traceable Faust corpus with source attribution and exclusion policy. License is resolved per function where a library file declares licenses per function, and per file otherwise; header-less example files inherit their repository's license. A `rights_cleared` transition also requires a notice row (path, blob id, copyright, license) for every cleared file or function, and an inferred clearance names a reviewer. Mixed licenses in one file take the strictest. Vendored copies are not cleared on their own.
 - R-003: Contamination-resistant splits by project, near-duplicate family and provenance.
 - R-004 (REPLACED 0.3.0): Task taxonomy has three axes: DSP category (the faustlibraries library split: oscillators, filters, envelopes, delays, reverbs, compressors and dynamics, noises, physical models, spatialization, analyzers, routing, misc effects and synths), task type (generate, repair, explain, optimize, remix) and target (host, language backend, plugin, embedded board, FPGA). Dev tasks are seeded from faustlibraries `#### Usage` blocks and tests; the sealed holdout is newly written (§9).
 - R-005 (MODIFIED 0.3.0): The compiler harness runs libfaust from faustwasm in a sandboxed worker as the primary compiler and the native Faust 2.88.0 CLI for cross-checks (D-003r2). Receipts record backend, Faust version, options, exit status, classified diagnostics and source digest. The reward ladder is: parse error < type or arity error < compiles with warnings < compiles clean.
@@ -117,7 +117,7 @@ Subject: a `SourceRecord` or `Example` on its way into a `DatasetSnapshot`.
 
 | From | Event | Guard | To | Effect |
 |---|---|---|---|---|
-| DISCOVERED | rights_cleared | RightsRecord shows license eligibility and attribution (R-002, R-014) | RIGHTS_CLEARED | Write RightsRecord; append receipt |
+| DISCOVERED | rights_cleared | RightsRecord shows license eligibility, attribution, and a notice row (R-002, R-014, D-013) | RIGHTS_CLEARED | Write RightsRecord; append receipt |
 | DISCOVERED | rights_rejected | License ineligible, unknown or restricted (R-014) | QUARANTINED | Write exclusion receipt with reason; content not copied into any snapshot |
 | RIGHTS_CLEARED | normalized | Deterministic transform succeeded | NORMALIZED | Write normalized Example as new node, parent = source; append receipt |
 | RIGHTS_CLEARED | normalize_failed | Transform error (INFERRED) | QUARANTINED | Append receipt with diagnostics (INFERRED) |
@@ -377,6 +377,7 @@ Parallelism permitted only where declared dependencies allow it. Every task requ
 - D-010 ACCEPTED: Remix novelty is a dev metric, not a gate. faust-rs experimental primitives are out of scope. Provenance: Danny yes 2026-10-16 23:39 PT.
 - D-011 ACCEPTED: Fixes to the upstream Faust compiler or libraries may be contributed upstream under their LGPL license. Provenance: Danny yes 2026-10-16 23:39 PT.
 - D-012 ACCEPTED: First plugin formats: CLAP (`faust2clap`) and VST3, both built on Linux in a container, plus LV2 (`faust2lv2`) on Linux. AU is deferred to a macOS CI runner. VST3 is built from the CLAP build with `clap-wrapper` (MIT) by default; `faust2juce` is the fallback and needs a JUCE license decision first, because JUCE is AGPLv3 or commercial (ADR-0004, INFERRED choice within Danny's "JUCE or native scripts"). Provenance: Danny yes 2026-10-16 23:39 PT.
+- D-013 ACCEPTED: Rights defaults for the T05 inventory. STK-4.3 is other-permissive and clears with a notice. Bare BSD may train and eval and may not be redistributed. A notice manifest is required before `rights_cleared`. Vendored copies are rejected as sources and deduped by content hash to the upstream pin. faustlibraries is cleared per function: a declare wins, else the section header, else reject. Mixed-license files take the strictest license. Ungranted CCA4I "TODO: if/when Romain agrees" comments are stripped from cleared slices. GPL and LGPL stay training-only, and generated Faust must pass a near-duplicate filter against that set (proposed for T06/T07; the threshold is not set). Header-less means no license or copyright in the leading comment and no prefixed `declare` of license or copyright. An inferred clearance needs a named reviewer. Impulse tests are training only and cannot enter eval or holdout. Provenance: Danny yes 2026-10-17 1:04 PM PT ("get us where we need to go however you gotta do it"). Refines D-004 and D-007. See ADR-0003 and §21.
 - D-006 SUPERSEDED by D-006r2 (Danny yes 2026-10-16 22:25 PT). Original: Teacher model is Opus via OpenRouter, with a per-run spend cap approved for each run before it starts. Provenance: Danny yes 2026-10-16 22:20 PT. See ADR-0002.
 - D-006r2 ACCEPTED: Training-data teacher is an open-weight model: default `deepseek/deepseek-v4.1-flash` (DeepSeek-V4.1-Flash, MIT license) via OpenRouter with high reasoning effort, under a per-run spend cap approved for each run. Opus via OpenRouter is used only for review, grading and eval judging, never as a source of training targets, because Anthropic's usage terms restrict using outputs to train competing models. Provenance: Danny yes 2026-10-16 22:25 PT. Supersedes D-006. See ADR-0002 and ADR-0003.
 
@@ -450,6 +451,7 @@ never from scratch, in weeks rather than months. Evidence is in
 | D-010 | Remix novelty is a dev metric, not a gate; faust-rs experimental primitives out | ACCEPTED | Danny yes 2026-10-16 23:39 PT | ADR-0004 |
 | D-011 | Upstream Faust compiler and library fixes under LGPL are allowed | ACCEPTED | Danny yes 2026-10-16 23:39 PT | ADR-0003 |
 | D-012 | First plugin formats CLAP, VST3 (via clap-wrapper), LV2 on Linux; AU deferred to macOS CI | ACCEPTED | Danny yes 2026-10-16 23:39 PT | ADR-0004 |
+| D-013 | STK-4.3 permissive with notice; bare BSD not redistributed; notice manifest required; vendored copies deduped and not cleared; per-function library slicing; strictest license wins; CC-TODO stripped; copyleft training-only plus a proposed near-duplicate output gate; header-less definition; inferred clearance needs a reviewer; impulse tests stay out of eval | ACCEPTED; refines D-004 and D-007 | Danny yes 2026-10-17 1:04 PM PT | ADR-0003, §22 |
 
 ## 19. Amendments 0.3.0 (ADR-0004, ACCEPTED)
 
@@ -510,3 +512,23 @@ Approval: Danny yes 2026-10-17 1:13 PM PT. This is the next spec version after 0
 | ID | Change | Was | Label |
 |---|---|---|---|
 | A-10 | CompilerReceipt `diagnostic_class` adds `unbound_symbol`, `resource_limit` and `internal` | Enum ended at `ok`, `warning`, `type_error`, `arity_error`, `parse_error`, `timeout`, `other` | OBSERVED (approval) |
+
+## 22. Amendments 0.3.3 (D-013, ACCEPTED)
+
+Approval: Danny yes 2026-10-17 1:04 PM PT ("get us where we need to go however you gotta do it"). Danny delegated the per-row rights calls. This section is the rights-policy amendment. It does not change R-001, §20, or §21.
+
+| # | Default |
+|---|---|
+| 1 | STK-4.3 is other-permissive. The upstream-changes clause in `faustlibraries/licenses/stk-4.3.0.md` is not a binding provision. Clear with a notice that records the copyright and the STK text. |
+| 2 | Bare "BSD" with no license text may be used for training and eval. It is not redistributed. The notice records the copyright string. |
+| 3 | `rights_cleared` requires a notice row: path, blob id, copyright, and license, per file or per function. |
+| 4 | Vendored copies (faustide, faustlive, faustwasm tests, faustgen-supercollider, pd-faustgen `mixer.dsp`) are not cleared on their own. Dedupe them by content hash to the upstream pin. |
+| 5 | faustlibraries is sliced per function. `declare <fn> license` wins. Otherwise the section header applies. No header means reject. |
+| 6 | A file that mixes licenses takes the strictest one. |
+| 7 | Ungranted CCA4I comments ("TODO: if/when Romain agrees") are stripped from a cleared slice. Keeping the comment makes the slice training-only. |
+| 8 | GPL and LGPL stay training-only (D-004, D-007). Generated `.dsp` must pass a near-duplicate filter against that set. The filter is a proposed T06/T07 requirement. The threshold is not set here. |
+| 9 | Header-less means the leading comment has no license or copyright text, and the file has no `declare` of license or copyright under any prefix. |
+| 10 | A clearance that rests only on inferred evidence needs a named human reviewer. Without one it stays unsigned. |
+| 11 | Impulse tests are training only. The machine rejects eval and holdout for those paths. |
+
+The inventory that applies these calls is [docs/rights-inventory.md](../../docs/rights-inventory.md). Boof, under this delegation, signed `faust-examples-headerless` and `faust-impulse-headerless` against observed license text at commit `8c00913e`. Those rows are training-only. Their attribution is incomplete, and the field stays false. `faust-examples-copyright-only` and `faustlibraries-attribution-gap` stay unsigned.
