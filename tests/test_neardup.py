@@ -3,8 +3,11 @@
 from __future__ import annotations
 
 from faustcoder.neardup import (
+    char_shingles,
     cluster_families,
+    is_excerpt,
     is_near_duplicate,
+    jaccard_counts,
     memorization_hits,
     strip_comments,
     tokens,
@@ -69,6 +72,67 @@ def test_short_texts_use_the_character_fallback() -> None:
     assert families["sealed"] != families["other"]
     hits = memorization_hits(edited, [("sealed", original), ("other", other)])
     assert [hit[0] for hit in hits] == ["sealed"]
+
+
+def test_half_excerpt_is_not_a_jaccard_near_duplicate() -> None:
+    """A 50% verbatim excerpt fails Jaccard 4/5 and is still an excerpt."""
+    whole = long_text("lib", count=80)
+    excerpt = " ".join(whole.split()[:40]) + "\n"
+    assert is_near_duplicate(excerpt, whole) is False
+    assert is_excerpt(excerpt, whole) is True
+    assert is_excerpt(whole, excerpt) is False
+    families = cluster_families(
+        [("cleared", excerpt), ("rejected", whole), ("other", long_text("omega"))],
+        ["rejected"],
+    )
+    assert families["cleared"] == families["rejected"]
+    assert families["other"] != families["rejected"]
+    untouched = cluster_families([("cleared", excerpt), ("rejected", whole)])
+    assert untouched["cleared"] != untouched["rejected"]
+
+
+def test_containment_threshold_is_one_half() -> None:
+    shared = [f"shared{index}" for index in range(22)]
+    part = " ".join(shared + [f"part{index}" for index in range(18)]) + "\n"
+    whole = " ".join(shared + [f"whole{index}" for index in range(40)]) + "\n"
+    short_share = [f"shared{index}" for index in range(21)]
+    below = " ".join(short_share + [f"part{index}" for index in range(19)]) + "\n"
+    assert is_excerpt(part, whole) is True
+    assert is_excerpt(below, whole) is False
+
+
+def test_verbatim_run_catches_a_statement_inside_a_larger_file() -> None:
+    statement = long_text("stmt", count=40).split()
+    cleared = " ".join(
+        [f"head{index}" for index in range(80)]
+        + statement
+        + [f"tail{index}" for index in range(80)]
+    )
+    rejected = " ".join(
+        [f"lib{index}" for index in range(100)]
+        + statement
+        + [f"end{index}" for index in range(100)]
+    )
+    assert is_near_duplicate(cleared, rejected) is False
+    assert is_excerpt(cleared, rejected) is True
+
+
+def test_exact_short_program_is_a_memorization_hit() -> None:
+    text = "process = 1;\n"
+    other = "process = no.noise;\n"
+    hits = memorization_hits(text, [("sealed", text), ("other", other)])
+    assert [hit[0] for hit in hits] == ["sealed"]
+    assert hits[0][1] == hits[0][2] > 0
+
+
+def test_short_hit_reports_character_shingles() -> None:
+    original = "process = os.osc(440);"
+    edited = "process = os.osc(441);"
+    hits = memorization_hits(edited, [("sealed", original)])
+    intersection, union = jaccard_counts(
+        char_shingles(edited), char_shingles(original)
+    )
+    assert hits == (("sealed", intersection, union),)
 
 
 def test_memorization_hits_reports_the_corpus_id() -> None:

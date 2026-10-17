@@ -45,6 +45,8 @@ FFUNCTION_REASON = "ffunction"
 NEEDS_HUMAN_REASON = "needs-human"
 _TIME = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$")
 _HEX40 = re.compile(r"^[0-9a-f]{40}$")
+_HEX64 = re.compile(r"^[0-9a-f]{64}$")
+_ZERO_BLOB = frozenset({"0" * 40, "0" * 64})
 _DECISIONS = frozenset({"rights_cleared", "rights_rejected", "needs_human"})
 _FLAGS = ("train", "eval", "redistribute")
 
@@ -432,7 +434,7 @@ def _notice_index(
             raise InventoryError("notice row must be an object")
         commit = _hex40(row.get("commit"), "notice commit")
         path = _path(row.get("path"), "notice path")
-        blob_sha = _hex40(row.get("blob_sha"), "notice blob_sha")
+        blob_sha = _blob_sha(row.get("blob_sha"), "notice blob_sha")
         function = row.get("function") or ""
         if not isinstance(function, str):
             raise InventoryError("notice function must be a string")
@@ -456,7 +458,7 @@ def _file_spec(value: object, entry_id: str) -> tuple[str, str, str]:
         raise InventoryError(f"{entry_id}: file entry must be an object")
     return (
         _path(value.get("path"), f"{entry_id}: path"),
-        _hex40(value.get("blob_sha"), f"{entry_id}: blob_sha"),
+        _blob_sha(value.get("blob_sha"), f"{entry_id}: blob_sha"),
         "",
     )
 
@@ -469,7 +471,7 @@ def _function_spec(value: object, entry_id: str) -> tuple[str, str, str]:
         raise InventoryError(f"{entry_id}: function name is missing")
     return (
         _path(value.get("path"), f"{entry_id}: path"),
-        _hex40(value.get("blob_sha"), f"{entry_id}: blob_sha"),
+        _blob_sha(value.get("blob_sha"), f"{entry_id}: blob_sha"),
         function.strip(),
     )
 
@@ -496,6 +498,19 @@ def _check_time(value: object, field: str) -> None:
 def _hex40(value: object, field: str) -> str:
     if not isinstance(value, str) or _HEX40.fullmatch(value) is None:
         raise InventoryError(f"{field} must be 40 lowercase hex characters")
+    return value
+
+
+def _blob_sha(value: object, field: str) -> str:
+    """Accept a sha1 blob id or a sha256 blob id. Reject the zero placeholder."""
+    if not isinstance(value, str) or (
+        _HEX40.fullmatch(value) is None and _HEX64.fullmatch(value) is None
+    ):
+        raise InventoryError(
+            f"{field} must be 40 lowercase hex characters or 64 for sha256"
+        )
+    if value in _ZERO_BLOB:
+        raise InventoryError(f"{field} must be a git object id")
     return value
 
 

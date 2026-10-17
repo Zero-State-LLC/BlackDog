@@ -2,17 +2,22 @@
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 import pytest
 
+from faustcoder.acquire import git_blob_sha1, git_blob_sha256
 from faustcoder.canonical import canonical_bytes
-from faustcoder.dataset import PRODUCER
+from faustcoder.dataset import PRODUCER, current_state
 from faustcoder.errors import AcquireError, InventoryError, MutationError
-from faustcoder.inventory import content_digest
-from faustcoder.neardup import is_near_duplicate
+from faustcoder.inventory import content_digest, parse_corpus
+from faustcoder.libraries import library_root
+from faustcoder.neardup import is_excerpt, is_near_duplicate
 from faustcoder.snapshot import commit_snapshot, compile_snapshot
 from faustcoder.store import ArtifactStore
+
+from faustcoder.upstream import UPSTREAM_ORIGINALS
 
 from tests.t06support import (
     ACTOR,
@@ -26,6 +31,7 @@ from tests.t06support import (
     long_text,
     notice_doc,
     notice_row,
+    parse_pinned,
     pins_for,
     stage,
 )
@@ -224,6 +230,13 @@ def test_manifest_has_no_program_text(tmp_path: Path) -> None:
         if store.get(artifact_id)["payload"].get("record_type") == "Example"
     ]
     assert sentinel in examples[0]
+    source = next(
+        store.get(artifact_id)
+        for artifact_id in store.list()
+        if store.get(artifact_id)["payload"].get("record_type") == "SourceRecord"
+    )
+    assert "retrieved_at" not in source["payload"]
+    assert current_state(store, source["content_digest"]) == "DEDUPED"
 
 
 def test_same_license_family_intersects_flags(tmp_path: Path) -> None:
@@ -320,6 +333,241 @@ def test_rejected_row_without_a_blob_is_not_fetched() -> None:
     assert row["origin"] == "inventory"
     assert row["reason"] == "no file list on the row"
     assert _manifest(compiled)["units"] == []
+
+
+def test_listed_blob_sha_is_sha1_or_sha256(tmp_path: Path) -> None:
+    """A listed spec rejects the zero placeholder and any other length."""
+
+    def rejected(blob_sha: str) -> dict[str, object]:
+        return {
+            "id": "bad-blob",
+            "decision": "rights_rejected",
+            "license": "unknown",
+            "eligible_for": [],
+            "pin": {"repo": REPO, "commit": PIN, "ref": "fixture"},
+            "evidence_label": "OBSERVED",
+            "attribution": "Acme Example",
+            "reviewer": "",
+            "reason": "bad blob id",
+            "file_count": 1,
+            "files": [{"path": "bad.dsp", "blob_sha": blob_sha}],
+        }
+
+    for blob_sha in ("0" * 40, "0" * 64, "g" * 40, "A" * 40, "ab", "ab" * 20 + "zz"):
+        with pytest.raises(InventoryError, match="blob_sha"):
+            parse_pinned(inventory_doc([rejected(blob_sha)]), notice_doc([]))
+    data = b"process = 1;\n"
+    digest = git_blob_sha256(data)
+    corpus = parse_pinned(inventory_doc([rejected(digest)]), notice_doc([]))
+    assert corpus.comparisons[0].blob_sha == digest
+    root = tmp_path / "fixtures"
+    stage(root, REPO, PIN, "bad.dsp", data)
+    compiled = _compile(root, [rejected(digest)], [])
+    assert _manifest(compiled)["units"] == []
+    assert _manifest(compiled)["excluded"][0]["origin"] == "inventory"  # type: ignore[index]
+    stage(root, REPO, PIN, "bad.dsp", b"process = 2;\n")
+    with pytest.raises(AcquireError, match="blob_sha"):
+        _compile(root, [rejected(digest)], [])
+
+
+def test_half_excerpt_of_a_rejected_unit_is_needs_human(tmp_path: Path) -> None:
+    """A 50% verbatim excerpt is under Jaccard 4/5 and still needs-human."""
+    root = tmp_path / "fixtures"
+    whole = long_text("lib", count=80).encode()
+    excerpt = (" ".join(whole.decode().split()[:40]) + "\n").encode()
+    other = long_text("gamma").encode()
+    assert is_near_duplicate(excerpt.decode(), whole.decode()) is False
+    assert is_excerpt(excerpt.decode(), whole.decode()) is True
+    stage(root, REPO, PIN, "gpl.dsp", whole)
+    stage(root, REPO, PIN, "mit.dsp", excerpt)
+    stage(root, REPO, PIN, "other.dsp", other)
+    refused = entry(
+        "gpl",
+        whole,
+        path="gpl.dsp",
+        decision="rights_rejected",
+        license_name="GPL-2.0-or-later",
+        eligible_for=[],
+        reason="GPL source is not cleared",
+        reviewer="",
+    )
+    mit, mit_notice = cleared("mit", excerpt, path="mit.dsp", license_name="MIT")
+    kept, kept_notice = cleared("other", other, path="other.dsp")
+    compiled = _compile(root, [refused, mit, kept], [mit_notice, kept_notice])
+    payload = _manifest(compiled)
+    assert [row["entry_id"] for row in payload["units"]] == ["other"]  # type: ignore[index]
+    excluded = _by_entry(payload["excluded"])  # type: ignore[arg-type]
+    assert excluded["mit"]["reason"] == "needs-human"
+    assert excluded["mit"]["origin"] == "dedup"
+    assert excluded["gpl"]["origin"] == "inventory"
+    assert excluded["gpl"]["duplicate_family"] == excluded["mit"]["duplicate_family"]
+    store = ArtifactStore(tmp_path / "store")
+    commit_snapshot(store, compiled)
+    stored = b"".join(path.read_bytes() for path in store.root.rglob("*") if path.is_file())
+    assert b"lib0" not in stored
+    assert b"gamma0" in stored
+
+
+def test_half_excerpt_of_a_holdout_is_a_leak(tmp_path: Path) -> None:
+    root = tmp_path / "fixtures"
+    whole = long_text("hold", count=80).encode()
+    excerpt = (" ".join(whole.decode().split()[:40]) + "\n").encode()
+    other = long_text("gamma").encode()
+    assert is_near_duplicate(excerpt.decode(), whole.decode()) is False
+    stage(root, REPO, PIN, "sealed.dsp", whole)
+    stage(root, REPO, PIN, "excerpt.dsp", excerpt)
+    stage(root, REPO, PIN, "other.dsp", other)
+    sealed_row, sealed_notice = cleared("sealed", whole, path="sealed.dsp")
+    excerpt_row, excerpt_notice = cleared("excerpt", excerpt, path="excerpt.dsp")
+    other_row, other_notice = cleared("other", other, path="other.dsp")
+    compiled = _compile(
+        root,
+        [sealed_row, excerpt_row, other_row],
+        [sealed_notice, excerpt_notice, other_notice],
+        sealed=[{"repo": REPO, "commit": PIN, "path": "sealed.dsp", "function": ""}],
+    )
+    payload = _manifest(compiled)
+    assert [row["entry_id"] for row in payload["units"]] == ["other"]  # type: ignore[index]
+    excluded = _by_entry(payload["excluded"])  # type: ignore[arg-type]
+    assert excluded["excerpt"]["reason"] == "holdout-family"
+    assert excluded["excerpt"]["origin"] == "dedup"
+
+
+def test_upstream_original_stays_cleared_when_the_copy_is_rejected(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    root = tmp_path / "fixtures"
+    original = long_text("birds", count=80).encode()
+    copied = long_text("birds", count=80, replacement="copied").encode()
+    laundered = long_text("birds", count=80, replacement="laundered").encode()
+    other = long_text("gamma").encode()
+    assert is_near_duplicate(original.decode(), copied.decode()) is True
+    stage(root, REPO, PIN, "Birds.dsp", original)
+    stage(root, REPO, PIN, "birds.dsp", copied)
+    stage(root, REPO, PIN, "copy.dsp", laundered)
+    stage(root, REPO, PIN, "other.dsp", other)
+    birds, birds_notice = cleared("birds", original, path="Birds.dsp")
+    refused = entry(
+        "syfala-examples",
+        copied,
+        path="birds.dsp",
+        decision="rights_rejected",
+        license_name="unlicensed",
+        eligible_for=[],
+        reason="Syfala has no repository license",
+        reviewer="",
+    )
+    extra, extra_notice = cleared("extra", laundered, path="copy.dsp")
+    kept, kept_notice = cleared("other", other, path="other.dsp")
+    entries = [birds, refused, extra, kept]
+    notices = [birds_notice, extra_notice, kept_notice]
+    blocked = _compile(root, entries, notices)
+    assert "birds" not in _by_entry(_manifest(blocked)["units"])  # type: ignore[arg-type]
+    import faustcoder.upstream as upstream
+
+    monkeypatch.setattr(
+        upstream, "UPSTREAM_BLOB_SHAS", frozenset({git_blob_sha1(original)})
+    )
+    compiled = _compile(root, entries, notices)
+    payload = _manifest(compiled)
+    rows = _by_entry(payload["units"])  # type: ignore[arg-type]
+    assert rows["birds"]["eligible_for"] == ["train", "eval", "redistribute"]
+    assert "extra" not in rows
+    excluded = _by_entry(payload["excluded"])  # type: ignore[arg-type]
+    assert excluded["extra"]["reason"] == "needs-human"
+    assert excluded["extra"]["origin"] == "dedup"
+    assert excluded["syfala-examples"]["origin"] == "inventory"
+
+
+def test_upstream_allowlist_matches_cleared_inventory_rows() -> None:
+    inventory = json.loads(Path("corpus/rights-inventory.v1.json").read_text(encoding="utf-8"))
+    notice = json.loads(Path("corpus/notice-manifest.v1.json").read_text(encoding="utf-8"))
+    corpus = parse_corpus(inventory, notice)
+    by_blob = {unit.blob_sha: unit for unit in corpus.units}
+    assert len(UPSTREAM_ORIGINALS) == 4
+    for item in UPSTREAM_ORIGINALS:
+        unit = by_blob[item.blob_sha]
+        assert unit.repo == item.repo
+        assert unit.path == item.path
+        assert unit.decision == "rights_cleared"
+        assert item.copied_on == "2024-02-13"
+        assert item.copy_repo == "inria-emeraude/syfala"
+
+
+def test_instr_reverb_excerpt_is_needs_human(tmp_path: Path) -> None:
+    """Playground InstrReverb.dsp is an excerpt of rejected instrReverb."""
+    library = library_root() / "instruments.lib"
+    if not library.is_file():
+        pytest.fail("pinned instruments.lib is missing; run scripts/fetch-faustlibraries.sh")
+    lib = library.read_bytes()
+    dsp = Path("tests/fixtures/t06/InstrReverb.dsp").read_bytes()
+    lib_blob = "1863cc3c6085f78c9f37ff79d98451f449ab8138"
+    dsp_blob = "e38da4010e6abb85eadd02cecb60337798993194"
+    assert git_blob_sha1(lib) == lib_blob
+    assert git_blob_sha1(dsp) == dsp_blob
+    assert is_near_duplicate(dsp.decode(), lib.decode()) is False
+    assert is_excerpt(dsp.decode(), lib.decode()) is True
+    inventory = json.loads(Path("corpus/rights-inventory.v1.json").read_text(encoding="utf-8"))
+    notice = json.loads(Path("corpus/notice-manifest.v1.json").read_text(encoding="utf-8"))
+    corpus = parse_corpus(inventory, notice)
+    rejected = [
+        unit
+        for unit in corpus.comparisons
+        if unit.path == "instruments.lib" and unit.function == "instrReverb"
+    ]
+    cleared_rows = [unit for unit in corpus.units if unit.path.endswith("InstrReverb.dsp")]
+    assert len(rejected) == 1 and rejected[0].blob_sha == lib_blob
+    assert rejected[0].entry_id == "faustlibraries-undeclared"
+    assert len(cleared_rows) == 1 and cleared_rows[0].blob_sha == dsp_blob
+    assert cleared_rows[0].decision == "rights_cleared"
+    root = tmp_path / "fixtures"
+    lib_repo = "grame-cncm/faustlibraries"
+    lib_pin = "2edec0537f536eaa130d42c354884d7db971663c"
+    play_repo = "grame-cncm/faustplayground"
+    play_pin = "abf9af4ce9f12fba64fdb2237343bd5d5c8a8047"
+    stage(root, lib_repo, lib_pin, "instruments.lib", lib)
+    stage(root, play_repo, play_pin, "public/faust-modules/effects/InstrReverb.dsp", dsp)
+    other = long_text("gamma").encode()
+    stage(root, REPO, PIN, "other.dsp", other)
+    refused = entry(
+        "faustlibraries-undeclared",
+        lib,
+        path="instruments.lib",
+        function="instrReverb",
+        decision="rights_rejected",
+        license_name="unlicensed",
+        eligible_for=[],
+        reason="No declare and no section header",
+        reviewer="",
+        pin=lib_pin,
+        repo=lib_repo,
+    )
+    play, play_notice = cleared(
+        "faustplayground-headerless",
+        dsp,
+        path="public/faust-modules/effects/InstrReverb.dsp",
+        license_name="LGPL-2.1-or-later",
+        eligible_for=["train"],
+        pin=play_pin,
+        repo=play_repo,
+    )
+    kept, kept_notice = cleared("other", other, path="other.dsp")
+    compiled = _compile(root, [refused, play, kept], [play_notice, kept_notice])
+    payload = _manifest(compiled)
+    assert [row["entry_id"] for row in payload["units"]] == ["other"]  # type: ignore[index]
+    excluded = _by_entry(payload["excluded"])  # type: ignore[arg-type]
+    assert excluded["faustplayground-headerless"]["reason"] == "needs-human"
+    assert excluded["faustplayground-headerless"]["origin"] == "dedup"
+    assert excluded["faustlibraries-undeclared"]["origin"] == "inventory"
+    assert (
+        excluded["faustlibraries-undeclared"]["duplicate_family"]
+        == excluded["faustplayground-headerless"]["duplicate_family"]
+    )
+    store = ArtifactStore(tmp_path / "store")
+    commit_snapshot(store, compiled)
+    stored = b"".join(path.read_bytes() for path in store.root.rglob("*") if path.is_file())
+    assert b"Reverberation Room Size" not in stored
+    assert b"gamma0" in stored
 
 
 def test_rejected_near_copy_launders_nothing(tmp_path: Path) -> None:

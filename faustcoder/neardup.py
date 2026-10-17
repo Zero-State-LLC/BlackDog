@@ -14,11 +14,18 @@ an AST shingle):
   ``MIN_TOKENS`` tokens and the Jaccard index is at least 4/5.
 - The comparison is integer: ``intersection * 5 >= union * 4``.
   A reported float is not the decision.
+- Jaccard is symmetric, so a verbatim excerpt of a rejected file
+  stays under 4/5. An excerpt check is separate and asymmetric:
+  ``|shingles(part) ∩ shingles(whole)| / |shingles(part)| >= 1/2``,
+  or a contiguous run of ``VERBATIM_RUN`` tokens from the part
+  appears in the whole. ``cluster_families`` applies that only from
+  a non-comparison text into a comparison text.
 
 ``MIN_TOKENS`` is 40. Below that, shared Faust boilerplate
 (``declare``, ``import``, ``process``) dominates the shingles and
 unrelated programs look alike. Exact normalized-hash equality is a
-separate pass and still clusters short texts.
+separate pass and still clusters short texts. The excerpt check uses
+the same 40-token floor.
 
 Family ids are ``sha256:`` of the canonical JSON array of the sorted
 unique normalized digests in the component. The id does not depend on
@@ -37,6 +44,13 @@ NGRAM_N = 5
 THRESHOLD_NUMERATOR = 4
 THRESHOLD_DENOMINATOR = 5
 MIN_TOKENS = 40
+# Asymmetric excerpt check. Jaccard 4/5 misses a half-file copy
+# (INFERRED). The floor matches ``MIN_TOKENS`` so boilerplate under
+# 40 tokens is not an excerpt. A run of this many normalized tokens
+# is a second way in, for one statement buried in a larger file.
+CONTAINMENT_NUMERATOR = 1
+CONTAINMENT_DENOMINATOR = 2
+VERBATIM_RUN = 40
 # Short texts never reach the token shingles. A character 5-gram
 # fallback covers them. Jaccard is still an integer compare.
 # Texts of at least 32 non-space characters match at 4/5.
@@ -186,6 +200,62 @@ def short_near_duplicate(left: str, right: str) -> bool:
     )
 
 
+def containment_at_least(
+    part: frozenset[str],
+    whole: frozenset[str],
+    numerator: int = CONTAINMENT_NUMERATOR,
+    denominator: int = CONTAINMENT_DENOMINATOR,
+) -> bool:
+    """Return whether ``|part ∩ whole| / |part| >= numerator / denominator``.
+
+    An empty part is not contained. The denominator is the part, not
+    the union, so a short verbatim excerpt of a long file matches.
+    """
+    if denominator < 1 or numerator < 0 or numerator > denominator:
+        raise ValueError("threshold fraction is out of range")
+    if not part:
+        return False
+    return len(part & whole) * denominator >= len(part) * numerator
+
+
+def has_verbatim_run(
+    part: Sequence[str],
+    whole: Sequence[str],
+    length: int = VERBATIM_RUN,
+) -> bool:
+    """Return whether ``length`` contiguous tokens of ``part`` occur in ``whole``."""
+    if length < 1 or len(part) < length or len(whole) < length:
+        return False
+    window = shingles(whole, length)
+    return any(
+        "\0".join(part[index : index + length]) in window
+        for index in range(len(part) - length + 1)
+    )
+
+
+def is_excerpt(part: str, whole: str) -> bool:
+    """Return whether ``part`` is a verbatim excerpt of ``whole``.
+
+    Both the containment ratio and the long token run require
+    ``MIN_TOKENS`` on the part. Identical texts are not excerpts;
+    the exact-hash pass owns those.
+    """
+    if part == whole:
+        return False
+    part_tokens = tokens(part)
+    if len(part_tokens) < MIN_TOKENS:
+        return False
+    whole_tokens = tokens(whole)
+    # The run is only evidence when the non-cleared text is at least as
+    # long as the cleared text. A shorter rejected excerpt of an upstream
+    # original is not, by itself, a reason to quarantine the original.
+    if len(whole_tokens) >= len(part_tokens) and has_verbatim_run(
+        part_tokens, whole_tokens
+    ):
+        return True
+    return containment_at_least(shingles(part_tokens), shingles(whole_tokens))
+
+
 def is_near_duplicate(left: str, right: str) -> bool:
     """Return whether two normalized texts are near-duplicates.
 
@@ -212,19 +282,48 @@ def memorization_hits(
     """
     hits: list[tuple[str, int, int]] = []
     for corpus_id, text in corpus:
-        if not is_near_duplicate(candidate, text):
+        counted = _hit_counts(candidate, text)
+        if counted is None:
             continue
-        if tokens(candidate) and tokens(text):
-            intersection, union = jaccard_counts(
-                shingles(tokens(candidate)) or char_shingles(candidate),
-                shingles(tokens(text)) or char_shingles(text),
-            )
-        else:
-            intersection, union = jaccard_counts(
-                char_shingles(candidate), char_shingles(text)
-            )
+        intersection, union = counted
         hits.append((corpus_id, intersection, union))
     return tuple(hits)
+
+
+def _hit_counts(candidate: str, text: str) -> tuple[int, int] | None:
+    """Return the scores of the comparison that actually matched.
+
+    An exact copy is a hit, including under ``MIN_TOKENS``. A long
+    pair reports token-shingle counts. A short pair reports character
+    5-gram counts. An excerpt reports ``(intersection, |part shingles|)``.
+    """
+    if candidate == text:
+        return _identical_counts(candidate)
+    candidate_tokens = tokens(candidate)
+    text_tokens = tokens(text)
+    if len(candidate_tokens) >= MIN_TOKENS and len(text_tokens) >= MIN_TOKENS:
+        left = shingles(candidate_tokens)
+        right = shingles(text_tokens)
+        if jaccard_at_least(left, right):
+            return jaccard_counts(left, right)
+        if is_excerpt(candidate, text):
+            intersection = len(left & right)
+            return (intersection, len(left))
+        return None
+    if short_near_duplicate(candidate, text):
+        return jaccard_counts(char_shingles(candidate), char_shingles(text))
+    return None
+
+
+def _identical_counts(text: str) -> tuple[int, int]:
+    text_tokens = tokens(text)
+    if len(text_tokens) >= MIN_TOKENS:
+        size = len(shingles(text_tokens))
+        return (size, size)
+    size = len(char_shingles(text))
+    if size == 0:
+        size = len(_compact(text)) or 1
+    return (size, size)
 
 
 def family_id(digests: Iterable[str]) -> str:
@@ -237,12 +336,15 @@ def family_id(digests: Iterable[str]) -> str:
 
 def cluster_families(
     items: Sequence[tuple[str, str]],
+    comparison_ids: Collection[str] = (),
 ) -> dict[str, str]:
     """Map each item id to a duplicate-family id.
 
     ``items`` is ``(id, normalized_text)``. Exact normalized hashes are
-    unioned first. Near-duplicate pairs are unioned after that. The
-    family id is :func:`family_id` of the component's digests.
+    unioned first. Near-duplicate pairs are unioned after that. When
+    ``comparison_ids`` is set, a non-comparison text that is an excerpt
+    of a comparison text joins that component. The other direction does
+    not. The family id is :func:`family_id` of the component's digests.
     """
     if not items:
         return {}
@@ -304,6 +406,45 @@ def cluster_families(
                 continue
             if short_near_duplicate(text_of[left], text_of[right]):
                 union(left, right)
+
+    comparison = set(comparison_ids)
+    unknown = comparison - seen
+    if unknown:
+        raise ValueError(f"comparison id is not in the cluster: {min(unknown)}")
+    if comparison:
+        token_of = {item_id: tokens(text) for item_id, text in text_of.items()}
+        cleared_ids = [item_id for item_id in ordered_ids if item_id not in comparison]
+        compared_ids = [item_id for item_id in ordered_ids if item_id in comparison]
+        whole_shingles = {
+            item_id: shingles(token_of[item_id]) for item_id in compared_ids
+        }
+        whole_runs = {
+            item_id: shingles(token_of[item_id], VERBATIM_RUN)
+            if len(token_of[item_id]) >= VERBATIM_RUN
+            else frozenset()
+            for item_id in compared_ids
+        }
+        for part_id in cleared_ids:
+            part_tokens = token_of[part_id]
+            if len(part_tokens) < MIN_TOKENS:
+                continue
+            part_shingles = shingles(part_tokens)
+            part_runs = (
+                shingles(part_tokens, VERBATIM_RUN)
+                if len(part_tokens) >= VERBATIM_RUN
+                else frozenset()
+            )
+            for whole_id in compared_ids:
+                if find(part_id) == find(whole_id):
+                    continue
+                whole_tokens = token_of[whole_id]
+                run = (
+                    len(whole_tokens) >= len(part_tokens)
+                    and part_runs
+                    and bool(part_runs & whole_runs[whole_id])
+                )
+                if run or containment_at_least(part_shingles, whole_shingles[whole_id]):
+                    union(part_id, whole_id)
 
     components: dict[str, list[str]] = {}
     for item_id in ordered_ids:

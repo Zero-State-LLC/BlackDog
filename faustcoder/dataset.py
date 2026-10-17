@@ -486,15 +486,23 @@ def _envelope(
 def _check_source(payload: Mapping[str, Any]) -> None:
     if payload.get("record_type") != "SourceRecord":
         raise GuardError("source record_type is not SourceRecord")
-    allowed = {"record_type", "uri", "retrieved_at", "license_claim", "unit_id"}
-    if set(payload) != allowed:
+    required = {"record_type", "uri", "license_claim", "unit_id"}
+    # ``retrieved_at`` is optional. The snapshot omits it so a re-sign
+    # of the inventory does not change the source digest. The stepwise
+    # API still accepts a source that carries the field.
+    allowed = required | {"retrieved_at"}
+    if not required <= set(payload) <= allowed:
         raise GuardError("source payload fields are not the source contract")
     for key in ("faust_source", "text", "bytes"):
         if key in payload:
             raise GuardError("source payload carries program text")
-    for key in ("uri", "retrieved_at", "license_claim", "unit_id"):
+    for key in ("uri", "license_claim", "unit_id"):
         if not isinstance(payload.get(key), str) or not payload[key]:
             raise GuardError(f"source {key} is missing")
+    if "retrieved_at" in payload and (
+        not isinstance(payload.get("retrieved_at"), str) or not payload["retrieved_at"]
+    ):
+        raise GuardError("source retrieved_at is missing")
 
 
 def _check_actor(actor: object) -> None:

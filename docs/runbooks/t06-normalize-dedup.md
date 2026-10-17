@@ -84,10 +84,9 @@ the `to` field of that head.
 
 ## Compiler gate (T03b)
 
-The T03 harness bundles faustlibraries `version.lib` 2.74.2. The corpus
-pin is faustlibraries `2edec0537f53` (`version.lib` 2.80.0). See the
-[compiler harness runbook](compiler-harness.md). T03b stages that pin
-into the harness. Until it lands:
+T03b stages faustlibraries `2edec0537f53` (`version.lib` 2.80.0). See the
+[compiler harness runbook](compiler-harness.md). This task still does
+not compile-check the corpus:
 
 - T06 does not compile-check corpus units.
 - T06 does not read compiler receipts as a signal.
@@ -207,6 +206,48 @@ rejected and `needs_human` blob that names a sha. Those playground
 files are not in this repository, so CI does not byte-compare them.
 The snapshot does, once the pinned commits are checked out.
 
+Jaccard is symmetric, so a verbatim excerpt of a long rejected file
+stays under 4/5. An excerpt check is asymmetric (INFERRED). It fires
+when the cleared text has at least 40 tokens and either:
+
+- `|shingles(cleared) ∩ shingles(non-cleared)| / |shingles(cleared)|`
+  is at least 1/2 (`intersection * 2 >= |cleared shingles|`), or
+- a contiguous run of 40 normalized tokens from the cleared text
+  occurs in the non-cleared text, and that non-cleared text is at
+  least as long as the cleared text.
+
+A shorter rejected quote of a cleared original does not, by itself,
+quarantine the original. `faustplayground` `InstrReverb.dsp` is cleared
+LGPL-2.1 and is an excerpt of rejected `instrReverb` in
+`faustlibraries-undeclared` `instruments.lib`. The pair is
+`needs-human`. The playground bytes used by the regression test are
+`tests/fixtures/t06/InstrReverb.dsp` (blob `e38da4010e6abb85eadd02cecb60337798993194`).
+`instruments.lib` is the pinned faustlibraries checkout, not a second
+copy in git.
+
+## Upstream originals
+
+Syfala has no file list, so its blobs are not fetched. Commit
+`c893f4ce0d9aaf15d11dc9cf4d2abe67ea830c3f` on 2024-02-13 copied four
+upstream files. If that row ever names blobs, those originals stay
+cleared. The exception is an allowlist keyed by the upstream blob sha
+in `faustcoder/upstream.py`, with the copy path recorded beside it. It
+is not a date or similarity heuristic.
+
+| Upstream blob | Path | Syfala path |
+|---|---|---|
+| `e442c3d60a7bad0afa8de6bff4334923fbc627c0` | `grame-cncm/faustplayground` `public/faust-modules/combined/Birds.dsp` | `examples/faust/birds.dsp` |
+| `ec6d4ffb0377f360d4a9c997df773865e22b1cc1` | `grame-cncm/faust` `examples/physicalModeling/old/harpe.dsp` | `examples/faust/harp.dsp` |
+| `f14ca97f91375d8d84d59fd67564719e52124e8d` | `grame-cncm/faust` `examples/SAM/virtualAnalog/virtualAnalog.dsp` | `examples/faust/virtualAnalogForBrowser.dsp` |
+| `33cbf6614a886e120b52d297b9a7868972741f9e` | `grame-cncm/faust` `examples/SAM/virtualAnalog/virtualAnalogForBrowser.dsp` | `examples/faust/virtualAnalogForBrowser.dsp` |
+
+`virtualAnalog.dsp` and `virtualAnalogForBrowser.dsp` are the two SAM
+files contained by the one syfala browser file. `tests/impulse-tests/dsp/harpe.dsp`
+is a relative of `harpe.dsp` and is not on the allowlist. A listed
+`blob_sha` is 40 lowercase hex characters, or 64 for sha256. The zero
+id is rejected. A row with no file list still uses that placeholder
+internally and is not fetched.
+
 `memorization_hits` is the same comparison for T07 leakage checks and
 the proposed output memorization gate. It does not write artifacts.
 
@@ -279,6 +320,6 @@ artifact. It is not a field of the manifest.
 
 ## Labels
 
-- OBSERVED: the §7.1 table and diagram; T02 digest rules; ADR-0003; the 2026-10-17 defaults; spec §4.2 (no custom parser); `DatasetSnapshot` is the `split_frozen` effect; the T03 harness does not stage faustlibraries `2edec0537f53`; T05's inventory uses `rights_cleared`, `rights_rejected` and `needs_human`, with `files[]` or `functions[]` and a notice manifest keyed by commit, path, function and blob sha.
-- INFERRED: T06 stops at `normalized` and admits through T05's guard against the pinned inventory and notice digests; `generated_at` is outside that digest; the ingested blob is hashed before normalization; a mixed-license family, and a family that contains a rejected or `needs_human` member, is `needs-human` rather than an intersection that still stores the text; a shared blob with any non-cleared unit is `needs-human` because function rows have no line range; character 5-gram Jaccard for texts under 40 tokens; the 32-character and 1/3 skeleton thresholds; `ffunction` as a token backstop; `DedupManifest` rather than `DatasetSnapshot`; receipt time is `--created-at`; the compiler flag refuses instead of compiling. Slicing `.lib` function units is a follow-up.
+- OBSERVED: the §7.1 table and diagram; T02 digest rules; ADR-0003; the 2026-10-17 defaults; spec §4.2 (no custom parser); `DatasetSnapshot` is the `split_frozen` effect; T03b stages faustlibraries `2edec0537f53` and T06 still does not compile-check corpus units; T05's inventory uses `rights_cleared`, `rights_rejected` and `needs_human`, with `files[]` or `functions[]` and a notice manifest keyed by commit, path, function and blob sha.
+- INFERRED: T06 stops at `normalized` and admits through T05's guard against the pinned inventory and notice digests; `generated_at` is outside that digest; the ingested blob is hashed before normalization; a mixed-license family, and a family that contains a rejected or `needs_human` member, is `needs-human` rather than an intersection that still stores the text; a cleared excerpt of a non-cleared blob is `needs-human` at containment 1/2 or a 40-token run; the four syfala upstream originals are an explicit blob-sha allowlist; a shared blob with any non-cleared unit is `needs-human` because function rows have no line range; character 5-gram Jaccard for texts under 40 tokens; the 32-character and 1/3 skeleton thresholds; `ffunction` as a token backstop; `DedupManifest` rather than `DatasetSnapshot`; receipt time is `--created-at`; the compiler flag refuses instead of compiling. Slicing `.lib` function units is a follow-up.
 - SPECULATIVE: the 4/5 threshold, the 40-token floor, and the short-text 1/3 skeleton threshold need a real corpus before they are treated as tuned; full commit hashes are not in the approval note.

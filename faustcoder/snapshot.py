@@ -14,8 +14,11 @@ with reason ``needs-human``.
 
 ``rights_rejected`` and ``needs_human`` units that name a blob are
 fetched and clustered, and never emitted. A cleared unit in a family
-with one of them is ``needs-human`` as well. Intersection with a
+with one of them is ``needs-human`` as well, including when the cleared
+text is only an excerpt of the non-cleared text. Intersection with a
 rejected member's empty flags is the same outcome: nothing is stored.
+An allowlisted upstream original is the exception: the later copy does
+not quarantine it.
 """
 
 from __future__ import annotations
@@ -26,7 +29,7 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, replace
 from typing import Any
 
-from faustcoder.acquire import BlobFetcher, fetch_verified, git_blob_sha1
+from faustcoder.acquire import BlobFetcher, fetch_verified, git_blob_id
 from faustcoder.canonical import build_envelope
 from faustcoder.compiler_gate import assert_corpus_compile_disabled
 from faustcoder.dataset import PRODUCER, SCHEMA_VERSION, receipt_payload
@@ -46,15 +49,19 @@ from faustcoder.neardup import (
     CHAR_MIN_LENGTH,
     CHAR_N,
     CHAR_NUMERATOR,
+    CONTAINMENT_DENOMINATOR,
+    CONTAINMENT_NUMERATOR,
     MIN_TOKENS,
     NGRAM_N,
     SHORT_SKELETON_DENOMINATOR,
     SHORT_SKELETON_NUMERATOR,
     THRESHOLD_DENOMINATOR,
     THRESHOLD_NUMERATOR,
+    VERBATIM_RUN,
     cluster_families,
     tokens,
 )
+from faustcoder.upstream import is_upstream_original
 from faustcoder.normalize import normalize_bytes
 from faustcoder.policy import ordered_flags
 from faustcoder.store import ArtifactStore
@@ -126,12 +133,17 @@ def compile_snapshot(
         if item.unit.holdout and item.failure is not None:
             raise NormalizeError(item.failure)
     compared = _comparison_norms(corpus.comparisons, blobs)
+    excerpt_ids = [item.unit.unit_id for item in compared if item.text]
+    excerpt_ids.extend(
+        item.unit.unit_id for item in comparable if item.unit.holdout and item.text
+    )
     families = cluster_families(
         [
             (item.unit.unit_id, item.text or "")
             for item in comparable + compared
             if item.text
-        ]
+        ],
+        excerpt_ids,
     )
     sealed_ids = {item.unit.unit_id for item in comparable if item.unit.holdout}
     tainted = {families[item_id] for item_id in sealed_ids}
@@ -178,7 +190,7 @@ def _prepare(unit: Unit, blobs: dict[tuple[str, str, str, str], bytes]) -> _Norm
     raw = blobs[(unit.repo, unit.pin, unit.path, unit.blob_sha)]
     # Hash the ingested bytes before any transform. T05 binds the claimed
     # blob id, not the text, so a tampered body with the same claim is refused.
-    if git_blob_sha1(raw) != unit.blob_sha:
+    if git_blob_id(raw, unit.blob_sha) != unit.blob_sha:
         raise AcquireError("ingested bytes do not match blob_sha")
     try:
         normalized = normalize_bytes(raw, None)
@@ -218,11 +230,15 @@ def _quarantine_uncleared_families(
     """A family that contains a non-cleared member admits nothing.
 
     The rejected member's flags are empty, so the intersection is empty.
-    The cleared members are ``needs-human`` and are not emitted.
+    The cleared members are ``needs-human`` and are not emitted. An
+    allowlisted upstream original stays cleared: the rejected row copied
+    it later.
     """
     tainted = {families[item.unit.unit_id] for item in compared}
     for member in members:
         if member.family not in tainted:
+            continue
+        if is_upstream_original(member.norm.unit.blob_sha):
             continue
         member.mixed = True
         member.effective = ()
@@ -341,12 +357,14 @@ def _assemble(
             "char_min_length": CHAR_MIN_LENGTH,
             "char_n": CHAR_N,
             "char_threshold": f"{CHAR_NUMERATOR}/{CHAR_DENOMINATOR}",
+            "containment": f"{CONTAINMENT_NUMERATOR}/{CONTAINMENT_DENOMINATOR}",
             "min_tokens": MIN_TOKENS,
             "n": NGRAM_N,
             "short_skeleton_threshold": (
                 f"{SHORT_SKELETON_NUMERATOR}/{SHORT_SKELETON_DENOMINATOR}"
             ),
             "threshold": f"{THRESHOLD_NUMERATOR}/{THRESHOLD_DENOMINATOR}",
+            "verbatim_run": VERBATIM_RUN,
         },
         "normalization": {
             "encoding": "utf-8",

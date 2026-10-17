@@ -2,7 +2,7 @@
 
 Acquisition reads a full 40-hex commit and a git blob sha. A branch
 name, a tag name and a short hash are refused before any read. The
-bytes are checked with the git blob id:
+bytes are checked with the git blob id (40 hex sha1, or 64 hex sha256; the zero id is refused):
 
 ``sha1("blob {length}\\0" + bytes)``.
 
@@ -16,6 +16,7 @@ commit and path, refuses redirects, and leaves the blob-id check to
 from __future__ import annotations
 
 import hashlib
+import re
 import subprocess
 import urllib.error
 import urllib.parse
@@ -29,6 +30,9 @@ from faustcoder.errors import AcquireError
 COMMIT_RE_TEXT = r"^[0-9a-f]{40}$"
 MAX_BLOB_BYTES = 1_048_576
 _GIT_TIMEOUT_SECONDS = 30
+_BLOB_SHA1 = re.compile(r"^[0-9a-f]{40}$")
+_BLOB_SHA256 = re.compile(r"^[0-9a-f]{64}$")
+_ZERO_BLOB = frozenset({"0" * 40, "0" * 64})
 
 
 class BlobFetcher(Protocol):
@@ -40,10 +44,49 @@ class BlobFetcher(Protocol):
 
 def git_blob_sha1(data: bytes) -> str:
     """Return the lowercase git blob id of ``data``."""
+    return _git_blob_digest(data, "sha1")
+
+
+def git_blob_sha256(data: bytes) -> str:
+    """Return the lowercase git sha256 blob id of ``data``."""
+    return _git_blob_digest(data, "sha256")
+
+
+def blob_id_algorithm(blob_sha: str) -> str:
+    """Return ``sha1`` or ``sha256``. Reject a zero id and any other shape."""
+    if (
+        not isinstance(blob_sha, str)
+        or blob_sha in _ZERO_BLOB
+        or (
+            _BLOB_SHA1.fullmatch(blob_sha) is None
+            and _BLOB_SHA256.fullmatch(blob_sha) is None
+        )
+    ):
+        raise AcquireError(
+            "blob_sha must be 40 lowercase hex characters or 64 for sha256"
+        )
+    if _BLOB_SHA1.fullmatch(blob_sha):
+        return "sha1"
+    return "sha256"
+
+
+def git_blob_id(data: bytes, blob_sha: str) -> str:
+    """Hash ``data`` with the algorithm implied by ``blob_sha``."""
+    if blob_id_algorithm(blob_sha) == "sha1":
+        return git_blob_sha1(data)
+    return git_blob_sha256(data)
+
+
+def _git_blob_digest(data: bytes, algorithm: str) -> str:
     if not isinstance(data, (bytes, bytearray)):
         raise AcquireError("blob bytes are required")
     header = f"blob {len(data)}\0".encode("ascii")
-    return hashlib.sha1(header + bytes(data)).hexdigest()
+    body = header + bytes(data)
+    if algorithm == "sha1":
+        return hashlib.sha1(body).hexdigest()
+    if algorithm == "sha256":
+        return hashlib.sha256(body).hexdigest()
+    raise AcquireError("blob id algorithm is not sha1 or sha256")
 
 
 def require_pin(pin: str) -> None:
@@ -59,8 +102,7 @@ def fetch_verified(
 ) -> bytes:
     """Fetch ``path`` at ``pin`` and require the bytes to hash to ``blob_sha``."""
     require_pin(pin)
-    if not isinstance(blob_sha, str) or len(blob_sha) != 40:
-        raise AcquireError("blob_sha must be a full lowercase git blob id")
+    blob_id_algorithm(blob_sha)
     try:
         data = fetcher.fetch(repo, pin, path, blob_sha)
     except AcquireError:
@@ -72,7 +114,7 @@ def fetch_verified(
     raw = bytes(data)
     if len(raw) > MAX_BLOB_BYTES:
         raise AcquireError("blob exceeds the size limit")
-    if git_blob_sha1(raw) != blob_sha:
+    if git_blob_id(raw, blob_sha) != blob_sha:
         raise AcquireError("bytes do not match blob_sha")
     return raw
 
