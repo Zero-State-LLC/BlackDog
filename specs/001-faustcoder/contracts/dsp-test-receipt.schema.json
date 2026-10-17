@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/scrimshawlife-ctrl/FaustCoder/specs/001-faustcoder/contracts/DSPTestReceipt.schema.json",
+  "title": "DSPTestReceipt",
+  "description": "Spec §8 DSPTestReceipt (R-006).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "source_sha256",
+    "test_suite_digest",
+    "sample_rate",
+    "block_size",
+    "seed",
+    "metrics",
+    "thresholds",
+    "passed",
+    "harness_digest"
+  ],
+  "properties": {
+    "source_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "test_suite_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "sample_rate": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "block_size": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "seed": {
+      "type": "integer"
+    },
+    "metrics": {
+      "type": "object"
+    },
+    "thresholds": {
+      "type": "object"
+    },
+    "passed": {
+      "type": "boolean"
+    },
+    "harness_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    }
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/scrimshawlife-ctrl/FaustCoder/specs/001-faustcoder/contracts/TaskSpec.schema.json",
+  "title": "TaskSpec",
+  "description": "Spec §8 TaskSpec. Field types are INFERRED.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "task_id",
+    "task_type",
+    "prompt",
+    "constraints",
+    "expected_io",
+    "test_profile",
+    "schema_version"
+  ],
+  "properties": {
+    "task_id": {
+      "type": "string"
+    },
+    "task_type": {
+      "type": "string",
+      "description": "INFERRED examples: generate, repair, explain, optimize"
+    },
+    "prompt": {
+      "type": "string"
+    },
+    "constraints": {
+      "type": "object"
+    },
+    "expected_io": {
+      "type": "object",
+      "description": "INFERRED: input and output channel counts"
+    },
+    "test_profile": {
+      "type": "object"
+    },
+    "schema_version": {
+      "type": "string"
+    }
+  }
+}
