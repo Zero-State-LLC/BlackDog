@@ -93,6 +93,9 @@ secrets.*
 
 # Tooling
 node_modules/
+# Host fetches. scripts/fetch-faustlibraries.sh and scripts/fetch-faust-examples.sh.
+faust/libraries/
+faust/examples/
 *.egg-info/
 dist/
 build/

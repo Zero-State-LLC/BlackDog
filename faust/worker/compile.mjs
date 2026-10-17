@@ -4,8 +4,10 @@
 // refuses to start unless FAUSTCODER_SANDBOX=1 and Node's permission model
 // is on, so a bare `node compile.mjs` does not compile.
 
-import { writeFileSync, renameSync } from "node:fs";
-import { join } from "node:path";
+import { createHash } from "node:crypto";
+import { writeFileSync, renameSync, readdirSync, readFileSync, statSync } from "node:fs";
+import { connect } from "node:net";
+import { join, relative } from "node:path";
 import { pathToFileURL, fileURLToPath } from "node:url";
 
 const FAUSTWASM_VERSION = "0.19.0";
@@ -14,6 +16,11 @@ const SAFE_OPTION = /^(-[a-z][a-z0-9]*|[0-9]+)$/;
 
 function failClosed(message) {
   process.stderr.write(`${message}\n`);
+  process.exit(2);
+}
+
+function failCanary(message) {
+  process.stderr.write(`sandbox_canary_failed: ${message}\n`);
   process.exit(2);
 }
 
@@ -48,6 +55,199 @@ function assertOptions(options) {
   }
 }
 
+function ensureVirtualDir(fs, path) {
+  const parts = path.split("/").filter(Boolean);
+  let acc = "";
+  for (const part of parts) {
+    acc += `/${part}`;
+    if (!fs.analyzePath(acc).exists) {
+      fs.mkdir(acc);
+    }
+  }
+}
+
+function clearVirtual(fs, dir) {
+  let names;
+  try {
+    names = fs.readdir(dir);
+  } catch {
+    return;
+  }
+  for (const name of names) {
+    if (name === "." || name === "..") {
+      continue;
+    }
+    const path = `${dir}/${name}`;
+    const info = fs.analyzePath(path);
+    if (info.object && info.object.isFolder) {
+      clearVirtual(fs, path);
+      fs.rmdir(path);
+    } else {
+      fs.unlink(path);
+    }
+  }
+}
+
+function hostLibraries(root) {
+  const files = [];
+  const walk = (dir) => {
+    for (const name of readdirSync(dir)) {
+      if (name.startsWith(".")) {
+        continue;
+      }
+      const path = join(dir, name);
+      const stat = statSync(path);
+      if (stat.isSymbolicLink()) {
+        failClosed("library tree contains a symlink");
+      }
+      if (stat.isDirectory()) {
+        walk(path);
+      } else if (stat.isFile() && name.endsWith(".lib")) {
+        files.push(path);
+      }
+    }
+  };
+  walk(root);
+  return files;
+}
+
+function libraryTreeSha256(entries) {
+  const files = entries.slice().sort((left, right) => (left[0] < right[0] ? -1 : left[0] > right[0] ? 1 : 0));
+  const hash = createHash("sha256");
+  for (const [rel, raw] of files) {
+    const body = Buffer.isBuffer(raw) ? raw : Buffer.from(raw);
+    const length = Buffer.alloc(8);
+    length.writeBigUInt64BE(BigInt(body.length));
+    hash.update(Buffer.from(rel, "utf8"));
+    hash.update(Buffer.from("\n"));
+    hash.update(length);
+    hash.update(body);
+  }
+  return hash.digest("hex");
+}
+
+function stageLibraries(compiler, root) {
+  const fs = compiler.fs();
+  clearVirtual(fs, "/usr/share/faust");
+  ensureVirtualDir(fs, "/usr/share/faust");
+  const written = [];
+  for (const file of hostLibraries(root)) {
+    const rel = relative(root, file).split("\\").join("/");
+    const dest = `/usr/share/faust/${rel}`;
+    ensureVirtualDir(fs, dest.split("/").slice(0, -1).join("/"));
+    const bytes = readFileSync(file);
+    fs.writeFile(dest, bytes);
+    written.push([rel, bytes]);
+  }
+  return libraryTreeSha256(written);
+}
+
+function mountedLibrarySha256(fs) {
+  const files = [];
+  const walk = (dir, prefix) => {
+    let names;
+    try {
+      names = fs.readdir(dir);
+    } catch {
+      failClosed("mounted library tree is missing");
+    }
+    for (const name of names) {
+      if (name === "." || name === ".." || name.startsWith(".")) {
+        continue;
+      }
+      const path = `${dir}/${name}`;
+      const rel = prefix ? `${prefix}/${name}` : name;
+      const info = fs.analyzePath(path);
+      if (info.object && info.object.isFolder) {
+        walk(path, rel);
+      } else if (name.endsWith(".lib")) {
+        const data = fs.readFile(path);
+        files.push([rel, Buffer.from(data)]);
+      }
+    }
+  };
+  walk("/usr/share/faust", "");
+  return libraryTreeSha256(files);
+}
+
+function namespaceInterfaces() {
+  let text;
+  try {
+    text = readFileSync("/proc/net/dev", "utf8");
+  } catch {
+    failCanary("network namespace interfaces could not be read");
+  }
+  const names = [];
+  for (const line of text.split("\n").slice(2)) {
+    const trimmed = line.trim();
+    if (!trimmed) {
+      continue;
+    }
+    const name = trimmed.split(":")[0];
+    if (name) {
+      names.push(name);
+    }
+  }
+  return names;
+}
+
+function assertNetworkIsolated() {
+  const names = namespaceInterfaces();
+  if (names.length !== 1 || names[0] !== "lo") {
+    failCanary("network namespace has a non-loopback interface");
+  }
+  return new Promise((resolve) => {
+    const socket = connect({ host: "1.1.1.1", port: 443 });
+    const timer = setTimeout(() => {
+      socket.destroy();
+      failCanary("network connect did not fail inside the sandbox");
+    }, 1000);
+    socket.once("error", () => {
+      clearTimeout(timer);
+      socket.destroy();
+      resolve();
+    });
+    socket.once("connect", () => {
+      clearTimeout(timer);
+      socket.destroy();
+      failCanary("network connect succeeded inside the sandbox");
+    });
+  });
+}
+
+function assertSourcePath(path) {
+  if (typeof path !== "string" || path === "" || path.startsWith("/") || path.includes("\\")) {
+    failClosed("source path is not relative");
+  }
+  const parts = path.split("/");
+  for (const part of parts) {
+    if (part === "" || part === "." || part === "..") {
+      failClosed("source path escapes the source directory");
+    }
+    if (!/^[A-Za-z0-9_.+-]+$/.test(part)) {
+      failClosed("source path has an unsafe component");
+    }
+  }
+  if (!path.endsWith(".dsp")) {
+    failClosed("source path must be a .dsp file");
+  }
+}
+
+function stageSources(compiler, sources) {
+  const fs = compiler.fs();
+  clearVirtual(fs, "/src");
+  ensureVirtualDir(fs, "/src");
+  for (const file of sources) {
+    if (!file || typeof file.source !== "string") {
+      failClosed("source file must be a string");
+    }
+    assertSourcePath(file.path);
+    const dest = `/src/${file.path}`;
+    ensureVirtualDir(fs, dest.split("/").slice(0, -1).join("/"));
+    fs.writeFile(dest, file.source);
+  }
+}
+
 async function loadCompiler(runtimeJs) {
   const entry = fileURLToPath(
     new URL("./node_modules/@grame/faustwasm/dist/esm/index.js", import.meta.url),
@@ -65,8 +265,8 @@ function hostBytes(value) {
   return Buffer.from(value);
 }
 
-async function compileWasm(compiler, source, options) {
-  const factory = await compiler.createMonoDSPFactory("input", source, options.join(" "));
+async function compileWasm(compiler, moduleName, source, options) {
+  const factory = await compiler.createMonoDSPFactory(moduleName, source, options.join(" "));
   if (!factory || !factory.code) {
     return { compile_ok: false, diagnostics: "compiler returned failure\n", files: [] };
   }
@@ -80,9 +280,9 @@ async function compileWasm(compiler, source, options) {
   };
 }
 
-function compileCpp(compiler, source, options) {
+function compileCpp(compiler, moduleName, source, options) {
   const args = ["-lang", "cpp", "-o", "output.cpp", ...options].join(" ");
-  const ok = compiler.generateAuxFiles("input", source, args);
+  const ok = compiler.generateAuxFiles(moduleName, source, args);
   if (!ok) {
     const message = compiler.getErrorMessage() || "compiler returned failure\n";
     return {
@@ -117,14 +317,37 @@ async function main() {
   }
   const options = request.options ?? [];
   assertOptions(options);
+  const libraryRoot = process.argv[3];
+  if (!libraryRoot) {
+    failClosed("library tree argument is required");
+  }
+  const sources = request.sources ?? [];
+  if (!Array.isArray(sources)) {
+    failClosed("sources must be an array");
+  }
+  await assertNetworkIsolated();
   const compiler = await loadCompiler(join(workdir, "runtime", "libfaust-wasm.js"));
+  const writtenSha = stageLibraries(compiler, libraryRoot);
+  const libraryTreeSha256 = mountedLibrarySha256(compiler.fs());
+  if (writtenSha !== libraryTreeSha256) {
+    failClosed("mounted library tree does not match the bytes written");
+  }
+  let moduleName = "input";
+  if (sources.length > 0) {
+    if (typeof request.filename !== "string") {
+      failClosed("filename is required");
+    }
+    assertSourcePath(request.filename);
+    stageSources(compiler, sources);
+    moduleName = `/src/${request.filename}`;
+  }
   const libfaustVersion = compiler.version();
   let compiled;
   try {
     compiled =
       request.lang === "wasm"
-        ? await compileWasm(compiler, request.source, options)
-        : compileCpp(compiler, request.source, options);
+        ? await compileWasm(compiler, moduleName, request.source, options)
+        : compileCpp(compiler, moduleName, request.source, options);
   } catch (error) {
     const message = error instanceof Error ? error.message : "compiler failed";
     compiled = {
@@ -144,6 +367,7 @@ async function main() {
   writeResult(workdir, {
     faustwasm_version: FAUSTWASM_VERSION,
     libfaust_version: libfaustVersion,
+    library_tree_sha256: libraryTreeSha256,
     compile_ok: compiled.compile_ok,
     diagnostics: compiled.diagnostics,
     output_files: outputFiles,

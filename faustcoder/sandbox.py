@@ -18,13 +18,31 @@ Enforcement, in order:
    clears that sysctl only when ``runner.environment`` is
    ``github-hosted``, then checks ``unshare --net --map-current-user --
    true``. On a DGX Spark or any self-hosted runner, do not set that
-   sysctl. Grant ``userns`` to the node binary with a per-binary AppArmor
-   profile. See ``docs/runbooks/compiler-harness.md``. The scrubbed
-   environment also drops ``HTTP_PROXY``, ``HTTPS_PROXY``, ``ALL_PROXY``,
-   ``NODE_OPTIONS`` and the rest of the parent environment.
+   sysctl. Install a root-owned copy of the unshare binary at
+   ``/opt/faustcoder/bin/fc-unshare`` and point ``FAUSTCODER_UNSHARE`` at
+   it. See ``docs/runbooks/compiler-harness.md``. When ``FAUSTCODER_UNSHARE``
+   is set, the path has to be absolute, a regular file, owned by root, and
+   not writable by group or others. The parent directory has to meet the
+   same ownership rule. A symlink or a user-owned wrapper is refused.
+   Unset, the sandbox uses the system ``unshare``, which is the CI
+   default. The compile worker then checks, in that same process, that
+   the network namespace has no non-loopback interface and that a connect
+   fails. The scrubbed environment also drops ``HTTP_PROXY``,
+   ``HTTPS_PROXY``, ``ALL_PROXY``, ``NODE_OPTIONS`` and the rest of the
+   parent environment.
 2. Code generation. Node is started with
    ``--disallow-code-generation-from-strings``, which rejects ``eval`` and
    ``new Function``. faustwasm 0.19.0 still compiles under that flag.
+   ``--stack-size=8192`` sets the V8 stack to 8192 KB. Node's default
+   (about 984 KB) overflows while compiling
+   ``physicalModeling/fds/2dKirchhoffThinPlate.dsp``. 6144 KB still
+   overflows. 6272 KB is the smallest size observed to compile that file
+   on Node 22. 8192 KB is the harness bound, a round step above that
+   failure. The flag is part of the compiler identity. A Faust definition
+   with no base case then runs until the worker dies with ``SIGSEGV``
+   instead of raising a catchable JavaScript stack error. That is still
+   an internal failure. The resident cap below is what stops a compile
+   that merely allocates.
 3. Filesystem, process, and addons. ``--permission`` is on and the command
    does not pass ``--allow-child-process``, ``--allow-worker``,
    ``--allow-addons``, ``--allow-wasi`` or ``--allow-net``. Read and write
@@ -55,10 +73,12 @@ and does not run the compiler on the host network.
 
 from __future__ import annotations
 
+import hashlib
 import math
 import os
 import shutil
 import signal
+import stat
 import subprocess
 import threading
 from collections.abc import Sequence
@@ -67,9 +87,13 @@ from pathlib import Path
 
 # Flags that are part of the compiler identity. Per-run filesystem allow
 # paths are absolute temp directories and are not part of this tuple.
+# --stack-size is kilobytes of V8 stack. 8192 KB is the documented bound
+# for physicalModeling/fds/2dKirchhoffThinPlate.dsp. See the module docstring.
+NODE_STACK_SIZE_KB = 8192
 NODE_SANDBOX_FLAGS = (
     "--disallow-code-generation-from-strings",
     "--permission",
+    f"--stack-size={NODE_STACK_SIZE_KB}",
 )
 
 _IGNORED_OUTPUTS = {
@@ -96,7 +120,10 @@ class ResourceLimits:
     """
 
     timeout_s: float = 15.0
-    memory_bytes: int = 512 * 1024 * 1024
+    # 768 MB covers SAM/virtualAnalog/virtualAnalog.dsp, which exceeds
+    # 608 MB and compiles at 640 MB. The 50 ms poll needs room above that
+    # peak. The plate compile stays near 510 MB.
+    memory_bytes: int = 768 * 1024 * 1024
     output_bytes: int = 8 * 1024 * 1024
     source_bytes: int = 1024 * 1024
     poll_interval_s: float = 0.05
@@ -133,21 +160,65 @@ def node_executable() -> str:
     return _require_tool("node")
 
 
+def unshare_executable() -> str:
+    """Return the ``unshare`` binary this process will execute.
+
+    ``FAUSTCODER_UNSHARE`` selects a dedicated binary such as
+    ``/opt/faustcoder/bin/fc-unshare``. When it is set, the path must be
+    absolute, a regular file (not a symlink), owned by root, and not
+    writable by group or others. The parent directory must be a root-owned
+    directory that group and others cannot write. Unset, the system
+    ``unshare`` is used. CI leaves the variable unset. A shell wrapper is
+    the wrong binary: the ``unshare`` syscall has to come from the file
+    AppArmor names.
+    """
+    override = os.environ.get("FAUSTCODER_UNSHARE", "").strip()
+    if not override:
+        return _require_tool("unshare")
+    if not os.path.isabs(override):
+        raise SandboxError(f"FAUSTCODER_UNSHARE must be an absolute path: {override}")
+    path = Path(override)
+    _require_root_owned(path, "FAUSTCODER_UNSHARE", directory=False)
+    _require_root_owned(path.parent, "FAUSTCODER_UNSHARE directory", directory=True)
+    if not os.access(path, os.X_OK):
+        raise SandboxError(f"FAUSTCODER_UNSHARE is not executable: {override}")
+    return override
+
+
+def unshare_identity() -> tuple[str, str]:
+    """Return the resolved path and sha256 of the unshare binary in use.
+
+    ``FAUSTCODER_UNSHARE`` unset means the system ``unshare``. The path is
+    resolved, so a symlink is named by its target. The sha256 is of that
+    file's bytes. ``environment_digest`` records both, so a swapped wrapper
+    changes the digest before the network canary runs.
+    """
+    path = Path(unshare_executable()).resolve()
+    return str(path), hashlib.sha256(path.read_bytes()).hexdigest()
+
+
 def node_command(
     script: Path,
     args: Sequence[str],
     *,
     read_paths: Sequence[Path],
     write_paths: Sequence[Path],
+    literal_reads: Sequence[str] = (),
 ) -> list[str]:
     """Build the Node command line for one sandboxed script.
 
     The command enables the permission model and does not grant network,
     child processes, worker threads, native addons or WASI.
+    ``literal_reads`` are appended as written. ``/proc/net/dev`` has to
+    stay literal: ``realpath`` follows ``/proc/net`` into the parent's pid.
     """
     command = [node_executable(), *NODE_SANDBOX_FLAGS]
     for path in read_paths:
         command.append(f"--allow-fs-read={_permission_path(path)}")
+    for item in literal_reads:
+        if not item.startswith("/") or "\x00" in item:
+            raise SandboxError(f"literal read path must be absolute: {item}")
+        command.append(f"--allow-fs-read={item}")
     for path in write_paths:
         command.append(f"--allow-fs-write={_permission_path(path)}")
     command.append(str(script.resolve()))
@@ -171,7 +242,7 @@ def run_in_sandbox(
     if not command:
         raise SandboxError("sandbox command is empty")
     prlimit = _require_tool("prlimit")
-    unshare = _require_tool("unshare")
+    unshare = unshare_executable()
     cpu_seconds = max(1, math.ceil(limits.timeout_s) + 1)
     wrapped = [
         prlimit,
@@ -321,6 +392,21 @@ def _permission_path(path: Path) -> str:
     if os.path.isdir(text) and not text.endswith(os.sep):
         return text + os.sep
     return text
+
+
+def _require_root_owned(path: Path, label: str, *, directory: bool) -> None:
+    try:
+        info = os.lstat(path)
+    except OSError as exc:
+        raise SandboxError(f"{label} is not available: {path}") from exc
+    kind = stat.S_ISDIR if directory else stat.S_ISREG
+    expected = "directory" if directory else "regular file"
+    if not kind(info.st_mode):
+        raise SandboxError(f"{label} is not a {expected}: {path}")
+    if info.st_uid != 0:
+        raise SandboxError(f"{label} must be owned by root: {path}")
+    if info.st_mode & 0o022:
+        raise SandboxError(f"{label} must not be writable by group or others: {path}")
 
 
 def _require_tool(name: str) -> str:

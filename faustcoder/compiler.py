@@ -44,17 +44,47 @@ to milliseconds. A source rejected for size never starts the process and
 records ``0``.
 
 ``environment_digest`` hashes a canonical object with ``compiler``,
-``faust_version``, ``faustlibraries_version`` (the ``vl.version`` triplet
-declared in the bundled ``version.lib``, or ``""`` for the native CLI),
+``faust_version``, ``faustlibraries_version`` (``vl.version`` of the staged
+pin, ``2.80.0``), ``faustlibraries_commit`` (``2edec0537f53``),
+``faustlibraries_tree_sha256`` (the canonical checkout),
+``faustlibraries_share_sha256`` (the tree mounted at ``/usr/share/faust``,
+checkout paths plus the flat ``old/*.lib`` and ``dx7/*.lib`` copies),
+``bundled_faustlibraries_version`` (the triplet still embedded in
+``libfaust-wasm.data``, ``2.74.2`` for wasm and ``""`` for the native CLI),
 ``faustwasm`` (``0.19.0`` or ``""``), ``lang``,
 ``libfaust_wasm_data_sha256``, ``network`` (``unshare-net-userns``),
-``node`` (major.minor only), ``node_flags`` (the identity flags, not
-per-run temp paths), ``options``, ``runtime_sha256`` (sha256 of the staged
-``libfaust-wasm.js``, ``.wasm`` and ``.data``) and ``user_map``
-(``current``). Host name, Node patch version and the job directory are
-not included. The libfaust version is resolved once per runtime hash and
-reused on every receipt from that runtime, including timeout, memory,
-output and internal receipts.
+``node`` (major.minor only), ``node_flags`` (the identity flags, including
+``--stack-size=8192``, not per-run temp paths), ``options``,
+``runtime_sha256`` (sha256 of the staged ``libfaust-wasm.js``, ``.wasm``
+and ``.data``), ``unshare_path`` (the resolved path of the ``unshare``
+binary this process executes, including the system binary when
+``FAUSTCODER_UNSHARE`` is unset), ``unshare_sha256`` (sha256 of that
+file) and ``user_map`` (``current``). Host name, Node patch version, the
+job directory and the host library path are not included. The unshare
+path is included because a different binary is a different sandbox. A
+swapped wrapper changes ``environment_digest`` before the network canary
+runs.
+
+The libfaust version is resolved once per runtime hash and reused on
+every receipt from that runtime, including timeout, memory, output and
+internal receipts. ``faustlibraries_share_sha256`` is the hash of the
+share directory, recomputed on every compile, and of the bytes the worker
+writes into the Emscripten filesystem. Those two hashes have to match the
+pin. A mismatch raises before a receipt is written. One changed byte of
+that mounted tree changes the digest. A checkout that does not match the
+pin is refused the same way.
+
+Before every wasm compile the worker replaces ``/usr/share/faust`` in the
+Emscripten filesystem with that pinned share, then hashes exactly those
+mounted bytes and returns the digest. The harness refuses the result
+unless it is the pinned share hash. In the same process, before compiling,
+the worker reads ``/proc/net/dev`` and requires the only interface to be
+``lo``, then requires a connect to fail. The native 2.88.0 cross-check
+passes the same directory as ``-I``. The logical ``command`` records
+``--faustlibraries=2edec0537f53`` and not the host path. The tree is
+fetched on the host. The sandbox does not download it. Do not run a T06
+or T07 compile check, and do not feed a receipt into a reward, against a
+harness that skipped this staging.
 
 ``command`` records the logical compiler invocation, including
 ``--faustwasm=0.19.0``. The schema has no separate faustwasm field, so the
@@ -94,8 +124,9 @@ Harness failures override that text:
 - a JS runtime exception (``allocate is not defined``, ``Maximum call
   stack size exceeded``, ``ReferenceError``, ``RangeError``, ``TypeError``,
   and the same family), a remote ``import`` / ``library`` / ``component``
-  URL rejected before spawn, a worker crash, or an unreadable result ->
-  ``internal``, exit 126
+  URL rejected before spawn, a worker crash (including ``SIGSEGV`` from a
+  recursive source once ``--stack-size=8192`` lets it pass the old V8
+  limit), or an unreadable result -> ``internal``, exit 126
 
 Compiler rejection of the source is exit 1. Exit 0 is ``ok`` or ``warning``.
 
@@ -132,6 +163,14 @@ from pathlib import Path
 from typing import Any
 
 from faustcoder.canonical import build_envelope, canonical_bytes, content_digest_for
+from faustcoder.exclusions import CompilerExclusion, exclusion_for_source
+from faustcoder.libraries import (
+    FAUSTLIBRARIES_COMMIT,
+    FAUSTLIBRARIES_SHARE_SHA256,
+    FAUSTLIBRARIES_VERSION,
+    require_library_tree,
+    share_directory,
+)
 from faustcoder.sandbox import (
     NODE_SANDBOX_FLAGS,
     ResourceLimits,
@@ -140,6 +179,7 @@ from faustcoder.sandbox import (
     node_command,
     node_executable,
     run_in_sandbox,
+    unshare_identity,
 )
 from faustcoder.schemas import validate
 from faustcoder.store import ArtifactStore
@@ -147,10 +187,12 @@ from faustcoder.store import ArtifactStore
 FAUSTWASM_VERSION = "0.19.0"
 NATIVE_FAUST_VERSION = "2.88.0"
 COMPILER_SCHEMA_VERSION = "0.3.2"
-# ADR-0004 / T05 pin. The wasm bundle's version.lib is a different triplet;
-# runtime_pin().faustlibraries_version is the bundle, not this commit.
-FAUSTLIBRARIES_PIN = "2edec0537f53"
-FAUSTLIBRARIES_PIN_VERSION = "2.80.0"
+# ADR-0004 / T05 pin. Staged into /usr/share/faust before every compile.
+# The wasm bundle's version.lib is still 2.74.2 and is not the compile set.
+FAUSTLIBRARIES_PIN = FAUSTLIBRARIES_COMMIT
+FAUSTLIBRARIES_PIN_VERSION = FAUSTLIBRARIES_VERSION
+_MAX_REQUEST_BYTES = 2 * 1024 * 1024
+_SOURCE_PATH = re.compile(r"^[A-Za-z0-9_.+-]+$")
 EXCLUDED_TIMING_FIELDS = ("duration_ms",)
 UNGRADED_EXIT_FLOOR = 124
 _COMPILER_SCHEMA = "compiler-receipt.schema.json"
@@ -182,7 +224,7 @@ _JS_RUNTIME = (
     "is not a function",
 )
 _PIN_LOCK = threading.Lock()
-_PIN_CACHE: dict[tuple[str, str, str], "RuntimePin"] = {}
+_PIN_CACHE: dict[tuple[str, ...], "RuntimePin"] = {}
 
 
 class CompilerHarnessError(Exception):
@@ -197,13 +239,18 @@ class NativeFaustUnavailable(CompilerHarnessError):
 class RuntimePin:
     """Identity of one staged libfaust runtime.
 
-    ``faustlibraries_version`` is the ``vl.version`` triplet in the bundled
-    ``version.lib``. ``node`` is major.minor. The three sha256 fields are
-    hex digests of the runtime bytes, with no ``sha256:`` prefix.
+    ``faustlibraries_version`` is ``vl.version`` of the pinned tree that is
+    staged over the bundle. ``bundled_faustlibraries_version`` is the
+    triplet still sitting in ``libfaust-wasm.data``. ``node`` is
+    major.minor. The sha256 fields are hex digests with no ``sha256:``
+    prefix.
     """
 
     faust_version: str
     faustlibraries_version: str
+    bundled_faustlibraries_version: str
+    faustlibraries_commit: str
+    faustlibraries_tree_sha256: str
     node: str
     js_sha256: str
     wasm_sha256: str
@@ -295,22 +342,32 @@ def compile_source(
     lang: str = "wasm",
     options: Sequence[str] = (),
     limits: ResourceLimits | None = None,
+    filename: str = "input.dsp",
+    siblings: Mapping[str, str] | None = None,
 ) -> Compilation:
     """Compile ``source`` with libfaust-wasm and return a receipt.
 
     ``lang`` is ``wasm`` or ``cpp``. A Faust rejection is a receipt with
     exit code 1, not an exception. A missing sandbox tool raises
-    ``SandboxError``.
+    ``SandboxError``. ``siblings`` maps relative ``.dsp`` paths to source
+    text from the same program. They are written into the Emscripten
+    filesystem so ``import`` and ``component`` of those paths resolve.
+    A known faust-stk or fastpow2 source raises ``CompilerExclusion``
+    instead of a receipt. That exclusion is a failure when rewards land,
+    not a pass and not an ungraded refuge. Reward behavior is unchanged.
     """
     if not isinstance(source, str):
         raise TypeError("source must be a string")
     if lang not in {"wasm", "cpp"}:
         raise ValueError("lang must be 'wasm' or 'cpp'")
     checked = _validate_options(options)
+    files = _source_files(filename, source, siblings)
+    _reject_excluded(source)
     bounds = limits or ResourceLimits()
-    source_bytes = source.encode("utf-8")
+    entry = _normalize_dsp_path(filename) if siblings else None
+    source_bytes = _source_identity(files, entry=entry)
     pin = runtime_pin()
-    if len(source_bytes) > bounds.source_bytes:
+    if sum(len(text.encode("utf-8")) for _, text in files) > bounds.source_bytes:
         return _harness_receipt(
             source_bytes,
             lang=lang,
@@ -320,7 +377,7 @@ def compile_source(
             faust_version=pin.faust_version,
             pin=pin,
         )
-    if _REMOTE_IMPORT.search(source):
+    if any(_REMOTE_IMPORT.search(text) for _, text in files):
         return _harness_receipt(
             source_bytes,
             lang=lang,
@@ -333,23 +390,43 @@ def compile_source(
     script = worker_directory() / "compile.mjs"
     if not script.is_file():
         raise SandboxError(f"compiler worker is missing: {script}")
-    request = json.dumps(
-        {"source": source, "lang": lang, "options": list(checked)},
-        ensure_ascii=False,
-        separators=(",", ":"),
-    ).encode("utf-8")
+    libraries = share_directory()
+    payload: dict[str, Any] = {
+        "source": source,
+        "lang": lang,
+        "options": list(checked),
+        "sources": [],
+    }
+    if siblings:
+        payload["filename"] = _normalize_dsp_path(filename)
+        payload["sources"] = [{"path": path, "source": text} for path, text in files]
+    request = json.dumps(payload, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
+    if len(request) > _MAX_REQUEST_BYTES:
+        return _harness_receipt(
+            source_bytes,
+            lang=lang,
+            options=checked,
+            stop_reason="source",
+            duration_ms=0,
+            faust_version=pin.faust_version,
+            pin=pin,
+        )
     started = time.monotonic()
     with tempfile.TemporaryDirectory(prefix="faustcoder-") as temporary:
         workdir = Path(temporary)
         _stage_runtime(workdir)
         command = node_command(
             script,
-            [str(workdir)],
-            read_paths=[worker_directory(), workdir],
+            [str(workdir), str(libraries)],
+            read_paths=[worker_directory(), workdir, libraries],
             write_paths=[workdir],
+            # /proc/net is a symlink to self/net. realpath would grant the
+            # parent's pid. The canary has to read the child's namespace.
+            literal_reads=("/proc/net/dev",),
         )
         run = run_in_sandbox(command, stdin=request, workdir=workdir, limits=bounds)
         duration_ms = int((time.monotonic() - started) * 1000)
+        _raise_if_canary_failed(run)
         if run.stop_reason:
             return _harness_receipt(
                 source_bytes,
@@ -370,6 +447,49 @@ def compile_source(
             duration_ms=duration_ms,
             pin=pin,
         )
+
+
+def compile_directory(
+    directory: Path,
+    entry: str,
+    *,
+    lang: str = "wasm",
+    options: Sequence[str] = (),
+    limits: ResourceLimits | None = None,
+) -> Compilation:
+    """Compile ``entry`` plus every ``.dsp`` file under ``directory``.
+
+    Paths stay relative to ``directory``. ``component("../x.dsp")`` resolves
+    when ``directory`` is the common parent of the entry and ``x.dsp``.
+    Symlinks are skipped.
+    """
+    root = directory.resolve()
+    if not root.is_dir():
+        raise CompilerHarnessError(f"source directory is missing: {directory}")
+    entry_rel = _normalize_dsp_path(entry)
+    siblings: dict[str, str] = {}
+    source = ""
+    found = False
+    for path in root.rglob("*.dsp"):
+        if path.is_symlink() or not path.is_file():
+            continue
+        rel = path.relative_to(root).as_posix()
+        text = path.read_bytes().decode("utf-8")
+        if rel == entry_rel:
+            found = True
+            source = text
+            continue
+        siblings[rel] = text
+    if not found:
+        raise CompilerHarnessError(f"entry is not in the source directory: {entry}")
+    return compile_source(
+        source,
+        lang=lang,
+        options=options,
+        limits=limits,
+        filename=entry_rel,
+        siblings=siblings,
+    )
 
 
 def compile_native(
@@ -398,11 +518,12 @@ def compile_native(
             faust_version=NATIVE_FAUST_VERSION,
             compiler="faust-cli",
         )
+    libraries = share_directory()
     started = time.monotonic()
     with tempfile.TemporaryDirectory(prefix="faustcoder-") as temporary:
         workdir = Path(temporary)
         (workdir / "input.dsp").write_bytes(source_bytes)
-        command = [binary, "-lang", "cpp", *checked, "input.dsp"]
+        command = _native_command(binary, libraries, checked)
         run = run_in_sandbox(command, stdin=b"", workdir=workdir, limits=bounds, cwd=workdir)
         duration_ms = int((time.monotonic() - started) * 1000)
         if run.stop_reason:
@@ -545,25 +666,30 @@ def lookup_compiler_receipt(
 def runtime_pin() -> RuntimePin:
     """Return the installed libfaust pin, probing the runtime once per hash."""
     _installed_faustwasm_version()
+    libraries = require_library_tree()
     runtime = _runtime_directory()
     hashes = tuple(_file_sha256(runtime / name) for name in _RUNTIME_FILES)
+    cache_key = (*hashes, libraries.sha256)
     with _PIN_LOCK:
-        cached = _PIN_CACHE.get(hashes)
+        cached = _PIN_CACHE.get(cache_key)
     if cached is not None:
         return cached
-    libraries = _faustlibraries_version(runtime / "libfaust-wasm.data")
+    bundled = _faustlibraries_version(runtime / "libfaust-wasm.data")
     node = _node_major_minor()
     faust_version = _probe_libfaust_version()
     pin = RuntimePin(
         faust_version=faust_version,
-        faustlibraries_version=libraries,
+        faustlibraries_version=libraries.version,
+        bundled_faustlibraries_version=bundled,
+        faustlibraries_commit=libraries.commit,
+        faustlibraries_tree_sha256=libraries.sha256,
         node=node,
         js_sha256=hashes[0],
         wasm_sha256=hashes[1],
         data_sha256=hashes[2],
     )
     with _PIN_LOCK:
-        _PIN_CACHE[hashes] = pin
+        _PIN_CACHE[cache_key] = pin
     return pin
 
 
@@ -574,17 +700,38 @@ def environment_preimage(
     lang: str,
     options: Sequence[str],
     pin: RuntimePin | None,
+    mounted_share_sha256: str | None = None,
 ) -> dict[str, Any]:
-    """Return the object hashed into ``environment_digest``."""
+    """Return the object hashed into ``environment_digest``.
+
+    ``faustlibraries_share_sha256`` is the hash of the tree mounted at
+    ``/usr/share/faust``. The share directory is re-hashed on this call.
+    ``mounted_share_sha256``, when the worker returned one, has to be that
+    same value. A mismatch raises and the caller writes no receipt.
+    """
+    libraries = require_library_tree()
+    share_directory(libraries)
+    if mounted_share_sha256 is not None and mounted_share_sha256 != FAUSTLIBRARIES_SHARE_SHA256:
+        raise SandboxError(
+            "worker hash of /usr/share/faust does not match the pinned share: "
+            f"{mounted_share_sha256}"
+        )
     wasm = compiler == "libfaust-wasm" and pin is not None
+    unshare_path, unshare_sha256 = unshare_identity()
     return {
+        "bundled_faustlibraries_version": pin.bundled_faustlibraries_version if wasm else "",
         "compiler": compiler,
         "faust_version": faust_version,
-        "faustlibraries_version": pin.faustlibraries_version if wasm else "",
+        "faustlibraries_commit": libraries.commit,
+        "faustlibraries_share_sha256": FAUSTLIBRARIES_SHARE_SHA256,
+        "faustlibraries_tree_sha256": libraries.sha256,
+        "faustlibraries_version": libraries.version,
         "faustwasm": FAUSTWASM_VERSION if compiler == "libfaust-wasm" else "",
         "lang": lang,
         "libfaust_wasm_data_sha256": pin.data_sha256 if wasm else "",
         "network": "unshare-net-userns",
+        "unshare_path": unshare_path,
+        "unshare_sha256": unshare_sha256,
         "node": pin.node if wasm else "",
         "node_flags": list(NODE_SANDBOX_FLAGS) if compiler == "libfaust-wasm" else [],
         "options": list(options),
@@ -597,6 +744,11 @@ def environment_preimage(
         else {},
         "user_map": "current",
     }
+
+
+def _native_command(binary: str, libraries: Path, options: Sequence[str]) -> list[str]:
+    """Argv for the native cross-check. ``-I`` is the pinned share tree."""
+    return [binary, "-I", str(libraries), "-lang", "cpp", *options, "input.dsp"]
 
 
 def _require_native_faust() -> str:
@@ -637,6 +789,71 @@ def _stage_runtime(workdir: Path) -> None:
         if not origin.is_file():
             raise SandboxError(f"missing faustwasm runtime file: {name}")
         shutil.copyfile(origin, target / name)
+
+
+def _source_files(
+    filename: str, source: str, siblings: Mapping[str, str] | None
+) -> list[tuple[str, str]]:
+    if not siblings:
+        return [("input.dsp", source)]
+    entry = _normalize_dsp_path(filename)
+    files = {entry: source}
+    for name, text in siblings.items():
+        if not isinstance(text, str):
+            raise ValueError("sibling source must be a string")
+        rel = _normalize_dsp_path(name)
+        if rel in files:
+            raise ValueError(f"duplicate source path: {rel}")
+        files[rel] = text
+    return sorted(files.items())
+
+
+def _source_identity(files: Sequence[tuple[str, str]], *, entry: str | None = None) -> bytes:
+    """Bytes hashed into ``source_sha256``.
+
+    A single file is the source text alone. A multi-file program also
+    hashes every path and the selected entry, so two entries over the
+    same directory do not share an identity.
+    """
+    if entry is None:
+        if len(files) != 1:
+            raise CompilerHarnessError("multi-file source identity requires an entry path")
+        return files[0][1].encode("utf-8")
+    chunks = [b"entry\n" + entry.encode("utf-8") + b"\n"]
+    for path, text in files:
+        data = text.encode("utf-8")
+        chunks.append(path.encode("utf-8") + b"\n" + len(data).to_bytes(8, "big") + data)
+    return b"".join(chunks)
+
+
+def _raise_if_canary_failed(run: SandboxRun) -> None:
+    """A failed network canary is not an ordinary internal receipt."""
+    marker = b"sandbox_canary_failed:"
+    if marker not in run.stderr:
+        return
+    detail = run.stderr.decode("utf-8", errors="replace").strip()
+    raise SandboxError(f"network namespace canary failed: {detail}")
+
+
+def _reject_excluded(source: str) -> None:
+    # CompilerExclusion is not a receipt. When rewards land, an exclusion
+    # of model output is a failure, not a pass and not an ungraded refuge.
+    found = exclusion_for_source(source)
+    if found is not None:
+        raise CompilerExclusion(found)
+
+
+def _normalize_dsp_path(name: str) -> str:
+    if not isinstance(name, str) or "\\" in name or name.startswith("/"):
+        raise ValueError("source path must be relative")
+    parts = name.split("/")
+    if not parts or any(
+        part in {"", ".", ".."} or _SOURCE_PATH.fullmatch(part) is None for part in parts
+    ):
+        raise ValueError("source path must stay inside the source directory")
+    if not name.endswith(".dsp"):
+        raise ValueError("source path must be a .dsp file")
+    return "/".join(parts)
 
 
 def _validate_options(options: Sequence[str]) -> tuple[str, ...]:
@@ -732,6 +949,14 @@ def _receipt_from_worker(
             faust_version=pin.faust_version,
             pin=pin,
         )
+    mounted = body.get("library_tree_sha256")
+    # The worker hashes the bytes it wrote into /usr/share/faust. That has
+    # to equal the Python hash of the share directory just mounted.
+    if not isinstance(mounted, str) or mounted != FAUSTLIBRARIES_SHARE_SHA256:
+        raise SandboxError(
+            "worker hash of /usr/share/faust does not match the pinned share: "
+            f"{mounted}"
+        )
     faust_version = pin.faust_version
     diagnostics = body.get("diagnostics")
     if not isinstance(diagnostics, str):
@@ -800,6 +1025,7 @@ def _receipt_from_worker(
         outputs=outputs,
         duration_ms=duration_ms,
         pin=pin,
+        mounted_share_sha256=mounted,
     )
 
 
@@ -858,6 +1084,7 @@ def _build(
     duration_ms: int,
     pin: RuntimePin | None = None,
     harness: str | None = None,
+    mounted_share_sha256: str | None = None,
 ) -> Compilation:
     runtime_failure = harness is None and not compile_ok and _is_js_runtime(diagnostics)
     if harness == "timeout":
@@ -884,6 +1111,7 @@ def _build(
         lang=lang,
         options=options,
         pin=pin,
+        mounted_share_sha256=mounted_share_sha256,
     )
     command = _logical_command(compiler, faust_version, lang, options)
     receipt = {
@@ -919,6 +1147,7 @@ def _logical_command(
         command = ["faust"]
         if faust_version != "unknown":
             command.append(f"--faust={faust_version}")
+    command.append(f"--faustlibraries={FAUSTLIBRARIES_PIN}")
     command.extend(["-lang", lang, *options])
     return command
 

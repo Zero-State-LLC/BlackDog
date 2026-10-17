@@ -43,11 +43,16 @@ jobs:
       - name: Install Faust worker
         working-directory: faust/worker
         run: npm ci --ignore-scripts
+      - name: Fetch pinned faustlibraries
+        run: ./scripts/fetch-faustlibraries.sh
+      - name: Fetch Faust 2.88.0 examples
+        run: ./scripts/fetch-faust-examples.sh
       # GitHub-hosted Ubuntu blocks unprivileged user namespaces, so
       # `unshare --net --map-current-user` fails with EPERM on uid_map.
       # The sysctl is host-wide. Set it only on ephemeral github-hosted
-      # runners. Sparks and self-hosted runners use a per-binary AppArmor
-      # profile (docs/runbooks/compiler-harness.md), never this sysctl.
+      # runners. Sparks use /opt/faustcoder/bin/fc-unshare
+      # (docs/runbooks/compiler-harness.md), never this sysctl. CI leaves
+      # FAUSTCODER_UNSHARE unset and uses the system unshare.
       - name: Allow the compiler network namespace
         if: runner.environment == 'github-hosted'
         run: |
