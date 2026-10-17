@@ -61,14 +61,53 @@ through a decision record when needed.
 
 - CLAP SDK and clap-helpers: MIT. VST 3 SDK: MIT since 3.8.0. clap-wrapper:
   MIT. OBSERVED (F21, F22).
+- VST3 route: default `faust2clap` then clap-wrapper, OBSERVED to build and
+  validate on Linux (faust 2.90.10 arch files, faust 2.79.3 compiler), with
+  known bugs. See "VST3 route evidence" below. Shipping builds use
+  clap-wrapper's linked, self-contained mode (INFERRED from clap-wrapper docs;
+  not yet built).
 - JUCE is AGPLv3 or commercial. `faust2juce` is the fallback for VST3 only if
-  clap-wrapper fails the lane, and needs a JUCE license decision first.
-  INFERRED.
+  clap-wrapper fails the lane, and only after a commercial JUCE licence
+  decision. A DPF (ISC) spike is the second fallback. INFERRED.
 - `faust2faustvst` and `faust2vst` target VST2 and are not used. OBSERVED
   (F20).
 - `pluginval` is GPL-3.0 and `lv2lint` Artistic-2.0. They run as separate
   validation tools and are not linked into or shipped with FaustCoder output.
   INFERRED; not legal advice.
+
+### VST3 route evidence (amended 0.3.1, Danny yes 2026-10-16 23:56 PT)
+
+Local test on 2026-10-16: a stereo gain (`fixtures/plugin/gain.dsp`) built
+with `faust2clap` from the faust checkout at 2.90.10 (`15a26da`), compiled by
+faust 2.79.3, then wrapped to VST3 by clap-wrapper (`1cca996`), which fetched
+VST 3 SDK `v3.8.0_build_66`. OBSERVED unless marked.
+
+| Route | License fit | Activity (last push) | Faust integration | Headless Linux | LV2 / AU | Result |
+|---|---|---|---|---|---|---|
+| A. `faust2clap` + clap-wrapper (default) | All MIT; faust `architecture/clap` files carry no license header (open question) | clap-wrapper 2026-10-15; faust CLAP files 2026-07-29 | Built in, one command | Builds with a CXXFLAGS workaround | AU via clap-wrapper on macOS (INFERRED, untested); LV2 via `faust2lv2` | pluginval 1.0.4 strictness 10 SUCCESS (VST3); clap-validator 0.4.1: 33 pass, 2 fail, 1 warning, 8 skipped |
+| B. `faust2juce` + JUCE (fallback) | AGPLv3 or commercial | JUCE 2026-10-16 | Mature; VST3, AU, AUv3 by default | Heavier (X11 dev packages); not tested | VST3 + AU in one toolchain | Not built |
+| C. DPF (second fallback) | ISC | DPF 2026-10-04; faustpp 2022-09; cookiecutter-dpf-faust 2024-11 | Stale glue | Linux-native (INFERRED) | VST3, CLAP, LV2, AU in one framework (INFERRED) | Not built; spike |
+| iPlug2 | Permissive (WDL style) | 2026-09-15 | No faust script | Weak (INFERRED) | No LV2 | Rejected |
+| Native Faust VST3 architecture | n/a | n/a | None; `faust2vst`, `faustvst.cpp` are VST2 | n/a | n/a | Not available |
+
+Known issues (route A):
+
+1. Build break on Linux: generated code uses `std::strcmp` without
+   `<cstring>`. Workaround: `CXXFLAGS="-include cstring -include cwchar"`.
+   The faust2clap README says only the macOS path has been exercised.
+2. clap-validator failure: the parameter value after initialization is
+   uninitialised (about 3e32) instead of its default 0.
+3. clap-validator failure: parameter events with a foreign namespace ID
+   change parameter values.
+4. clap-validator warning: 4x slowdown on denormals; no flush-to-zero.
+5. Licence question for Grame: `architecture/clap/*.cpp` has no license
+   header, and those files are compiled into every generated plugin.
+6. The test used clap-wrapper's generic mode (the `.vst3` loads `gain.clap`
+   from `~/.clap`); the self-contained shipping build is not yet built.
+7. Not yet rerun on the pinned faust 2.88.0. AU and LV2 not tested.
+
+CI (`.github/workflows/plugin-lane-smoke.yml`) runs the same build; the strict
+CLAP validation step is expected to fail until items 2 and 3 are fixed upstream.
 
 ### FPGA F0 spike (only FPGA work scheduled)
 

@@ -20,6 +20,7 @@ See [docs/VERSIONING.md](docs/VERSIONING.md).
 
 ### Changed
 
+- D-012 VST3 route evidence (Danny yes 2026-10-16 23:56 PT): `faust2clap` + clap-wrapper is OBSERVED to build and validate on Linux with known bugs (research F26, F27; ADR-0004); fallback `faust2juce` after a JUCE licence decision, second fallback a DPF spike; plugin-lane smoke CI with strict CLAP validation expected to fail.
 - Spec 001 to 0.3.0 (ADR-0004, Danny yes 2026-10-16 23:39 PT): reuse Faust tooling (faustwasm compiler and renderer, impulse-test references, compiler JSON instead of a custom parser); task taxonomy by faustlibraries category, task type and target; per-function licensing (D-007); runtimes D-003r2; new target lanes for language backends, plugins (CLAP, VST3, LV2), embedded boards (Daisy, Teensy 4.x) and a V0.5-FPGA milestone with an F0 spike; new `TARGET_CHECKED` candidate state and TargetReceipt contract; tasks T17 to T22.
 - Research F10 corrected: the Faust compiler is LGPL-2.1-or-later, not GPL.
 

@@ -89,7 +89,7 @@ Lanes run in parallel with T10.
   - Workflows: anti-slop-code, production-systems.
 - [ ] T18 [P] [Lane] Plugin lane (R-023, D-012).
   - Depends on: T04. Milestone: v0.3.
-  - Acceptance: CLAP (`faust2clap`), VST3 (clap-wrapper) and LV2 (`faust2lv2`) build in a Linux container; `clap-validator`, `pluginval` and `lv2lint` pass on known-good fixtures and fail on known-bad ones; parameter-map check passes. AU deferred to macOS CI.
+  - Acceptance: CLAP (`faust2clap`), VST3 (clap-wrapper) and LV2 (`faust2lv2`) build in a Linux container; `clap-validator`, `pluginval` and `lv2lint` pass on known-good fixtures and fail on known-bad ones; parameter-map check passes. AU deferred to macOS CI. VST3 shipping build uses clap-wrapper's self-contained mode; strict CLAP validation is expected to fail until the upstream fixes in ADR-0004 "VST3 route evidence" land.
   - Workflows: anti-slop-code, production-systems, ADVERSARY review (container and SDK supply chain).
 - [ ] T19 [P] [Lane] Embedded lane (R-019, D-008).
   - Depends on: T04. Milestone: v0.3.
