@@ -80,7 +80,9 @@ mounted bytes and returns the digest. The harness refuses the result
 unless it is the pinned share hash. In the same process, before compiling,
 the worker reads ``/proc/net/dev`` and requires the only interface to be
 ``lo``, then requires a connect to fail. The native 2.88.0 cross-check
-passes the same directory as ``-I``. The logical ``command`` records
+copies that share into a private directory, hashes the copy, and passes
+the copy as ``-I``. A mismatch raises before Faust starts. The logical
+``command`` records
 ``--faustlibraries=2edec0537f53`` and not the host path. The tree is
 fetched on the host. The sandbox does not download it. Do not run a T06
 or T07 compile check, and do not feed a receipt into a reward, against a
@@ -170,6 +172,7 @@ from faustcoder.libraries import (
     FAUSTLIBRARIES_VERSION,
     require_library_tree,
     share_directory,
+    snapshot_share,
 )
 from faustcoder.sandbox import (
     NODE_SANDBOX_FLAGS,
@@ -523,7 +526,8 @@ def compile_native(
     with tempfile.TemporaryDirectory(prefix="faustcoder-") as temporary:
         workdir = Path(temporary)
         (workdir / "input.dsp").write_bytes(source_bytes)
-        command = _native_command(binary, libraries, checked)
+        private = snapshot_share(libraries, workdir / "libraries")
+        command = _native_command(binary, private, checked)
         run = run_in_sandbox(command, stdin=b"", workdir=workdir, limits=bounds, cwd=workdir)
         duration_ms = int((time.monotonic() - started) * 1000)
         if run.stop_reason:
@@ -747,7 +751,7 @@ def environment_preimage(
 
 
 def _native_command(binary: str, libraries: Path, options: Sequence[str]) -> list[str]:
-    """Argv for the native cross-check. ``-I`` is the pinned share tree."""
+    """Argv for the native cross-check. ``-I`` is a hashed private copy."""
     return [binary, "-I", str(libraries), "-lang", "cpp", *options, "input.dsp"]
 
 

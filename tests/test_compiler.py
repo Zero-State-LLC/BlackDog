@@ -28,6 +28,7 @@ from faustcoder import (
     SandboxError,
     classify_diagnostic,
     compile_directory,
+    compile_native,
     compile_source,
     cross_check_native,
     digest_hex,
@@ -41,7 +42,7 @@ from faustcoder import (
     validate,
 )
 from faustcoder.canonical import canonical_bytes
-from faustcoder.sandbox import unshare_identity
+from faustcoder.sandbox import SandboxRun, unshare_identity
 from faustcoder.compiler import (
     FAUSTLIBRARIES_PIN,
     FAUSTLIBRARIES_PIN_VERSION,
@@ -51,6 +52,7 @@ from faustcoder.compiler import (
     worker_directory,
 )
 from faustcoder.exclusions import exclusion_for_source, exclusions, normalize_source
+import faustcoder.libraries as libraries
 from faustcoder.libraries import (
     FAUSTLIBRARIES_SHARE_SHA256,
     FAUSTLIBRARIES_TREE_SHA256,
@@ -687,6 +689,134 @@ def test_share_lock_symlink_is_refused(
     finally:
         fcntl.flock(fd, fcntl.LOCK_UN)
         os.close(fd)
+
+
+def test_share_lock_directory_is_refused(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    checkout = tmp_path / "2edec0537f53"
+    _copy_library_checkout(checkout)
+    (tmp_path / "share-2edec0537f53.lock").mkdir()
+    monkeypatch.setenv("FAUSTCODER_LIBRARIES", str(checkout))
+    with pytest.raises(SandboxError, match="share lock is a directory"):
+        share_directory()
+    assert not (tmp_path / "share-2edec0537f53").exists()
+
+
+def test_in_process_share_lock_times_out(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    checkout = tmp_path / "2edec0537f53"
+    _copy_library_checkout(checkout)
+    monkeypatch.setenv("FAUSTCODER_LIBRARIES", str(checkout))
+    monkeypatch.setattr("faustcoder.libraries.SHARE_LOCK_TIMEOUT_S", 0.4)
+    assert libraries._LOCK.acquire(timeout=1)
+    try:
+        started = time.monotonic()
+        with pytest.raises(SandboxError, match="another thread in this process"):
+            share_directory()
+        assert time.monotonic() - started < 3
+        assert not (tmp_path / "share-2edec0537f53").exists()
+    finally:
+        libraries._LOCK.release()
+
+
+def test_thread_lock_and_flock_share_one_deadline(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    checkout = tmp_path / "2edec0537f53"
+    _copy_library_checkout(checkout)
+    holder = _hold_share_lock(tmp_path / "share-2edec0537f53.lock")
+    monkeypatch.setenv("FAUSTCODER_LIBRARIES", str(checkout))
+    monkeypatch.setattr("faustcoder.libraries.SHARE_LOCK_TIMEOUT_S", 1.0)
+
+    class DelayedLock:
+        def acquire(self, blocking: bool = True, timeout: float = -1) -> bool:
+            time.sleep(0.6)
+            return True
+
+        def release(self) -> None:
+            return None
+
+    monkeypatch.setattr("faustcoder.libraries._LOCK", DelayedLock())
+    try:
+        started = time.monotonic()
+        with pytest.raises(SandboxError, match="another process holds"):
+            share_directory()
+        # A second full timeout after the 0.6s thread-lock delay would pass 1.6s.
+        assert time.monotonic() - started < 1.35
+        assert not (tmp_path / "share-2edec0537f53").exists()
+    finally:
+        holder.kill()
+        holder.wait(timeout=5)
+
+
+def test_native_compile_uses_a_hashed_private_copy(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    live = share_directory()
+    monkeypatch.setattr("faustcoder.compiler._require_native_faust", lambda: "/usr/bin/faust")
+
+    def fake_run(command: list[str], **kwargs: object) -> SandboxRun:
+        include = Path(command[command.index("-I") + 1])
+        assert include != live
+        assert include.parent == Path(str(kwargs["workdir"]))
+        assert canonical_tree_sha256(include) == FAUSTLIBRARIES_SHARE_SHA256
+        return SandboxRun(0, b"int process(){return 0;}\n", b"", "", False, False)
+
+    monkeypatch.setattr("faustcoder.compiler.run_in_sandbox", fake_run)
+    compiled = compile_native("process = _;\n")
+    assert compiled.receipt["exit_code"] == 0
+    assert compiled.receipt["compiler"] == "faust-cli"
+
+
+def test_native_compile_refuses_a_share_tampered_after_the_hash(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    checkout = tmp_path / "2edec0537f53"
+    _copy_library_checkout(checkout)
+    monkeypatch.setenv("FAUSTCODER_LIBRARIES", str(checkout))
+    share_directory()
+
+    def tamper_after_hash() -> Path:
+        path = libraries.share_directory()
+        maths = path / "maths.lib"
+        maths.write_bytes(maths.read_bytes() + b"PWNED = 42;\n")
+        return path
+
+    monkeypatch.setattr("faustcoder.compiler.share_directory", tamper_after_hash)
+    monkeypatch.setattr("faustcoder.compiler._require_native_faust", lambda: "/usr/bin/faust")
+
+    def fail_run(*_args: object, **_kwargs: object) -> SandboxRun:
+        raise AssertionError("native compile started after a tampered snapshot")
+
+    monkeypatch.setattr("faustcoder.compiler.run_in_sandbox", fail_run)
+    with pytest.raises(SandboxError, match="share"):
+        compile_native("process = _;\n")
+
+
+def _hold_share_lock(path: Path) -> subprocess.Popen[bytes]:
+    process = subprocess.Popen(
+        [
+            sys.executable,
+            "-c",
+            "import fcntl, os, sys, time\n"
+            "fd = os.open(sys.argv[1], os.O_CREAT | os.O_RDWR, 0o644)\n"
+            "fcntl.flock(fd, fcntl.LOCK_EX)\n"
+            "print('held', flush=True)\n"
+            "time.sleep(30)\n",
+            str(path),
+        ],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+    try:
+        assert _read_line(process, 5) == b"held\n"
+    except Exception:
+        process.kill()
+        process.wait(timeout=5)
+        raise
+    return process
 
 
 def _read_line(process: subprocess.Popen[bytes], timeout: float) -> bytes:

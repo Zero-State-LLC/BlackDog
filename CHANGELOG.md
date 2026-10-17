@@ -10,6 +10,8 @@ See [docs/VERSIONING.md](docs/VERSIONING.md).
 
 ### Added
 
+- T03b follow-up: the in-process share lock and the file lock share one 30-second deadline. A directory at the lock path raises `SandboxError`. Native compiles hash a private copy of the share and pass that copy as `-I`.
+
 - T03b follow-up: waiting for the faustlibraries share lock is bounded. A timeout raises `SandboxError` instead of blocking a cold publish. The lock file is opened with `O_NOFOLLOW` and a symlink is refused. After a tamper refusal, delete `share-<commit>` and re-stage; the harness does not delete that tree itself.
 
 - T03b follow-up: a multi-file `source_sha256` includes the selected entry path. Publishing the shared library tree takes a process-wide file lock and does not delete a live tree. A failed network canary raises `SandboxError` instead of an `internal` receipt. The worker hashes the bytes it writes into `/usr/share/faust` and that hash has to match the Python share hash.

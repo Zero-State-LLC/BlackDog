@@ -68,15 +68,18 @@ delete it. Delete `faust/libraries/share-2edec0537f53` (the
 re-stages that share from the verified checkout. Do not repair
 `.tree-sha256` by hand.
 
-The first publish waits at most 30 seconds for `share-<commit>.lock`.
-That file is opened with `O_NOFOLLOW`. A symlink is refused. A hung
-holder raises `SandboxError` instead of blocking the caller.
+The first publish waits at most 30 seconds in total. That bound covers
+the in-process lock and `share-<commit>.lock`, not each of them
+separately. The lock file is opened with `O_NOFOLLOW`. A symlink or a
+directory is refused. A hung holder raises `SandboxError` instead of
+blocking the caller.
 
 `scripts/fetch-faustlibraries.sh` downloads the commit on the host. The
 sandbox does not. Before every wasm compile the worker deletes
 `/usr/share/faust` in the Emscripten filesystem and writes that share.
-The native 2.88.0 cross-check passes the same directory as `-I`.
-The logical command records `--faustlibraries=2edec0537f53`.
+The native 2.88.0 cross-check copies that share into a private directory,
+hashes the copy, and passes the copy as `-I`. A mismatch raises before
+Faust starts. The logical command records `--faustlibraries=2edec0537f53`.
 
 The data file still contains libraries 2.74.2. Those bytes are hashed so
 the runtime identity stays in the digest. They are not the libraries the
