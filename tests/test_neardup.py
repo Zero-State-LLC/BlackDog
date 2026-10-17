@@ -5,10 +5,12 @@ from __future__ import annotations
 from faustcoder.neardup import (
     char_shingles,
     cluster_families,
+    containment_at_least,
     is_excerpt,
     is_near_duplicate,
     jaccard_counts,
     memorization_hits,
+    shingles,
     strip_comments,
     tokens,
 )
@@ -80,13 +82,21 @@ def test_half_excerpt_is_not_a_jaccard_near_duplicate() -> None:
     excerpt = " ".join(whole.split()[:40]) + "\n"
     assert is_near_duplicate(excerpt, whole) is False
     assert is_excerpt(excerpt, whole) is True
-    assert is_excerpt(whole, excerpt) is False
+    # The run counts when the cleared file is the longer one. The
+    # allowlist, not this predicate, keeps an upstream original.
+    assert is_excerpt(whole, excerpt) is True
     families = cluster_families(
         [("cleared", excerpt), ("rejected", whole), ("other", long_text("omega"))],
         ["rejected"],
     )
     assert families["cleared"] == families["rejected"]
     assert families["other"] != families["rejected"]
+    vendored = cluster_families(
+        [("cleared", whole), ("rejected", excerpt), ("other", long_text("omega"))],
+        ["rejected"],
+    )
+    assert vendored["cleared"] == vendored["rejected"]
+    assert vendored["other"] != vendored["rejected"]
     untouched = cluster_families([("cleared", excerpt), ("rejected", whole)])
     assert untouched["cleared"] != untouched["rejected"]
 
@@ -99,6 +109,38 @@ def test_containment_threshold_is_one_half() -> None:
     below = " ".join(short_share + [f"part{index}" for index in range(19)]) + "\n"
     assert is_excerpt(part, whole) is True
     assert is_excerpt(below, whole) is False
+
+
+def test_vendored_rejected_file_plus_padding_is_an_excerpt() -> None:
+    """Rejected R plus twice as much padding shares a 40-token run."""
+    rejected = long_text("rejected", count=80)
+    cleared = rejected.strip() + " " + long_text("pad", count=160)
+    part = shingles(tokens(cleared))
+    whole = shingles(tokens(rejected))
+    assert len(tokens(rejected)) == 80
+    assert len(tokens(cleared)) == 240
+    assert containment_at_least(part, whole) is False
+    assert is_near_duplicate(cleared, rejected) is False
+    assert is_excerpt(cleared, rejected) is True
+    families = cluster_families(
+        [("cleared", cleared), ("rejected", rejected), ("other", long_text("omega"))],
+        ["rejected"],
+    )
+    assert families["cleared"] == families["rejected"]
+    assert families["other"] != families["rejected"]
+
+
+def test_rejected_text_under_forty_tokens_is_not_an_excerpt() -> None:
+    """The 40-token floor is policy: a 36-token rejected function stays out."""
+    rejected = long_text("fn", count=36)
+    cleared = rejected.strip() + " " + long_text("own", count=80)
+    assert is_excerpt(cleared, rejected) is False
+    assert is_near_duplicate(cleared, rejected) is False
+    families = cluster_families(
+        [("cleared", cleared), ("rejected", rejected)],
+        ["rejected"],
+    )
+    assert families["cleared"] != families["rejected"]
 
 
 def test_verbatim_run_catches_a_statement_inside_a_larger_file() -> None:

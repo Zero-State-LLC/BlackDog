@@ -17,8 +17,8 @@ fetched and clustered, and never emitted. A cleared unit in a family
 with one of them is ``needs-human`` as well, including when the cleared
 text is only an excerpt of the non-cleared text. Intersection with a
 rejected member's empty flags is the same outcome: nothing is stored.
-An allowlisted upstream original is the exception: the later copy does
-not quarantine it.
+An allowlisted upstream original stays cleared only when every
+non-cleared member of its family is that entry's recorded copy.
 """
 
 from __future__ import annotations
@@ -61,7 +61,7 @@ from faustcoder.neardup import (
     cluster_families,
     tokens,
 )
-from faustcoder.upstream import is_upstream_original
+from faustcoder.upstream import exempt_upstream_original
 from faustcoder.normalize import normalize_bytes
 from faustcoder.policy import ordered_flags
 from faustcoder.store import ArtifactStore
@@ -231,14 +231,17 @@ def _quarantine_uncleared_families(
 
     The rejected member's flags are empty, so the intersection is empty.
     The cleared members are ``needs-human`` and are not emitted. An
-    allowlisted upstream original stays cleared: the rejected row copied
-    it later.
+    allowlisted upstream original stays cleared only when every
+    non-cleared member of that family is the recorded copy.
     """
-    tainted = {families[item.unit.unit_id] for item in compared}
+    peers_of: dict[str, list[tuple[str, str]]] = defaultdict(list)
+    for item in compared:
+        peers_of[families[item.unit.unit_id]].append((item.unit.repo, item.unit.path))
     for member in members:
-        if member.family not in tainted:
+        peers = peers_of.get(member.family)
+        if not peers:
             continue
-        if is_upstream_original(member.norm.unit.blob_sha):
+        if exempt_upstream_original(member.norm.unit.blob_sha, peers):
             continue
         member.mixed = True
         member.effective = ()

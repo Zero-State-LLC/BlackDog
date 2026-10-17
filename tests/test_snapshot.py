@@ -17,7 +17,7 @@ from faustcoder.neardup import is_excerpt, is_near_duplicate
 from faustcoder.snapshot import commit_snapshot, compile_snapshot
 from faustcoder.store import ArtifactStore
 
-from faustcoder.upstream import UPSTREAM_ORIGINALS
+from faustcoder.upstream import UPSTREAM_ORIGINALS, UpstreamOriginal
 
 from tests.t06support import (
     ACTOR,
@@ -466,7 +466,19 @@ def test_upstream_original_stays_cleared_when_the_copy_is_rejected(
     import faustcoder.upstream as upstream
 
     monkeypatch.setattr(
-        upstream, "UPSTREAM_BLOB_SHAS", frozenset({git_blob_sha1(original)})
+        upstream,
+        "UPSTREAM_ORIGINALS",
+        (
+            UpstreamOriginal(
+                blob_sha=git_blob_sha1(original),
+                repo=REPO,
+                path="Birds.dsp",
+                copy_repo=REPO,
+                copy_path="birds.dsp",
+                copied_on="2024-02-13",
+                evidence="c" * 40,
+            ),
+        ),
     )
     compiled = _compile(root, entries, notices)
     payload = _manifest(compiled)
@@ -476,6 +488,116 @@ def test_upstream_original_stays_cleared_when_the_copy_is_rejected(
     excluded = _by_entry(payload["excluded"])  # type: ignore[arg-type]
     assert excluded["extra"]["reason"] == "needs-human"
     assert excluded["extra"]["origin"] == "dedup"
+    assert excluded["syfala-examples"]["origin"] == "inventory"
+
+
+def test_vendored_rejected_file_plus_padding_is_needs_human(tmp_path: Path) -> None:
+    """Rejected R plus twice as much of the cleared file's own code is needs-human."""
+    root = tmp_path / "fixtures"
+    rejected_text = long_text("rejected", count=80)
+    cleared_text = rejected_text.strip() + " " + long_text("pad", count=160)
+    other = long_text("gamma")
+    assert is_near_duplicate(cleared_text, rejected_text) is False
+    assert is_excerpt(cleared_text, rejected_text) is True
+    rejected_bytes = rejected_text.encode()
+    cleared_bytes = cleared_text.encode()
+    other_bytes = other.encode()
+    stage(root, REPO, PIN, "gpl.dsp", rejected_bytes)
+    stage(root, REPO, PIN, "mit.dsp", cleared_bytes)
+    stage(root, REPO, PIN, "other.dsp", other_bytes)
+    refused = entry(
+        "gpl",
+        rejected_bytes,
+        path="gpl.dsp",
+        decision="rights_rejected",
+        license_name="GPL-2.0-or-later",
+        eligible_for=[],
+        reason="GPL source is not cleared",
+        reviewer="",
+    )
+    mit, mit_notice = cleared("mit", cleared_bytes, path="mit.dsp", license_name="MIT")
+    kept, kept_notice = cleared("other", other_bytes, path="other.dsp")
+    compiled = _compile(root, [refused, mit, kept], [mit_notice, kept_notice])
+    payload = _manifest(compiled)
+    assert [row["entry_id"] for row in payload["units"]] == ["other"]  # type: ignore[index]
+    excluded = _by_entry(payload["excluded"])  # type: ignore[arg-type]
+    assert excluded["mit"]["reason"] == "needs-human"
+    assert excluded["mit"]["origin"] == "dedup"
+    assert excluded["gpl"]["origin"] == "inventory"
+    assert excluded["gpl"]["duplicate_family"] == excluded["mit"]["duplicate_family"]
+    store = ArtifactStore(tmp_path / "store")
+    commit_snapshot(store, compiled)
+    stored = b"".join(path.read_bytes() for path in store.root.rglob("*") if path.is_file())
+    assert b"rejected0" not in stored
+    assert b"gamma0" in stored
+
+
+def test_allowlisted_original_near_another_repo_is_needs_human(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The allowlist skips a blob only beside that entry's recorded copy."""
+    root = tmp_path / "fixtures"
+    original = long_text("birds", count=80).encode()
+    foreign = long_text("birds", count=80, replacement="foreign").encode()
+    copied = long_text("birds", count=80, replacement="copied").encode()
+    other = long_text("gamma").encode()
+    assert is_near_duplicate(original.decode(), foreign.decode()) is True
+    syfala = "inria-emeraude/syfala"
+    stage(root, REPO, PIN, "Birds.dsp", original)
+    stage(root, REPO, PIN, "stolen.dsp", foreign)
+    stage(root, syfala, PIN, "examples/faust/birds.dsp", copied)
+    stage(root, REPO, PIN, "other.dsp", other)
+    birds, birds_notice = cleared("birds", original, path="Birds.dsp")
+    foreign_row = entry(
+        "other-rejected",
+        foreign,
+        path="stolen.dsp",
+        decision="rights_rejected",
+        license_name="GPL-2.0-or-later",
+        eligible_for=[],
+        reason="A different repo copied the original",
+        reviewer="",
+    )
+    copy_row = entry(
+        "syfala-examples",
+        copied,
+        path="examples/faust/birds.dsp",
+        decision="rights_rejected",
+        license_name="unlicensed",
+        eligible_for=[],
+        reason="Syfala has no repository license",
+        reviewer="",
+        repo=syfala,
+    )
+    kept, kept_notice = cleared("other", other, path="other.dsp")
+    import faustcoder.upstream as upstream
+
+    monkeypatch.setattr(
+        upstream,
+        "UPSTREAM_ORIGINALS",
+        (
+            UpstreamOriginal(
+                blob_sha=git_blob_sha1(original),
+                repo=REPO,
+                path="Birds.dsp",
+                copy_repo=syfala,
+                copy_path="examples/faust/birds.dsp",
+                copied_on="2024-02-13",
+                evidence="c" * 40,
+            ),
+        ),
+    )
+    compiled = _compile(
+        root,
+        [birds, foreign_row, copy_row, kept],
+        [birds_notice, kept_notice],
+    )
+    payload = _manifest(compiled)
+    assert [row["entry_id"] for row in payload["units"]] == ["other"]  # type: ignore[index]
+    excluded = _by_entry(payload["excluded"])  # type: ignore[arg-type]
+    assert excluded["birds"]["reason"] == "needs-human"
+    assert excluded["birds"]["origin"] == "dedup"
+    assert excluded["other-rejected"]["origin"] == "inventory"
     assert excluded["syfala-examples"]["origin"] == "inventory"
 
 

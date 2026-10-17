@@ -15,11 +15,13 @@ an AST shingle):
 - The comparison is integer: ``intersection * 5 >= union * 4``.
   A reported float is not the decision.
 - Jaccard is symmetric, so a verbatim excerpt of a rejected file
-  stays under 4/5. An excerpt check is separate and asymmetric:
+  stays under 4/5. An excerpt check is separate:
   ``|shingles(part) ∩ shingles(whole)| / |shingles(part)| >= 1/2``,
-  or a contiguous run of ``VERBATIM_RUN`` tokens from the part
-  appears in the whole. ``cluster_families`` applies that only from
-  a non-comparison text into a comparison text.
+  or a contiguous run of ``VERBATIM_RUN`` tokens appears in both.
+  The run counts when the cleared file is the longer one. The part
+  must still have at least ``MIN_TOKENS`` tokens.
+  ``cluster_families`` applies that only from a non-comparison text
+  into a comparison text.
 
 ``MIN_TOKENS`` is 40. Below that, shared Faust boilerplate
 (``declare``, ``import``, ``process``) dominates the shingles and
@@ -246,12 +248,10 @@ def is_excerpt(part: str, whole: str) -> bool:
     if len(part_tokens) < MIN_TOKENS:
         return False
     whole_tokens = tokens(whole)
-    # The run is only evidence when the non-cleared text is at least as
-    # long as the cleared text. A shorter rejected excerpt of an upstream
-    # original is not, by itself, a reason to quarantine the original.
-    if len(whole_tokens) >= len(part_tokens) and has_verbatim_run(
-        part_tokens, whole_tokens
-    ):
+    # A run counts in either direction. A cleared file that vendors a
+    # shorter rejected file, plus its own padding, still shares that run.
+    # Upstream originals are kept by the allowlist, not by skipping here.
+    if has_verbatim_run(part_tokens, whole_tokens):
         return True
     return containment_at_least(shingles(part_tokens), shingles(whole_tokens))
 
@@ -437,12 +437,7 @@ def cluster_families(
             for whole_id in compared_ids:
                 if find(part_id) == find(whole_id):
                     continue
-                whole_tokens = token_of[whole_id]
-                run = (
-                    len(whole_tokens) >= len(part_tokens)
-                    and part_runs
-                    and bool(part_runs & whole_runs[whole_id])
-                )
+                run = bool(part_runs and part_runs & whole_runs[whole_id])
                 if run or containment_at_least(part_shingles, whole_shingles[whole_id]):
                     union(part_id, whole_id)
 

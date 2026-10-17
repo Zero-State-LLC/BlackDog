@@ -5,14 +5,17 @@ Syfala commit ``c893f4ce0d9aaf15d11dc9cf4d2abe67ea830c3f`` (2024-02-13,
 row lists no blobs today. If it ever does, those four originals are the
 upstream sources and are not quarantined for matching the copy.
 
-The key is the upstream blob sha. This is an allowlist with a recorded
-provenance, not a date or similarity heuristic. ``virtualAnalog.dsp``
-and ``virtualAnalogForBrowser.dsp`` are the two SAM files contained by
+The key is the upstream blob sha plus the recorded copy path. A family
+exempts that blob only when every non-cleared member is that copy.
+Another repo in the same family still quarantines it. This is not a
+date or similarity heuristic. ``virtualAnalog.dsp`` and
+``virtualAnalogForBrowser.dsp`` are the two SAM files contained by
 syfala ``examples/faust/virtualAnalogForBrowser.dsp``.
 """
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from dataclasses import dataclass
 
 SYFALA_COMMIT = "c893f4ce0d9aaf15d11dc9cf4d2abe67ea830c3f"
@@ -77,3 +80,21 @@ UPSTREAM_BLOB_SHAS = frozenset(item.blob_sha for item in UPSTREAM_ORIGINALS)
 def is_upstream_original(blob_sha: str) -> bool:
     """Return whether ``blob_sha`` is an allowlisted upstream original."""
     return blob_sha in UPSTREAM_BLOB_SHAS
+
+
+def exempt_upstream_original(blob_sha: str, peers: Sequence[tuple[str, str]]) -> bool:
+    """Return whether ``blob_sha`` may stay cleared beside these copies.
+
+    ``peers`` is ``(repo, path)`` for every non-cleared member of the
+    family. The blob is exempt only when one allowlist entry's
+    ``copy_repo`` and ``copy_path`` account for all of them.
+    """
+    if not peers:
+        return False
+    peer_set = set(peers)
+    for item in UPSTREAM_ORIGINALS:
+        if item.blob_sha != blob_sha:
+            continue
+        if peer_set <= {(item.copy_repo, item.copy_path)}:
+            return True
+    return False

@@ -212,18 +212,24 @@ when the cleared text has at least 40 tokens and either:
 
 - `|shingles(cleared) ∩ shingles(non-cleared)| / |shingles(cleared)|`
   is at least 1/2 (`intersection * 2 >= |cleared shingles|`), or
-- a contiguous run of 40 normalized tokens from the cleared text
-  occurs in the non-cleared text, and that non-cleared text is at
-  least as long as the cleared text.
+- the two texts share a contiguous run of 40 normalized tokens.
 
-A shorter rejected quote of a cleared original does not, by itself,
-quarantine the original. `faustplayground` `InstrReverb.dsp` is cleared
-LGPL-2.1 and is an excerpt of rejected `instrReverb` in
-`faustlibraries-undeclared` `instruments.lib`. The pair is
-`needs-human`. The playground bytes used by the regression test are
-`tests/fixtures/t06/InstrReverb.dsp` (blob `e38da4010e6abb85eadd02cecb60337798993194`).
-`instruments.lib` is the pinned faustlibraries checkout, not a second
-copy in git.
+The run counts when the cleared file is the longer one. A cleared file
+that vendors an entire rejected blob and then adds its own padding is
+`needs-human`. The upstream allowlist below, not a length comparison,
+is what keeps an original that a later copy quotes.
+
+The 40-token floor is policy. A cleared text under 40 tokens is not
+an excerpt. A rejected blob under 40 tokens cannot supply a 40-token
+run, so own code plus one rejected function shorter than 40 tokens
+stays admitted. Containment uses the same floor on the cleared side.
+
+`faustplayground` `InstrReverb.dsp` is cleared LGPL-2.1 and is an
+excerpt of rejected `instrReverb` in `faustlibraries-undeclared`
+`instruments.lib`. The pair is `needs-human`. The playground bytes
+used by the regression test are `tests/fixtures/t06/InstrReverb.dsp`
+(blob `e38da4010e6abb85eadd02cecb60337798993194`). `instruments.lib`
+is the pinned faustlibraries checkout, not a second copy in git.
 
 ## Upstream originals
 
@@ -231,8 +237,11 @@ Syfala has no file list, so its blobs are not fetched. Commit
 `c893f4ce0d9aaf15d11dc9cf4d2abe67ea830c3f` on 2024-02-13 copied four
 upstream files. If that row ever names blobs, those originals stay
 cleared. The exception is an allowlist keyed by the upstream blob sha
-in `faustcoder/upstream.py`, with the copy path recorded beside it. It
-is not a date or similarity heuristic.
+in `faustcoder/upstream.py`, with the copy repo and path recorded
+beside it. A family exempts that blob only when every non-cleared
+member is that entry's `copy_repo` and `copy_path`. A near-duplicate
+from any other repo is `needs-human`. It is not a date or similarity
+heuristic.
 
 | Upstream blob | Path | Syfala path |
 |---|---|---|
@@ -321,5 +330,5 @@ artifact. It is not a field of the manifest.
 ## Labels
 
 - OBSERVED: the §7.1 table and diagram; T02 digest rules; ADR-0003; the 2026-10-17 defaults; spec §4.2 (no custom parser); `DatasetSnapshot` is the `split_frozen` effect; T03b stages faustlibraries `2edec0537f53` and T06 still does not compile-check corpus units; T05's inventory uses `rights_cleared`, `rights_rejected` and `needs_human`, with `files[]` or `functions[]` and a notice manifest keyed by commit, path, function and blob sha.
-- INFERRED: T06 stops at `normalized` and admits through T05's guard against the pinned inventory and notice digests; `generated_at` is outside that digest; the ingested blob is hashed before normalization; a mixed-license family, and a family that contains a rejected or `needs_human` member, is `needs-human` rather than an intersection that still stores the text; a cleared excerpt of a non-cleared blob is `needs-human` at containment 1/2 or a 40-token run; the four syfala upstream originals are an explicit blob-sha allowlist; a shared blob with any non-cleared unit is `needs-human` because function rows have no line range; character 5-gram Jaccard for texts under 40 tokens; the 32-character and 1/3 skeleton thresholds; `ffunction` as a token backstop; `DedupManifest` rather than `DatasetSnapshot`; receipt time is `--created-at`; the compiler flag refuses instead of compiling. Slicing `.lib` function units is a follow-up.
+- INFERRED: T06 stops at `normalized` and admits through T05's guard against the pinned inventory and notice digests; `generated_at` is outside that digest; the ingested blob is hashed before normalization; a mixed-license family, and a family that contains a rejected or `needs_human` member, is `needs-human` rather than an intersection that still stores the text; a cleared excerpt of a non-cleared blob is `needs-human` at containment 1/2 or a 40-token run, including when the cleared file is longer and vendors the rejected blob; a rejected function under 40 tokens stays below that floor; the four syfala upstream originals stay cleared only when every non-cleared family member is that entry's recorded copy; a shared blob with any non-cleared unit is `needs-human` because function rows have no line range; character 5-gram Jaccard for texts under 40 tokens; the 32-character and 1/3 skeleton thresholds; `ffunction` as a token backstop; `DedupManifest` rather than `DatasetSnapshot`; receipt time is `--created-at`; the compiler flag refuses instead of compiling. Slicing `.lib` function units is a follow-up.
 - SPECULATIVE: the 4/5 threshold, the 40-token floor, and the short-text 1/3 skeleton threshold need a real corpus before they are treated as tuned; full commit hashes are not in the approval note.
