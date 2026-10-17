@@ -37,9 +37,9 @@ jobs:
           fetch ext/sdk/clap-helpers https://github.com/free-audio/clap-helpers "$CLAP_HELPERS_SHA"
           fetch ext/clap-wrapper https://github.com/free-audio/clap-wrapper "$CLAP_WRAPPER_SHA"
       - name: Build CLAP (faust2clap, with the cstring workaround)
-        env:
-          CXXFLAGS: -include cstring -include cwchar
         run: |
+          # Pinned checkout headers first: Ubuntu's packaged faust headers are older.
+          export CXXFLAGS="-include cstring -include cwchar -I$PWD/ext/faust/architecture"
           mkdir -p work && cp fixtures/plugin/gain.dsp work/
           python3 ext/faust/tools/faust2appls/faust2clap --clap-sdk "$PWD/ext/sdk" --no-install work/gain.dsp
           mkdir -p "$HOME/.clap" && cp work/gain-clap/build/gain.clap "$HOME/.clap/"
