@@ -18,6 +18,8 @@ See [docs/VERSIONING.md](docs/VERSIONING.md).
 
 ### Changed
 
+- Project board moved to the public [org project 29](https://github.com/orgs/Zero-State-LLC/projects/29); KANBAN.md link updated. Repository and board are public for now (ORG-001 resolved, revisitable).
+
 - Repository transferred to the Zero-State-LLC organization; repository URLs updated. It stays public.
 - Secret scan job `gitleaks` now runs the checksum-verified gitleaks 8.30.1 CLI; gitleaks-action requires a paid license key for organization repositories.
 - D-006 superseded by D-006r2: open-weight `deepseek/deepseek-v4.1-flash` via OpenRouter generates training data; Opus is used only for review, grading and eval judging.

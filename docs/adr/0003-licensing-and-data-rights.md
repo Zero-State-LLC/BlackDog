@@ -59,8 +59,8 @@ These are INFERRED readings, not part of the approval. Not legal advice.
   only. AGPL, MPL and other copyleft licenses are not covered by the approval
   and stay excluded until decided.
 - Resolved (Danny yes 2026-10-16 22:25 PT): the repository was transferred to the Zero-State-LLC
-  organization, so ownership matches the proprietary license. It stays public;
-  the public versus private decision is still open.
+  organization, so ownership matches the proprietary license. It stays public
+  for now (ORG-001, Danny 2026-10-16 22:32 PT), revisitable later.
 - Section 4 of the proprietary license bars AI-training use of covered
   material without Zero State's authorization; Zero State's own use is
   unaffected.
