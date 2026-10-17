@@ -213,6 +213,43 @@ _LIB_VERSION = re.compile(
 _REMOTE_IMPORT = re.compile(
     r"""(?ix)\b(?:import|library|component)\s*\(\s*["']https?://"""
 )
+
+
+def _code_without_comments(source: str) -> str:
+    """Return ``source`` with Faust ``//`` and ``/* */`` comments removed.
+
+    Quoted strings are kept, so a URL inside a string argument is
+    still visible and a URL that only appears in a comment is not.
+    """
+    if not isinstance(source, str):
+        raise TypeError("source must be a string")
+    out: list[str] = []
+    index = 0
+    length = len(source)
+    while index < length:
+        character = source[index]
+        if character in {'"', "'"}:
+            quote = character
+            end = index + 1
+            while end < length and source[end] != quote:
+                if source[end] == "\\":
+                    end += 2
+                    continue
+                end += 1
+            out.append(source[index : min(end + 1, length)])
+            index = end + 1
+            continue
+        if source.startswith("//", index):
+            newline = source.find("\n", index)
+            index = length if newline < 0 else newline
+            continue
+        if source.startswith("/*", index):
+            close = source.find("*/", index + 2)
+            index = length if close < 0 else close + 2
+            continue
+        out.append(character)
+        index += 1
+    return "".join(out)
 _JS_RUNTIME = (
     "allocate is not defined",
     "maximum call stack size exceeded",
@@ -353,8 +390,9 @@ def compile_source(
     text from the same program. They are written into the Emscripten
     filesystem so ``import`` and ``component`` of those paths resolve.
     A known faust-stk or fastpow2 source raises ``CompilerExclusion``
-    instead of a receipt. That exclusion is a failure when rewards land,
-    not a pass and not an ungraded refuge. Reward behavior is unchanged.
+    instead of a receipt. ``grade_compiler_exclusion`` grades that as
+    ``parse_error`` (spec §23 A1). It is not a pass and not an
+    ungraded refuge.
     """
     if not isinstance(source, str):
         raise TypeError("source must be a string")
@@ -377,7 +415,9 @@ def compile_source(
             faust_version=pin.faust_version,
             pin=pin,
         )
-    if any(_REMOTE_IMPORT.search(text) for _, text in files):
+    # A6: the pre-filter sees string arguments of import/library/component,
+    # not comments. A URL in a comment is not a remote import.
+    if any(_REMOTE_IMPORT.search(_code_without_comments(text)) for _, text in files):
         return _harness_receipt(
             source_bytes,
             lang=lang,

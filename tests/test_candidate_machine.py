@@ -94,19 +94,24 @@ def test_compile_failed_follows_the_attempt_bound() -> None:
 
 
 def test_signal_edges_leave_compile_checked() -> None:
-    assert apply_signal(CandidateState.COMPILE_CHECKED, passed=True) is (
+    from faustcoder.candidate_machine import apply_diagnostic_signal
+    from faustcoder.reward import grade_receipt
+    from tests.support import allowlisted_reward_envelope
+
+    passed = grade_receipt(allowlisted_reward_envelope(passed=True))
+    failed = grade_receipt(allowlisted_reward_envelope(passed=False))
+    assert apply_signal(CandidateState.COMPILE_CHECKED, passed) is CandidateState.SIGNAL_CHECKED
+    assert apply_signal(CandidateState.COMPILE_CHECKED, failed) is CandidateState.REJECTED
+    with pytest.raises(IllegalTransition):
+        apply_signal(CandidateState.DRAFT, passed)
+    with pytest.raises(TypeError, match="RewardableSignalReceipt"):
+        apply_signal(CandidateState.COMPILE_CHECKED, True)  # type: ignore[arg-type]
+    assert apply_diagnostic_signal(CandidateState.COMPILE_CHECKED, passed=True) is (
         CandidateState.SIGNAL_CHECKED
     )
-    assert apply_signal(CandidateState.COMPILE_CHECKED, passed=False) is (
+    assert apply_diagnostic_signal(CandidateState.COMPILE_CHECKED, passed=False) is (
         CandidateState.REJECTED
     )
-    with pytest.raises(IllegalTransition):
-        apply_signal(CandidateState.DRAFT, passed=True)
-    assert apply_signal(
-        CandidateState.COMPILE_CHECKED, passed=True, reward_graded=True
-    ) is CandidateState.SIGNAL_CHECKED
-    with pytest.raises(TypeError, match="reward_graded"):
-        apply_signal(CandidateState.COMPILE_CHECKED, passed=True, reward_graded=1)  # type: ignore[arg-type]
 
 
 def test_signal_guard_can_reject_without_moving() -> None:

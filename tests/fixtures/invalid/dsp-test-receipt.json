@@ -7,5 +7,6 @@
   "metrics": {},
   "thresholds": {},
   "passed": true,
-  "harness_digest": "sha256:fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210"
+  "harness_digest": "sha256:fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210",
+  "purpose": "diagnostic"
 }

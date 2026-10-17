@@ -820,12 +820,29 @@ def test_reward_graded_coarse_check_starts_after_the_reference() -> None:
     )
     assert "impulse:envelope" in open_failures
     tail = list(inside)
-    tail[200] = 1.0
+    tail[200] = 1e-5
+    block = profile.block_size
+    start = 200 // block * block
+    assert abs(_rms(tail[start : start + block]) - _rms(inside[start : start + block])) <= (
+        DEFAULT_TOLERANCE
+    )
     _summary, tail_failures, _peak = _measure_stimulus(
         "impulse", [tail], profile, reference, reward_graded=True
     )
-    assert "impulse:reference" not in tail_failures
-    assert "impulse:envelope" in tail_failures
+    assert "impulse:reference" in tail_failures
+    assert "impulse:envelope" not in tail_failures
+    from faustcoder.reward import grade_receipt, reward_value
+    from faustcoder.reward.types import Ungraded
+    from tests.support import allowlisted_reward_envelope
+
+    def claim_passed(payload: dict) -> None:
+        payload["passed"] = True
+        payload["metrics"]["comparison"] = "reward-graded-signed"
+        payload["metrics"]["signed_frames"] = payload["profile"]["head_frames"]
+
+    refused = grade_receipt(allowlisted_reward_envelope(mutate=claim_passed))
+    assert isinstance(refused, Ungraded)
+    assert reward_value(refused) is None
 
 
 def test_reward_graded_signs_the_trimmed_reference() -> None:
@@ -856,12 +873,14 @@ def test_reward_graded_signs_the_trimmed_reference() -> None:
         assert "impulse:reference" in run.failures, (label, run.failures)
         assert "impulse:envelope" not in run.failures, (label, run.failures)
         assert "impulse:bands" not in run.failures, (label, run.failures)
-        assert run.receipt["metrics"]["comparison"] == "reward-graded-signed"
-        assert run.receipt["metrics"]["head_frames"] == reference.frames
-        assert run.receipt["thresholds"]["head_frames"] == reference.frames
-        assert impulse["compared_frames"] == reference.frames
+        assert run.receipt["metrics"]["comparison"] == "reward-graded-signed-full"
+        assert run.receipt["purpose"] == "reward"
+        assert run.receipt["metrics"]["head_frames"] == DEFAULT_FRAMES
+        assert run.receipt["thresholds"]["head_frames"] == DEFAULT_FRAMES
+        assert impulse["compared_frames"] == run.receipt["metrics"]["frame_count"]
+        assert run.receipt["metrics"]["signed_frames"] == run.receipt["metrics"]["frame_count"]
         assert reference.frames > DEFAULT_FRAMES
-        assert run.receipt["metrics"]["frame_count"] > reference.frames
+        assert run.receipt["metrics"]["frame_count"] >= reference.frames
         assert run.receipt["thresholds"]["reward_graded"] is True
 
 

@@ -33,7 +33,7 @@ spec-kit; security-relevant tasks add ADVERSARY review.
   - Depends on: T02. Milestone: v0.1.
   - Acceptance: reproducible compiler receipts (R-005); no network, bounded resources (R-013).
   - Amended 0.3.0 (ADR-0004): wrap libfaust from faustwasm 0.19.0 in a Node.js worker; cross-check with the native Faust 2.88.0 CLI; classify diagnostics.
-  - Amended 0.3.4 (ADR-0006): the R-005 reward ladder is A1–A7 in the ADR; reward code keeps ADR-0005 behavior until the grader PR lands.
+  - Amended 0.3.4 (ADR-0006): the R-005 reward ladder is A1–A7 in the ADR. ADR-0006 is in force in reward code (`grade_receipt`, spec §23).
   - Workflows: production-systems, ADVERSARY review. Evidence: `receipts/T03/` (INFERRED).
 - [ ] T04 [Found] DSP signal test harness.
   - Depends on: T03. Milestone: v0.1.

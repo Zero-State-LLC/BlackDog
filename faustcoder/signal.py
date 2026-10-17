@@ -22,12 +22,14 @@ the render is a coarse check: per-block RMS and spectral band
 energies, with the same tolerance. That coarse check is
 magnitude-only, and the 2e-6 floor is per sample, so one 1e-5 spike
 inside a 64-sample block can hide in the block RMS. A
-``reward_graded`` run sets ``head_frames`` to the trimmed reference
-length and signs every sample of that reference. Coarse checks then
-cover only the samples past the reference. An impulse reference whose
-``max_frames`` is below the 144000 block-aligned cap raises
-``ValueError``; the cap is not raised. ``thresholds.reward_graded``
-is stored on every receipt and is part of the reproducible digest.
+``reward_graded`` run signs every sample of the render up to the
+pinned ``max_frames``, including sign and timing past ``head_frames``
+(spec §23 A4, ADR-0006). Coarse magnitude checks are not a reward
+pass. An impulse reference whose ``max_frames`` is below the 144000
+block-aligned cap raises ``ValueError``; the cap is not raised.
+``thresholds.reward_graded`` is stored on every receipt and is part
+of the reproducible digest. ``purpose`` is ``reward`` or
+``diagnostic``. Diagnostic receipts are not rewards.
 ``reject_dc`` does not fire when the reference carries the same DC.
 An impulse reference is built at
 ``max_frames`` (144000, three seconds at 48 kHz) and trimmed to the
@@ -79,7 +81,11 @@ from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Any
 
-from faustcoder.candidate_machine import CandidateState, apply_signal
+from faustcoder.candidate_machine import (
+    CandidateState,
+    apply_diagnostic_signal,
+    apply_signal,
+)
 from faustcoder.canonical import build_envelope, content_digest_for, digest_hex
 from faustcoder.compiler import (
     FAUSTWASM_VERSION,
@@ -112,7 +118,7 @@ DEFAULT_TAIL_MARGIN = 64
 MAX_FRAMES = 144_000
 STIMULI = ("impulse", "sine", "noise")
 METRIC_VERSION = 2
-SIGNAL_SCHEMA_VERSION = "0.3.2"
+SIGNAL_SCHEMA_VERSION = "0.3.4"
 _SCHEMA = "dsp-test-receipt.schema.json"
 _FLOAT32_MIN_NORMAL = 1.1754943508222875e-38
 _PI = 3.141592653589793
@@ -298,6 +304,7 @@ class SignalCommit:
     state: CandidateState
     artifact_ids: tuple[str, ...]
     suite: SignalSuite
+    outcomes: tuple[object, ...] = ()
 
 
 def f32(value: float) -> float:
@@ -554,10 +561,11 @@ def run_signal(
     ``require_reference`` on. With an impulse reference it raises
     ``ValueError`` when ``max_frames`` is below the 144000
     block-aligned cap, and it does not raise that cap. The exact
-    signed comparison then covers the trimmed reference
-    (``head_frames`` equals ``reference.frames``). Coarse checks
-    cover only the samples past that reference. The head stays the
-    only exact window when the run is not reward-graded.
+    signed comparison covers the whole render up to that cap,
+    including samples past ``head_frames`` (spec §23 A4). Coarse
+    magnitude checks are recorded and are not the reward pass. The
+    head stays the only exact window when the run is not
+    reward-graded.
     """
     if not isinstance(source, str):
         raise TypeError("source must be a string")
@@ -690,15 +698,31 @@ def commit_signal_check(
                 parents=parents,
             )
         )
+    purposes = [run.receipt.get("purpose") for run in suite.runs]
+    if any(purpose == "reward" for purpose in purposes):
+        if any(purpose != "reward" for purpose in purposes):
+            raise SignalHarnessError("a reward-graded suite cannot mix diagnostic receipts")
+        from faustcoder.reward.grader import Ungraded, grade_receipt
+
+        outcomes = tuple(grade_receipt(store.get(artifact_id)) for artifact_id in artifact_ids)
+        if any(isinstance(item, Ungraded) for item in outcomes):
+            # Dropped from reward. Do not take signal_failed: that would
+            # score an ungraded receipt as a model failure (spec §23 A2).
+            return SignalCommit(
+                state=state,
+                artifact_ids=tuple(artifact_ids),
+                suite=suite,
+                outcomes=outcomes,
+            )
+        chosen = next((item for item in outcomes if not item.passed), outcomes[0])
+        return SignalCommit(
+            state=apply_signal(state, chosen),
+            artifact_ids=tuple(artifact_ids),
+            suite=suite,
+            outcomes=outcomes,
+        )
     return SignalCommit(
-        state=apply_signal(
-            state,
-            passed=suite.passed,
-            reward_graded=all(
-                bool(run.receipt.get("thresholds", {}).get("reward_graded"))
-                for run in suite.runs
-            ),
-        ),
+        state=apply_diagnostic_signal(state, passed=suite.passed),
         artifact_ids=tuple(artifact_ids),
         suite=suite,
     )
@@ -841,7 +865,7 @@ def _judge(
             summary["max_abs_error_nano"] = to_nano(peak_error)
     failures = sorted(set(failures))
     metrics: dict[str, Any] = {
-        "comparison": "reward-graded-signed" if reward_graded else "head-exact+coarse",
+        "comparison": "reward-graded-signed-full" if reward_graded else "head-exact+coarse",
         "failures": failures,
         "frame_count": profile.frames,
         "head_frames": profile.head_frames,
@@ -852,6 +876,8 @@ def _judge(
         "renders": renders,
         "stimuli": sorted(profile.stimuli),
     }
+    if reward_graded:
+        metrics["signed_frames"] = profile.frames
     if promotion_candidate and cpu_duration_ms is not None:
         metrics["cpu_duration_ms"] = cpu_duration_ms
     harness = _harness_preimage()
@@ -892,6 +918,8 @@ def _judge(
         "passed": not failures,
         "harness_digest": content_digest_for(harness),
         "renderer": "faustwasm",
+        "purpose": "reward" if reward_graded else "diagnostic",
+        "profile": profile_payload(profile),
     }
     if ref_payload is not None:
         receipt["reference_digest"] = content_digest_for(ref_payload)
@@ -1010,11 +1038,10 @@ def _measure_stimulus(
     head = profile.head_frames
     if not isinstance(head, int):
         raise SignalHarnessError("head_frames was not resolved")
-    # Reward grading has already set the head to the trimmed reference.
-    # Sign that window. Coarse checks, which ignore sign, cover only
-    # the samples past it. Other runs keep the exact check on the head
-    # and the coarse check on the whole render.
-    compared = head
+    # Reward grading signs the whole render, past head_frames included
+    # (spec §23 A4). Other runs keep the exact check on the head and
+    # the coarse check on the whole render.
+    compared = profile.frames if reward_graded else head
     summary["compared_frames"] = compared
     peak_error, token = compare_channels(
         [channel[:compared] for channel in quantized_candidate],
@@ -1030,12 +1057,11 @@ def _measure_stimulus(
         failures.append(f"{name}:nonfinite")
     elif token == "channels":
         failures.append(f"{name}:channels")
-    if reward_graded:
-        coarse_candidate = [channel[compared:] for channel in quantized_candidate]
-        coarse_reference = [channel[compared:] for channel in quantized_reference]
-    else:
-        coarse_candidate = quantized_candidate
-        coarse_reference = quantized_reference
+    # Non-reward runs keep the magnitude check on the whole render.
+    # Reward runs record it and do not fail on it: a 1e-5 spike can
+    # hide in a block RMS, and A4 requires the signed compare instead.
+    coarse_candidate = quantized_candidate
+    coarse_reference = quantized_reference
     rms_gap, band_gap, rms_fail, band_fail = _coarse_gaps(
         coarse_candidate, coarse_reference, profile
     )
@@ -1043,9 +1069,9 @@ def _measure_stimulus(
         "band_max_abs_error_nano": to_nano(band_gap),
         "block_rms_max_abs_error_nano": to_nano(rms_gap),
     }
-    if rms_fail:
+    if not reward_graded and rms_fail:
         failures.append(f"{name}:envelope")
-    if band_fail:
+    if not reward_graded and band_fail:
         failures.append(f"{name}:bands")
     _note_impulse_tail(name, reference, profile, failures)
     return summary, failures, peak_error
@@ -1129,9 +1155,9 @@ def _prepare_render(
     A reward-graded run always rejects non-finite samples and requires
     a reference. With an impulse reference, ``max_frames`` below the
     144000 block-aligned cap raises ``ValueError`` before render. The
-    cap is not raised. ``head_frames`` becomes the trimmed reference
-    length, and a shorter impulse reference is silence-padded out to
-    the render so the coarse tail has samples to judge.
+    cap is not raised. ``head_frames`` stays the pinned profile value.
+    The signed compare covers the whole render. A shorter impulse
+    reference is silence-padded out to that render.
     """
     if (
         reward_graded
@@ -1149,12 +1175,9 @@ def _prepare_render(
     profile = _default_impulse_frames(profile)
     if reference is None:
         return profile, None
-    trimmed = reference.frames
     if profile.frames < reference.frames:
         profile = replace(profile, frames=reference.frames)
     _require_same_identity(profile, reference)
-    if reward_graded:
-        profile = replace(profile, head_frames=trimmed)
     if profile.frames > reference.frames:
         if profile.stimuli != ("impulse",):
             _require_same_setup(profile, reference)

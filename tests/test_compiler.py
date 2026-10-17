@@ -392,6 +392,15 @@ def test_harness_failures_keep_the_success_environment() -> None:
         assert compiled.receipt["exit_code"] >= UNGRADED_EXIT_FLOOR
 
 
+def test_url_in_a_comment_is_not_a_remote_import() -> None:
+    source = '// import("https://example.invalid/x.lib")\nprocess = _;\n'
+    compiled = compile_source(source, lang="wasm")
+    assert compiled.receipt["exit_code"] == 0
+    block = '/* component("https://example.invalid/y.lib") */\nprocess = _;\n'
+    compiled_block = compile_source(block, lang="wasm")
+    assert compiled_block.receipt["exit_code"] == 0
+
+
 @pytest.mark.parametrize(
     "source",
     [
