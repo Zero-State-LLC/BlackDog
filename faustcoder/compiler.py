@@ -16,10 +16,10 @@ pretend to succeed.
 The native Faust 2.88.0 CLI is a cross-check, not the primary compiler.
 ``compile_native`` and ``cross_check_native`` raise
 ``NativeFaustUnavailable`` when ``faust`` is absent or is not 2.88.0.
-CI does not install native Faust, so those tests skip there. The same
-job clears Ubuntu's unprivileged-userns AppArmor restriction so
-``unshare --net --map-root-user`` can create the network namespace
-(see :mod:`faustcoder.sandbox`). Versions
+CI does not install native Faust, so those tests skip there. The pytest
+job clears Ubuntu's unprivileged-userns AppArmor restriction only on
+GitHub-hosted runners (see :mod:`faustcoder.sandbox` and
+``docs/runbooks/compiler-harness.md``). Versions
 differ (wasm libfaust 2.90.0 versus native 2.88.0), so the cross-check
 compares ``diagnostic_class``, not output bytes.
 
@@ -44,10 +44,17 @@ to milliseconds. A source rejected for size never starts the process and
 records ``0``.
 
 ``environment_digest`` hashes a canonical object with ``compiler``,
-``faust_version``, ``faustwasm`` (``0.19.0`` or ``""`` for the native CLI),
-``lang``, ``network`` (``unshare-net-userns``), ``node_flags`` (the
-identity flags, not per-run temp paths) and ``options``. Host name, Node
-patch version and the job directory are not included.
+``faust_version``, ``faustlibraries_version`` (the ``vl.version`` triplet
+declared in the bundled ``version.lib``, or ``""`` for the native CLI),
+``faustwasm`` (``0.19.0`` or ``""``), ``lang``,
+``libfaust_wasm_data_sha256``, ``network`` (``unshare-net-userns``),
+``node`` (major.minor only), ``node_flags`` (the identity flags, not
+per-run temp paths), ``options``, ``runtime_sha256`` (sha256 of the staged
+``libfaust-wasm.js``, ``.wasm`` and ``.data``) and ``user_map``
+(``current``). Host name, Node patch version and the job directory are
+not included. The libfaust version is resolved once per runtime hash and
+reused on every receipt from that runtime, including timeout, memory,
+output and internal receipts.
 
 ``command`` records the logical compiler invocation, including
 ``--faustwasm=0.19.0``. The schema has no separate faustwasm field, so the
@@ -73,8 +80,7 @@ compiler text, first match:
 - success and the text contains ``WARNING`` -> ``warning``
 - success -> ``ok``
 - ``syntax error`` -> ``parse_error``
-- ``undefined symbol`` -> ``other`` (unbound identifier; the enum has no
-  separate value)
+- ``undefined symbol`` -> ``unbound_symbol``
 - ``too much arguments`` or ``too few arguments`` -> ``arity_error``
 - ``number of outputs``, ``number of inputs``, ``type error`` or
   ``incompatible type`` -> ``type_error`` (channel shape included)
@@ -83,12 +89,25 @@ compiler text, first match:
 Harness failures override that text:
 
 - wall clock or CPU backstop -> ``timeout``, exit 124
-- memory, output size or source size -> ``other``, exit 125, diagnostic
-  ``resource limit: ...``
-- worker crash or an unreadable result -> ``other``, exit 126, diagnostic
-  ``internal: ...``
+- memory, output size or source size -> ``resource_limit``, exit 125,
+  diagnostic ``resource limit: ...``
+- a JS runtime exception (``allocate is not defined``, ``Maximum call
+  stack size exceeded``, ``ReferenceError``, ``RangeError``, ``TypeError``,
+  and the same family), a remote ``import`` / ``library`` / ``component``
+  URL rejected before spawn, a worker crash, or an unreadable result ->
+  ``internal``, exit 126
 
 Compiler rejection of the source is exit 1. Exit 0 is ``ok`` or ``warning``.
+
+Reward consumers key on the pair ``(exit_code, diagnostic_class)``.
+Exit codes 124 and above are ungraded: they are not rungs on the R-005
+ladder. A harness failure must not score as ``other`` or as a compiler
+rejection. ``unbound_symbol`` is a compiler class (exit 1). See
+``docs/runbooks/compiler-harness.md`` and ADR-0005. A receipt whose exit
+is 124 or above is not evidence that another operator reproduced a
+successful compile of that source; compare ``environment_digest`` for the
+pin, and ``reproducible_digest`` only across receipts with the same exit
+and diagnostic class.
 
 Options are an allowlist (``-double``, ``-single``, ``-vec``, ``-scal``,
 ``-inpl``, and ``-ct``, ``-es``, ``-mcd``, ``-ftz`` with a non-negative
@@ -105,6 +124,7 @@ import re
 import shutil
 import subprocess
 import tempfile
+import threading
 import time
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
@@ -118,6 +138,7 @@ from faustcoder.sandbox import (
     SandboxError,
     SandboxRun,
     node_command,
+    node_executable,
     run_in_sandbox,
 )
 from faustcoder.schemas import validate
@@ -125,7 +146,13 @@ from faustcoder.store import ArtifactStore
 
 FAUSTWASM_VERSION = "0.19.0"
 NATIVE_FAUST_VERSION = "2.88.0"
+COMPILER_SCHEMA_VERSION = "0.3.2"
+# ADR-0004 / T05 pin. The wasm bundle's version.lib is a different triplet;
+# runtime_pin().faustlibraries_version is the bundle, not this commit.
+FAUSTLIBRARIES_PIN = "2edec0537f53"
+FAUSTLIBRARIES_PIN_VERSION = "2.80.0"
 EXCLUDED_TIMING_FIELDS = ("duration_ms",)
+UNGRADED_EXIT_FLOOR = 124
 _COMPILER_SCHEMA = "compiler-receipt.schema.json"
 _FLAGS = {"-double", "-single", "-vec", "-scal", "-inpl"}
 _FLAGS_WITH_INT = {"-ct", "-es", "-mcd", "-ftz"}
@@ -136,6 +163,26 @@ _RUNTIME_FILES = (
     "libfaust-wasm.wasm",
     "libfaust-wasm.data",
 )
+_LIB_VERSION = re.compile(
+    rb"version\s*=\s*(\d+),\s*//\s*MAJOR version when we make incompatible API changes,\s*"
+    rb"(\d+),\s*//\s*MINOR version when we add functionality in a backwards compatible manner,\s*"
+    rb"(\d+);\s*//\s*PATCH version"
+)
+_REMOTE_IMPORT = re.compile(
+    r"""(?ix)\b(?:import|library|component)\s*\(\s*["']https?://"""
+)
+_JS_RUNTIME = (
+    "allocate is not defined",
+    "maximum call stack size exceeded",
+    "referenceerror",
+    "rangeerror",
+    "typeerror",
+    "syntaxerror",
+    "is not defined",
+    "is not a function",
+)
+_PIN_LOCK = threading.Lock()
+_PIN_CACHE: dict[tuple[str, str, str], "RuntimePin"] = {}
 
 
 class CompilerHarnessError(Exception):
@@ -144,6 +191,23 @@ class CompilerHarnessError(Exception):
 
 class NativeFaustUnavailable(CompilerHarnessError):
     """The native Faust 2.88.0 CLI is not available for a cross-check."""
+
+
+@dataclass(frozen=True)
+class RuntimePin:
+    """Identity of one staged libfaust runtime.
+
+    ``faustlibraries_version`` is the ``vl.version`` triplet in the bundled
+    ``version.lib``. ``node`` is major.minor. The three sha256 fields are
+    hex digests of the runtime bytes, with no ``sha256:`` prefix.
+    """
+
+    faust_version: str
+    faustlibraries_version: str
+    node: str
+    js_sha256: str
+    wasm_sha256: str
+    data_sha256: str
 
 
 @dataclass(frozen=True)
@@ -190,7 +254,7 @@ def classify_diagnostic(diagnostics: str, *, compile_ok: bool) -> str:
     if "syntax error" in folded:
         return "parse_error"
     if "undefined symbol" in folded:
-        return "other"
+        return "unbound_symbol"
     if "too much arguments" in folded or "too few arguments" in folded:
         return "arity_error"
     if (
@@ -245,6 +309,7 @@ def compile_source(
     checked = _validate_options(options)
     bounds = limits or ResourceLimits()
     source_bytes = source.encode("utf-8")
+    pin = runtime_pin()
     if len(source_bytes) > bounds.source_bytes:
         return _harness_receipt(
             source_bytes,
@@ -252,9 +317,19 @@ def compile_source(
             options=checked,
             stop_reason="source",
             duration_ms=0,
-            faust_version="unknown",
+            faust_version=pin.faust_version,
+            pin=pin,
         )
-    _installed_faustwasm_version()
+    if _REMOTE_IMPORT.search(source):
+        return _harness_receipt(
+            source_bytes,
+            lang=lang,
+            options=checked,
+            stop_reason="remote",
+            duration_ms=0,
+            faust_version=pin.faust_version,
+            pin=pin,
+        )
     script = worker_directory() / "compile.mjs"
     if not script.is_file():
         raise SandboxError(f"compiler worker is missing: {script}")
@@ -282,7 +357,8 @@ def compile_source(
                 options=checked,
                 stop_reason=run.stop_reason,
                 duration_ms=duration_ms,
-                faust_version="unknown",
+                faust_version=pin.faust_version,
+                pin=pin,
             )
         return _receipt_from_worker(
             source_bytes,
@@ -292,6 +368,7 @@ def compile_source(
             workdir=workdir,
             run=run,
             duration_ms=duration_ms,
+            pin=pin,
         )
 
 
@@ -403,18 +480,123 @@ def store_compiler_receipt(
     producer: str = "faustcoder.compiler",
     parents: Sequence[str] = (),
 ) -> str:
-    """Validate ``receipt`` and store it. Return the artifact id."""
+    """Validate ``receipt`` and store it. Return the artifact id.
+
+    Receipts are deduplicated by ``reproducible_digest``. A second store of
+    a receipt that differs only by ``duration_ms`` returns the first
+    artifact id and does not write another envelope. ``created_at`` on the
+    first envelope wins. Look the stored envelope up with
+    ``lookup_compiler_receipt``.
+    """
     if not isinstance(receipt, dict):
         raise CompilerHarnessError("receipt must be a JSON object")
     validate(receipt, _COMPILER_SCHEMA)
+    digest = reproducible_receipt_digest(receipt)
+    existing = lookup_compiler_receipt(store, digest)
+    if existing is not None:
+        return str(existing["artifact_id"])
     envelope = build_envelope(
-        schema_version="0.3.0",
+        schema_version=COMPILER_SCHEMA_VERSION,
         created_at=created_at,
         producer=producer,
         parents=list(parents),
         payload=receipt,
     )
-    return store.put(envelope)
+    artifact_id = store.put(envelope)
+    path = _receipt_index_path(store, digest)
+    path.parent.mkdir(mode=0o755, exist_ok=True)
+    try:
+        fd = os.open(path, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o644)
+    except FileExistsError:
+        winner = lookup_compiler_receipt(store, digest)
+        if winner is None:
+            raise CompilerHarnessError("receipt index disappeared during store")
+        return str(winner["artifact_id"])
+    with os.fdopen(fd, "w", encoding="ascii") as handle:
+        handle.write(artifact_id + "\n")
+    return artifact_id
+
+
+def lookup_compiler_receipt(
+    store: ArtifactStore, reproducible_digest: str
+) -> dict[str, Any] | None:
+    """Return the envelope stored for ``reproducible_digest``, or None.
+
+    The index lives beside the artifact store, outside ``sha256/``. The
+    payload's reproducible digest is checked against the requested digest.
+    """
+    path = _receipt_index_path(store, reproducible_digest)
+    if path.is_symlink():
+        raise CompilerHarnessError("receipt index path is a symlink")
+    if not path.is_file():
+        return None
+    artifact_id = path.read_text(encoding="ascii").strip()
+    if re.fullmatch(r"[0-9a-f]{64}", artifact_id) is None:
+        raise CompilerHarnessError("receipt index does not hold an artifact id")
+    envelope = store.get(artifact_id)
+    payload = envelope.get("payload")
+    if not isinstance(payload, dict):
+        raise CompilerHarnessError("stored receipt payload is not an object")
+    if reproducible_receipt_digest(payload) != _normalize_digest(reproducible_digest):
+        raise CompilerHarnessError("receipt index does not match the stored payload")
+    return envelope
+
+
+def runtime_pin() -> RuntimePin:
+    """Return the installed libfaust pin, probing the runtime once per hash."""
+    _installed_faustwasm_version()
+    runtime = _runtime_directory()
+    hashes = tuple(_file_sha256(runtime / name) for name in _RUNTIME_FILES)
+    with _PIN_LOCK:
+        cached = _PIN_CACHE.get(hashes)
+    if cached is not None:
+        return cached
+    libraries = _faustlibraries_version(runtime / "libfaust-wasm.data")
+    node = _node_major_minor()
+    faust_version = _probe_libfaust_version()
+    pin = RuntimePin(
+        faust_version=faust_version,
+        faustlibraries_version=libraries,
+        node=node,
+        js_sha256=hashes[0],
+        wasm_sha256=hashes[1],
+        data_sha256=hashes[2],
+    )
+    with _PIN_LOCK:
+        _PIN_CACHE[hashes] = pin
+    return pin
+
+
+def environment_preimage(
+    *,
+    compiler: str,
+    faust_version: str,
+    lang: str,
+    options: Sequence[str],
+    pin: RuntimePin | None,
+) -> dict[str, Any]:
+    """Return the object hashed into ``environment_digest``."""
+    wasm = compiler == "libfaust-wasm" and pin is not None
+    return {
+        "compiler": compiler,
+        "faust_version": faust_version,
+        "faustlibraries_version": pin.faustlibraries_version if wasm else "",
+        "faustwasm": FAUSTWASM_VERSION if compiler == "libfaust-wasm" else "",
+        "lang": lang,
+        "libfaust_wasm_data_sha256": pin.data_sha256 if wasm else "",
+        "network": "unshare-net-userns",
+        "node": pin.node if wasm else "",
+        "node_flags": list(NODE_SANDBOX_FLAGS) if compiler == "libfaust-wasm" else [],
+        "options": list(options),
+        "runtime_sha256": {
+            "libfaust-wasm.data": pin.data_sha256,
+            "libfaust-wasm.js": pin.js_sha256,
+            "libfaust-wasm.wasm": pin.wasm_sha256,
+        }
+        if wasm
+        else {},
+        "user_map": "current",
+    }
 
 
 def _require_native_faust() -> str:
@@ -504,6 +686,7 @@ def _receipt_from_worker(
     workdir: Path,
     run: SandboxRun,
     duration_ms: int,
+    pin: RuntimePin,
 ) -> Compilation:
     result_path = workdir / "result.json"
     if run.returncode != 0 or not result_path.is_file():
@@ -513,7 +696,8 @@ def _receipt_from_worker(
             options=options,
             stop_reason="internal",
             duration_ms=duration_ms,
-            faust_version="unknown",
+            faust_version=pin.faust_version,
+            pin=pin,
         )
     try:
         body = json.loads(result_path.read_text(encoding="utf-8"))
@@ -524,7 +708,8 @@ def _receipt_from_worker(
             options=options,
             stop_reason="internal",
             duration_ms=duration_ms,
-            faust_version="unknown",
+            faust_version=pin.faust_version,
+            pin=pin,
         )
     if not isinstance(body, dict) or body.get("faustwasm_version") != FAUSTWASM_VERSION:
         return _harness_receipt(
@@ -533,11 +718,21 @@ def _receipt_from_worker(
             options=options,
             stop_reason="internal",
             duration_ms=duration_ms,
-            faust_version="unknown",
+            faust_version=pin.faust_version,
+            pin=pin,
         )
-    faust_version = body.get("libfaust_version")
-    if not isinstance(faust_version, str) or re.fullmatch(r"[\w.+-]{1,64}", faust_version) is None:
-        faust_version = "unknown"
+    reported = body.get("libfaust_version")
+    if reported != pin.faust_version:
+        return _harness_receipt(
+            source_bytes,
+            lang=lang,
+            options=options,
+            stop_reason="internal",
+            duration_ms=duration_ms,
+            faust_version=pin.faust_version,
+            pin=pin,
+        )
+    faust_version = pin.faust_version
     diagnostics = body.get("diagnostics")
     if not isinstance(diagnostics, str):
         diagnostics = ""
@@ -554,6 +749,7 @@ def _receipt_from_worker(
                 stop_reason="internal",
                 duration_ms=duration_ms,
                 faust_version=faust_version,
+                pin=pin,
             )
         total = 0
         for name in names:
@@ -565,6 +761,7 @@ def _receipt_from_worker(
                     stop_reason="internal",
                     duration_ms=duration_ms,
                     faust_version=faust_version,
+                    pin=pin,
                 )
             path = workdir / name
             if path.is_symlink() or not path.is_file():
@@ -575,6 +772,7 @@ def _receipt_from_worker(
                     stop_reason="internal",
                     duration_ms=duration_ms,
                     faust_version=faust_version,
+                    pin=pin,
                 )
             size = path.stat().st_size
             total += size
@@ -586,6 +784,7 @@ def _receipt_from_worker(
                     stop_reason="output",
                     duration_ms=duration_ms,
                     faust_version=faust_version,
+                    pin=pin,
                 )
             outputs.append((name, path.read_bytes()))
     if not compile_ok and diagnostics == "":
@@ -600,6 +799,7 @@ def _receipt_from_worker(
         diagnostics=diagnostics,
         outputs=outputs,
         duration_ms=duration_ms,
+        pin=pin,
     )
 
 
@@ -612,6 +812,7 @@ def _harness_receipt(
     duration_ms: int,
     faust_version: str,
     compiler: str = "libfaust-wasm",
+    pin: RuntimePin | None = None,
 ) -> Compilation:
     messages = {
         "timeout": "timeout: wall clock limit exceeded\n",
@@ -619,10 +820,16 @@ def _harness_receipt(
         "output": "resource limit: output size\n",
         "source": "resource limit: source size\n",
         "internal": "internal: worker failed\n",
+        "remote": "internal: remote import rejected\n",
         "cpu": "timeout: wall clock limit exceeded\n",
     }
     diagnostics = messages.get(stop_reason, "internal: worker failed\n")
-    reason = "timeout" if stop_reason in {"timeout", "cpu"} else stop_reason
+    if stop_reason in {"timeout", "cpu"}:
+        reason = "timeout"
+    elif stop_reason == "remote":
+        reason = "internal"
+    else:
+        reason = stop_reason
     return _build(
         source_bytes,
         compiler=compiler,
@@ -633,6 +840,7 @@ def _harness_receipt(
         diagnostics=diagnostics,
         outputs=[],
         duration_ms=duration_ms,
+        pin=pin,
         harness=reason,
     )
 
@@ -648,16 +856,18 @@ def _build(
     diagnostics: str,
     outputs: Sequence[tuple[str, bytes]],
     duration_ms: int,
+    pin: RuntimePin | None = None,
     harness: str | None = None,
 ) -> Compilation:
+    runtime_failure = harness is None and not compile_ok and _is_js_runtime(diagnostics)
     if harness == "timeout":
         diagnostic_class = "timeout"
         exit_code = 124
     elif harness in {"memory", "output", "source"}:
-        diagnostic_class = "other"
+        diagnostic_class = "resource_limit"
         exit_code = 125
-    elif harness == "internal":
-        diagnostic_class = "other"
+    elif harness == "internal" or runtime_failure:
+        diagnostic_class = "internal"
         exit_code = 126
     elif compile_ok:
         diagnostic_class = classify_diagnostic(diagnostics, compile_ok=True)
@@ -665,18 +875,16 @@ def _build(
     else:
         diagnostic_class = classify_diagnostic(diagnostics, compile_ok=False)
         exit_code = 1
-    if harness is not None:
+    if harness is not None or runtime_failure:
         outputs = []
     stdout = canonical_output_bytes(outputs)
-    preimage = {
-        "compiler": compiler,
-        "faust_version": faust_version,
-        "faustwasm": FAUSTWASM_VERSION if compiler == "libfaust-wasm" else "",
-        "lang": lang,
-        "network": "unshare-net-userns",
-        "node_flags": list(NODE_SANDBOX_FLAGS) if compiler == "libfaust-wasm" else [],
-        "options": list(options),
-    }
+    preimage = environment_preimage(
+        compiler=compiler,
+        faust_version=faust_version,
+        lang=lang,
+        options=options,
+        pin=pin,
+    )
     command = _logical_command(compiler, faust_version, lang, options)
     receipt = {
         "source_sha256": hashlib.sha256(source_bytes).hexdigest(),
@@ -727,3 +935,85 @@ def _normalize_diagnostics(text: str, workdir: Path) -> str:
 
 def _digest(data: bytes) -> str:
     return "sha256:" + hashlib.sha256(data).hexdigest()
+
+
+def _is_js_runtime(diagnostics: str) -> bool:
+    if "ERROR :" in diagnostics or "WARNING" in diagnostics:
+        return False
+    folded = diagnostics.lower()
+    return any(marker in folded for marker in _JS_RUNTIME)
+
+
+def _normalize_digest(value: str) -> str:
+    text = value.strip()
+    hex_id = text[7:] if text.startswith("sha256:") else text
+    if re.fullmatch(r"[0-9a-f]{64}", hex_id) is None:
+        raise CompilerHarnessError("reproducible digest must be sha256 and 64 hex characters")
+    return f"sha256:{hex_id}"
+
+
+def _receipt_index_path(store: ArtifactStore, digest: str) -> Path:
+    hex_id = _normalize_digest(digest).removeprefix("sha256:")
+    return store.root / "receipt-index" / hex_id
+
+
+def _runtime_directory() -> Path:
+    return worker_directory() / "node_modules" / "@grame" / "faustwasm" / "libfaust-wasm"
+
+
+def _file_sha256(path: Path) -> str:
+    if not path.is_file():
+        raise SandboxError(f"missing faustwasm runtime file: {path.name}")
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def _faustlibraries_version(data_path: Path) -> str:
+    match = _LIB_VERSION.search(data_path.read_bytes())
+    if match is None:
+        raise SandboxError("bundled version.lib does not declare vl.version")
+    return ".".join(part.decode("ascii") for part in match.groups())
+
+
+def _node_major_minor() -> str:
+    completed = subprocess.run(
+        [node_executable(), "--version"],
+        capture_output=True,
+        text=True,
+        timeout=10,
+        check=False,
+    )
+    match = re.fullmatch(r"v(\d+)\.(\d+)\.\d+", completed.stdout.strip())
+    if match is None:
+        raise SandboxError(f"node --version returned {completed.stdout!r}")
+    return f"{match.group(1)}.{match.group(2)}"
+
+
+def _probe_libfaust_version() -> str:
+    script = worker_directory() / "version.mjs"
+    if not script.is_file():
+        raise SandboxError(f"version worker is missing: {script}")
+    with tempfile.TemporaryDirectory(prefix="faustcoder-pin-") as temporary:
+        workdir = Path(temporary)
+        _stage_runtime(workdir)
+        command = node_command(
+            script,
+            [str(workdir)],
+            read_paths=[worker_directory(), workdir],
+            write_paths=[workdir],
+        )
+        run = run_in_sandbox(
+            command,
+            stdin=b"",
+            workdir=workdir,
+            limits=ResourceLimits(timeout_s=30),
+        )
+    if run.stop_reason or run.returncode != 0:
+        detail = run.stderr.decode("utf-8", errors="replace").strip()
+        raise SandboxError(
+            "libfaust version probe failed: "
+            + (detail or run.stop_reason or str(run.returncode))
+        )
+    version = run.stdout.decode("utf-8").strip()
+    if re.fullmatch(r"[\w.+-]{1,64}", version) is None:
+        raise SandboxError(f"libfaust version probe returned {version!r}")
+    return version

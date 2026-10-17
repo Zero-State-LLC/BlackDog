@@ -4,14 +4,17 @@ from __future__ import annotations
 
 import hashlib
 import os
+import time
 from pathlib import Path
 
 import pytest
 
 from faustcoder import (
+    COMPILER_SCHEMA_VERSION,
     EXCLUDED_TIMING_FIELDS,
     FAUSTWASM_VERSION,
     NODE_SANDBOX_FLAGS,
+    UNGRADED_EXIT_FLOOR,
     ArtifactStore,
     NativeFaustUnavailable,
     ResourceLimits,
@@ -19,13 +22,21 @@ from faustcoder import (
     compile_source,
     cross_check_native,
     digest_hex,
+    lookup_compiler_receipt,
     node_command,
     reproducible_receipt_digest,
     run_in_sandbox,
+    runtime_pin,
     store_compiler_receipt,
     validate,
 )
-from faustcoder.compiler import canonical_output_bytes, worker_directory
+from faustcoder.canonical import canonical_bytes
+from faustcoder.compiler import (
+    FAUSTLIBRARIES_PIN_VERSION,
+    canonical_output_bytes,
+    environment_preimage,
+    worker_directory,
+)
 
 FIXTURES = Path(__file__).resolve().parent / "fixtures" / "dsp"
 _ESCAPE = Path("/tmp/faustcoder-t03-escape")
@@ -62,7 +73,7 @@ def test_classify_known_compiler_text() -> None:
     )
     assert (
         classify_diagnostic("ERROR : undefined symbol : not_a_real_identifier\n", compile_ok=False)
-        == "other"
+        == "unbound_symbol"
     )
     assert (
         classify_diagnostic("ERROR : too much arguments : 2, instead of : 1\n", compile_ok=False)
@@ -117,9 +128,11 @@ def test_path_options_are_rejected() -> None:
 def test_source_over_the_size_limit_is_a_resource_receipt() -> None:
     compiled = compile_source("process = _;\n", limits=ResourceLimits(source_bytes=4))
     assert compiled.receipt["exit_code"] == 125
-    assert compiled.receipt["diagnostic_class"] == "other"
+    assert compiled.receipt["diagnostic_class"] == "resource_limit"
     assert compiled.diagnostics == "resource limit: source size\n"
     assert compiled.receipt["duration_ms"] == 0
+    assert compiled.receipt["faust_version"] == "2.90.0"
+    assert compiled.receipt["exit_code"] >= UNGRADED_EXIT_FLOOR
     assert compiled.receipt["stdout_digest"].endswith(hashlib.sha256(b"").hexdigest())
 
 
@@ -165,10 +178,19 @@ def test_gain_receipt_is_reproducible_and_stored(store: ArtifactStore) -> None:
     artifact_id = store_compiler_receipt(
         store, receipt, created_at="2026-10-17T00:00:00Z"
     )
-    assert store.get(artifact_id)["payload"] == receipt
+    stored = store.get(artifact_id)
+    assert stored["payload"] == receipt
+    assert stored["schema_version"] == COMPILER_SCHEMA_VERSION
     tweaked = dict(receipt, duration_ms=receipt["duration_ms"] + 1)
     assert reproducible_receipt_digest(tweaked) == first.reproducible_digest
     assert digest_hex(tweaked) != digest_hex(receipt)
+    again = store_compiler_receipt(store, tweaked, created_at="2026-10-17T00:00:01Z")
+    assert again == artifact_id
+    found = lookup_compiler_receipt(store, first.reproducible_digest)
+    assert found is not None
+    assert found["artifact_id"] == artifact_id
+    assert found["payload"]["duration_ms"] == receipt["duration_ms"]
+    assert store.list() == [artifact_id]
 
 
 @pytest.mark.parametrize(
@@ -177,7 +199,7 @@ def test_gain_receipt_is_reproducible_and_stored(store: ArtifactStore) -> None:
         ("syntax.dsp", "parse_error", "syntax error"),
         ("shape.dsp", "type_error", "number of outputs"),
         ("arity.dsp", "arity_error", "too much arguments"),
-        ("unbound.dsp", "other", "undefined symbol"),
+        ("unbound.dsp", "unbound_symbol", "undefined symbol"),
     ],
 )
 def test_known_bad_fixtures(name: str, diagnostic_class: str, snippet: str) -> None:
@@ -271,3 +293,136 @@ def test_native_cross_check_matches_diagnostic_class() -> None:
     assert gain.native.receipt["lang"] == "cpp"
     assert syntax.diagnostic_class_matches
     assert syntax.wasm.receipt["diagnostic_class"] == "parse_error"
+
+
+def test_runtime_pin_records_bundle_bytes_and_library_drift() -> None:
+    pin = runtime_pin()
+    runtime = (
+        worker_directory()
+        / "node_modules"
+        / "@grame"
+        / "faustwasm"
+        / "libfaust-wasm"
+    )
+    assert pin.faust_version == "2.90.0"
+    assert pin.faustlibraries_version == "2.74.2"
+    assert pin.faustlibraries_version != FAUSTLIBRARIES_PIN_VERSION
+    assert pin.data_sha256 == hashlib.sha256(
+        (runtime / "libfaust-wasm.data").read_bytes()
+    ).hexdigest()
+    assert pin.wasm_sha256 == hashlib.sha256(
+        (runtime / "libfaust-wasm.wasm").read_bytes()
+    ).hexdigest()
+    assert pin.js_sha256 == hashlib.sha256(
+        (runtime / "libfaust-wasm.js").read_bytes()
+    ).hexdigest()
+    preimage = environment_preimage(
+        compiler="libfaust-wasm",
+        faust_version=pin.faust_version,
+        lang="wasm",
+        options=(),
+        pin=pin,
+    )
+    assert preimage["libfaust_wasm_data_sha256"] == pin.data_sha256
+    assert preimage["runtime_sha256"]["libfaust-wasm.wasm"] == pin.wasm_sha256
+    assert preimage["runtime_sha256"]["libfaust-wasm.data"] == pin.data_sha256
+    assert preimage["user_map"] == "current"
+
+
+def test_harness_failures_keep_the_success_environment() -> None:
+    source = _source("gain.dsp")
+    ok = compile_source(source, lang="wasm")
+    timed = compile_source(source, limits=ResourceLimits(timeout_s=0.05))
+    memory = compile_source(
+        source,
+        limits=ResourceLimits(timeout_s=15, memory_bytes=64 * 1024 * 1024, poll_interval_s=0.02),
+    )
+    output = compile_source(source, limits=ResourceLimits(timeout_s=15, output_bytes=1024))
+    assert ok.receipt["faust_version"] == "2.90.0"
+    assert ok.receipt["environment_digest"] == "sha256:" + hashlib.sha256(
+        canonical_bytes(
+            environment_preimage(
+                compiler="libfaust-wasm",
+                faust_version="2.90.0",
+                lang="wasm",
+                options=(),
+                pin=runtime_pin(),
+            )
+        )
+    ).hexdigest()
+    cases = (
+        (timed, 124, "timeout"),
+        (memory, 125, "resource_limit"),
+        (output, 125, "resource_limit"),
+    )
+    for compiled, exit_code, diagnostic_class in cases:
+        assert compiled.receipt["exit_code"] == exit_code
+        assert compiled.receipt["diagnostic_class"] == diagnostic_class
+        assert compiled.receipt["faust_version"] == "2.90.0"
+        assert "--libfaust=2.90.0" in compiled.receipt["command"]
+        assert compiled.receipt["environment_digest"] == ok.receipt["environment_digest"]
+        assert compiled.receipt["exit_code"] >= UNGRADED_EXIT_FLOOR
+
+
+@pytest.mark.parametrize(
+    "source",
+    [
+        _source("remote.dsp"),
+        'process = library("https://example.invalid/x.lib");\n',
+        "process = component('http://example.invalid/x.lib');\n",
+    ],
+)
+def test_remote_url_imports_are_internal(source: str) -> None:
+    compiled = compile_source(source, lang="wasm")
+    assert compiled.receipt["exit_code"] == 126
+    assert compiled.receipt["diagnostic_class"] == "internal"
+    assert compiled.diagnostics == "internal: remote import rejected\n"
+    assert compiled.receipt["faust_version"] == "2.90.0"
+    assert compiled.receipt["duration_ms"] == 0
+
+
+def test_deep_recursion_is_internal() -> None:
+    compiled = compile_source(_source("recurse.dsp"), lang="wasm")
+    assert compiled.receipt["exit_code"] == 126
+    assert compiled.receipt["diagnostic_class"] == "internal"
+    assert "maximum call stack size exceeded" in compiled.diagnostics.lower()
+    assert compiled.receipt["faust_version"] == "2.90.0"
+
+
+def test_sandbox_uid_is_unprivileged_and_offline(tmp_path: Path) -> None:
+    script = worker_directory() / "probe.mjs"
+    command = node_command(
+        script,
+        ["identity", str(tmp_path)],
+        read_paths=[worker_directory(), tmp_path, Path("/proc")],
+        write_paths=[tmp_path],
+    )
+    run = run_in_sandbox(command, stdin=b"", workdir=tmp_path, limits=ResourceLimits(timeout_s=3))
+    assert run.returncode == 0, run.stderr
+    lines = run.stdout.decode().splitlines()
+    assert lines[0].startswith("uid ")
+    uid = int(lines[0].split()[1])
+    assert uid != 0
+    assert lines[1].startswith("capeff ")
+    assert int(lines[1].split()[1], 16) == 0
+    assert lines[2] == "blocked"
+
+
+def test_timeout_is_armed_before_stdin(tmp_path: Path) -> None:
+    script = worker_directory() / "probe.mjs"
+    command = node_command(
+        script,
+        ["hold", str(tmp_path)],
+        read_paths=[worker_directory(), tmp_path],
+        write_paths=[tmp_path],
+    )
+    started = time.monotonic()
+    run = run_in_sandbox(
+        command,
+        stdin=b"x" * (256 * 1024),
+        workdir=tmp_path,
+        limits=ResourceLimits(timeout_s=0.4),
+    )
+    elapsed = time.monotonic() - started
+    assert run.stop_reason == "timeout"
+    assert elapsed < 3

@@ -1,7 +1,7 @@
 # FaustCoder: DAG-Compliant DSP Coding Model
 
 - Status: DRAFT / refinement-ready
-- Version: 0.3.1 (R-001 v0.2 evidence, Danny yes 2026-10-17 12:54 PM PT). 0.3.0: Faust-tooling assimilation and target lanes, ADR-0004; see §19. 0.2.0 training path: ADR-0002, §17
+- Version: 0.3.2 (CompilerReceipt diagnostic classes, ADR-0005, Danny yes 2026-10-17 1:13 PM PT). 0.3.1: R-001 v0.2 evidence, Danny yes 2026-10-17 12:54 PM PT; see §20. 0.3.0: Faust-tooling assimilation and target lanes, ADR-0004; see §19. 0.2.0 training path: ADR-0002, §17
 - Target: NVIDIA DGX Spark (128 GB unified memory)
 
 ## 1. Constitution
@@ -300,6 +300,8 @@ MODIFIED 0.3.0 (R-004): adds `category` (faustlibraries library name), `target` 
 
 MODIFIED 0.3.0 (R-005): adds `compiler` (`libfaust-wasm` or `faust-cli`), `lang` (output backend), `options` and `diagnostic_class` (`ok`, `warning`, `type_error`, `arity_error`, `parse_error`, `timeout`, `other`).
 
+MODIFIED 0.3.2 (ADR-0005, Danny yes 2026-10-17 1:13 PM PT): `diagnostic_class` adds `unbound_symbol`, `resource_limit` and `internal`.
+
 ### DSPTestReceipt
 
 `{source_sha256, test_suite_digest, sample_rate, block_size, seed, metrics, thresholds, passed, harness_digest}`
@@ -500,3 +502,11 @@ Approval: Danny yes 2026-10-17 12:54 PM PT. Training runs on a dedicated DGX Spa
 | A-09 | For v0.2, R-001 is satisfied by cited external DGX Spark benchmarks plus one environment-fingerprint receipt per machine. On-hardware throughput is T10, on that cleared Spark | T09 acceptance required ARM64/Blackwell throughput and memory receipts before T10 | OBSERVED (approval) |
 
 This supersedes, for the v0.2 R-001 gate only, the §17 S-6 recommendation that T09 record throughput receipts before T10. S-6's row is left as written. The `env_verified` guard in §7.3 is unchanged: it still requires pinned dependencies and hardware diagnostics, not a token rate.
+
+## 21. Amendments 0.3.2 (CompilerReceipt diagnostics, ACCEPTED)
+
+Approval: Danny yes 2026-10-17 1:13 PM PT. This is the next spec version after 0.3.1 (§20). Decision: [ADR-0005](../../docs/adr/0005-compiler-diagnostic-classes.md).
+
+| ID | Change | Was | Label |
+|---|---|---|---|
+| A-10 | CompilerReceipt `diagnostic_class` adds `unbound_symbol`, `resource_limit` and `internal` | Enum ended at `ok`, `warning`, `type_error`, `arity_error`, `parse_error`, `timeout`, `other` | OBSERVED (approval) |

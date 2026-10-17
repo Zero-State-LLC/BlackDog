@@ -5,17 +5,22 @@ parent environment, the network, or an unbounded runtime.
 
 Enforcement, in order:
 
-1. Network. ``unshare --net --map-root-user`` runs the process in a new
-   network namespace with no interfaces. A connect fails with
-   ``ENETUNREACH``. Node 22's ``--permission`` model does not deny network
-   and rejects ``--allow-net``; the namespace is the control that holds on
-   the Node 22 line used in CI. GitHub-hosted Ubuntu sets
+1. Network and user. ``unshare --net --map-current-user`` (util-linux
+   2.38 or newer) runs the process in a new network namespace with no
+   interfaces, and maps the calling uid to itself. A connect fails with
+   ``ENETUNREACH``. Inside that namespace the uid is not 0 and ``CapEff``
+   is 0. ``--map-root-user`` is not used: it maps the caller to uid 0 with
+   a full capability set. Node 22's ``--permission`` model does not deny
+   network and rejects ``--allow-net``; the namespace is the control that
+   holds on the Node 22 line used in CI. GitHub-hosted Ubuntu sets
    ``kernel.apparmor_restrict_unprivileged_userns=1``, and ``unshare`` then
-   fails with ``EPERM`` writing ``/proc/self/uid_map``. The pytest job sets
-   that sysctl to 0 on the runner and checks ``unshare --net
-   --map-root-user -- true`` before the tests. The compiler still runs as
-   the unprivileged user inside the namespace. The scrubbed environment
-   also drops ``HTTP_PROXY``, ``HTTPS_PROXY``, ``ALL_PROXY``,
+   fails with ``EPERM`` writing ``/proc/self/uid_map``. The pytest job
+   clears that sysctl only when ``runner.environment`` is
+   ``github-hosted``, then checks ``unshare --net --map-current-user --
+   true``. On a DGX Spark or any self-hosted runner, do not set that
+   sysctl. Grant ``userns`` to the node binary with a per-binary AppArmor
+   profile. See ``docs/runbooks/compiler-harness.md``. The scrubbed
+   environment also drops ``HTTP_PROXY``, ``HTTPS_PROXY``, ``ALL_PROXY``,
    ``NODE_OPTIONS`` and the rest of the parent environment.
 2. Code generation. Node is started with
    ``--disallow-code-generation-from-strings``, which rejects ``eval`` and
@@ -24,9 +29,10 @@ Enforcement, in order:
    does not pass ``--allow-child-process``, ``--allow-worker``,
    ``--allow-addons``, ``--allow-wasi`` or ``--allow-net``. Read and write
    are limited to the absolute paths passed in. Write is the job directory.
-4. Time. The parent kills the process group when ``timeout_s`` wall-clock
-   seconds elapse. ``prlimit --cpu`` is a CPU-time backstop
-   (``ceil(timeout_s) + 1`` seconds) and is reported as a timeout.
+4. Time. The wall-clock timer is armed before stdin is written, and the
+   write runs on its own thread, so a child that never reads a full pipe
+   is still killed at ``timeout_s``. ``prlimit --cpu`` is a CPU-time
+   backstop (``ceil(timeout_s) + 1`` seconds) and is reported as a timeout.
 5. Memory. ``RLIMIT_AS`` is not used: the embedded libfaust module reserves
    a large virtual address space (about 11 GB) while the compile's resident
    set stays near 80 MB. A parent thread samples ``VmRSS`` of the process
@@ -175,7 +181,7 @@ def run_in_sandbox(
         "--",
         unshare,
         "--net",
-        "--map-root-user",
+        "--map-current-user",
         "--",
         *command,
     ]
@@ -230,25 +236,44 @@ def run_in_sandbox(
         daemon=True,
     )
     watcher = threading.Thread(target=watch, daemon=True)
+    def expire() -> None:
+        mark("timeout")
+        _kill_group(process.pid)
+
+    # Armed before stdin is written. A full pipe must not block the parent
+    # past timeout_s.
+    timer = threading.Timer(limits.timeout_s, expire)
+    timer.daemon = True
+
+    def write_stdin() -> None:
+        if process.stdin is None:
+            return
+        try:
+            process.stdin.write(stdin)
+        except (BrokenPipeError, OSError, ValueError):
+            pass
+        finally:
+            try:
+                process.stdin.close()
+            except OSError:
+                pass
+
+    writer = threading.Thread(target=write_stdin, daemon=True)
     out_thread.start()
     err_thread.start()
     watcher.start()
+    timer.start()
+    writer.start()
     try:
-        if process.stdin is not None:
-            try:
-                process.stdin.write(stdin)
-            except BrokenPipeError:
-                pass
-            finally:
-                process.stdin.close()
         try:
-            process.wait(timeout=limits.timeout_s)
+            process.wait(timeout=limits.timeout_s + 5)
         except subprocess.TimeoutExpired:
-            mark("timeout")
-            _kill_group(process.pid)
+            expire()
             process.wait(timeout=5)
     finally:
+        timer.cancel()
         stop.set()
+        writer.join(timeout=1)
         watcher.join(timeout=1)
         out_thread.join(timeout=1)
         err_thread.join(timeout=1)

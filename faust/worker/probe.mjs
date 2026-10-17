@@ -69,6 +69,26 @@ if (mode === "network") {
   const keys = ["HTTP_PROXY", "HTTPS_PROXY", "ALL_PROXY", "NODE_OPTIONS", "npm_config_registry"];
   const present = keys.filter((key) => process.env[key]);
   token(present.length === 0 ? "env-clean" : `env-dirty ${present.join(",")}`);
+} else if (mode === "identity") {
+  const status = readFileSync("/proc/self/status", "utf8");
+  const cap = /^CapEff:\s*([0-9a-f]+)/m.exec(status);
+  token(`uid ${process.getuid()}`);
+  token(`capeff ${cap ? cap[1] : "missing"}`);
+  const socket = net.connect({ host: "1.1.1.1", port: 443 });
+  socket.on("connect", () => {
+    token("connected");
+    process.exit(2);
+  });
+  socket.on("error", () => {
+    token("blocked");
+    process.exit(0);
+  });
+  setTimeout(() => {
+    token("no-connect");
+    process.exit(0);
+  }, 500);
+} else if (mode === "hold") {
+  setInterval(() => {}, 1000);
 } else {
   process.stderr.write("unknown probe\n");
   process.exit(2);
