@@ -33,11 +33,11 @@ one DSP program.
 
 ## Decision
 
-- **A1:** A failure the source caused gets the `parse_error` rung, the lowest graded rung. That covers: a remote import, library or component; recursion or any other stack overflow caused by the source; a timeout or resource kill the source ran into; any `CompilerExclusion` matched by model output; and any non-finite (NaN/Inf), silent, DC or trivial render in a reward-graded run.
+- **A1:** A failure the source caused gets the `parse_error` rung, the lowest graded rung. That covers: a remote import, library or component; recursion or any other stack overflow caused by the source; a timeout or resource kill the source ran into; any `CompilerExclusion` matched by model output; and any non-finite (NaN/Inf), silent, DC or trivial render in a reward-graded run. A timeout or resource kill counts as source-attributable only once triage attributes it to the source.
 - **A2:** The grader never penalizes the model for an error attributable to the evaluation environment or the harness. It distinguishes two such cases, and both are ungraded and quarantined for fixing:
   - (a) a **reproducible infrastructure failure**, i.e. a worker crash or an `internal` receipt reproduced on a known-good fixture under the same harness and environment digest within the same batch;
   - (b) a **deterministic harness defect**, i.e. the harness or environment, not the source, deterministically produces the error for a given input (for example a pre-filter false positive or a crash in harness code), as established by triage.
-  An `internal` receipt whose cause has not been attributed yet is ungraded and quarantined until triage attributes it. It is graded under A1 only once it is attributed to the source.
+  Any receipt whose cause has not been attributed yet (an `internal` receipt, a timeout or resource kill with exit 124/125/126, or a worker or harness crash) is ungraded and quarantined until triage attributes it. It is graded under A1 only once it is attributed to the source.
 - **A3:** Reward-graded runs force `reject_nonfinite=True`.
 - **A4:** The signal comparison covers the whole render up to a pinned `max_frames`. It includes sign and timing beyond `head_frames`, not magnitude alone. `max_frames` and `head_frames` are part of the reward profile digest.
 - **A5:** A grader accepts a receipt only when it carries `thresholds.reward_graded` and the canonical profile digest. `apply_signal` takes the receipt.
@@ -46,15 +46,17 @@ one DSP program.
 
 ## Consequences
 
-- After acceptance, a policy cannot dodge a parse error by importing a
-  URL, recursing, or allocating until the harness kills the compile.
+- Once the A1–A7 grader changes land, a policy cannot dodge a parse
+  error by importing a URL, recursing, or allocating until the harness
+  kills the compile.
 - Infrastructure faults stay out of the ladder, and a rising ungraded
   rate is visible instead of being dropped quietly.
 - Reward consumers keep the ADR-0005 table in the compiler runbook until
   the grader changes that implement A1–A7 land.
 - A2 quarantine entries are tracked as harness or environment bugs to
   fix.
-- A4/A5 close ADVERSARY PR41 T04 r3 B1/B2/N4, A3 closes r2 N1, and A1
+- A4/A5 specify the fix for ADVERSARY PR41 T04 r3 B1/B2/N4, and
+  enforcement lands with the grader PR. A3 closes r2 N1, and A1
   (CompilerExclusion) matches the PR40 T03b note.
 
 ## Alternatives considered
