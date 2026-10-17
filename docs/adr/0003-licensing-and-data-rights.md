@@ -47,6 +47,21 @@ Status: ACCEPTED
   repository that is LGPL-2.1-or-later, so those files are training-only.
 - AGPL stays excluded.
 
+### D-013: rights defaults (Danny yes 2026-10-17 1:04 PM PT)
+
+Danny approved these defaults ("get us where we need to go however you gotta do it") and delegated the per-row calls. Spec §22 is the amendment. This supersedes the interpretation note below that left STK-4.3 unapproved.
+
+- STK-4.3 is other-permissive. Clear it with a notice. The upstream-changes sentence in `licenses/stk-4.3.0.md` is not a binding provision.
+- Bare "BSD" may train and eval. It is not redistributed.
+- `rights_cleared` requires `corpus/notice-manifest.v1.json`: path, blob id, copyright, license.
+- Vendored copies are not a second source. Content-hash them to the upstream pin and reject the copy.
+- Library files are sliced per function. A declare wins, then the section header, then reject.
+- Mixed licenses in one file take the strictest.
+- CCA4I "TODO: if/when Romain agrees" comments are stripped from cleared slices.
+- GPL and LGPL stay training-only. A near-duplicate filter on generated Faust against that set is proposed for T06 and T07. The threshold is not set.
+- Header-less means no license or copyright in the leading comment and no prefixed license or copyright declare.
+- An inferred clearance names a reviewer. Impulse tests never enter eval or holdout.
+
 ### D-011: upstream contributions (Danny yes 2026-10-16 23:39 PT)
 
 - Fixes to the Faust compiler or libraries found while building FaustCoder
@@ -77,10 +92,12 @@ Status: ACCEPTED
 These are INFERRED readings, not part of the approval. Not legal advice.
 
 - "Other permissive" is read as ISC, Zlib, BSL-1.0, 0BSD, MIT-0, CC0-1.0,
-  Unlicense and STK-4.3 (the STK license used in faustlibraries).
+  and Unlicense. STK-4.3 is no longer only an interpretation: D-013 accepts
+  it as other-permissive.
 - LGPL, including the Faust library exception, is treated like GPL: training
-  only. (Confirmed by D-007 for header-less files.) AGPL, MPL and other copyleft licenses are not covered by the approval
-  and stay excluded until decided.
+  only. (Confirmed by D-007 for header-less files and by D-013 for declared
+  LGPL functions.) AGPL stays excluded. MPL and other copyleft licenses are
+  not covered and stay excluded until decided.
 - Resolved (Danny yes 2026-10-16 22:25 PT): the repository was transferred to the Zero-State-LLC
   organization, so ownership matches the proprietary license. It stays public
   for now (ORG-001, Danny 2026-10-16 22:32 PT), revisitable later.
