@@ -38,24 +38,30 @@ same digest returns the first envelope.
 ## What the environment digest covers
 
 The hashed object includes the embedded libfaust version, the staged
-faustlibraries commit `2edec0537f53`, the sha256 of that canonical `*.lib`
-tree, the staged `vl.version` (`2.80.0`), the triplet still embedded in
-`libfaust-wasm.data` (`2.74.2` on faustwasm 0.19.0), the sha256 of
-`libfaust-wasm.js`, `.wasm` and `.data`, and the Node major.minor. It does
-not include the host name, the Node patch, the job directory, or the host
-path of the library tree.
+faustlibraries commit `2edec0537f53`, the sha256 of that canonical checkout,
+the sha256 of the tree mounted at `/usr/share/faust`
+(`faustlibraries_share_sha256`), the staged `vl.version` (`2.80.0`), the
+triplet still embedded in `libfaust-wasm.data` (`2.74.2` on faustwasm
+0.19.0), the sha256 of `libfaust-wasm.js`, `.wasm` and `.data`, and the
+Node major.minor. It does not include the host name, the Node patch, the
+job directory, or the host path of the library tree.
 
 The canonical tree hash is every regular `*.lib` file, sorted by relative
 path. Each entry is the UTF-8 path, a newline, an 8-byte big-endian
-length, and the file bytes. One changed library byte changes the hash and
-therefore `environment_digest`. A checkout that does not match the pinned
-hash is refused before a receipt is written.
+length, and the file bytes. The checkout hash and the mounted-share hash
+differ because the share also contains the flat `old/*.lib` and `dx7/*.lib`
+copies. The digest binds the mounted hash. The worker hashes the bytes it
+writes into `/usr/share/faust` on every compile and the harness refuses
+the result unless that hash is the pin. The host share is hashed again on
+every reuse. A `.tree-sha256` stamp is not evidence. One changed byte of
+the mounted tree changes `environment_digest`, and a mismatch is refused
+before a receipt is written. A checkout that does not match the pinned
+hash is refused the same way.
 
 `scripts/fetch-faustlibraries.sh` downloads the commit on the host. The
 sandbox does not. Before every wasm compile the worker deletes
-`/usr/share/faust` in the Emscripten filesystem and writes that tree,
-including the flat `old/*.lib` and `dx7/*.lib` copies from Faust's install
-script. The native 2.88.0 cross-check passes the same directory as `-I`.
+`/usr/share/faust` in the Emscripten filesystem and writes that share.
+The native 2.88.0 cross-check passes the same directory as `-I`.
 The logical command records `--faustlibraries=2edec0537f53`.
 
 The data file still contains libraries 2.74.2. Those bytes are hashed so
@@ -100,6 +106,19 @@ sha256 and raises `CompilerExclusion` before the worker starts. That is
 not diagnostic class `other`. The example sources are fetched by
 `scripts/fetch-faust-examples.sh` and are not committed.
 
+`CompilerExclusion` on a model output is a failure when rewards land. It
+is not a pass, and it is not an ungraded refuge. Reproducing one of these
+eight sources must not escape a penalty. Reward behavior is unchanged
+until that ladder is built. `CompilerExclusion.reward_disposition` is
+`failure`.
+
+Each entry records the raw sha256 and the sha256 after T06 normalization.
+T06 forces LF newlines and strips trailing spaces and tabs. Six of the
+eight raw hashes will not match that normalized text. Only
+`physicalModeling/faust-stk/modalBar.dsp` and `SAM/effects/effects.dsp`
+are unchanged. The harness excludes a source when either hash matches, so
+those six stay excluded after T06 normalizes them.
+
 ## Network namespace on a runner
 
 The compiler runs as `unshare --net --map-current-user`. The uid inside
@@ -143,9 +162,17 @@ profile faustcoder-unshare /opt/faustcoder/bin/fc-unshare flags=(unconfined) {
 
 Save that as `/etc/apparmor.d/faustcoder-unshare` and load it with
 `apparmor_parser -r`. `flags=(unconfined)` adds `userns` for this path and
-does not confine the rest of the process. Set
+does not confine the rest of the process. The `faustcoder` group must
+contain only the harness user. Anyone in that group gets unprivileged
+user namespaces for any command run through `fc-unshare`, because the
+profile is unconfined. Set
 `FAUSTCODER_UNSHARE=/opt/faustcoder/bin/fc-unshare` for the harness user.
-The sandbox reads that variable. Unset, it uses the system `unshare`. CI
+When that variable is set, the sandbox requires an absolute path to a
+regular file that root owns and that group and others cannot write, and
+the same for its parent directory. A symlink or a wrapper owned by the
+harness user is refused. Inside the compile process, before compiling,
+the worker requires `/proc/net/dev` to list only `lo` and requires a
+connect to fail. Unset, the sandbox uses the system `unshare`. CI
 leaves it unset and keeps the github-hosted sysctl step.
 
 Confirm, without changing the sysctl:

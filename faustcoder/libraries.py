@@ -5,17 +5,22 @@ host by ``scripts/fetch-faustlibraries.sh`` and checked against
 ``FAUSTLIBRARIES_TREE_SHA256`` before any compile. The sandboxed worker
 never downloads it. It only reads the directory Python passes in.
 
-The canonical hash covers every regular ``*.lib`` file in that checkout.
-Paths are relative and sorted. Each entry is the UTF-8 path, a newline, an
-8-byte big-endian length, and the file bytes. A symlink ``.lib`` is refused.
-Other files in the checkout, including the ``formalisation`` symlink, are
-not part of the hash and are not staged.
+The canonical hash covers every regular ``*.lib`` file. Paths are relative
+and sorted. Each entry is the UTF-8 path, a newline, an 8-byte big-endian
+length, and the file bytes. A symlink ``.lib`` is refused. Other files in
+the checkout, including the ``formalisation`` symlink, are not part of the
+hash and are not staged.
 
 Faust's own install copies ``old/*.lib`` and ``dx7/*.lib`` to the top of
 the share directory. ``stdfaust.lib`` imports ``dx7.lib`` by that flat name,
 and ``sf.lib`` imports ``old/effect.lib`` by its repo path. The share
-directory keeps both layouts. The hash is of the checkout, not of the
-duplicated flat copies.
+directory keeps both layouts. ``FAUSTLIBRARIES_TREE_SHA256`` is the checkout.
+``FAUSTLIBRARIES_SHARE_SHA256`` is the tree mounted at ``/usr/share/faust``,
+flat copies included. The receipt digest binds that mounted hash.
+
+``share_directory`` hashes the share on every call, including reuse. A
+``.tree-sha256`` stamp is not evidence. A mismatch raises and the share is
+left in place: it is not rebuilt and then compiled.
 """
 
 from __future__ import annotations
@@ -34,8 +39,11 @@ from faustcoder.sandbox import SandboxError
 FAUSTLIBRARIES_COMMIT = "2edec0537f53"
 FAUSTLIBRARIES_COMMIT_FULL = "2edec0537f536eaa130d42c354884d7db971663c"
 FAUSTLIBRARIES_VERSION = "2.80.0"
-# sha256 of the canonical *.lib tree at FAUSTLIBRARIES_COMMIT.
+# sha256 of the canonical *.lib checkout at FAUSTLIBRARIES_COMMIT.
 FAUSTLIBRARIES_TREE_SHA256 = "edf8f43966942ec96ec2e46341af49454c311586a62879b430687c9ffd434173"
+# sha256 of the share layout mounted at /usr/share/faust (checkout paths
+# plus the flat old/ and dx7/ copies).
+FAUSTLIBRARIES_SHARE_SHA256 = "8d3c460cf50702e3ff0a232e35010f075c5af8c7972be2a0941277d656622618"
 _VERSION = re.compile(
     rb"version\s*=\s*(\d+),\s*//\s*MAJOR version when we make incompatible API changes,\s*"
     rb"(\d+),\s*//\s*MINOR version when we add functionality in a backwards compatible manner,\s*"
@@ -43,8 +51,6 @@ _VERSION = re.compile(
 )
 _FLAT_DIRS = frozenset({"old", "dx7"})
 _LOCK = threading.Lock()
-_TREES: dict[str, "LibraryTree"] = {}
-_SHARES: dict[str, Path] = {}
 
 
 @dataclass(frozen=True)
@@ -73,8 +79,8 @@ def library_root() -> Path:
 def canonical_tree_sha256(root: Path) -> str:
     """Hash the ``*.lib`` files under ``root``.
 
-    One changed library byte changes this digest. The digest is the value
-    recorded in ``environment_digest``.
+    One changed library byte changes this digest. For the share directory
+    this is the hash of the tree mounted at ``/usr/share/faust``.
     """
     if not root.is_dir():
         raise SandboxError(f"faustlibraries tree is not a directory: {root}")
@@ -86,20 +92,22 @@ def canonical_tree_sha256(root: Path) -> str:
             continue
         if path.is_file() and path.suffix == ".lib":
             files.append((path.relative_to(root).as_posix(), path.read_bytes()))
-    chunks: list[bytes] = []
-    for rel, data in sorted(files):
-        chunks.append(rel.encode("utf-8") + b"\n" + len(data).to_bytes(8, "big") + data)
-    return hashlib.sha256(b"".join(chunks)).hexdigest()
+    return _hash_entries(files)
+
+
+def share_layout_sha256(root: Path) -> str:
+    """Hash the share layout derived from a checkout, without writing it."""
+    files = [(rel, source.read_bytes()) for rel, source in _share_files(root)]
+    return _hash_entries(files)
 
 
 def require_library_tree() -> LibraryTree:
-    """Return the pinned tree, or raise when it is missing or mismatched."""
+    """Return the pinned tree, or raise when it is missing or mismatched.
+
+    The checkout is hashed on every call. A long-running process does not
+    keep a passed verification.
+    """
     root = library_root()
-    key = str(root)
-    with _LOCK:
-        cached = _TREES.get(key)
-    if cached is not None:
-        return cached
     if not root.is_dir():
         raise SandboxError(
             "pinned faustlibraries tree is missing; run scripts/fetch-faustlibraries.sh"
@@ -115,52 +123,70 @@ def require_library_tree() -> LibraryTree:
         raise SandboxError(
             f"pinned version.lib declares {version}, expected {FAUSTLIBRARIES_VERSION}"
         )
-    tree = LibraryTree(
+    return LibraryTree(
         root=root,
         commit=FAUSTLIBRARIES_COMMIT,
         version=version,
         sha256=digest,
     )
-    with _LOCK:
-        _TREES[key] = tree
-    return tree
 
 
 def share_directory(tree: LibraryTree | None = None) -> Path:
     """Return the host directory mounted at ``/usr/share/faust``.
 
-    Native Faust receives this path as ``-I``. The worker reads it and
-    copies it into the Emscripten filesystem. The path is not part of the
-    receipt.
+    The directory is hashed on every call, including when it already
+    exists. The hash has to equal ``FAUSTLIBRARIES_SHARE_SHA256``. A stamp
+    file is not consulted. A mismatch raises ``SandboxError`` and does not
+    replace the directory. Native Faust receives this path as ``-I``. The
+    worker reads it and copies it into the Emscripten filesystem. The path
+    is not part of the receipt.
     """
     resolved = tree or require_library_tree()
-    key = str(resolved.root)
-    with _LOCK:
-        cached = _SHARES.get(key)
-    if cached is not None and (cached / ".tree-sha256").is_file():
-        return cached
+    expected = share_layout_sha256(resolved.root)
+    if expected != FAUSTLIBRARIES_SHARE_SHA256:
+        raise SandboxError(
+            "pinned faustlibraries share layout does not match "
+            f"{FAUSTLIBRARIES_COMMIT}: {expected}"
+        )
     dest = resolved.root.parent / f"share-{resolved.commit}"
-    stamp = dest / ".tree-sha256"
-    if stamp.is_file() and stamp.read_text(encoding="ascii").strip() == resolved.sha256:
-        with _LOCK:
-            _SHARES[key] = dest
-        return dest
-    temporary = Path(tempfile.mkdtemp(prefix="faustcoder-share-", dir=resolved.root.parent))
-    try:
-        for rel, source in _share_files(resolved.root):
-            target = temporary / rel
-            target.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copyfile(source, target)
-        (temporary / ".tree-sha256").write_text(resolved.sha256 + "\n", encoding="ascii")
-        if dest.exists():
-            shutil.rmtree(dest)
-        temporary.rename(dest)
-    except Exception:
-        shutil.rmtree(temporary, ignore_errors=True)
-        raise
     with _LOCK:
-        _SHARES[key] = dest
-    return dest
+        if dest.exists():
+            _require_mounted_hash(dest, expected)
+            return dest
+        temporary = Path(tempfile.mkdtemp(prefix="faustcoder-share-", dir=resolved.root.parent))
+        try:
+            for rel, source in _share_files(resolved.root):
+                target = temporary / rel
+                target.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copyfile(source, target)
+            # Not authoritative. Verification hashes the *.lib bytes.
+            (temporary / ".tree-sha256").write_text(expected + "\n", encoding="ascii")
+            temporary.rename(dest)
+        except Exception:
+            shutil.rmtree(temporary, ignore_errors=True)
+            raise
+        try:
+            _require_mounted_hash(dest, expected)
+        except SandboxError:
+            shutil.rmtree(dest, ignore_errors=True)
+            raise
+        return dest
+
+
+def _require_mounted_hash(dest: Path, expected: str) -> None:
+    actual = canonical_tree_sha256(dest)
+    if actual != expected:
+        raise SandboxError(
+            "staged faustlibraries share does not match the tree mounted at "
+            f"/usr/share/faust ({expected}): {actual}"
+        )
+
+
+def _hash_entries(files: list[tuple[str, bytes]]) -> str:
+    chunks: list[bytes] = []
+    for rel, data in sorted(files):
+        chunks.append(rel.encode("utf-8") + b"\n" + len(data).to_bytes(8, "big") + data)
+    return hashlib.sha256(b"".join(chunks)).hexdigest()
 
 
 def _share_files(root: Path) -> list[tuple[str, Path]]:
@@ -191,7 +217,9 @@ def _version_of(path: Path) -> str:
 
 def main() -> None:
     tree = require_library_tree()
+    share = share_directory(tree)
     print(f"{tree.sha256}  {tree.root}")
+    print(f"{FAUSTLIBRARIES_SHARE_SHA256}  {share}")
 
 
 if __name__ == "__main__":

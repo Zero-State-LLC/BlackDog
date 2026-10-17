@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import hashlib
 import os
+import shutil
+import subprocess
 import time
 from pathlib import Path
 
@@ -44,10 +46,12 @@ from faustcoder.compiler import (
     environment_preimage,
     worker_directory,
 )
-from faustcoder.exclusions import exclusions
+from faustcoder.exclusions import exclusion_for_source, exclusions, normalize_source
 from faustcoder.libraries import (
+    FAUSTLIBRARIES_SHARE_SHA256,
     FAUSTLIBRARIES_TREE_SHA256,
     canonical_tree_sha256,
+    library_root,
     share_directory,
 )
 
@@ -342,6 +346,7 @@ def test_runtime_pin_records_the_staged_libraries_and_the_bundle() -> None:
     assert preimage["libfaust_wasm_data_sha256"] == pin.data_sha256
     assert preimage["faustlibraries_commit"] == FAUSTLIBRARIES_PIN
     assert preimage["faustlibraries_tree_sha256"] == FAUSTLIBRARIES_TREE_SHA256
+    assert preimage["faustlibraries_share_sha256"] == FAUSTLIBRARIES_SHARE_SHA256
     assert preimage["faustlibraries_version"] == "2.80.0"
     assert preimage["bundled_faustlibraries_version"] == "2.74.2"
     assert preimage["runtime_sha256"]["libfaust-wasm.wasm"] == pin.wasm_sha256
@@ -510,6 +515,12 @@ def test_one_library_byte_changes_the_tree_hash(tmp_path: Path) -> None:
     assert hashlib.sha256(canonical_bytes(preimage)).digest() != hashlib.sha256(
         canonical_bytes(mutated)
     ).digest()
+    mounted = dict(preimage, faustlibraries_share_sha256=second)
+    assert hashlib.sha256(canonical_bytes(preimage)).digest() != hashlib.sha256(
+        canonical_bytes(mounted)
+    ).digest()
+    assert preimage["faustlibraries_share_sha256"] == FAUSTLIBRARIES_SHARE_SHA256
+    assert canonical_tree_sha256(share_directory()) == FAUSTLIBRARIES_SHARE_SHA256
 
 
 def test_native_command_points_at_the_pinned_share_tree() -> None:
@@ -533,6 +544,7 @@ def test_native_preimage_uses_the_same_library_tree() -> None:
     )
     assert preimage["faustlibraries_commit"] == FAUSTLIBRARIES_PIN
     assert preimage["faustlibraries_tree_sha256"] == FAUSTLIBRARIES_TREE_SHA256
+    assert preimage["faustlibraries_share_sha256"] == FAUSTLIBRARIES_SHARE_SHA256
     assert preimage["faustlibraries_version"] == FAUSTLIBRARIES_PIN_VERSION
     assert preimage["bundled_faustlibraries_version"] == ""
 
@@ -617,3 +629,104 @@ def test_unshare_path_defaults_to_the_system_binary(
     monkeypatch.setenv("FAUSTCODER_UNSHARE", str(tmp_path / "missing-unshare"))
     with pytest.raises(SandboxError, match="FAUSTCODER_UNSHARE"):
         unshare_executable()
+    monkeypatch.setenv("FAUSTCODER_UNSHARE", "unshare")
+    with pytest.raises(SandboxError, match="absolute"):
+        unshare_executable()
+
+
+def _copy_library_checkout(destination: Path) -> None:
+    source = library_root()
+    for path in source.rglob("*.lib"):
+        if path.is_symlink() or not path.is_file():
+            continue
+        target = destination / path.relative_to(source)
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(path, target)
+
+
+def test_tampered_share_is_refused(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    checkout = tmp_path / "2edec0537f53"
+    _copy_library_checkout(checkout)
+    monkeypatch.setenv("FAUSTCODER_LIBRARIES", str(checkout))
+    share = share_directory()
+    maths = share / "maths.lib"
+    maths.write_bytes(maths.read_bytes() + b"PWNED = 42;\n")
+    assert (share / ".tree-sha256").is_file()
+    with pytest.raises(SandboxError, match="share"):
+        compile_source("process = ma.PWNED;\n")
+
+
+def test_compiler_exclusion_of_model_output_is_a_failure_not_a_pass() -> None:
+    # When rewards land, this exception is a failure. It must not become a
+    # pass or an ungraded receipt.
+    source = (_examples() / "SAM/effects/effects.dsp").read_bytes().decode("utf-8")
+    with pytest.raises(CompilerExclusion) as caught:
+        compile_source(source)
+    assert caught.value.reward_disposition == "failure"
+    assert not hasattr(caught.value, "receipt")
+
+
+def test_six_of_eight_exclusion_hashes_change_after_t06_normalization() -> None:
+    unchanged = []
+    changed = []
+    root = _examples()
+    for item in exclusions():
+        source = (root / item.path).read_bytes().decode("utf-8")
+        raw = hashlib.sha256(source.encode("utf-8")).hexdigest()
+        normalized = hashlib.sha256(normalize_source(source).encode("utf-8")).hexdigest()
+        assert raw == item.sha256
+        assert normalized == item.normalized_sha256
+        assert _exclusion_matches(source, item.path)
+        assert _exclusion_matches(normalize_source(source), item.path)
+        if item.sha256 == item.normalized_sha256:
+            unchanged.append(item.path)
+        else:
+            changed.append(item.path)
+    assert len(changed) == 6
+    assert unchanged == [
+        "physicalModeling/faust-stk/modalBar.dsp",
+        "SAM/effects/effects.dsp",
+    ]
+
+
+def _exclusion_matches(source: str, path: str) -> bool:
+    found = exclusion_for_source(source)
+    return found is not None and found.path == path
+
+
+def test_user_owned_unshare_wrapper_is_refused(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    wrapper = tmp_path / "fc-unshare"
+    wrapper.write_text("#!/bin/sh\nwhile [ \"$1\" != \"--\" ]; do shift; done\nshift\nexec \"$@\"\n")
+    wrapper.chmod(0o755)
+    monkeypatch.setenv("FAUSTCODER_UNSHARE", str(wrapper))
+    with pytest.raises(SandboxError, match="FAUSTCODER_UNSHARE"):
+        unshare_executable()
+    link = tmp_path / "unshare-link"
+    link.symlink_to("/usr/bin/unshare")
+    monkeypatch.setenv("FAUSTCODER_UNSHARE", str(link))
+    with pytest.raises(SandboxError, match="regular file"):
+        unshare_executable()
+
+
+def test_root_owned_unshare_wrapper_fails_the_network_canary(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    root = Path("/opt/faustcoder-canary")
+    binary = root / "bin" / "fc-unshare"
+    script = "#!/bin/sh\nwhile [ \"$1\" != \"--\" ]; do shift; done\nshift\nexec \"$@\"\n"
+    subprocess.run(["sudo", "rm", "-rf", str(root)], check=True)
+    try:
+        subprocess.run(["sudo", "install", "-d", "-o", "root", "-g", "root", "-m", "0755", str(binary.parent)], check=True)
+        subprocess.run(["sudo", "tee", str(binary)], input=script.encode(), check=True, stdout=subprocess.DEVNULL)
+        subprocess.run(["sudo", "chown", "root:root", str(binary)], check=True)
+        subprocess.run(["sudo", "chmod", "0755", str(binary)], check=True)
+        monkeypatch.setenv("FAUSTCODER_UNSHARE", str(binary))
+        assert unshare_executable() == str(binary)
+        compiled = compile_source("process = _;\n", limits=ResourceLimits(timeout_s=20))
+        assert compiled.receipt["exit_code"] != 0
+        assert compiled.receipt["diagnostic_class"] != "ok"
+        assert compiled.receipt["exit_code"] >= UNGRADED_EXIT_FLOOR
+    finally:
+        subprocess.run(["sudo", "rm", "-rf", str(root)], check=False)

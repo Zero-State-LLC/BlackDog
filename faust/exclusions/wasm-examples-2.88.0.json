@@ -1,29 +1,35 @@
 {
   "faust_examples": "2.88.0",
+  "normalization": "T06 forces LF newlines and strips trailing spaces and tabs. Six of the eight sha256 values differ from normalized_sha256. physicalModeling/faust-stk/modalBar.dsp and SAM/effects/effects.dsp do not.",
   "stk_ffunction": [
     {
       "path": "physicalModeling/faust-stk/bass.dsp",
       "sha256": "da11d4df24d7f355e55f7bd4b75baf6836320edd8877a9b182d486d8347e0116",
+      "normalized_sha256": "793de8e17816b742dd13d1036ab09945b00430546725ac923f22bad678b7b340",
       "reason": "ffunction calls an STK C header. The wasm libfaust build cannot link it. Recorded exclusion."
     },
     {
       "path": "physicalModeling/faust-stk/harpsi.dsp",
       "sha256": "63b273a9bcef31c0e28213d3aa3e0eafdab41d207fd20b765c003048bc866389",
+      "normalized_sha256": "5961852b994b0a6c0ba2e2313fe66e22a40791750bbebb415c8fa676242e1965",
       "reason": "ffunction calls an STK C header. The wasm libfaust build cannot link it. Recorded exclusion."
     },
     {
       "path": "physicalModeling/faust-stk/modalBar.dsp",
       "sha256": "6bc8fb79512caf5bcdce03f7ad8b9a77b0251edfea4f899386e30fac72eaa657",
+      "normalized_sha256": "6bc8fb79512caf5bcdce03f7ad8b9a77b0251edfea4f899386e30fac72eaa657",
       "reason": "ffunction calls an STK C header. The wasm libfaust build cannot link it. Recorded exclusion."
     },
     {
       "path": "physicalModeling/faust-stk/piano.dsp",
       "sha256": "df6c8274b4f35a1e64343ecd8c170fa762464f3c51f5aad2c0736d52bc75085f",
+      "normalized_sha256": "1ba3b9a251b7c1d386c0a8e60419e4c884005dd6558c66ca54bd42ca1a25f8e9",
       "reason": "ffunction calls an STK C header. The wasm libfaust build cannot link it. Recorded exclusion."
     },
     {
       "path": "physicalModeling/faust-stk/voiceForm.dsp",
       "sha256": "53bd165589203332b38db3bfc4c78b4e019f0ed4a401c30d1c6c9dcd547e8e16",
+      "normalized_sha256": "0181819d57e59d016e68cf0d1c0a3c24443ab9f65eaabe4d1ac689b6316fcaa5",
       "reason": "ffunction calls an STK C header. The wasm libfaust build cannot link it. Recorded exclusion."
     }
   ],
@@ -31,16 +37,19 @@
     {
       "path": "SAM/echo/echo.dsp",
       "sha256": "19cbb9ce942bad4ba4dec13246e038c1e2da7eef2f51a1901de0b9332dedc8f4",
+      "normalized_sha256": "845d731e2676e542d51a26b21db4ed6cd0a9d38955a3c78272f6a8fafb270384",
       "reason": "ffunction fastpow2 from fast_pow2.h is rejected by the wasm backend after sibling imports resolve. Recorded exclusion."
     },
     {
       "path": "SAM/effects/echo.dsp",
       "sha256": "b363d9c35c6d937bcbce13f506f8e76c088d0e9abd7fd2b5d04333c977c47288",
+      "normalized_sha256": "e379dc1556c3a27882b98ae1404824cdc86687e2b7739fff3fc029ef788e5302",
       "reason": "ffunction fastpow2 from fast_pow2.h is rejected by the wasm backend after sibling imports resolve. Recorded exclusion."
     },
     {
       "path": "SAM/effects/effects.dsp",
       "sha256": "96bbb71864ccf3f70c18689ade9d5099f548ffb96d8188e7ee42f8cd884ee2e7",
+      "normalized_sha256": "96bbb71864ccf3f70c18689ade9d5099f548ffb96d8188e7ee42f8cd884ee2e7",
       "reason": "components echo.dsp, which embeds ffunction fastpow2. The wasm backend rejects it after sibling imports resolve. Recorded exclusion."
     }
   ]

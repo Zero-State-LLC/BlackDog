@@ -46,7 +46,9 @@ records ``0``.
 ``environment_digest`` hashes a canonical object with ``compiler``,
 ``faust_version``, ``faustlibraries_version`` (``vl.version`` of the staged
 pin, ``2.80.0``), ``faustlibraries_commit`` (``2edec0537f53``),
-``faustlibraries_tree_sha256`` (the canonical ``*.lib`` tree),
+``faustlibraries_tree_sha256`` (the canonical checkout),
+``faustlibraries_share_sha256`` (the tree mounted at ``/usr/share/faust``,
+checkout paths plus the flat ``old/*.lib`` and ``dx7/*.lib`` copies),
 ``bundled_faustlibraries_version`` (the triplet still embedded in
 ``libfaust-wasm.data``, ``2.74.2`` for wasm and ``""`` for the native CLI),
 ``faustwasm`` (``0.19.0`` or ``""``), ``lang``,
@@ -58,18 +60,24 @@ and ``.data``) and ``user_map`` (``current``). Host name, Node patch
 version, the job directory and the host library path are not included.
 The libfaust version is resolved once per runtime hash and reused on
 every receipt from that runtime, including timeout, memory, output and
-internal receipts. One changed library byte changes
-``faustlibraries_tree_sha256`` and therefore this digest. A tree that does
-not match the pin is refused before a receipt is written.
+internal receipts. ``faustlibraries_share_sha256`` is the hash of the
+share directory, recomputed on every compile, and of the bytes the worker
+writes into the Emscripten filesystem. Those two hashes have to match the
+pin. A mismatch raises before a receipt is written. One changed byte of
+that mounted tree changes the digest. A checkout that does not match the
+pin is refused the same way.
 
 Before every wasm compile the worker replaces ``/usr/share/faust`` in the
-Emscripten filesystem with that pinned tree, including the flat
-``old/*.lib`` and ``dx7/*.lib`` copies Faust's install script makes. The
-native 2.88.0 cross-check passes the same directory as ``-I``. The logical
-``command`` records ``--faustlibraries=2edec0537f53`` and not the host path.
-The tree is fetched on the host. The sandbox does not download it. Do not
-run a T06 or T07 compile check, and do not feed a receipt into a reward,
-against a harness that skipped this staging.
+Emscripten filesystem with that pinned share, then hashes exactly those
+mounted bytes and returns the digest. The harness refuses the result
+unless it is the pinned share hash. In the same process, before compiling,
+the worker reads ``/proc/net/dev`` and requires the only interface to be
+``lo``, then requires a connect to fail. The native 2.88.0 cross-check
+passes the same directory as ``-I``. The logical ``command`` records
+``--faustlibraries=2edec0537f53`` and not the host path. The tree is
+fetched on the host. The sandbox does not download it. Do not run a T06
+or T07 compile check, and do not feed a receipt into a reward, against a
+harness that skipped this staging.
 
 ``command`` records the logical compiler invocation, including
 ``--faustwasm=0.19.0``. The schema has no separate faustwasm field, so the
@@ -151,6 +159,7 @@ from faustcoder.canonical import build_envelope, canonical_bytes, content_digest
 from faustcoder.exclusions import CompilerExclusion, exclusion_for_source
 from faustcoder.libraries import (
     FAUSTLIBRARIES_COMMIT,
+    FAUSTLIBRARIES_SHARE_SHA256,
     FAUSTLIBRARIES_VERSION,
     require_library_tree,
     share_directory,
@@ -336,7 +345,8 @@ def compile_source(
     text from the same program. They are written into the Emscripten
     filesystem so ``import`` and ``component`` of those paths resolve.
     A known faust-stk or fastpow2 source raises ``CompilerExclusion``
-    instead of a receipt.
+    instead of a receipt. That exclusion is a failure when rewards land,
+    not a pass and not an ungraded refuge. Reward behavior is unchanged.
     """
     if not isinstance(source, str):
         raise TypeError("source must be a string")
@@ -401,6 +411,9 @@ def compile_source(
             [str(workdir), str(libraries)],
             read_paths=[worker_directory(), workdir, libraries],
             write_paths=[workdir],
+            # /proc/net is a symlink to self/net. realpath would grant the
+            # parent's pid. The canary has to read the child's namespace.
+            literal_reads=("/proc/net/dev",),
         )
         run = run_in_sandbox(command, stdin=request, workdir=workdir, limits=bounds)
         duration_ms = int((time.monotonic() - started) * 1000)
@@ -677,15 +690,29 @@ def environment_preimage(
     lang: str,
     options: Sequence[str],
     pin: RuntimePin | None,
+    mounted_share_sha256: str | None = None,
 ) -> dict[str, Any]:
-    """Return the object hashed into ``environment_digest``."""
+    """Return the object hashed into ``environment_digest``.
+
+    ``faustlibraries_share_sha256`` is the hash of the tree mounted at
+    ``/usr/share/faust``. The share directory is re-hashed on this call.
+    ``mounted_share_sha256``, when the worker returned one, has to be that
+    same value. A mismatch raises and the caller writes no receipt.
+    """
     libraries = require_library_tree()
+    share_directory(libraries)
+    if mounted_share_sha256 is not None and mounted_share_sha256 != FAUSTLIBRARIES_SHARE_SHA256:
+        raise SandboxError(
+            "worker hash of /usr/share/faust does not match the pinned share: "
+            f"{mounted_share_sha256}"
+        )
     wasm = compiler == "libfaust-wasm" and pin is not None
     return {
         "bundled_faustlibraries_version": pin.bundled_faustlibraries_version if wasm else "",
         "compiler": compiler,
         "faust_version": faust_version,
         "faustlibraries_commit": libraries.commit,
+        "faustlibraries_share_sha256": FAUSTLIBRARIES_SHARE_SHA256,
         "faustlibraries_tree_sha256": libraries.sha256,
         "faustlibraries_version": libraries.version,
         "faustwasm": FAUSTWASM_VERSION if compiler == "libfaust-wasm" else "",
@@ -779,6 +806,8 @@ def _source_identity(files: Sequence[tuple[str, str]]) -> bytes:
 
 
 def _reject_excluded(source: str) -> None:
+    # CompilerExclusion is not a receipt. When rewards land, an exclusion
+    # of model output is a failure, not a pass and not an ungraded refuge.
     found = exclusion_for_source(source)
     if found is not None:
         raise CompilerExclusion(found)
@@ -890,6 +919,12 @@ def _receipt_from_worker(
             faust_version=pin.faust_version,
             pin=pin,
         )
+    mounted = body.get("library_tree_sha256")
+    if not isinstance(mounted, str) or mounted != FAUSTLIBRARIES_SHARE_SHA256:
+        raise SandboxError(
+            "worker hash of /usr/share/faust does not match the pinned share: "
+            f"{mounted}"
+        )
     faust_version = pin.faust_version
     diagnostics = body.get("diagnostics")
     if not isinstance(diagnostics, str):
@@ -958,6 +993,7 @@ def _receipt_from_worker(
         outputs=outputs,
         duration_ms=duration_ms,
         pin=pin,
+        mounted_share_sha256=mounted,
     )
 
 
@@ -1016,6 +1052,7 @@ def _build(
     duration_ms: int,
     pin: RuntimePin | None = None,
     harness: str | None = None,
+    mounted_share_sha256: str | None = None,
 ) -> Compilation:
     runtime_failure = harness is None and not compile_ok and _is_js_runtime(diagnostics)
     if harness == "timeout":
@@ -1042,6 +1079,7 @@ def _build(
         lang=lang,
         options=options,
         pin=pin,
+        mounted_share_sha256=mounted_share_sha256,
     )
     command = _logical_command(compiler, faust_version, lang, options)
     receipt = {

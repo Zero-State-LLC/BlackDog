@@ -4,7 +4,9 @@
 // refuses to start unless FAUSTCODER_SANDBOX=1 and Node's permission model
 // is on, so a bare `node compile.mjs` does not compile.
 
+import { createHash } from "node:crypto";
 import { writeFileSync, renameSync, readdirSync, readFileSync, statSync } from "node:fs";
+import { connect } from "node:net";
 import { join, relative } from "node:path";
 import { pathToFileURL, fileURLToPath } from "node:url";
 
@@ -114,6 +116,89 @@ function stageLibraries(compiler, root) {
     ensureVirtualDir(fs, dest.split("/").slice(0, -1).join("/"));
     fs.writeFile(dest, readFileSync(file));
   }
+}
+
+function mountedLibrarySha256(fs) {
+  const files = [];
+  const walk = (dir, prefix) => {
+    let names;
+    try {
+      names = fs.readdir(dir);
+    } catch {
+      failClosed("mounted library tree is missing");
+    }
+    for (const name of names) {
+      if (name === "." || name === ".." || name.startsWith(".")) {
+        continue;
+      }
+      const path = `${dir}/${name}`;
+      const rel = prefix ? `${prefix}/${name}` : name;
+      const info = fs.analyzePath(path);
+      if (info.object && info.object.isFolder) {
+        walk(path, rel);
+      } else if (name.endsWith(".lib")) {
+        const data = fs.readFile(path);
+        files.push([rel, Buffer.from(data)]);
+      }
+    }
+  };
+  walk("/usr/share/faust", "");
+  files.sort((left, right) => (left[0] < right[0] ? -1 : left[0] > right[0] ? 1 : 0));
+  const hash = createHash("sha256");
+  for (const [rel, body] of files) {
+    const length = Buffer.alloc(8);
+    length.writeBigUInt64BE(BigInt(body.length));
+    hash.update(Buffer.from(rel, "utf8"));
+    hash.update(Buffer.from("\n"));
+    hash.update(length);
+    hash.update(body);
+  }
+  return hash.digest("hex");
+}
+
+function namespaceInterfaces() {
+  let text;
+  try {
+    text = readFileSync("/proc/net/dev", "utf8");
+  } catch {
+    failClosed("network namespace interfaces could not be read");
+  }
+  const names = [];
+  for (const line of text.split("\n").slice(2)) {
+    const trimmed = line.trim();
+    if (!trimmed) {
+      continue;
+    }
+    const name = trimmed.split(":")[0];
+    if (name) {
+      names.push(name);
+    }
+  }
+  return names;
+}
+
+function assertNetworkIsolated() {
+  const names = namespaceInterfaces();
+  if (names.length !== 1 || names[0] !== "lo") {
+    failClosed("network namespace has a non-loopback interface");
+  }
+  return new Promise((resolve) => {
+    const socket = connect({ host: "1.1.1.1", port: 443 });
+    const timer = setTimeout(() => {
+      socket.destroy();
+      failClosed("network connect did not fail inside the sandbox");
+    }, 1000);
+    socket.once("error", () => {
+      clearTimeout(timer);
+      socket.destroy();
+      resolve();
+    });
+    socket.once("connect", () => {
+      clearTimeout(timer);
+      socket.destroy();
+      failClosed("network connect succeeded inside the sandbox");
+    });
+  });
 }
 
 function assertSourcePath(path) {
@@ -226,8 +311,10 @@ async function main() {
   if (!Array.isArray(sources)) {
     failClosed("sources must be an array");
   }
+  await assertNetworkIsolated();
   const compiler = await loadCompiler(join(workdir, "runtime", "libfaust-wasm.js"));
   stageLibraries(compiler, libraryRoot);
+  const libraryTreeSha256 = mountedLibrarySha256(compiler.fs());
   let moduleName = "input";
   if (sources.length > 0) {
     if (typeof request.filename !== "string") {
@@ -263,6 +350,7 @@ async function main() {
   writeResult(workdir, {
     faustwasm_version: FAUSTWASM_VERSION,
     libfaust_version: libfaustVersion,
+    library_tree_sha256: libraryTreeSha256,
     compile_ok: compiled.compile_ok,
     diagnostics: compiled.diagnostics,
     output_files: outputFiles,
