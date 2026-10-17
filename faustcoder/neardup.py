@@ -11,23 +11,25 @@ an AST shingle):
 - Tokenize identifiers, numbers and single-character operators.
 - Build a set of 5-token shingles.
 - A pair is a near-duplicate when each side has at least
-  ``MIN_TOKENS`` tokens and the Jaccard index is at least 4/5.
+  ``TOKEN_FLOOR`` tokens and the Jaccard index is at least 4/5.
 - The comparison is integer: ``intersection * 5 >= union * 4``.
   A reported float is not the decision.
 - Jaccard is symmetric, so a verbatim excerpt of a rejected file
   stays under 4/5. An excerpt check is separate:
   ``|shingles(part) ∩ shingles(whole)| / |shingles(part)| >= 1/2``,
-  or a contiguous run of ``VERBATIM_RUN`` tokens appears in both.
+  or a contiguous run of ``TOKEN_FLOOR`` tokens appears in both.
   The run counts when the cleared file is the longer one. The part
-  must still have at least ``MIN_TOKENS`` tokens.
+  must still have at least ``TOKEN_FLOOR`` tokens.
   ``cluster_families`` applies that only from a non-comparison text
   into a comparison text.
 
-``MIN_TOKENS`` is 40. Below that, shared Faust boilerplate
-(``declare``, ``import``, ``process``) dominates the shingles and
-unrelated programs look alike. Exact normalized-hash equality is a
-separate pass and still clusters short texts. The excerpt check uses
-the same 40-token floor.
+``TOKEN_FLOOR`` is the single length constant for that minimum and
+for the verbatim run. It is 40. That value is the operating floor,
+not an accepted clearance policy. The measurement is
+``docs/analysis/t06-short-kernel-floor.md``. Below the floor, shared
+Faust boilerplate (``declare``, ``import``, ``process``) dominates
+the shingles and unrelated programs look alike. Exact normalized-hash
+equality is a separate pass and still clusters short texts.
 
 Family ids are ``sha256:`` of the canonical JSON array of the sorted
 unique normalized digests in the component. The id does not depend on
@@ -45,14 +47,15 @@ from faustcoder.canonical import canonical_bytes, sha256_prefixed
 NGRAM_N = 5
 THRESHOLD_NUMERATOR = 4
 THRESHOLD_DENOMINATOR = 5
-MIN_TOKENS = 40
+# Single length constant. Jaccard, excerpt containment, and the
+# verbatim run all use it. Not an accepted clearance policy.
+TOKEN_FLOOR = 40
+MIN_TOKENS = TOKEN_FLOOR
+VERBATIM_RUN = TOKEN_FLOOR
 # Asymmetric excerpt check. Jaccard 4/5 misses a half-file copy
-# (INFERRED). The floor matches ``MIN_TOKENS`` so boilerplate under
-# 40 tokens is not an excerpt. A run of this many normalized tokens
-# is a second way in, for one statement buried in a larger file.
+# (INFERRED).
 CONTAINMENT_NUMERATOR = 1
 CONTAINMENT_DENOMINATOR = 2
-VERBATIM_RUN = 40
 # Short texts never reach the token shingles. A character 5-gram
 # fallback covers them. Jaccard is still an integer compare.
 # Texts of at least 32 non-space characters match at 4/5.
@@ -177,7 +180,7 @@ def char_shingles(source: str, n: int = CHAR_N) -> frozenset[str]:
 
 
 def short_near_duplicate(left: str, right: str) -> bool:
-    """Near-duplicate fallback for texts under ``MIN_TOKENS``.
+    """Near-duplicate fallback for texts under ``TOKEN_FLOOR``.
 
     Identical texts return ``False``. The exact-hash pass owns those.
     """
@@ -223,9 +226,11 @@ def containment_at_least(
 def has_verbatim_run(
     part: Sequence[str],
     whole: Sequence[str],
-    length: int = VERBATIM_RUN,
+    length: int | None = None,
 ) -> bool:
     """Return whether ``length`` contiguous tokens of ``part`` occur in ``whole``."""
+    if length is None:
+        length = TOKEN_FLOOR
     if length < 1 or len(part) < length or len(whole) < length:
         return False
     window = shingles(whole, length)
@@ -239,13 +244,13 @@ def is_excerpt(part: str, whole: str) -> bool:
     """Return whether ``part`` is a verbatim excerpt of ``whole``.
 
     Both the containment ratio and the long token run require
-    ``MIN_TOKENS`` on the part. Identical texts are not excerpts;
+    ``TOKEN_FLOOR`` on the part. Identical texts are not excerpts;
     the exact-hash pass owns those.
     """
     if part == whole:
         return False
     part_tokens = tokens(part)
-    if len(part_tokens) < MIN_TOKENS:
+    if len(part_tokens) < TOKEN_FLOOR:
         return False
     whole_tokens = tokens(whole)
     # A run counts in either direction. A cleared file that vendors a
@@ -261,11 +266,11 @@ def is_near_duplicate(left: str, right: str) -> bool:
 
     Identical short texts return ``False``. Exact equality is the hash
     pass in ``cluster_families``, not this predicate. A pair under
-    ``MIN_TOKENS`` uses :func:`short_near_duplicate`.
+    ``TOKEN_FLOOR`` uses :func:`short_near_duplicate`.
     """
     left_tokens = tokens(left)
     right_tokens = tokens(right)
-    if len(left_tokens) >= MIN_TOKENS and len(right_tokens) >= MIN_TOKENS:
+    if len(left_tokens) >= TOKEN_FLOOR and len(right_tokens) >= TOKEN_FLOOR:
         return jaccard_at_least(shingles(left_tokens), shingles(right_tokens))
     return short_near_duplicate(left, right)
 
@@ -293,7 +298,7 @@ def memorization_hits(
 def _hit_counts(candidate: str, text: str) -> tuple[int, int] | None:
     """Return the scores of the comparison that actually matched.
 
-    An exact copy is a hit, including under ``MIN_TOKENS``. A long
+    An exact copy is a hit, including under ``TOKEN_FLOOR``. A long
     pair reports token-shingle counts. A short pair reports character
     5-gram counts. An excerpt reports ``(intersection, |part shingles|)``.
     """
@@ -301,7 +306,7 @@ def _hit_counts(candidate: str, text: str) -> tuple[int, int] | None:
         return _identical_counts(candidate)
     candidate_tokens = tokens(candidate)
     text_tokens = tokens(text)
-    if len(candidate_tokens) >= MIN_TOKENS and len(text_tokens) >= MIN_TOKENS:
+    if len(candidate_tokens) >= TOKEN_FLOOR and len(text_tokens) >= TOKEN_FLOOR:
         left = shingles(candidate_tokens)
         right = shingles(text_tokens)
         if jaccard_at_least(left, right):
@@ -317,7 +322,7 @@ def _hit_counts(candidate: str, text: str) -> tuple[int, int] | None:
 
 def _identical_counts(text: str) -> tuple[int, int]:
     text_tokens = tokens(text)
-    if len(text_tokens) >= MIN_TOKENS:
+    if len(text_tokens) >= TOKEN_FLOOR:
         size = len(shingles(text_tokens))
         return (size, size)
     size = len(char_shingles(text))
@@ -362,7 +367,7 @@ def cluster_families(
         item_tokens = tokens(text)
         token_count[item_id] = len(item_tokens)
         shingle_of[item_id] = (
-            shingles(item_tokens) if len(item_tokens) >= MIN_TOKENS else frozenset()
+            shingles(item_tokens) if len(item_tokens) >= TOKEN_FLOOR else frozenset()
         )
 
     def find(item_id: str) -> str:
@@ -398,7 +403,7 @@ def cluster_families(
             if find(left) == find(right):
                 continue
             both_long = (
-                token_count[left] >= MIN_TOKENS and token_count[right] >= MIN_TOKENS
+                token_count[left] >= TOKEN_FLOOR and token_count[right] >= TOKEN_FLOOR
             )
             if both_long:
                 if jaccard_at_least(shingle_of[left], shingle_of[right]):
@@ -419,19 +424,19 @@ def cluster_families(
             item_id: shingles(token_of[item_id]) for item_id in compared_ids
         }
         whole_runs = {
-            item_id: shingles(token_of[item_id], VERBATIM_RUN)
-            if len(token_of[item_id]) >= VERBATIM_RUN
+            item_id: shingles(token_of[item_id], TOKEN_FLOOR)
+            if len(token_of[item_id]) >= TOKEN_FLOOR
             else frozenset()
             for item_id in compared_ids
         }
         for part_id in cleared_ids:
             part_tokens = token_of[part_id]
-            if len(part_tokens) < MIN_TOKENS:
+            if len(part_tokens) < TOKEN_FLOOR:
                 continue
             part_shingles = shingles(part_tokens)
             part_runs = (
-                shingles(part_tokens, VERBATIM_RUN)
-                if len(part_tokens) >= VERBATIM_RUN
+                shingles(part_tokens, TOKEN_FLOOR)
+                if len(part_tokens) >= TOKEN_FLOOR
                 else frozenset()
             )
             for whole_id in compared_ids:

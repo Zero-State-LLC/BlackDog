@@ -51,13 +51,12 @@ from faustcoder.neardup import (
     CHAR_NUMERATOR,
     CONTAINMENT_DENOMINATOR,
     CONTAINMENT_NUMERATOR,
-    MIN_TOKENS,
+    TOKEN_FLOOR,
     NGRAM_N,
     SHORT_SKELETON_DENOMINATOR,
     SHORT_SKELETON_NUMERATOR,
     THRESHOLD_DENOMINATOR,
     THRESHOLD_NUMERATOR,
-    VERBATIM_RUN,
     cluster_families,
     tokens,
 )
@@ -361,13 +360,14 @@ def _assemble(
             "char_n": CHAR_N,
             "char_threshold": f"{CHAR_NUMERATOR}/{CHAR_DENOMINATOR}",
             "containment": f"{CONTAINMENT_NUMERATOR}/{CONTAINMENT_DENOMINATOR}",
-            "min_tokens": MIN_TOKENS,
+            "min_tokens": TOKEN_FLOOR,
             "n": NGRAM_N,
             "short_skeleton_threshold": (
                 f"{SHORT_SKELETON_NUMERATOR}/{SHORT_SKELETON_DENOMINATOR}"
             ),
             "threshold": f"{THRESHOLD_NUMERATOR}/{THRESHOLD_DENOMINATOR}",
-            "verbatim_run": VERBATIM_RUN,
+            "token_floor": TOKEN_FLOOR,
+            "verbatim_run": TOKEN_FLOOR,
         },
         "normalization": {
             "encoding": "utf-8",

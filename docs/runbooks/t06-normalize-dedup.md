@@ -208,21 +208,26 @@ The snapshot does, once the pinned commits are checked out.
 
 Jaccard is symmetric, so a verbatim excerpt of a long rejected file
 stays under 4/5. An excerpt check is asymmetric (INFERRED). It fires
-when the cleared text has at least 40 tokens and either:
+when the cleared text has at least `TOKEN_FLOOR` tokens and either:
 
 - `|shingles(cleared) ∩ shingles(non-cleared)| / |shingles(cleared)|`
   is at least 1/2 (`intersection * 2 >= |cleared shingles|`), or
-- the two texts share a contiguous run of 40 normalized tokens.
+- the two texts share a contiguous run of `TOKEN_FLOOR` normalized tokens.
 
 The run counts when the cleared file is the longer one. A cleared file
 that vendors an entire rejected blob and then adds its own padding is
 `needs-human`. The upstream allowlist below, not a length comparison,
 is what keeps an original that a later copy quotes.
 
-The 40-token floor is policy. A cleared text under 40 tokens is not
-an excerpt. A rejected blob under 40 tokens cannot supply a 40-token
-run, so own code plus one rejected function shorter than 40 tokens
-stays admitted. Containment uses the same floor on the cleared side.
+`TOKEN_FLOOR` in `faustcoder/neardup.py` is the single length constant
+for the Jaccard minimum, the excerpt minimum, and the verbatim run.
+It is 40 today. Danny has not accepted that value as clearance policy
+(2026-10-17, 4:11 PM PT). The measurement and the recommendation are
+in [the short-kernel note](../analysis/t06-short-kernel-floor.md).
+A cleared text under the floor is not an excerpt. A rejected blob
+shorter than the floor cannot supply a run of that length, so own code
+plus one shorter rejected function stays admitted at the current
+constant.
 
 On the pinned corpus, dropping the length guard newly quarantines 11
 cleared STK examples. Each shares an 89-token `nonLinearity` block
@@ -341,5 +346,5 @@ artifact. It is not a field of the manifest.
 ## Labels
 
 - OBSERVED: the §7.1 table and diagram; T02 digest rules; ADR-0003; the 2026-10-17 defaults; spec §4.2 (no custom parser); `DatasetSnapshot` is the `split_frozen` effect; T03b stages faustlibraries `2edec0537f53` and T06 still does not compile-check corpus units; T05's inventory uses `rights_cleared`, `rights_rejected` and `needs_human`, with `files[]` or `functions[]` and a notice manifest keyed by commit, path, function and blob sha.
-- INFERRED: T06 stops at `normalized` and admits through T05's guard against the pinned inventory and notice digests; `generated_at` is outside that digest; the ingested blob is hashed before normalization; a mixed-license family, and a family that contains a rejected or `needs_human` member, is `needs-human` rather than an intersection that still stores the text; a cleared excerpt of a non-cleared blob is `needs-human` at containment 1/2 or a 40-token run, including when the cleared file is longer and vendors the rejected blob; a rejected function under 40 tokens stays below that floor; the four syfala upstream originals stay cleared only when every non-cleared family member is that entry's recorded copy; a shared blob with any non-cleared unit is `needs-human` because function rows have no line range; character 5-gram Jaccard for texts under 40 tokens; the 32-character and 1/3 skeleton thresholds; `ffunction` as a token backstop; `DedupManifest` rather than `DatasetSnapshot`; receipt time is `--created-at`; the compiler flag refuses instead of compiling. Slicing `.lib` function units is a follow-up.
-- SPECULATIVE: the 4/5 threshold, the 40-token floor, and the short-text 1/3 skeleton threshold need a real corpus before they are treated as tuned; full commit hashes are not in the approval note.
+- INFERRED: T06 stops at `normalized` and admits through T05's guard against the pinned inventory and notice digests; `generated_at` is outside that digest; the ingested blob is hashed before normalization; a mixed-license family, and a family that contains a rejected or `needs_human` member, is `needs-human` rather than an intersection that still stores the text; a cleared excerpt of a non-cleared blob is `needs-human` at containment 1/2 or a run of `TOKEN_FLOOR` tokens, including when the cleared file is longer and vendors the rejected blob; `TOKEN_FLOOR` is one constant (currently 40) and is not an accepted clearance policy; the four syfala upstream originals stay cleared only when every non-cleared family member is that entry's recorded copy; a shared blob with any non-cleared unit is `needs-human` because function rows have no line range; character 5-gram Jaccard for texts under 40 tokens; the 32-character and 1/3 skeleton thresholds; `ffunction` as a token backstop; `DedupManifest` rather than `DatasetSnapshot`; receipt time is `--created-at`; the compiler flag refuses instead of compiling. Slicing `.lib` function units is a follow-up.
+- SPECULATIVE: the 4/5 threshold and the short-text 1/3 skeleton threshold need a retune before they are treated as settled; full commit hashes are not in the approval note. The length floor is measured in the short-kernel note and the recommendation there is 40.

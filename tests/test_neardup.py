@@ -3,6 +3,9 @@
 from __future__ import annotations
 
 from faustcoder.neardup import (
+    MIN_TOKENS,
+    TOKEN_FLOOR,
+    VERBATIM_RUN,
     char_shingles,
     cluster_families,
     containment_at_least,
@@ -16,6 +19,13 @@ from faustcoder.neardup import (
 )
 
 from tests.t06support import long_text
+
+
+def test_token_floor_is_one_constant() -> None:
+    """Jaccard, containment, and the verbatim run share ``TOKEN_FLOOR``."""
+    assert TOKEN_FLOOR == 40
+    assert MIN_TOKENS == TOKEN_FLOOR
+    assert VERBATIM_RUN == TOKEN_FLOOR
 
 
 def test_comments_are_stripped_and_strings_stay() -> None:
@@ -131,7 +141,7 @@ def test_vendored_rejected_file_plus_padding_is_an_excerpt() -> None:
 
 
 def test_rejected_text_under_forty_tokens_is_not_an_excerpt() -> None:
-    """The 40-token floor is policy: a 36-token rejected function stays out."""
+    """At the operating floor, a 36-token rejected function is not an excerpt."""
     rejected = long_text("fn", count=36)
     cleared = rejected.strip() + " " + long_text("own", count=80)
     assert is_excerpt(cleared, rejected) is False
