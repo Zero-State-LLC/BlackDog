@@ -10,10 +10,11 @@ See [docs/VERSIONING.md](docs/VERSIONING.md).
 
 ### Added
 
+- T05: source rights inventory (`corpus/rights-inventory.v1.json`), the notice manifest (`corpus/notice-manifest.v1.json`), and the dataset `rights_cleared` / `rights_rejected` transitions. A clearance requires a matching notice row, a pinned commit, and a named reviewer when the evidence is inferred. Exclusion receipts carry a reason and do not copy program text.
+
 - T03 follow-up: the compiler runs as the calling user (`unshare --net --map-current-user`, `CapEff` 0). Every receipt reuses the embedded libfaust pin. `environment_digest` covers the bundled faustlibraries triplet and the runtime bytes. Receipts are stored and looked up by reproducible digest. CompilerReceipt `diagnostic_class` adds `unbound_symbol`, `resource_limit` and `internal` (spec 0.3.2, ADR-0005, Danny yes 2026-10-17 1:13 PM PT).
 
 - T03: sandboxed Node.js worker around libfaust from faustwasm 0.19.0. Python drives it with no network, a wall-clock timeout, a resident-memory cap and an output-size cap, and stores a CompilerReceipt in the T02 artifact store. The native Faust 2.88.0 cross-check runs only when that binary is already installed.
-
 - T09: DGX Spark feasibility study, bounded environment probe, and the training-machine `env_verified` transition. CI covers the state machine with a mocked Spark fingerprint. On-hardware throughput is not measured in this change.
 
 - T02 follow-up: envelope-integrity sidecar verified on read, and a pytest job in the existing spec-check workflow.
@@ -30,6 +31,7 @@ See [docs/VERSIONING.md](docs/VERSIONING.md).
 
 ### Changed
 
+- Spec 001 to 0.3.3 (D-013, Danny yes 2026-10-17 1:04 PM PT): STK-4.3 is other-permissive with a required notice; bare BSD is not redistributed; vendored copies are deduped by content hash and not cleared; faustlibraries is sliced per function; mixed licenses take the strictest; CC-TODO comments are stripped; GPL and LGPL stay training-only, with a near-duplicate output filter proposed for T06 and T07. See spec §22.
 - Spec 001 to 0.3.1 (Danny yes 2026-10-17 12:54 PM PT): for v0.2, R-001 is satisfied by cited external DGX Spark benchmarks plus a per-machine environment fingerprint receipt. On-hardware throughput is deferred to T10 on the dedicated Spark cleared of other workloads before training.
 - T09 probe: the default memory cap is that dedicated machine's MemTotal minus an 8 GiB OS margin, and cannot exceed 120 GiB. The 96 GiB shared-machine ceiling is withdrawn. 7.6B full-parameter AdamW stays a no-go on 128 GB unified memory.
 

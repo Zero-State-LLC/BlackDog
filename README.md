@@ -2,11 +2,12 @@
 
 Compiler-verified Faust DSP coding model, developed on NVIDIA DGX Spark.
 
-**Status:** specification-first. The V0.1 content-addressed artifact store (T02) and sandboxed Faust compiler harness (T03, faustwasm 0.19.0) are implemented. No model-quality claim is established. For v0.2, R-001 (amended 0.3.1) uses cited external DGX Spark benchmarks plus a per-machine fingerprint; FaustCoder throughput on the Spark is not measured yet.
+**Status:** specification-first. The V0.1 content-addressed artifact store (T02), sandboxed Faust compiler harness (T03, faustwasm 0.19.0), and dataset rights transitions (T05) are implemented. No model-quality claim is established. For v0.2, R-001 (amended 0.3.1) uses cited external DGX Spark benchmarks plus a per-machine fingerprint; FaustCoder throughput on the Spark is not measured yet.
 
 ## Start here
 
 - [Canonical specification](specs/001-faustcoder/spec.md)
+- [Source rights inventory](docs/rights-inventory.md)
 - [Implementation backlog](KANBAN.md)
 - Architecture decisions: [ADR-0001](docs/adr/0001-dag-evidence.md), [ADR-0002](docs/adr/0002-training-path.md), [ADR-0003](docs/adr/0003-licensing-and-data-rights.md), [ADR-0004](docs/adr/0004-target-lanes-and-faust-tooling.md)
 - [Constitution](.specify/memory/constitution.md)

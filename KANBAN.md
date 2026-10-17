@@ -27,6 +27,8 @@ All tasks are **TODO**. Dependency arrows are mandatory promotion gates.
 | T21 | v0.3 | Real-time safety checks | T04 | Bad fixtures rejected on every lane |
 | T22 | v0.5-fpga | FPGA F0 spike | T04 | DecisionRecord on the lowering path |
 
+Proposed T06/T07 requirement (D-013, Danny yes 2026-10-17 1:04 PM PT): an n-gram or AST near-duplicate filter on generated `.dsp` against the training-only set. The threshold is not set. Impulse-test paths already cannot take `eval`.
+
 Lane issues (ADR-0004): T17 #25, T18 #26, T19 #27, T20 #28, T21 #29, T22 #30.
 
 ## Decisions
@@ -50,3 +52,4 @@ Mirrors the decision items on the [project board](https://github.com/orgs/Zero-S
 | D-012 | Plugin formats CLAP, VST3 (clap-wrapper), LV2; AU deferred | ACCEPTED 2026-10-16 23:39 PT | ADR-0004 |
 | ORG-002 | Board moved to org project 29; user board 8 kept, marked superseded | Done 2026-10-16 | spec §18 |
 | R-001 | v0.2 evidence: cited external Spark benchmarks plus a per-machine fingerprint; throughput is T10 on the cleared dedicated Spark | ACCEPTED 2026-10-17 12:54 PM PT | spec §20 |
+| D-013 | STK-4.3 permissive with notice; bare BSD not redistributed; notice required; vendored copies deduped; per-function slicing; strictest license; copyleft near-duplicate gate proposed for T06/T07 | ACCEPTED 2026-10-17 1:04 PM PT | spec §22, ADR-0003 |
