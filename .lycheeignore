@@ -2,5 +2,3 @@
 ^https://github\.com/Zero-State-LLC/FaustCoder/security/advisories/new
 ^https://github\.com/Zero-State-LLC/FaustCoder/commits/main
 ^https://github\.com/Zero-State-LLC/FaustCoder/specs/
-# Private user project board (404 for anonymous requests)
-^https://github\.com/users/scrimshawlife-ctrl/projects/

@@ -23,7 +23,7 @@ All tasks are **TODO**. Dependency arrows are mandatory promotion gates.
 
 ## Decisions
 
-Mirrors the decision items on the [project board](https://github.com/users/scrimshawlife-ctrl/projects/8). Log: [spec §18](specs/001-faustcoder/spec.md#18-decision-log).
+Mirrors the decision items on the [project board](https://github.com/orgs/Zero-State-LLC/projects/29). Log: [spec §18](specs/001-faustcoder/spec.md#18-decision-log).
 
 | ID | Decision | Status | Record |
 |---|---|---|---|
@@ -32,4 +32,5 @@ Mirrors the decision items on the [project board](https://github.com/users/scrim
 | D-004 | Corpus allowlist; GPL training-only; unlicensed excluded | ACCEPTED 2026-10-16 | ADR-0003 |
 | D-006 | Teacher: Opus via OpenRouter, per-run spend cap | SUPERSEDED 2026-10-16 22:25 PT | ADR-0002 |
 | D-006r2 | Teacher: open-weight deepseek-v4.1-flash via OpenRouter, per-run cap; Opus for review and judging only | ACCEPTED 2026-10-16 | ADR-0002, ADR-0003 |
-| ORG-001 | Repo moved to Zero-State-LLC, stays public (public versus private open) | Done 2026-10-16 | spec §18 |
+| ORG-001 | Repo moved to Zero-State-LLC; repo and board public for now (revisitable) | Done 2026-10-16 22:32 PT | spec §18 |
+| ORG-002 | Board moved to org project 29; user board 8 kept, marked superseded | Done 2026-10-16 | spec §18 |

@@ -383,4 +383,5 @@ never from scratch, in weeks rather than months. Evidence is in
 | D-004 | Permissive allowlist; GPL for training only, never redistributed; unlicensed excluded | ACCEPTED | Danny yes 2026-10-16 22:20 PT | ADR-0003 |
 | D-006 | Teacher: Opus via OpenRouter; per-run spend cap approved per run | SUPERSEDED by D-006r2 | Danny yes 2026-10-16 22:20 PT | ADR-0002 |
 | D-006r2 | Training-data teacher: open-weight `deepseek/deepseek-v4.1-flash` via OpenRouter, high reasoning, per-run spend cap. Opus only for review, grading and eval judging, never for training targets | ACCEPTED | Danny yes 2026-10-16 22:25 PT | ADR-0002, ADR-0003 |
-| ORG-001 | Repository transferred to Zero-State-LLC; stays public (public versus private still open) | ACCEPTED | Danny yes 2026-10-16 22:25 PT | README |
+| ORG-001 | Repository transferred to Zero-State-LLC (Danny yes 2026-10-16 22:25 PT). Visibility RESOLVED: public for now, revisitable later; applies to the repository and the org project board | ACCEPTED | Danny 2026-10-16 22:32 PT | KANBAN.md |
+| ORG-002 | Project board moved to the org ([project 29](https://github.com/orgs/Zero-State-LLC/projects/29)), linked to this repository. User board scrimshawlife-ctrl #8 kept and marked superseded | ACCEPTED | Danny 2026-10-16 22:31 PT | KANBAN.md |
