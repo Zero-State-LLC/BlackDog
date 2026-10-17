@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/scrimshawlife-ctrl/FaustCoder/specs/001-faustcoder/contracts/DSPTestReceipt.schema.json",
+  "$id": "https://github.com/Zero-State-LLC/FaustCoder/specs/001-faustcoder/contracts/DSPTestReceipt.schema.json",
   "title": "DSPTestReceipt",
   "description": "Spec §8 DSPTestReceipt (R-006).",
   "type": "object",

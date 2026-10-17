@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/scrimshawlife-ctrl/FaustCoder/specs/001-faustcoder/contracts/TrainingRun.schema.json",
+  "$id": "https://github.com/Zero-State-LLC/FaustCoder/specs/001-faustcoder/contracts/TrainingRun.schema.json",
   "title": "TrainingRun",
   "description": "Spec §8 TrainingRun (R-008, R-009).",
   "type": "object",

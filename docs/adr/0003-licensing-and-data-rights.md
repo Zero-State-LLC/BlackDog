@@ -27,6 +27,18 @@ Status: ACCEPTED
   committed to this repository and not included in any released dataset.
 - Unlicensed code (no license file or declaration) is excluded.
 
+### Teacher outputs (D-006r2)
+
+- Provenance: Danny yes 2026-10-16 22:25 PT. Supersedes the training-data part of D-006
+  (Danny yes 2026-10-16 22:20 PT).
+- Training targets may come only from models whose outputs carry no
+  restriction on training use. Default: `deepseek/deepseek-v4.1-flash`
+  (MIT) via OpenRouter.
+- Opus outputs are never stored as training targets or in released data.
+  Opus may review, grade and judge evaluations only.
+- Each synthetic item records its teacher model id in its `SourceRecord`, so
+  items from a disallowed source can be found and removed. INFERRED.
+
 ## Consequences
 
 - Every `SourceRecord` carries a license claim; `RightsRecord.eligible_for`
@@ -46,9 +58,9 @@ These are INFERRED readings, not part of the approval. Not legal advice.
 - LGPL, including the Faust library exception, is treated like GPL: training
   only. AGPL, MPL and other copyleft licenses are not covered by the approval
   and stay excluded until decided.
-- The proprietary license names Zero State LLC as owner while the repository
-  sits on the personal account `scrimshawlife-ctrl`; transfer to the
-  Zero-State-LLC organization if ownership should match.
+- Resolved (Danny yes 2026-10-16 22:25 PT): the repository was transferred to the Zero-State-LLC
+  organization, so ownership matches the proprietary license. It stays public;
+  the public versus private decision is still open.
 - Section 4 of the proprietary license bars AI-training use of covered
   material without Zero State's authorization; Zero State's own use is
   unaffected.

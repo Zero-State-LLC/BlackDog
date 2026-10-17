@@ -18,9 +18,12 @@ See [docs/VERSIONING.md](docs/VERSIONING.md).
 
 ### Changed
 
+- Repository transferred to the Zero-State-LLC organization; repository URLs updated. It stays public.
+- D-006 superseded by D-006r2: open-weight `deepseek/deepseek-v4.1-flash` via OpenRouter generates training data; Opus is used only for review, grading and eval judging.
+
 - Licensing: split license accepted (ADR-0003). Apache-2.0 for `specs/` and `docs/`, Zero State Proprietary License 1.0 for everything else; LICENSE, LICENSE-APACHE, NOTICE and per-directory license files added; README and CONTRIBUTING updated (closes #20).
 - Decisions D-003 (44.1 and 48 kHz), D-004 (corpus allowlist, GPL training-only) and D-006 (Opus via OpenRouter, per-run spend cap) accepted; spec §18 decision log added.
 
 - Spec 001 to 0.2.0: small-model shortlist, per-phase training method, phase gates and flagged slowdowns (§17).
 
-[Unreleased]: https://github.com/scrimshawlife-ctrl/FaustCoder/commits/main
+[Unreleased]: https://github.com/Zero-State-LLC/FaustCoder/commits/main

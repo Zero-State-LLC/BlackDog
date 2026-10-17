@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/scrimshawlife-ctrl/FaustCoder/specs/001-faustcoder/contracts/TaskSpec.schema.json",
+  "$id": "https://github.com/Zero-State-LLC/FaustCoder/specs/001-faustcoder/contracts/TaskSpec.schema.json",
   "title": "TaskSpec",
   "description": "Spec §8 TaskSpec. Field types are INFERRED.",
   "type": "object",

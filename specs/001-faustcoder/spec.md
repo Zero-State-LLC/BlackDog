@@ -319,7 +319,8 @@ Parallelism permitted only where declared dependencies allow it. Every task requ
 - D-003 ACCEPTED: Sample rates 44.1 kHz and 48 kHz. Signal tests and task suites run at both rates. Provenance: Danny yes 2026-10-16 22:20 PT. DSP target runtimes remain open.
 - D-004 ACCEPTED: Training-corpus allowlist is MIT, BSD, Apache and other permissive licenses. GPL code is allowed for training only and is never redistributed in this repository or in released data. Unlicensed code is excluded. Provenance: Danny yes 2026-10-16 22:20 PT. See ADR-0003.
 - D-005: Set quality gates using observed baseline and task severity.
-- D-006 ACCEPTED: Teacher model is Opus via OpenRouter, with a per-run spend cap approved for each run before it starts. Provenance: Danny yes 2026-10-16 22:20 PT. See ADR-0002.
+- D-006 SUPERSEDED by D-006r2 (Danny yes 2026-10-16 22:25 PT). Original: Teacher model is Opus via OpenRouter, with a per-run spend cap approved for each run before it starts. Provenance: Danny yes 2026-10-16 22:20 PT. See ADR-0002.
+- D-006r2 ACCEPTED: Training-data teacher is an open-weight model: default `deepseek/deepseek-v4.1-flash` (DeepSeek-V4.1-Flash, MIT license) via OpenRouter with high reasoning effort, under a per-run spend cap approved for each run. Opus via OpenRouter is used only for review, grading and eval judging, never as a source of training targets, because Anthropic's usage terms restrict using outputs to train competing models. Provenance: Danny yes 2026-10-16 22:25 PT. Supersedes D-006. See ADR-0002 and ADR-0003.
 
 ## 15. Non-negotiable release gate
 
@@ -380,4 +381,6 @@ never from scratch, in weeks rather than months. Evidence is in
 | LIC-001 | Split license: Apache-2.0 for `specs/` and `docs/` (including ADRs); Zero State Proprietary License 1.0 for code, model weights and data | ACCEPTED | Danny yes 2026-10-16 22:20 PT | ADR-0003, issue #20 |
 | D-003 | Sample rates 44.1 kHz and 48 kHz | ACCEPTED | Danny yes 2026-10-16 22:20 PT | §14, ADR-0002 |
 | D-004 | Permissive allowlist; GPL for training only, never redistributed; unlicensed excluded | ACCEPTED | Danny yes 2026-10-16 22:20 PT | ADR-0003 |
-| D-006 | Teacher: Opus via OpenRouter; per-run spend cap approved per run | ACCEPTED | Danny yes 2026-10-16 22:20 PT | ADR-0002 |
+| D-006 | Teacher: Opus via OpenRouter; per-run spend cap approved per run | SUPERSEDED by D-006r2 | Danny yes 2026-10-16 22:20 PT | ADR-0002 |
+| D-006r2 | Training-data teacher: open-weight `deepseek/deepseek-v4.1-flash` via OpenRouter, high reasoning, per-run spend cap. Opus only for review, grading and eval judging, never for training targets | ACCEPTED | Danny yes 2026-10-16 22:25 PT | ADR-0002, ADR-0003 |
+| ORG-001 | Repository transferred to Zero-State-LLC; stays public (public versus private still open) | ACCEPTED | Danny yes 2026-10-16 22:25 PT | README |

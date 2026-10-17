@@ -1,6 +1,6 @@
 # Pages that need a signed-in session or do not exist until first use.
-^https://github\.com/scrimshawlife-ctrl/FaustCoder/security/advisories/new
-^https://github\.com/scrimshawlife-ctrl/FaustCoder/commits/main
-^https://github\.com/scrimshawlife-ctrl/FaustCoder/specs/
+^https://github\.com/Zero-State-LLC/FaustCoder/security/advisories/new
+^https://github\.com/Zero-State-LLC/FaustCoder/commits/main
+^https://github\.com/Zero-State-LLC/FaustCoder/specs/
 # Private user project board (404 for anonymous requests)
 ^https://github\.com/users/scrimshawlife-ctrl/projects/
