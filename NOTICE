@@ -1,0 +1,21 @@
+FaustCoder
+Copyright 2026 Zero State LLC
+
+This repository is split-licensed. Decision: ADR-0003, approved by Danny on
+2026-10-16 at 22:20 PT.
+
+1. specs/ and docs/ (including docs/adr/) are licensed under the Apache
+   License, Version 2.0. See LICENSE-APACHE, specs/LICENSE and docs/LICENSE.
+
+2. Everything else, including source code, scripts, schemas outside specs/,
+   CI configuration, model weights, adapters, checkpoints, datasets, corpus
+   manifests and evaluation data, is licensed under the Zero State Proprietary
+   License, Version 1.0. See LICENSE. This is the default for any path not
+   listed in item 1.
+
+The Zero State Proprietary License text in LICENSE is copied verbatim from
+Zero-State-LLC/Patch-Hive. Its general description of covered materials
+applies here only to the paths in item 2.
+
+Third-party materials keep their own licenses. GPL-licensed source code used
+for training is never stored in this repository or in released data (ADR-0003).

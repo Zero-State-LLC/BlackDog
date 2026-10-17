@@ -316,10 +316,10 @@ Parallelism permitted only where declared dependencies allow it. Every task requ
 
 - D-001: Confirm Faust DSP language (assumed).
 - D-002 (amended 0.2.0, ADR-0002): Select student model after the P0 bake-off from the 0.5B to 8B Apache-2.0 shortlist in research.md. Larger models are teacher or reference candidates only (D-006).
-- D-003: Choose initial sample rates and DSP target runtimes.
-- D-004: Determine corpus redistribution versus training-only rights.
+- D-003 ACCEPTED: Sample rates 44.1 kHz and 48 kHz. Signal tests and task suites run at both rates. Provenance: Danny yes 2026-10-16 22:20 PT. DSP target runtimes remain open.
+- D-004 ACCEPTED: Training-corpus allowlist is MIT, BSD, Apache and other permissive licenses. GPL code is allowed for training only and is never redistributed in this repository or in released data. Unlicensed code is excluded. Provenance: Danny yes 2026-10-16 22:20 PT. See ADR-0003.
 - D-005: Set quality gates using observed baseline and task severity.
-- D-006: Decide local-only versus optional hosted teacher usage and data boundaries.
+- D-006 ACCEPTED: Teacher model is Opus via OpenRouter, with a per-run spend cap approved for each run before it starts. Provenance: Danny yes 2026-10-16 22:20 PT. See ADR-0002.
 
 ## 15. Non-negotiable release gate
 
@@ -370,5 +370,14 @@ never from scratch, in weeks rather than months. Evidence is in
 | S-2 | §7.2 human `REVIEWED` step per candidate | Impossible at RL and synthetic-data volume | In training and evaluation loops, use automated independent gates (R-011); human review at promotion only | INFERRED |
 | S-3 | R-010 four API verbs and V0.4 IDE integration | Product scope before the model is proven | Keep after P3; T13 and T14 stay off the critical path | INFERRED |
 | S-4 | R-006 latency and CPU checks on every candidate | Slows data validation | Run on promotion candidates only | INFERRED |
-| S-5 | D-003, D-004, D-006 open | Block corpus clearing, harness and synthetic data | Defaults: 48 kHz, C++ backend; training-only use with a permissive allowlist; local Apache-2.0 teacher. Owner to confirm | INFERRED; not legal advice |
+| S-5 | D-003, D-004, D-006 open (resolved 2026-10-16: ACCEPTED in §14, ADR-0002, ADR-0003) | Block corpus clearing, harness and synthetic data | Defaults: 48 kHz, C++ backend; training-only use with a permissive allowlist; local Apache-2.0 teacher. Owner to confirm | INFERRED; not legal advice |
 | S-6 | T09 as a full study | Delays T10 | One-day smoke test that records throughput and memory receipts | INFERRED |
+
+## 18. Decision log
+
+| ID | Decision | Status | Provenance | Record |
+|---|---|---|---|---|
+| LIC-001 | Split license: Apache-2.0 for `specs/` and `docs/` (including ADRs); Zero State Proprietary License 1.0 for code, model weights and data | ACCEPTED | Danny yes 2026-10-16 22:20 PT | ADR-0003, issue #20 |
+| D-003 | Sample rates 44.1 kHz and 48 kHz | ACCEPTED | Danny yes 2026-10-16 22:20 PT | §14, ADR-0002 |
+| D-004 | Permissive allowlist; GPL for training only, never redistributed; unlicensed excluded | ACCEPTED | Danny yes 2026-10-16 22:20 PT | ADR-0003 |
+| D-006 | Teacher: Opus via OpenRouter; per-run spend cap approved per run | ACCEPTED | Danny yes 2026-10-16 22:20 PT | ADR-0002 |
