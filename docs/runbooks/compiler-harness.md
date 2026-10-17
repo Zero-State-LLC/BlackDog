@@ -175,7 +175,8 @@ regular file that root owns and that group and others cannot write, and
 the same for its parent directory. A symlink or a wrapper owned by the
 harness user is refused. Inside the compile process, before compiling,
 the worker requires `/proc/net/dev` to list only `lo` and requires a
-connect to fail. Unset, the sandbox uses the system `unshare`. Either
+connect to fail. A failed canary raises `SandboxError` and does not
+write an `internal` receipt. Unset, the sandbox uses the system `unshare`. Either
 way, `environment_digest` records that binary's resolved path and sha256.
 CI leaves the variable unset and keeps the github-hosted sysctl step.
 

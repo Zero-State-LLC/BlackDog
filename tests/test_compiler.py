@@ -6,6 +6,7 @@ import hashlib
 import os
 import shutil
 import subprocess
+import sys
 import time
 from pathlib import Path
 
@@ -560,6 +561,51 @@ def test_library_tree_mismatch_is_refused(tmp_path: Path, monkeypatch: pytest.Mo
         compile_source("process = _;\n")
 
 
+def test_two_entries_under_one_root_do_not_share_a_source_identity(tmp_path: Path) -> None:
+    (tmp_path / "a.dsp").write_text("process = _ * 0.5;\n", encoding="utf-8")
+    (tmp_path / "b.dsp").write_text("process = _ * 0.25;\n", encoding="utf-8")
+    first = compile_directory(tmp_path, "a.dsp")
+    second = compile_directory(tmp_path, "b.dsp")
+    assert first.receipt["exit_code"] == 0, first.diagnostics
+    assert second.receipt["exit_code"] == 0, second.diagnostics
+    assert first.receipt["source_sha256"] != second.receipt["source_sha256"]
+
+
+def test_concurrent_processes_publish_one_share(tmp_path: Path) -> None:
+    checkout = tmp_path / "2edec0537f53"
+    _copy_library_checkout(checkout)
+    script = (
+        "import os, sys\n"
+        "os.environ['FAUSTCODER_LIBRARIES'] = sys.argv[1]\n"
+        "from faustcoder.libraries import (\n"
+        "    FAUSTLIBRARIES_SHARE_SHA256, canonical_tree_sha256, share_directory,\n"
+        ")\n"
+        "path = share_directory()\n"
+        "digest = canonical_tree_sha256(path)\n"
+        "if digest != FAUSTLIBRARIES_SHARE_SHA256:\n"
+        "    raise SystemExit(digest)\n"
+        "print(path)\n"
+    )
+    processes = [
+        subprocess.Popen(
+            [sys.executable, "-c", script, str(checkout)],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+        for _ in range(8)
+    ]
+    results = []
+    for process in processes:
+        stdout, stderr = process.communicate()
+        results.append((process.returncode, stdout, stderr))
+    failures = [item for item in results if item[0] != 0]
+    assert not failures, failures
+    paths = {stdout.decode().strip() for _, stdout, _ in results}
+    assert len(paths) == 1
+    assert (tmp_path / "share-2edec0537f53").is_dir()
+    assert (tmp_path / "share-2edec0537f53.lock").is_file()
+
+
 def test_sibling_import_from_the_same_directory_compiles() -> None:
     compiled = compile_directory(FIXTURES / "multi", "main.dsp")
     assert compiled.receipt["exit_code"] == 0, compiled.diagnostics
@@ -792,9 +838,7 @@ def test_root_owned_unshare_wrapper_fails_the_network_canary(
         subprocess.run(["sudo", "chmod", "0755", str(binary)], check=True)
         monkeypatch.setenv("FAUSTCODER_UNSHARE", str(binary))
         assert unshare_executable() == str(binary)
-        compiled = compile_source("process = _;\n", limits=ResourceLimits(timeout_s=20))
-        assert compiled.receipt["exit_code"] != 0
-        assert compiled.receipt["diagnostic_class"] != "ok"
-        assert compiled.receipt["exit_code"] >= UNGRADED_EXIT_FLOOR
+        with pytest.raises(SandboxError, match="canary"):
+            compile_source("process = _;\n", limits=ResourceLimits(timeout_s=20))
     finally:
         subprocess.run(["sudo", "rm", "-rf", str(root)], check=False)

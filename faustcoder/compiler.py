@@ -364,7 +364,8 @@ def compile_source(
     files = _source_files(filename, source, siblings)
     _reject_excluded(source)
     bounds = limits or ResourceLimits()
-    source_bytes = _source_identity(files)
+    entry = _normalize_dsp_path(filename) if siblings else None
+    source_bytes = _source_identity(files, entry=entry)
     pin = runtime_pin()
     if sum(len(text.encode("utf-8")) for _, text in files) > bounds.source_bytes:
         return _harness_receipt(
@@ -425,6 +426,7 @@ def compile_source(
         )
         run = run_in_sandbox(command, stdin=request, workdir=workdir, limits=bounds)
         duration_ms = int((time.monotonic() - started) * 1000)
+        _raise_if_canary_failed(run)
         if run.stop_reason:
             return _harness_receipt(
                 source_bytes,
@@ -806,14 +808,31 @@ def _source_files(
     return sorted(files.items())
 
 
-def _source_identity(files: Sequence[tuple[str, str]]) -> bytes:
-    if len(files) == 1:
+def _source_identity(files: Sequence[tuple[str, str]], *, entry: str | None = None) -> bytes:
+    """Bytes hashed into ``source_sha256``.
+
+    A single file is the source text alone. A multi-file program also
+    hashes every path and the selected entry, so two entries over the
+    same directory do not share an identity.
+    """
+    if entry is None:
+        if len(files) != 1:
+            raise CompilerHarnessError("multi-file source identity requires an entry path")
         return files[0][1].encode("utf-8")
-    chunks: list[bytes] = []
+    chunks = [b"entry\n" + entry.encode("utf-8") + b"\n"]
     for path, text in files:
         data = text.encode("utf-8")
         chunks.append(path.encode("utf-8") + b"\n" + len(data).to_bytes(8, "big") + data)
     return b"".join(chunks)
+
+
+def _raise_if_canary_failed(run: SandboxRun) -> None:
+    """A failed network canary is not an ordinary internal receipt."""
+    marker = b"sandbox_canary_failed:"
+    if marker not in run.stderr:
+        return
+    detail = run.stderr.decode("utf-8", errors="replace").strip()
+    raise SandboxError(f"network namespace canary failed: {detail}")
 
 
 def _reject_excluded(source: str) -> None:
@@ -931,6 +950,8 @@ def _receipt_from_worker(
             pin=pin,
         )
     mounted = body.get("library_tree_sha256")
+    # The worker hashes the bytes it wrote into /usr/share/faust. That has
+    # to equal the Python hash of the share directory just mounted.
     if not isinstance(mounted, str) or mounted != FAUSTLIBRARIES_SHARE_SHA256:
         raise SandboxError(
             "worker hash of /usr/share/faust does not match the pinned share: "

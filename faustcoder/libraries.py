@@ -25,6 +25,7 @@ left in place: it is not rebuilt and then compiled.
 
 from __future__ import annotations
 
+import fcntl
 import hashlib
 import os
 import re
@@ -137,7 +138,10 @@ def share_directory(tree: LibraryTree | None = None) -> Path:
     The directory is hashed on every call, including when it already
     exists. The hash has to equal ``FAUSTLIBRARIES_SHARE_SHA256``. A stamp
     file is not consulted. A mismatch raises ``SandboxError`` and does not
-    replace the directory. Native Faust receives this path as ``-I``. The
+    replace the directory. The first publish is serialized with a lock
+    file beside the share (``fcntl.flock``) plus a thread lock, and it
+    never deletes a tree another caller is already using. Native Faust
+    receives this path as ``-I``. The
     worker reads it and copies it into the Emscripten filesystem. The path
     is not part of the receipt.
     """
@@ -149,28 +153,55 @@ def share_directory(tree: LibraryTree | None = None) -> Path:
             f"{FAUSTLIBRARIES_COMMIT}: {expected}"
         )
     dest = resolved.root.parent / f"share-{resolved.commit}"
+    if dest.exists():
+        _require_mounted_hash(dest, expected)
+        return dest
     with _LOCK:
+        _publish_share(resolved.root, dest, expected)
+    return dest
+
+
+def _publish_share(root: Path, dest: Path, expected: str) -> None:
+    """Install ``dest`` once. Concurrent publishers share one lock file.
+
+    ``fcntl.flock`` covers other processes. ``_LOCK`` covers other threads
+    in this process, because a Linux flock does not block them. An existing
+    tree is hashed and kept. It is not deleted to make room for a new one.
+    """
+    lock_path = dest.parent / f"{dest.name}.lock"
+    lock_path.parent.mkdir(parents=True, exist_ok=True)
+    fd = os.open(lock_path, os.O_CREAT | os.O_RDWR, 0o644)
+    try:
+        fcntl.flock(fd, fcntl.LOCK_EX)
         if dest.exists():
             _require_mounted_hash(dest, expected)
-            return dest
-        temporary = Path(tempfile.mkdtemp(prefix="faustcoder-share-", dir=resolved.root.parent))
+            return
+        temporary = Path(tempfile.mkdtemp(prefix="faustcoder-share-", dir=dest.parent))
+        created = False
         try:
-            for rel, source in _share_files(resolved.root):
+            for rel, source in _share_files(root):
                 target = temporary / rel
                 target.parent.mkdir(parents=True, exist_ok=True)
                 shutil.copyfile(source, target)
             # Not authoritative. Verification hashes the *.lib bytes.
             (temporary / ".tree-sha256").write_text(expected + "\n", encoding="ascii")
-            temporary.rename(dest)
+            os.rename(temporary, dest)
+            created = True
         except Exception:
             shutil.rmtree(temporary, ignore_errors=True)
+            if dest.is_dir():
+                _require_mounted_hash(dest, expected)
+                return
             raise
         try:
             _require_mounted_hash(dest, expected)
         except SandboxError:
-            shutil.rmtree(dest, ignore_errors=True)
+            if created:
+                shutil.rmtree(dest, ignore_errors=True)
             raise
-        return dest
+    finally:
+        fcntl.flock(fd, fcntl.LOCK_UN)
+        os.close(fd)
 
 
 def _require_mounted_hash(dest: Path, expected: str) -> None:

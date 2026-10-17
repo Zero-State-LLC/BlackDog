@@ -19,6 +19,11 @@ function failClosed(message) {
   process.exit(2);
 }
 
+function failCanary(message) {
+  process.stderr.write(`sandbox_canary_failed: ${message}\n`);
+  process.exit(2);
+}
+
 function writeResult(workdir, body) {
   const destination = join(workdir, "result.json");
   const temporary = `${destination}.tmp`;
@@ -106,16 +111,35 @@ function hostLibraries(root) {
   return files;
 }
 
+function libraryTreeSha256(entries) {
+  const files = entries.slice().sort((left, right) => (left[0] < right[0] ? -1 : left[0] > right[0] ? 1 : 0));
+  const hash = createHash("sha256");
+  for (const [rel, raw] of files) {
+    const body = Buffer.isBuffer(raw) ? raw : Buffer.from(raw);
+    const length = Buffer.alloc(8);
+    length.writeBigUInt64BE(BigInt(body.length));
+    hash.update(Buffer.from(rel, "utf8"));
+    hash.update(Buffer.from("\n"));
+    hash.update(length);
+    hash.update(body);
+  }
+  return hash.digest("hex");
+}
+
 function stageLibraries(compiler, root) {
   const fs = compiler.fs();
   clearVirtual(fs, "/usr/share/faust");
   ensureVirtualDir(fs, "/usr/share/faust");
+  const written = [];
   for (const file of hostLibraries(root)) {
     const rel = relative(root, file).split("\\").join("/");
     const dest = `/usr/share/faust/${rel}`;
     ensureVirtualDir(fs, dest.split("/").slice(0, -1).join("/"));
-    fs.writeFile(dest, readFileSync(file));
+    const bytes = readFileSync(file);
+    fs.writeFile(dest, bytes);
+    written.push([rel, bytes]);
   }
+  return libraryTreeSha256(written);
 }
 
 function mountedLibrarySha256(fs) {
@@ -143,17 +167,7 @@ function mountedLibrarySha256(fs) {
     }
   };
   walk("/usr/share/faust", "");
-  files.sort((left, right) => (left[0] < right[0] ? -1 : left[0] > right[0] ? 1 : 0));
-  const hash = createHash("sha256");
-  for (const [rel, body] of files) {
-    const length = Buffer.alloc(8);
-    length.writeBigUInt64BE(BigInt(body.length));
-    hash.update(Buffer.from(rel, "utf8"));
-    hash.update(Buffer.from("\n"));
-    hash.update(length);
-    hash.update(body);
-  }
-  return hash.digest("hex");
+  return libraryTreeSha256(files);
 }
 
 function namespaceInterfaces() {
@@ -161,7 +175,7 @@ function namespaceInterfaces() {
   try {
     text = readFileSync("/proc/net/dev", "utf8");
   } catch {
-    failClosed("network namespace interfaces could not be read");
+    failCanary("network namespace interfaces could not be read");
   }
   const names = [];
   for (const line of text.split("\n").slice(2)) {
@@ -180,13 +194,13 @@ function namespaceInterfaces() {
 function assertNetworkIsolated() {
   const names = namespaceInterfaces();
   if (names.length !== 1 || names[0] !== "lo") {
-    failClosed("network namespace has a non-loopback interface");
+    failCanary("network namespace has a non-loopback interface");
   }
   return new Promise((resolve) => {
     const socket = connect({ host: "1.1.1.1", port: 443 });
     const timer = setTimeout(() => {
       socket.destroy();
-      failClosed("network connect did not fail inside the sandbox");
+      failCanary("network connect did not fail inside the sandbox");
     }, 1000);
     socket.once("error", () => {
       clearTimeout(timer);
@@ -196,7 +210,7 @@ function assertNetworkIsolated() {
     socket.once("connect", () => {
       clearTimeout(timer);
       socket.destroy();
-      failClosed("network connect succeeded inside the sandbox");
+      failCanary("network connect succeeded inside the sandbox");
     });
   });
 }
@@ -313,8 +327,11 @@ async function main() {
   }
   await assertNetworkIsolated();
   const compiler = await loadCompiler(join(workdir, "runtime", "libfaust-wasm.js"));
-  stageLibraries(compiler, libraryRoot);
+  const writtenSha = stageLibraries(compiler, libraryRoot);
   const libraryTreeSha256 = mountedLibrarySha256(compiler.fs());
+  if (writtenSha !== libraryTreeSha256) {
+    failClosed("mounted library tree does not match the bytes written");
+  }
   let moduleName = "input";
   if (sources.length > 0) {
     if (typeof request.filename !== "string") {
