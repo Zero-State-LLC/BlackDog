@@ -43,8 +43,11 @@ the sha256 of the tree mounted at `/usr/share/faust`
 (`faustlibraries_share_sha256`), the staged `vl.version` (`2.80.0`), the
 triplet still embedded in `libfaust-wasm.data` (`2.74.2` on faustwasm
 0.19.0), the sha256 of `libfaust-wasm.js`, `.wasm` and `.data`, and the
-Node major.minor. It does not include the host name, the Node patch, the
-job directory, or the host path of the library tree.
+Node major.minor, and the resolved path and sha256 of the `unshare`
+binary that actually runs. `FAUSTCODER_UNSHARE` unset means the system
+`unshare`. A swapped wrapper changes `environment_digest` before the
+network canary runs. The digest does not include the host name, the Node
+patch, the job directory, or the host path of the library tree.
 
 The canonical tree hash is every regular `*.lib` file, sorted by relative
 path. Each entry is the UTF-8 path, a newline, an 8-byte big-endian
@@ -172,8 +175,9 @@ regular file that root owns and that group and others cannot write, and
 the same for its parent directory. A symlink or a wrapper owned by the
 harness user is refused. Inside the compile process, before compiling,
 the worker requires `/proc/net/dev` to list only `lo` and requires a
-connect to fail. Unset, the sandbox uses the system `unshare`. CI
-leaves it unset and keeps the github-hosted sysctl step.
+connect to fail. Unset, the sandbox uses the system `unshare`. Either
+way, `environment_digest` records that binary's resolved path and sha256.
+CI leaves the variable unset and keeps the github-hosted sysctl step.
 
 Confirm, without changing the sysctl:
 

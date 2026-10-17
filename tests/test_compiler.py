@@ -38,6 +38,7 @@ from faustcoder import (
     validate,
 )
 from faustcoder.canonical import canonical_bytes
+from faustcoder.sandbox import unshare_identity
 from faustcoder.compiler import (
     FAUSTLIBRARIES_PIN,
     FAUSTLIBRARIES_PIN_VERSION,
@@ -547,6 +548,9 @@ def test_native_preimage_uses_the_same_library_tree() -> None:
     assert preimage["faustlibraries_share_sha256"] == FAUSTLIBRARIES_SHARE_SHA256
     assert preimage["faustlibraries_version"] == FAUSTLIBRARIES_PIN_VERSION
     assert preimage["bundled_faustlibraries_version"] == ""
+    unshare_path, unshare_sha256 = unshare_identity()
+    assert preimage["unshare_path"] == unshare_path
+    assert preimage["unshare_sha256"] == unshare_sha256
 
 
 def test_library_tree_mismatch_is_refused(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -692,6 +696,70 @@ def test_six_of_eight_exclusion_hashes_change_after_t06_normalization() -> None:
 def _exclusion_matches(source: str, path: str) -> bool:
     found = exclusion_for_source(source)
     return found is not None and found.path == path
+
+
+def test_environment_digest_names_the_unshare_binary_actually_used(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.delenv("FAUSTCODER_UNSHARE", raising=False)
+    path, digest = unshare_identity()
+    assert path == str(Path(unshare_executable()).resolve())
+    assert digest == hashlib.sha256(Path(path).read_bytes()).hexdigest()
+    pin = runtime_pin()
+    preimage = environment_preimage(
+        compiler="libfaust-wasm",
+        faust_version=pin.faust_version,
+        lang="wasm",
+        options=(),
+        pin=pin,
+    )
+    assert preimage["unshare_path"] == path
+    assert preimage["unshare_sha256"] == digest
+
+
+def test_swapped_unshare_wrapper_changes_the_digest_before_the_canary(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    root = Path("/opt/faustcoder-canary-identity")
+    first = root / "bin" / "fc-unshare-a"
+    second = root / "bin" / "fc-unshare-b"
+    subprocess.run(["sudo", "rm", "-rf", str(root)], check=True)
+    try:
+        subprocess.run(
+            ["sudo", "install", "-d", "-o", "root", "-g", "root", "-m", "0755", str(first.parent)],
+            check=True,
+        )
+        for path, body in ((first, b"#!/bin/sh\necho a\n"), (second, b"#!/bin/sh\necho b\n")):
+            subprocess.run(
+                ["sudo", "tee", str(path)],
+                input=body,
+                check=True,
+                stdout=subprocess.DEVNULL,
+            )
+            subprocess.run(["sudo", "chown", "root:root", str(path)], check=True)
+            subprocess.run(["sudo", "chmod", "0755", str(path)], check=True)
+        pin = runtime_pin()
+
+        def preimage_for(binary: Path) -> dict[str, object]:
+            monkeypatch.setenv("FAUSTCODER_UNSHARE", str(binary))
+            return environment_preimage(
+                compiler="libfaust-wasm",
+                faust_version=pin.faust_version,
+                lang="wasm",
+                options=(),
+                pin=pin,
+            )
+
+        left = preimage_for(first)
+        right = preimage_for(second)
+        assert left["unshare_path"] == str(first.resolve())
+        assert right["unshare_path"] == str(second.resolve())
+        assert left["unshare_sha256"] != right["unshare_sha256"]
+        assert hashlib.sha256(canonical_bytes(left)).digest() != hashlib.sha256(
+            canonical_bytes(right)
+        ).digest()
+    finally:
+        subprocess.run(["sudo", "rm", "-rf", str(root)], check=False)
 
 
 def test_user_owned_unshare_wrapper_is_refused(

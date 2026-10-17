@@ -73,6 +73,7 @@ and does not run the compiler on the host network.
 
 from __future__ import annotations
 
+import hashlib
 import math
 import os
 import shutil
@@ -182,6 +183,18 @@ def unshare_executable() -> str:
     if not os.access(path, os.X_OK):
         raise SandboxError(f"FAUSTCODER_UNSHARE is not executable: {override}")
     return override
+
+
+def unshare_identity() -> tuple[str, str]:
+    """Return the resolved path and sha256 of the unshare binary in use.
+
+    ``FAUSTCODER_UNSHARE`` unset means the system ``unshare``. The path is
+    resolved, so a symlink is named by its target. The sha256 is of that
+    file's bytes. ``environment_digest`` records both, so a swapped wrapper
+    changes the digest before the network canary runs.
+    """
+    path = Path(unshare_executable()).resolve()
+    return str(path), hashlib.sha256(path.read_bytes()).hexdigest()
 
 
 def node_command(

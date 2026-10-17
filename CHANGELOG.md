@@ -10,6 +10,8 @@ See [docs/VERSIONING.md](docs/VERSIONING.md).
 
 ### Added
 
+- T03b follow-up: `environment_digest` records the resolved path and sha256 of the `unshare` binary that runs, including the system binary when `FAUSTCODER_UNSHARE` is unset. A swapped wrapper changes the digest before the network canary runs.
+
 - T03b follow-up: `environment_digest` binds the tree mounted at `/usr/share/faust`. The share is re-hashed on every reuse, the worker hashes the bytes it mounts, and a mismatch is refused before a receipt. `FAUSTCODER_UNSHARE`, when set, must be an absolute root-owned regular file that group and others cannot write; the compile process checks that the network namespace has only `lo` and that a connect fails. Recorded exclusions store both the raw sha256 and the T06-normalized sha256 (six of the eight raw hashes differ). A `CompilerExclusion` of model output is a failure when rewards land. The `faustcoder` group must contain only the harness user. ADR-0006 stays Proposed.
 
 - T03b: stage faustlibraries commit `2edec0537f53` into `/usr/share/faust` before every compile, and point the native 2.88.0 cross-check at the same tree. `environment_digest` includes the commit and the canonical lib-tree sha256. Sibling `.dsp` imports are staged. Node `--stack-size=8192` is the bound for `2dKirchhoffThinPlate.dsp`. Five faust-stk `ffunction` files, and three multi-file `fastpow2` files, are recorded exclusions. The Spark runbook installs root-owned `/opt/faustcoder/bin/fc-unshare` (mode 0750, group `faustcoder`) instead of an AppArmor profile on `node`. ADR-0006 (Proposed, awaiting Danny) would grade source-attributable failures at or below `parse_error`; reward behavior is unchanged.

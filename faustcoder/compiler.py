@@ -56,8 +56,15 @@ checkout paths plus the flat ``old/*.lib`` and ``dx7/*.lib`` copies),
 ``node`` (major.minor only), ``node_flags`` (the identity flags, including
 ``--stack-size=8192``, not per-run temp paths), ``options``,
 ``runtime_sha256`` (sha256 of the staged ``libfaust-wasm.js``, ``.wasm``
-and ``.data``) and ``user_map`` (``current``). Host name, Node patch
-version, the job directory and the host library path are not included.
+and ``.data``), ``unshare_path`` (the resolved path of the ``unshare``
+binary this process executes, including the system binary when
+``FAUSTCODER_UNSHARE`` is unset), ``unshare_sha256`` (sha256 of that
+file) and ``user_map`` (``current``). Host name, Node patch version, the
+job directory and the host library path are not included. The unshare
+path is included because a different binary is a different sandbox. A
+swapped wrapper changes ``environment_digest`` before the network canary
+runs.
+
 The libfaust version is resolved once per runtime hash and reused on
 every receipt from that runtime, including timeout, memory, output and
 internal receipts. ``faustlibraries_share_sha256`` is the hash of the
@@ -172,6 +179,7 @@ from faustcoder.sandbox import (
     node_command,
     node_executable,
     run_in_sandbox,
+    unshare_identity,
 )
 from faustcoder.schemas import validate
 from faustcoder.store import ArtifactStore
@@ -707,6 +715,7 @@ def environment_preimage(
             f"{mounted_share_sha256}"
         )
     wasm = compiler == "libfaust-wasm" and pin is not None
+    unshare_path, unshare_sha256 = unshare_identity()
     return {
         "bundled_faustlibraries_version": pin.bundled_faustlibraries_version if wasm else "",
         "compiler": compiler,
@@ -719,6 +728,8 @@ def environment_preimage(
         "lang": lang,
         "libfaust_wasm_data_sha256": pin.data_sha256 if wasm else "",
         "network": "unshare-net-userns",
+        "unshare_path": unshare_path,
+        "unshare_sha256": unshare_sha256,
         "node": pin.node if wasm else "",
         "node_flags": list(NODE_SANDBOX_FLAGS) if compiler == "libfaust-wasm" else [],
         "options": list(options),
