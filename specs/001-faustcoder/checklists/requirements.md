@@ -21,11 +21,12 @@ implementation. Checked items reflect the state of the spec on 2026-10-16.
 
 ## Consistency
 
-- [x] Task IDs match KANBAN.md and §13.
+- [x] Task IDs match KANBAN.md and §13 (T01 to T22).
 - [x] State names in §7 match the original lifecycle lines.
 - [x] Release gate in §15 matches the guard on `evidence_assembled` (§7.4).
 
 ## Governance
 
 - [x] Data rights, holdout sealing and sandboxing appear as requirements (R-003, R-013, R-014).
-- [ ] Open decisions D-001 to D-006 have owners. Partly: D-003 (sample rates), D-004 and D-006r2 ACCEPTED 2026-10-16 (spec §18); D-002, D-005 and D-003 runtimes open.
+- [ ] Open decisions have owners. Partly: D-003, D-003r2, D-004, D-006r2 and D-007 to D-012 ACCEPTED 2026-10-16 (spec §18); D-002 and D-005 open; FPGA path open until the F0 spike (D-009).
+- [x] Every target lane names its build, checks, first targets and milestone (ADR-0004).

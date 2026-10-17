@@ -2,6 +2,8 @@
 
 Status: PROPOSED
 
+Amended 2026-10-16 by [ADR-0004](0004-target-lanes-and-faust-tooling.md) (Danny yes 2026-10-16 23:39 PT): the P0 harness is built from faustwasm, and target lanes run beside P1 to P3.
+
 Date: 2026-10-16. Evidence: [research.md](../../specs/001-faustcoder/research.md).
 
 ## Context
@@ -30,7 +32,8 @@ re-planned through a decision record; it is never silently extended.
 2. **P0 — corpus and evaluation harness** (timebox 2 weeks).
    - Build: rights inventory with a permissive-license allowlist, normalized
      and deduplicated corpus with digests, sandboxed compiler harness, signal
-     test harness, a dev suite (about 200 tasks) and a sealed holdout of newly
+     test harness (SUPERSEDED wording; per ADR-0004 both wrap faustwasm with a
+     native Faust 2.88.0 cross-check), a dev suite (about 200 tasks) and a sealed holdout of newly
      written tasks (about 100), and one Spark throughput smoke test.
    - Exit gate: another operator reproduces compiler receipts and baseline
      compile@k and pass@k (with confidence intervals) for every shortlisted
@@ -70,6 +73,10 @@ re-planned through a decision record; it is never silently extended.
 Provenance: Danny yes 2026-10-16 22:20 PT. Recorded in [spec §18](../../specs/001-faustcoder/spec.md#18-decision-log).
 
 - D-003: signal tests, task suites and RL rewards run at 44.1 kHz and 48 kHz.
+- D-003r2 (Danny yes 2026-10-16 23:39 PT): rendering for evaluation and rewards uses faustwasm; the
+  native C++ backend of Faust 2.88.0 cross-checks it (ADR-0004). Supersedes the
+  open-runtimes clause of D-003.
+- D-007 to D-012 (Danny yes 2026-10-16 23:39 PT): see [spec §14](../../specs/001-faustcoder/spec.md#14-open-decisions). Target-lane results may join the P3 reward once each lane exists (R-016).
 - D-004: the P0 rights inventory applies the allowlist in
   [ADR-0003](0003-licensing-and-data-rights.md). GPL sources are
   training-only and are kept outside the repository and released data;

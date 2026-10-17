@@ -1,7 +1,7 @@
 # FaustCoder: DAG-Compliant DSP Coding Model
 
 - Status: DRAFT / refinement-ready
-- Version: 0.2.0 (training-path amendments proposed in ADR-0002; see §17)
+- Version: 0.3.0 (Faust-tooling assimilation and target lanes, ADR-0004; see §19). 0.2.0 training path: ADR-0002, §17
 - Target: NVIDIA DGX Spark (128 GB unified memory)
 
 ## 1. Constitution
@@ -13,6 +13,18 @@ FaustCoder is a locally deployable model specialized in generating, repairing, e
 In scope: Faust source generation, repair, DSP design, optimization, documentation, benchmark harness, dataset pipeline, model adapters, local serving and IDE-facing API.
 
 Out of scope (v1): general-purpose coding, autonomous plugin publishing, unrestricted internet ingestion, production audio mastering and claims of formal DSP verification.
+
+Target classes (ADD 0.3.0, ADR-0004, Danny yes 2026-10-16 23:39 PT): the model writes Faust; Faust's own backends and `faust2*` scripts lower it to each target, and a verification lane per target class checks the result.
+
+| Target class | Lane | First targets | Milestone |
+|---|---|---|---|
+| Host | wasm render (primary), native C++ cross-check | libfaust wasm, `-lang cpp` | V0.1 |
+| Language backends | Compile the generated code in that language | `cpp`, `c`, `rust`, `cmajor` first | V0.3 |
+| Plugins | `faust2*` build in a container, format validator, parameter-map check | CLAP, VST3, LV2 (Linux); AU deferred to macOS CI | V0.3 |
+| Embedded | Per-board cross-compile, resource budget, real-time safety | Daisy, Teensy 4.x (D-008) | V0.3 |
+| FPGA | Spike first; vendor-neutral Verilog via open toolchain | iCE40, ECP5 (D-009) | V0.5-FPGA |
+
+Plugin distribution, code signing, notarization and store submission stay out of scope.
 
 ## 3. Domain model
 
@@ -28,28 +40,42 @@ source acquisition -> rights check -> normalization -> deduplication -> split fr
 
 Each node references immutable parents. The graph must be acyclic; a new revision creates a new node, never rewrites ancestors. Invalidated ancestors invalidate dependent attestations until rerun. Execution orchestration may retry tasks, but retries create separate attempts and do not overwrite receipts.
 
-### 4.2 DSP graph
+### 4.2 DSP graph (REPLACED 0.3.0, ADR-0004 item 2)
 
-Parse Faust programs into a typed signal-flow representation. Validate sequential, parallel, split, merge, and recursive composition against Faust's compiler semantics. Feedback is permitted only when semantically legal and appropriately delayed/stateful; never reject all recursive programs merely because their raw signal graph contains cycles. For DAG-based optimization and inspection, represent legal feedback as state-transition edges or collapsed strongly connected components with explicit delay boundaries. The graph view is a derived analysis artifact; the Faust compiler remains authoritative for language validity.
+The Faust compiler is the only parser. Graph and interface views come from its
+own outputs: `-json` (UI, inputs, outputs, metadata), `-svg` block diagrams and
+the compiler's signal-level output. FaustCoder does not build its own Faust
+parser or typed signal-flow model. Feedback legality is whatever the compiler
+accepts; a program is never rejected because its raw signal graph has cycles.
+The superseded 0.2.0 text (custom typed signal-flow representation) is kept in
+§19 for history.
 
 ## 5. Requirements
 
-- R-001: Reproducible DGX Spark environment, pinned dependencies and hardware diagnostics.
-- R-002: Curated, license-traceable Faust corpus with source attribution and exclusion policy.
+- R-001 (MODIFIED 0.3.0): Reproducible DGX Spark environment, pinned dependencies and hardware diagnostics. Toolchain pins follow the version set in ADR-0004 (Faust 2.88.0, a faustlibraries commit, faustwasm, target SDKs and validators); every receipt records the pin it used.
+- R-002 (MODIFIED 0.3.0, D-007): Curated, license-traceable Faust corpus with source attribution and exclusion policy. License is resolved per function where a library file declares licenses per function, and per file otherwise; header-less example files inherit their repository's license.
 - R-003: Contamination-resistant splits by project, near-duplicate family and provenance.
-- R-004: Frozen task suite including oscillators, filters, envelopes, routing, effects, modulation and stateful DSP.
-- R-005: Compiler harness records exact Faust version, flags, exit code, diagnostics and source digest.
-- R-006: Signal tests evaluate finite output, channel count, stability, spectral behavior, latency and CPU use where relevant.
+- R-004 (REPLACED 0.3.0): Task taxonomy has three axes: DSP category (the faustlibraries library split: oscillators, filters, envelopes, delays, reverbs, compressors and dynamics, noises, physical models, spatialization, analyzers, routing, misc effects and synths), task type (generate, repair, explain, optimize, remix) and target (host, language backend, plugin, embedded board, FPGA). Dev tasks are seeded from faustlibraries `#### Usage` blocks and tests; the sealed holdout is newly written (§9).
+- R-005 (MODIFIED 0.3.0): The compiler harness runs libfaust from faustwasm in a sandboxed worker as the primary compiler and the native Faust 2.88.0 CLI for cross-checks (D-003r2). Receipts record backend, Faust version, options, exit status, classified diagnostics and source digest. The reward ladder is: parse error < type or arity error < compiles with warnings < compiles clean.
+- R-006 (REPLACED 0.3.0): Signal tests render offline with faustwasm at fixed sample rate, block size and seed and compare against references in the style of Faust's impulse tests (`tests/impulse-tests`), plus finite-output, channel-count, silence, DC and clipping checks. CPU cost is measured only on promotion candidates and target lanes, not on every candidate.
 - R-007 (amended 0.2.0, ADR-0002): Adapt an existing open base code model; never train from scratch. Baseline a 0.5B to 8B shortlist of Apache-2.0 base models (research.md) zero-shot and few-shot; choose the student by measured quality and Spark throughput, preferring the smallest model within the confidence interval of the best.
 - R-008 (amended 0.2.0, ADR-0002): Method per phase: full-parameter continued pretraining for students up to about 4B, LoRA rank 64 to 256 (alpha = 2r) for SFT and for larger students. QLoRA is not needed at or below 8B on 128 GB.
 - R-009: Immutable dataset/model/evaluation lineage and reproducible release manifest.
 - R-010: Local inference API supports generate, repair, explain and optimize with structured responses.
 - R-011: Independent evaluation cannot be satisfied by self-reported model judgments.
 - R-012: Explicit abstention and bounded repair attempts; no unbounded compiler-agent loop.
-- R-013: Security: sandbox compiler execution, resource limits, no arbitrary shell execution from generated code, and artifact integrity checks.
+- R-013 (MODIFIED 0.3.0): Security: sandboxed compiler and render workers (the wasm worker needs no host compiler or shell), containerized target toolchains with no network, resource limits, no arbitrary shell execution from generated code, and artifact integrity checks.
 - R-014: Training/evaluation data governance includes license eligibility, attribution, retention and removal procedure.
 - R-015 (amended 0.2.0, ADR-0002): Phase-gated training path P0 corpus and evaluation harness, P1 continued pretraining (skipped by rule when the cleared corpus is too small), P2 SFT, P3 compiler-feedback RL. Each phase has a timebox and an exit gate defined in ADR-0002.
-- R-016 (amended 0.2.0, ADR-0002): Synthetic training data and RL rewards come only from the sandboxed compiler and signal tests (R-005, R-006, R-011). Signal tests must reject silence, DC, NaN/Inf and trivial programs so rewards cannot be gamed.
+- R-016 (amended 0.2.0, ADR-0002): Synthetic training data and RL rewards come only from the sandboxed compiler and signal tests (R-005, R-006, R-011). Signal tests must reject silence, DC, NaN/Inf and trivial programs so rewards cannot be gamed. (0.3.0) Target-lane results (R-019 to R-024) may also be rewards once their lane is in place.
+- R-017 (ADD 0.3.0): SFT targets follow Faust house style: `import("stdfaust.lib");` and library prefixes (`os.`, `fi.`, `en.`), `declare` metadata (name, author, license, version), labeled UI primitives with units and ranges (`hslider`, `vslider`, `nentry`, `button`, `checkbox`, groups), and `process` as the entry point. A style check flags deviations; it is advisory, not a gate.
+- R-018 (ADD 0.3.0): Upstream-validated pairs: faustlibraries `#### Usage` blocks and tests and the Faust examples become SFT pairs only after they compile and render in the harness. License follows R-002.
+- R-019 (ADD 0.3.0, V0.3 gate, D-008): Embedded lane. A candidate for a board is reliable when it (1) builds with that board's `faust2*` script or SDK at the pinned version, (2) fits the board's flash and RAM budget from the linker map, (3) meets a CPU budget at the board's block size, measured in a cycle-accurate or host proxy until hardware exists, and (4) is real-time safe: no NaN/Inf or denormals in the render, no allocation in the audio callback, and memory placement declared with `-mem` where the board needs it. First boards: Daisy and Teensy 4.x.
+- R-020 (ADD 0.3.0, V0.3 gate, D-010): Remix tasks combine techniques from two or more existing demos with one experimental idea. Correctness uses the normal gates; novelty (distance from the source demos in code and in rendered output features) is a dev metric, not a gate. faust-rs experimental primitives are out of scope.
+- R-021 (ADD 0.3.0, V0.3 gate): Real-time safety checks apply on every target lane: finite output, no denormals (flush-to-zero honored), bounded delay-line memory and no allocation after init.
+- R-022 (ADD 0.3.0, V0.5-FPGA, D-009): FPGA lane. Goal: synthesizable, pipelined Verilog for generic FPGAs. The model writes Faust; a vendor-neutral lowering produces Verilog. The path is chosen after the F0 spike (ADR-0004). Evidence: Verilator simulation matches the Faust reference render within a fixed-point tolerance, and Yosys plus nextpnr synthesize for iCE40 and ECP5 within resource limits. "Pipelined" means the design sustains one sample per channel at 48 kHz at the achieved clock.
+- R-023 (ADD 0.3.0, D-012): Plugin lane. Build the candidate as a plugin in a container with the pinned `faust2*` script and SDK, run the format's validator (`clap-validator` for CLAP, `pluginval` for VST3, `lv2lint` for LV2; `auval` on macOS CI later) and check that every Faust UI parameter appears in the plugin with the same name, range, default and unit.
+- R-024 (ADD 0.3.0): Language-backend lane. For a task targeting a language, generate code with `faust -lang <lang>` and compile it with that language's pinned toolchain; a run of the compiled code must match the host reference render. First languages: `cpp`, `c`, `rust`, `cmajor`.
 
 ## 6. User journeys
 
@@ -126,8 +152,9 @@ Subject: a `CandidateProgram` produced for a `TaskSpec` (J-01), a repair request
 
 - Initial state: `DRAFT`.
 - Final states: `ACCEPTED`, `REJECTED`.
-- States: `DRAFT`, `COMPILE_CHECKED`, `SIGNAL_CHECKED`, `REVIEWED`, `ACCEPTED`, `REJECTED`, `REPAIRING` (INFERRED from J-02 and R-012).
-- Events: `compile_passed`, `compile_failed`, `repair_produced` (INFERRED), `abstain` (R-012), `signal_passed`, `signal_failed`, `review_recorded`, `accept`, `reject`.
+- States: `DRAFT`, `COMPILE_CHECKED`, `SIGNAL_CHECKED`, `TARGET_CHECKED` (ADD 0.3.0, ADR-0004), `REVIEWED`, `ACCEPTED`, `REJECTED`, `REPAIRING` (INFERRED from J-02 and R-012).
+- Events: `compile_passed`, `compile_failed`, `repair_produced` (INFERRED), `abstain` (R-012), `signal_passed`, `signal_failed`, `lanes_passed`, `lane_failed` (ADD 0.3.0), `review_recorded`, `accept`, `reject`.
+- Lanes (ADD 0.3.0): the TaskSpec `target` names zero or more lanes (R-019, R-022 to R-024). A host-only task has no lanes and passes `lanes_passed` with an empty TargetReceipt set.
 - Context: `repair_attempts` (count), `max_repair_attempts` (declared bound, value open: INFERRED, see D-005).
 
 | From | Event | Guard | To | Effect |
@@ -138,9 +165,11 @@ Subject: a `CandidateProgram` produced for a `TaskSpec` (J-01), a repair request
 | DRAFT | abstain | Model or policy declines (R-012) | REJECTED | Record abstention disposition |
 | REPAIRING | repair_produced | Repair output is a new CandidateProgram whose parent is the failed one (INFERRED) | DRAFT | New node; diff recorded for J-02 (INFERRED) |
 | REPAIRING | abstain | Repair declined or produced no change (INFERRED) | REJECTED | Record abstention disposition |
-| COMPILE_CHECKED | signal_passed | All signal tests in the TaskSpec `test_profile` pass: finite output, channel count, stability, spectral behavior, latency, CPU where relevant (R-006) | SIGNAL_CHECKED | Write DSPTestReceipt |
+| COMPILE_CHECKED | signal_passed | All signal tests in the TaskSpec `test_profile` pass: reference comparison, finite output, channel count, silence, DC and clipping (R-006, amended 0.3.0) | SIGNAL_CHECKED | Write DSPTestReceipt |
 | COMPILE_CHECKED | signal_failed | Any required signal test fails | REJECTED | Write DSPTestReceipt with failing metrics |
-| SIGNAL_CHECKED | review_recorded | Reviewer is independent of the generating model (R-011) | REVIEWED | Record review against gate results |
+| SIGNAL_CHECKED | lanes_passed | Every lane the TaskSpec `target` names passes (R-019, R-021 to R-024); none named for host-only tasks (ADD 0.3.0) | TARGET_CHECKED | Write one TargetReceipt per lane |
+| SIGNAL_CHECKED | lane_failed | Any named lane fails (ADD 0.3.0) | REJECTED | Write the failing TargetReceipt |
+| TARGET_CHECKED | review_recorded | Reviewer is independent of the generating model (R-011) | REVIEWED | Record review against gate results |
 | REVIEWED | accept | All gates pass; for J-03, semantic and signal comparison against the baseline shows no regression and equivalence is evidenced | ACCEPTED | Write DecisionRecord (disposition = accepted) |
 | REVIEWED | reject | Any gate fails, or J-03 equivalence is unproven | REJECTED | Write DecisionRecord (disposition = rejected, rationale) |
 
@@ -148,7 +177,8 @@ Illegal transitions:
 
 - `DRAFT` -> `SIGNAL_CHECKED`, `REVIEWED` or `ACCEPTED`: signal tests and review need a successful compile.
 - `COMPILE_CHECKED` -> `ACCEPTED`: compilation alone is never acceptance (§1, §9, ADR-0001).
-- `SIGNAL_CHECKED` -> `ACCEPTED` without `REVIEWED`.
+- `SIGNAL_CHECKED` -> `REVIEWED` or `ACCEPTED`: target lanes come first, even when the set is empty (ADD 0.3.0).
+- `SIGNAL_CHECKED` or `TARGET_CHECKED` -> `ACCEPTED` without `REVIEWED`.
 - `review_recorded` or `accept` driven by the generating model's self-assessment (R-011).
 - `compile_failed` -> `REPAIRING` when the bound is reached; no unbounded loop (R-012).
 - Any transition out of `ACCEPTED` or `REJECTED`; a new attempt is a new node.
@@ -164,7 +194,9 @@ stateDiagram-v2
     REPAIRING --> REJECTED: abstain
     COMPILE_CHECKED --> SIGNAL_CHECKED: signal_passed
     COMPILE_CHECKED --> REJECTED: signal_failed
-    SIGNAL_CHECKED --> REVIEWED: review_recorded [independent]
+    SIGNAL_CHECKED --> TARGET_CHECKED: lanes_passed
+    SIGNAL_CHECKED --> REJECTED: lane_failed
+    TARGET_CHECKED --> REVIEWED: review_recorded [independent]
     REVIEWED --> ACCEPTED: accept [all gates pass]
     REVIEWED --> REJECTED: reject
     ACCEPTED --> [*]
@@ -260,13 +292,25 @@ stateDiagram-v2
 
 `{task_id, task_type, prompt, constraints, expected_io, test_profile, schema_version}`
 
+MODIFIED 0.3.0 (R-004): adds `category` (faustlibraries library name), `target` (lanes, R-019 to R-024) and, for `task_type = remix`, `remix_sources` (two or more demo digests).
+
 ### CompilerReceipt
 
 `{source_sha256, faust_version, command, exit_code, stdout_digest, stderr_digest, duration_ms, environment_digest}`
 
+MODIFIED 0.3.0 (R-005): adds `compiler` (`libfaust-wasm` or `faust-cli`), `lang` (output backend), `options` and `diagnostic_class` (`ok`, `warning`, `type_error`, `arity_error`, `parse_error`, `timeout`, `other`).
+
 ### DSPTestReceipt
 
 `{source_sha256, test_suite_digest, sample_rate, block_size, seed, metrics, thresholds, passed, harness_digest}`
+
+MODIFIED 0.3.0 (R-006): adds `renderer` (`faustwasm` or `native`) and `reference_digest`.
+
+### TargetReceipt (ADD 0.3.0, ADR-0004)
+
+`{source_sha256, target_class, target, toolchain_pins, build_command, exit_code, resource_report, validator, validator_version, validator_result, parameter_map_check, realtime_checks, passed, environment_digest}`
+
+`target_class` is `language`, `plugin`, `embedded` or `fpga`. `resource_report` holds flash, RAM and CPU for boards, and LUT, FF, DSP, BRAM and Fmax for FPGAs.
 
 ### TrainingRun
 
@@ -288,11 +332,13 @@ Frozen holdout is never used for training, prompt tuning or candidate selection.
 
 Provisional V0.2 aspiration: >=90% compile@1 on held-out tasks, subject to baseline measurement and task-mix calibration. No release based on compilation alone.
 
+Per-target metrics (ADD 0.3.0, ADR-0004): for each lane, target-build@k, validator pass rate, parameter-map pass rate and, for boards and FPGAs, fits-budget rate. Remix tasks also report novelty as a dev metric (D-010). Sample rates follow D-003 (44.1 and 48 kHz) for every lane that renders audio.
+
 ## 10. Architecture
 
-`corpus/` provenance + rights; `datasets/` transforms and split manifests; `faust/` compiler harness and graph analysis; `eval/` signal tests and benchmarks; `train/` Spark configs and launchers; `serve/` inference API; `schemas/` contracts; `receipts/` immutable evidence; `docs/` architecture, runbooks, decisions; `specs/` versioned specifications.
+`corpus/` provenance + rights; `datasets/` transforms and split manifests; `faust/` thin wrappers around libfaust (wasm) and the Faust CLI (MODIFIED 0.3.0: no custom graph analysis); `eval/` signal tests and benchmarks; `targets/` (ADD 0.3.0) one container recipe and checker per lane: language, plugin, embedded, fpga; `train/` Spark configs and launchers; `serve/` inference API; `schemas/` contracts; `receipts/` immutable evidence; `docs/` architecture, runbooks, decisions; `specs/` versioned specifications.
 
-Recommended stack: Python, PyTorch, Transformers, PEFT/TRL, Faust CLI, pytest, Parquet, MLflow (tracking only, immutable manifest authoritative), OCI containers, local model server. (amended 0.2.0, ADR-0002): until V0.3, a content-digested JSONL manifest is the artifact store and MLflow is optional. Verify ARM64/Blackwell compatibility on DGX Spark before pinning any training stack.
+Recommended stack: Python, PyTorch, Transformers, PEFT/TRL, Faust CLI, faustwasm on Node.js (ADD 0.3.0), pytest, Parquet, MLflow (tracking only, immutable manifest authoritative), OCI containers, local model server. (amended 0.2.0, ADR-0002): until V0.3, a content-digested JSONL manifest is the artifact store and MLflow is optional. Verify ARM64/Blackwell compatibility on DGX Spark before pinning any training stack.
 
 ## 11. Security, privacy and governance
 
@@ -300,15 +346,18 @@ Execute compiler/test workers in restricted containers with no network, bounded 
 
 ## 12. Versioned roadmap and acceptance
 
-- V0.1 FOUNDATION: environment lock, compiler harness, schemas, corpus policy, frozen baseline suite. PASS when another operator can reproduce compiler receipts and baseline metrics from a clean checkout.
+- V0.1 FOUNDATION: environment lock, compiler harness (faustwasm worker plus native 2.88.0 cross-check, amended 0.3.0), schemas, corpus policy, frozen baseline suite. PASS when another operator can reproduce compiler receipts and baseline metrics from a clean checkout.
 - V0.2 SPECIALIST (amended 0.2.0, ADR-0002): rights-cleared corpus, split freeze, base-model bake-off, P1 continued pretraining or recorded skip, P2 SFT. PASS when improvement is statistically supported on development tasks and holdout remains sealed.
-- V0.3 DSP VERIFIER (amended 0.2.0, ADR-0002): P3 compiler-feedback RL, bounded repair, optimization comparisons. Typed feedback graph semantics (§4.2) move to V0.4. PASS when known-bad DSP programs fail gates and legal delayed feedback passes.
-- V0.4 PRODUCT: local serving, API, IDE integration, telemetry and failure handling, typed feedback graph semantics. PASS when end-to-end user journeys run on Spark with reproducible receipts.
+- V0.3 DSP VERIFIER (amended 0.2.0, ADR-0002; 0.3.0, ADR-0004): P3 compiler-feedback RL, bounded repair, optimization comparisons, plus the language, plugin (CLAP, VST3, LV2) and embedded (Daisy, Teensy 4.x) lanes, real-time safety checks and remix tasks. PASS when known-bad DSP programs fail gates, legal delayed feedback passes, and each lane rejects its known-bad fixtures.
+- V0.4 PRODUCT: local serving, API, IDE integration, telemetry and failure handling. (0.3.0: typed feedback graph semantics REMOVED; §4.2 uses compiler outputs.) PASS when end-to-end user journeys run on Spark with reproducible receipts.
+- V0.5-FPGA (ADD 0.3.0, D-009): F0 spike only is scheduled: one filter and one oscillator lowered to Verilog through a vendor-neutral path, simulated in Verilator against the Faust render and synthesized with Yosys and nextpnr for iCE40 and ECP5. The full FPGA lane is planned only after the spike's DecisionRecord. Off the V1.0 critical path.
 - V1.0 RELEASE: independent review, security assessment, model/data cards, immutable manifest, rollback procedure. PASS only with signed approval and complete evidence.
 
 ## 13. Dependency-ordered implementation tasks
 
-T01 constitution + ADRs -> T02 schemas + artifact store -> T03 compiler sandbox -> T04 DSP test harness -> T05 corpus rights inventory -> T06 normalization/dedup -> T07 split freeze -> T08 baseline models -> T09 Spark throughput/memory study -> T10 training path P1-P3 per ADR-0002 (amended 0.2.0) -> T11 evaluation and paired comparisons -> T12 decision gate -> T13 local serving -> T14 IDE integration -> T15 independent security/quality review -> T16 release.
+T01 constitution + ADRs -> T02 schemas + artifact store -> T03 compiler sandbox (faustwasm worker, 0.3.0) -> T04 DSP test harness (wasm offline render, 0.3.0) -> T05 corpus rights inventory -> T06 normalization/dedup -> T07 split freeze -> T08 baseline models -> T09 Spark throughput/memory study -> T10 training path P1-P3 per ADR-0002 (amended 0.2.0) -> T11 evaluation and paired comparisons -> T12 decision gate -> T13 local serving -> T14 IDE integration -> T15 independent security/quality review -> T16 release.
+
+Added 0.3.0 (ADR-0004): T17 language-backend lane (after T03, V0.3), T18 plugin lane (after T04, V0.3), T19 embedded lane (after T04, V0.3), T20 remix tasks and novelty metric (after T08, V0.3), T21 real-time safety checks (after T04, V0.3), T22 FPGA F0 spike (after T04, V0.5-FPGA). T17 to T19 and T22 run in parallel with T10.
 
 Parallelism permitted only where declared dependencies allow it. Every task requires owner, inputs, outputs, acceptance test, failure disposition and evidence path.
 
@@ -316,9 +365,16 @@ Parallelism permitted only where declared dependencies allow it. Every task requ
 
 - D-001: Confirm Faust DSP language (assumed).
 - D-002 (amended 0.2.0, ADR-0002): Select student model after the P0 bake-off from the 0.5B to 8B Apache-2.0 shortlist in research.md. Larger models are teacher or reference candidates only (D-006).
-- D-003 ACCEPTED: Sample rates 44.1 kHz and 48 kHz. Signal tests and task suites run at both rates. Provenance: Danny yes 2026-10-16 22:20 PT. DSP target runtimes remain open.
+- D-003 ACCEPTED, runtime part SUPERSEDED by D-003r2: Sample rates 44.1 kHz and 48 kHz. Signal tests and task suites run at both rates. Provenance: Danny yes 2026-10-16 22:20 PT. DSP target runtimes remain open (superseded).
+- D-003r2 ACCEPTED: Runtimes. Evaluation runs on libfaust wasm (faustwasm); the native C++ backend from Faust 2.88.0 cross-checks it; target lanes (ADR-0004) verify other runtimes. Sample rates from D-003 stand. Provenance: Danny yes 2026-10-16 23:39 PT. Supersedes the runtime part of D-003.
 - D-004 ACCEPTED: Training-corpus allowlist is MIT, BSD, Apache and other permissive licenses. GPL code is allowed for training only and is never redistributed in this repository or in released data. Unlicensed code is excluded. Provenance: Danny yes 2026-10-16 22:20 PT. See ADR-0003.
 - D-005: Set quality gates using observed baseline and task severity.
+- D-007 ACCEPTED: Licensing is per function where a library declares it and per file otherwise. Header-less example files inherit their repository's license; for the Faust repository that is LGPL, so they are training-only. AGPL stays excluded. Provenance: Danny yes 2026-10-16 23:39 PT. Refines D-004; see ADR-0003.
+- D-008 ACCEPTED: First embedded boards are Daisy (Electrosmith, STM32H7) and Teensy 4.x (i.MX RT1062). No board purchase yet; lanes run on cross-compile, linker maps and host proxies. Provenance: Danny yes 2026-10-16 23:39 PT.
+- D-009 ACCEPTED: The FPGA lowering path is decided after the F0 spike. Targets are iCE40 and ECP5 with the open toolchain. "Pipelined" means the design meets audio-rate throughput (one sample per channel per sample period at 48 kHz). Provenance: Danny yes 2026-10-16 23:39 PT.
+- D-010 ACCEPTED: Remix novelty is a dev metric, not a gate. faust-rs experimental primitives are out of scope. Provenance: Danny yes 2026-10-16 23:39 PT.
+- D-011 ACCEPTED: Fixes to the upstream Faust compiler or libraries may be contributed upstream under their LGPL license. Provenance: Danny yes 2026-10-16 23:39 PT.
+- D-012 ACCEPTED: First plugin formats: CLAP (`faust2clap`) and VST3, both built on Linux in a container, plus LV2 (`faust2lv2`) on Linux. AU is deferred to a macOS CI runner. VST3 is built from the CLAP build with `clap-wrapper` (MIT) by default; `faust2juce` is the fallback and needs a JUCE license decision first, because JUCE is AGPLv3 or commercial (ADR-0004, INFERRED choice within Danny's "JUCE or native scripts"). Provenance: Danny yes 2026-10-16 23:39 PT.
 - D-006 SUPERSEDED by D-006r2 (Danny yes 2026-10-16 22:25 PT). Original: Teacher model is Opus via OpenRouter, with a per-run spend cap approved for each run before it starts. Provenance: Danny yes 2026-10-16 22:20 PT. See ADR-0002.
 - D-006r2 ACCEPTED: Training-data teacher is an open-weight model: default `deepseek/deepseek-v4.1-flash` (DeepSeek-V4.1-Flash, MIT license) via OpenRouter with high reasoning effort, under a per-run spend cap approved for each run. Opus via OpenRouter is used only for review, grading and eval judging, never as a source of training targets, because Anthropic's usage terms restrict using outputs to train competing models. Provenance: Danny yes 2026-10-16 22:25 PT. Supersedes D-006. See ADR-0002 and ADR-0003.
 
@@ -379,9 +435,58 @@ never from scratch, in weeks rather than months. Evidence is in
 | ID | Decision | Status | Provenance | Record |
 |---|---|---|---|---|
 | LIC-001 | Split license: Apache-2.0 for `specs/` and `docs/` (including ADRs); Zero State Proprietary License 1.0 for code, model weights and data | ACCEPTED | Danny yes 2026-10-16 22:20 PT | ADR-0003, issue #20 |
-| D-003 | Sample rates 44.1 kHz and 48 kHz | ACCEPTED | Danny yes 2026-10-16 22:20 PT | §14, ADR-0002 |
+| D-003 | Sample rates 44.1 kHz and 48 kHz (runtimes left open) | ACCEPTED; runtime part SUPERSEDED by D-003r2 | Danny yes 2026-10-16 22:20 PT | §14, ADR-0002 |
 | D-004 | Permissive allowlist; GPL for training only, never redistributed; unlicensed excluded | ACCEPTED | Danny yes 2026-10-16 22:20 PT | ADR-0003 |
 | D-006 | Teacher: Opus via OpenRouter; per-run spend cap approved per run | SUPERSEDED by D-006r2 | Danny yes 2026-10-16 22:20 PT | ADR-0002 |
 | D-006r2 | Training-data teacher: open-weight `deepseek/deepseek-v4.1-flash` via OpenRouter, high reasoning, per-run spend cap. Opus only for review, grading and eval judging, never for training targets | ACCEPTED | Danny yes 2026-10-16 22:25 PT | ADR-0002, ADR-0003 |
 | ORG-001 | Repository transferred to Zero-State-LLC (Danny yes 2026-10-16 22:25 PT). Visibility RESOLVED: public for now, revisitable later; applies to the repository and the org project board | ACCEPTED | Danny 2026-10-16 22:32 PT | KANBAN.md |
 | ORG-002 | Project board moved to the org ([project 29](https://github.com/orgs/Zero-State-LLC/projects/29)), linked to this repository. User board scrimshawlife-ctrl #8 kept and marked superseded | ACCEPTED | Danny 2026-10-16 22:31 PT | KANBAN.md |
+| D-003r2 | Runtimes: wasm (faustwasm) for evaluation, native C++ from Faust 2.88.0 for cross-checks, target lanes for the rest | ACCEPTED; supersedes D-003 runtime part | Danny yes 2026-10-16 23:39 PT | §14, ADR-0004 |
+| D-007 | Per-function and per-file licensing; header-less example files inherit the repository license (Faust repo: LGPL, training-only); AGPL excluded | ACCEPTED; refines D-004 | Danny yes 2026-10-16 23:39 PT | ADR-0003 |
+| D-008 | First boards Daisy and Teensy 4.x; no board purchase yet | ACCEPTED | Danny yes 2026-10-16 23:39 PT | ADR-0004 |
+| D-009 | FPGA path chosen after the F0 spike; iCE40 and ECP5; pipelined = audio-rate throughput | ACCEPTED | Danny yes 2026-10-16 23:39 PT | ADR-0004 |
+| D-010 | Remix novelty is a dev metric, not a gate; faust-rs experimental primitives out | ACCEPTED | Danny yes 2026-10-16 23:39 PT | ADR-0004 |
+| D-011 | Upstream Faust compiler and library fixes under LGPL are allowed | ACCEPTED | Danny yes 2026-10-16 23:39 PT | ADR-0003 |
+| D-012 | First plugin formats CLAP, VST3 (via clap-wrapper), LV2 on Linux; AU deferred to macOS CI | ACCEPTED | Danny yes 2026-10-16 23:39 PT | ADR-0004 |
+
+## 19. Amendments 0.3.0 (ADR-0004, ACCEPTED)
+
+Owner brief (OBSERVED): assimilate the Faust reference
+(<https://faust.grame.fr>) instead of stacking on the current design; add
+reliable embedded code generation with remix tasks, synthesizable pipelined
+Verilog for generic FPGAs, and plugin and language generators as target
+classes. Approval: Danny yes 2026-10-16 23:39 PT ("apply the FaustCoder rework with the recommended
+defaults"). Evidence: [research.md](research.md) F15 to F27.
+
+Item numbers match the proposal Danny approved and ADR-0004.
+
+| # | Type | Before | After | Where | Label |
+|---|---|---|---|---|---|
+| 1 | REPLACE | Pinned Faust CLI in a container is the compiler sandbox | libfaust wasm (faustwasm) worker is the primary compiler; native 2.88.0 CLI cross-checks | R-005, R-013, §12 V0.1, T03 | INFERRED design; OBSERVED tooling (F15) |
+| 2 | REPLACE | Custom parser into a typed signal-flow representation (§4.2) | Compiler outputs (`-json`, `-svg`, signal output) are the graph views | §4.2, §10, V0.4 | INFERRED |
+| 3 | REPLACE | Custom signal harness incl. CPU on every candidate | faustwasm offline render plus impulse-test-style references; CPU on promotion and lanes only | R-006, T04 | OBSERVED (F15, F16) |
+| 4 | ADD | No embedded target | Embedded lane, V0.3 gate (Daisy, Teensy 4.x) | R-019, T19 | OBSERVED scripts (F19); INFERRED budgets |
+| 5 | ADD | No remix tasks | Remix task type, V0.3 gate; novelty is a dev metric | R-004, R-020, T20 | INFERRED |
+| 6 | MODIFY | Receipt: exit code and raw diagnostics | Classified diagnostics, compiler and backend fields; reward ladder | R-005, §8 | INFERRED |
+| 7 | ADD | NaN/Inf only | Real-time safety checks on every lane, V0.3 gate | R-021, T21 | INFERRED |
+| 8 | ADD | No FPGA target | V0.5-FPGA milestone; only the F0 spike scheduled | R-022, §12, T22 | OBSERVED backend state (F24, F25) |
+| 9 | REPLACE | R-004 hand list of task kinds | Three axes: faustlibraries category x task type x target | R-004, §8 TaskSpec | OBSERVED library split (F17) |
+| 10 | MODIFY | License per repository or file | Per function where declared, else per file; header-less files inherit the repo license | R-002, D-007, ADR-0003 | OBSERVED (F10, F18) |
+| 11 | ADD | SFT pairs from usage blocks, unvalidated | Upstream pairs enter SFT only after compiling and rendering | R-018 | INFERRED |
+| 12 | ADD | No style rules | Faust house style for SFT targets, advisory check | R-017 | OBSERVED conventions (F17) |
+| 13 | ADD | "Pinned dependencies" | Explicit version pin set | R-001, ADR-0004 | OBSERVED versions (F26) |
+| 14 | MODIFY | D-003 runtimes open | D-003r2 | §14 | OBSERVED (decision) |
+| 15 | DEFERRED | T14 custom IDE integration | Reuse faustlsp or the Faust IDE; decide at V0.4 | — | INFERRED; not applied |
+| 16 | DEFERRED | Custom CPU benchmarking | Reuse `faustbench` and `faust2bench`; decide when CPU gates are set | — | INFERRED; not applied |
+| 17 | ADD | No plugin target | Plugin lane: CLAP, VST3, LV2; validators and parameter-map check | R-023, T18 | OBSERVED tooling (F20 to F23) |
+| 18 | ADD | No language-backend target | Language lane: compile `-lang` output in that language | R-024, T17 | OBSERVED backends (F19) |
+| 19 | MODIFY | Candidate machine: signal check then review | `TARGET_CHECKED` state between them | §7.2 | INFERRED |
+
+Resolved from §17: S-1 (typed graph analysis) is removed by item 2; S-4
+(CPU on every candidate) is resolved by item 3.
+
+### Superseded text kept for history
+
+§4.2 as of 0.2.0 (SUPERSEDED by item 2, Danny yes 2026-10-16 23:39 PT):
+
+> Parse Faust programs into a typed signal-flow representation. Validate sequential, parallel, split, merge, and recursive composition against Faust's compiler semantics. Feedback is permitted only when semantically legal and appropriately delayed/stateful; never reject all recursive programs merely because their raw signal graph contains cycles. For DAG-based optimization and inspection, represent legal feedback as state-transition edges or collapsed strongly connected components with explicit delay boundaries. The graph view is a derived analysis artifact; the Faust compiler remains authoritative for language validity.

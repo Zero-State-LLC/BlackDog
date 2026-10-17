@@ -14,5 +14,6 @@ tests (task T02) and copied to `schemas/`.
 | [dsp-test-receipt.schema.json](dsp-test-receipt.schema.json) | §8 DSPTestReceipt |
 | [training-run.schema.json](training-run.schema.json) | §8 TrainingRun |
 | [decision-record.schema.json](decision-record.schema.json) | §8 DecisionRecord |
+| [target-receipt.schema.json](target-receipt.schema.json) | §8 TargetReceipt (0.3.0) |
 | [transition-receipt.schema.json](transition-receipt.schema.json) | §7 |
 | [inference-api.md](inference-api.md) | R-010 |
