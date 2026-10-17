@@ -8,7 +8,7 @@ Compiler-verified Faust DSP coding model, developed on NVIDIA DGX Spark.
 
 - [Canonical specification](specs/001-faustcoder/spec.md)
 - [Implementation backlog](KANBAN.md)
-- [Architecture decision](docs/adr/0001-dag-evidence.md)
+- Architecture decisions: [ADR-0001](docs/adr/0001-dag-evidence.md), [ADR-0002](docs/adr/0002-training-path.md), [ADR-0003](docs/adr/0003-licensing-and-data-rights.md)
 - [Constitution](.specify/memory/constitution.md)
 - [Contribution guidelines](CONTRIBUTING.md) and [security policy](SECURITY.md)
 - [Changelog](CHANGELOG.md) and [versioning](docs/VERSIONING.md)
@@ -27,4 +27,13 @@ The v0.1 milestone is infrastructure, contracts, provenance and baseline evaluat
 
 ## License
 
-No license has been chosen yet. Until one is added, default copyright applies and no reuse rights are granted.
+This repository is split-licensed (ADR-0003):
+
+| Path | License |
+|---|---|
+| `specs/` and `docs/` (including ADRs) | [Apache-2.0](LICENSE-APACHE) |
+| Everything else: code, scripts, CI, model weights, adapters, checkpoints, datasets and evaluation data | [Zero State Proprietary License 1.0](LICENSE) |
+
+The proprietary license is the default for any path not listed above. See
+[NOTICE](NOTICE). Third-party material keeps its own license; GPL code used for
+training is never stored in this repository or in released data.

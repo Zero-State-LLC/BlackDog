@@ -28,4 +28,4 @@ implementation. Checked items reflect the state of the spec on 2026-10-16.
 ## Governance
 
 - [x] Data rights, holdout sealing and sandboxing appear as requirements (R-003, R-013, R-014).
-- [ ] Open decisions D-001 to D-006 have owners. Open.
+- [ ] Open decisions D-001 to D-006 have owners. Partly: D-003 (sample rates), D-004 and D-006 ACCEPTED 2026-10-16 (spec §18); D-002, D-005 and D-003 runtimes open.

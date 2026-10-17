@@ -65,6 +65,20 @@ re-planned through a decision record; it is never silently extended.
 6. After P3, the sealed holdout is run once and the result goes into a
    `DecisionRecord` (spec §7.3, §7.4).
 
+## Accepted inputs
+
+Provenance: Danny yes 2026-10-16 22:20 PT. Recorded in [spec §18](../../specs/001-faustcoder/spec.md#18-decision-log).
+
+- D-003: signal tests, task suites and RL rewards run at 44.1 kHz and 48 kHz.
+- D-004: the P0 rights inventory applies the allowlist in
+  [ADR-0003](0003-licensing-and-data-rights.md). GPL sources are
+  training-only and are kept outside the repository and released data;
+  unlicensed sources are excluded.
+- D-006: P2 synthetic data uses Opus via OpenRouter as the teacher. Each
+  generation run needs its own approved spend cap before it starts, and the
+  receipt records the cap and the actual spend. Sealed holdout tasks are never
+  sent to the teacher (INFERRED, from spec §9).
+
 ## Consequences
 
 - Expected total: about 4 to 6 weeks and 60 to 150 DGX Spark hours; compute
@@ -74,14 +88,14 @@ re-planned through a decision record; it is never silently extended.
   synthetic data, score evaluations and supply the RL reward.
 - Typed signal-flow graph analysis (spec §4.2), IDE integration, and the
   serving API move after P3 (spec §17).
-- Teacher-model use for synthetic data stays gated by D-006; licenses outside
-  the allowlist stay gated by D-004.
+- Teacher-model use follows D-006 (per-run spend cap); corpus licenses follow
+  D-004 (ADR-0003).
 
 ## Alternatives considered
 
 - Larger students (14B, 30B MoE): rejected for the student; they conflict with
   the small-model goal and fine-tuning gains shrink with size on scarce data
-  (research F3). They may serve as teachers if D-006 allows.
+  (research F3). The teacher is fixed by D-006.
 - Prompting only (few-shot or retrieval, no training): kept as the P0 baseline
   that every phase must beat.
 - LoRA-only for every phase: rejected for CPT on small models (research F4).

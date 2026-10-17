@@ -2,6 +2,20 @@
 
 Read the canonical specification before implementation. Submit contract changes with schema tests and ADRs. Never add training data without provenance and rights review. Never modify frozen evaluation holdouts. Do not commit model weights, credentials, raw restricted datasets or generated receipts containing personal data.
 
+## Licensing of contributions
+
+- Contributions to `specs/` and `docs/` (including ADRs) are licensed under
+  [Apache-2.0](LICENSE-APACHE).
+- Contributions anywhere else, including code, scripts, CI, model weights and
+  data, are licensed under the [Zero State Proprietary License](LICENSE).
+  Zero State may require a contributor agreement before accepting them
+  (LICENSE §6).
+- Training data follows ADR-0003: MIT, BSD, Apache or other permissive
+  sources only; GPL code for training only and never committed or released;
+  unlicensed code excluded.
+
+## Requirements for implementation PRs
+
 Every implementation PR must identify requirements, dependencies, acceptance tests, evidence paths, failure dispositions and any security impact.
 
 ## Workflow

@@ -103,8 +103,8 @@ headline peaks; 1.5B is assumed about 2x the 3B rate. All figures INFERRED; P0 r
   INFERRED.
 - A second Spark runs evaluation and data generation in parallel with
   training; it is not needed for any single job at these sizes. INFERRED.
-- Hosted teacher cost (if D-006 allows): NOT_COMPUTABLE until a teacher is
-  chosen; needs a spend cap.
+- Teacher cost (Opus via OpenRouter, D-006): set per run by the approved
+  spend cap; NOT_COMPUTABLE in advance until the P2 data volume is fixed.
 
 ## Evaluation design
 
@@ -128,10 +128,10 @@ headline peaks; 1.5B is assumed about 2x the 3B rate. All figures INFERRED; P0 r
 |---|---|---|---|
 | D-001 | Faust language | Confirmed by the owner's brief | OBSERVED |
 | D-002 | Student model | Bake-off of the shortlist above; no 14B or 30B student | INFERRED |
-| D-003 | Sample rates and runtimes | Default 48 kHz, fixed block size, C++ backend; revisit after P0 | INFERRED |
-| D-004 | Redistribution versus training-only | Training-only for v1; no corpus redistribution; permissive-license allowlist; copyleft and unlicensed excluded until the owner decides | INFERRED; not legal advice |
+| D-003 | Sample rates and runtimes | ACCEPTED: 44.1 kHz and 48 kHz (Danny yes 2026-10-16 22:20 PT). Runtimes open; C++ backend suggested | OBSERVED (decision) |
+| D-004 | Redistribution versus training-only | ACCEPTED (ADR-0003, Danny yes 2026-10-16 22:20 PT): permissive allowlist; GPL training-only, never redistributed; unlicensed excluded | OBSERVED (decision) |
 | D-005 | Quality gates | Relative gates against the frozen baseline (ADR-0002) | INFERRED |
-| D-006 | Teacher model | Prefer a local Apache-2.0 open-weights teacher (no output-use restrictions); hosted only with a spend cap and ToS review | INFERRED |
+| D-006 | Teacher model | ACCEPTED: Opus via OpenRouter, per-run spend cap approved per run (Danny yes 2026-10-16 22:20 PT) | OBSERVED (decision) |
 
 ## References
 

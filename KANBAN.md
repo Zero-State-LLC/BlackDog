@@ -20,3 +20,14 @@ All tasks are **TODO**. Dependency arrows are mandatory promotion gates.
 | T14 | v0.4 | IDE integration | T13 | End-to-end journey tests |
 | T15 | v1.0 | Security and quality review | T14 | Independent audit |
 | T16 | v1.0 | Release | T15 | Signed release manifest and rollback test |
+
+## Decisions
+
+Mirrors the decision items on the [project board](https://github.com/users/scrimshawlife-ctrl/projects/8). Log: [spec §18](specs/001-faustcoder/spec.md#18-decision-log).
+
+| ID | Decision | Status | Record |
+|---|---|---|---|
+| LIC-001 | Split license: Apache-2.0 for specs/ and docs/, Zero State proprietary for the rest | Done (ACCEPTED 2026-10-16) | ADR-0003, #20 |
+| D-003 | Sample rates 44.1 and 48 kHz | ACCEPTED 2026-10-16 | spec §14 |
+| D-004 | Corpus allowlist; GPL training-only; unlicensed excluded | ACCEPTED 2026-10-16 | ADR-0003 |
+| D-006 | Teacher: Opus via OpenRouter, per-run spend cap | ACCEPTED 2026-10-16 | ADR-0002 |

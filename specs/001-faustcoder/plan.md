@@ -32,9 +32,10 @@ with the method per phase in R-008 and the student chosen by the bake-off in R-0
 | Serving | Local model server with generate, repair, explain, optimize | OBSERVED R-010 |
 | Performance goals | Not set until baseline (D-005); V0.2 aspiration >=90% compile@1 is provisional | OBSERVED §9 |
 
-Unknowns: student model (D-002), sample rates and runtimes (D-003),
-redistribution rights (D-004), quality gates (D-005), hosted teacher policy
-(D-006). See [research.md](research.md).
+Unknowns: student model (D-002), DSP target runtimes (D-003), quality gates
+(D-005). Accepted 2026-10-16: sample rates 44.1 and 48 kHz (D-003), corpus
+rights (D-004, ADR-0003), Opus via OpenRouter as teacher with per-run spend cap
+(D-006). See [spec §18](spec.md#18-decision-log) and [research.md](research.md).
 
 ## Constitution check
 
