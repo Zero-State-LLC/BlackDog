@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -20,6 +21,7 @@ from faustcoder import (
     SchemaValidationError,
     TamperError,
     canonical_bytes,
+    envelope_digest_for,
 )
 from faustcoder import store as store_module
 from tests.support import DIGEST_A, make_envelope
@@ -28,7 +30,11 @@ from tests.support import DIGEST_A, make_envelope
 def _write_raw(store: ArtifactStore, envelope: dict) -> None:
     path = store.path_for(envelope["artifact_id"])
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_bytes(canonical_bytes(envelope))
+    data = canonical_bytes(envelope)
+    path.write_bytes(data)
+    store.envelope_digest_path_for(envelope["artifact_id"]).write_bytes(
+        envelope_digest_for(data).encode("ascii")
+    )
 
 
 def test_put_get_exists_and_list_round_trip(store: ArtifactStore, tmp_path: Path) -> None:
@@ -278,7 +284,97 @@ def test_put_leaves_no_temp_files(store: ArtifactStore) -> None:
     envelope = make_envelope({"n": 1})
     store.put(envelope)
     names = sorted(path.name for path in (store.root / "sha256").iterdir())
-    assert names == [f"{envelope['artifact_id']}.json"]
+    artifact_id = envelope["artifact_id"]
+    assert names == [
+        f"{artifact_id}.envelope_digest",
+        f"{artifact_id}.json",
+    ]
+
+
+def _replacement(field: str) -> object:
+    if field == "schema_version":
+        return "9.9.9"
+    if field == "artifact_id":
+        return "ab" * 32
+    if field == "content_digest":
+        return "sha256:" + ("ab" * 32)
+    if field == "created_at":
+        return "2026-10-18T00:00:00Z"
+    if field == "producer":
+        return "tampered"
+    if field == "parents":
+        return [DIGEST_A]
+    if field == "payload":
+        return {"n": 2}
+    raise AssertionError(field)
+
+
+@pytest.mark.parametrize(
+    "field",
+    [
+        "schema_version",
+        "artifact_id",
+        "content_digest",
+        "created_at",
+        "producer",
+        "parents",
+        "payload",
+    ],
+)
+def test_tamper_of_each_envelope_field_is_detected(
+    store: ArtifactStore, field: str
+) -> None:
+    envelope = make_envelope({"n": 1})
+    store.put(envelope)
+    path = store.path_for(envelope["artifact_id"])
+    parsed = json.loads(path.read_text(encoding="utf-8"))
+    parsed[field] = _replacement(field)
+    path.write_bytes(canonical_bytes(parsed))
+    with pytest.raises(TamperError, match="envelope digest mismatch"):
+        store.get(envelope["artifact_id"])
+    with pytest.raises(TamperError, match="envelope digest mismatch"):
+        store.list()
+
+
+def test_sidecar_matches_the_canonical_envelope_bytes(store: ArtifactStore) -> None:
+    envelope = make_envelope({"n": 1, "label": "é"})
+    store.put(envelope)
+    raw = store.path_for(envelope["artifact_id"]).read_bytes()
+    sidecar = store.envelope_digest_path_for(envelope["artifact_id"]).read_bytes()
+    assert sidecar == b"sha256:" + hashlib.sha256(raw).hexdigest().encode("ascii")
+    assert envelope["artifact_id"] == hashlib.sha256(
+        canonical_bytes(envelope["payload"])
+    ).hexdigest()
+    assert store.get(envelope["artifact_id"])["producer"] == "t02-test"
+
+
+def test_sidecar_tamper_and_deletion_are_detected(store: ArtifactStore) -> None:
+    envelope = make_envelope({"n": 1})
+    store.put(envelope)
+    sidecar = store.envelope_digest_path_for(envelope["artifact_id"])
+    original = sidecar.read_bytes()
+    sidecar.write_bytes(b"sha256:" + b"cd" * 32)
+    with pytest.raises(TamperError, match="envelope digest mismatch"):
+        store.get(envelope["artifact_id"])
+    with pytest.raises(TamperError, match="envelope digest mismatch"):
+        store.put(envelope)
+    assert sidecar.read_bytes() == b"sha256:" + b"cd" * 32
+    sidecar.unlink()
+    with pytest.raises(TamperError, match="missing envelope digest"):
+        store.get(envelope["artifact_id"])
+    store.put(envelope)
+    assert sidecar.read_bytes() == original
+    assert store.get(envelope["artifact_id"])["payload"] == {"n": 1}
+
+
+def test_orphan_sidecar_is_rejected(store: ArtifactStore) -> None:
+    envelope = make_envelope({"n": 1})
+    store.put(envelope)
+    orphan = store.root / "sha256" / f"{'ab' * 32}.envelope_digest"
+    orphan.write_bytes(b"sha256:" + b"ab" * 32)
+    with pytest.raises(TamperError, match="without an object"):
+        store.list()
+    assert store.get(envelope["artifact_id"])["payload"] == {"n": 1}
 
 
 def test_non_object_envelope_is_rejected(store: ArtifactStore) -> None:

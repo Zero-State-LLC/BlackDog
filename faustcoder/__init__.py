@@ -5,6 +5,7 @@ from faustcoder.canonical import (
     canonical_bytes,
     content_digest_for,
     digest_hex,
+    envelope_digest_for,
     loads_strict,
     parse_reference,
 )
@@ -41,6 +42,7 @@ __all__ = [
     "canonical_bytes",
     "content_digest_for",
     "digest_hex",
+    "envelope_digest_for",
     "loads_strict",
     "parse_reference",
     "schema_directory",
