@@ -1,0 +1,16 @@
+__pycache__/
+.pytest_cache/
+.venv/
+.env
+.env.*
+!.env.example
+*.safetensors
+*.pt
+*.pth
+*.ckpt
+*.gguf
+*.parquet
+artifacts/
+checkpoints/
+runs/
+receipts/local/
