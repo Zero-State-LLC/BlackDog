@@ -5,6 +5,9 @@ Implementation: [`faustcoder/candidate_machine.py`](../../faustcoder/candidate_m
 T04 persists the `signal_passed` and `signal_failed` effects
 (a DSPTestReceipt). The other effects stay in the table so illegal
 edges are rejected; later tasks write their artifacts.
+A future grader must require `thresholds.reward_graded` true
+before `signal_passed`. `apply_signal` receives that bit and
+does not yet refuse a pass without it.
 
 Initial state: `DRAFT`.
 

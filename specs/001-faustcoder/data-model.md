@@ -72,9 +72,13 @@ objects and does not name a frame count. T04 keeps that contract. The
 harness puts the render length, the exact-compare head, stimulus names,
 failure tokens, per-stimulus RMS, peak, NaN/Inf/denormal counts, spectral
 bands, coarse block-RMS and band-energy gaps, the float32 sample
-digest, and the `unshare` path and sha256 in `metrics`. Thresholds record
-the gates that were enforced, including the absolute tolerance, the
-relative term, and `reward_graded` when that mark is set. `cpu_duration_ms`
+digest, the comparison window, and the `unshare` path and sha256 in
+`metrics`. Thresholds record the gates that were enforced, including
+the absolute tolerance and the relative term. `reward_graded` is
+stored on every receipt, true or false, and is part of the
+reproducible digest. A future grader must require that bit true.
+When it is true the signed sample comparison covers the whole render
+and `max_frames` is the 144000 block-aligned cap. `cpu_duration_ms`
 is present only for a promotion candidate. The reference document is a
 separate artifact (`kind = faustcoder.signal-reference`) whose content
 digest is `reference_digest`. That document carries its own sample rate,

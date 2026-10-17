@@ -295,12 +295,19 @@ def next_state(
     return row.target
 
 
-def apply_signal(state: CandidateState, *, passed: bool) -> CandidateState:
+def apply_signal(
+    state: CandidateState, *, passed: bool, reward_graded: bool = False
+) -> CandidateState:
     """Move ``COMPILE_CHECKED`` to ``SIGNAL_CHECKED`` or ``REJECTED``.
 
     The caller has already evaluated R-006. This does not write the
     receipt; ``faustcoder.signal.commit_signal_check`` does.
+    ``reward_graded`` is the receipt's ``thresholds.reward_graded``
+    bit. A future grader must refuse ``signal_passed`` unless that bit
+    is true. This function records the bit and does not yet enforce it.
     """
+    if not isinstance(reward_graded, bool):
+        raise TypeError("reward_graded must be a bool")
     event = CandidateEvent.SIGNAL_PASSED if passed else CandidateEvent.SIGNAL_FAILED
     return next_state(state, event, guard_passed=True)
 
@@ -341,6 +348,9 @@ def render_candidate_machine_markdown() -> str:
         "T04 persists the `signal_passed` and `signal_failed` effects",
         "(a DSPTestReceipt). The other effects stay in the table so illegal",
         "edges are rejected; later tasks write their artifacts.",
+        "A future grader must require `thresholds.reward_graded` true",
+        "before `signal_passed`. `apply_signal` receives that bit and",
+        "does not yet refuse a pass without it.",
         "",
         f"Initial state: `{INITIAL_STATE.value}`.",
         "",

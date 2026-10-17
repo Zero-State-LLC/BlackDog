@@ -19,7 +19,14 @@ tool; this change did not re-read that source, so the citation is
 INFERRED. Default ``rtol`` is 1e-5, the relative term in
 ``numpy.allclose``, and that citation is INFERRED too. The rest of
 the render is a coarse check: per-block RMS and spectral band
-energies, with the same tolerance. An impulse reference is built at
+energies, with the same tolerance. That coarse check is
+magnitude-only, and the 2e-6 floor is per sample, so one 1e-5 spike
+inside a 64-sample block can hide in the block RMS. A
+``reward_graded`` run refuses a ``max_frames`` other than the 144000
+block-aligned cap and compares every sample of the render with its
+sign. ``thresholds.reward_graded`` is stored on every receipt and is
+part of the reproducible digest. ``reject_dc`` does not fire when
+the reference is itself a non-silent constant. An impulse reference is built at
 ``max_frames`` (144000, three seconds at 48 kHz) and trimmed to the
 last sample at or above ``tail_threshold``, plus a margin. The tail
 gate scans that whole reference, so a silent gap before a delay or
@@ -541,7 +548,10 @@ def run_signal(
     there does not start the renderer. A program that renders and
     fails a check returns a receipt with ``passed`` false.
     ``reward_graded`` forces ``reject_nonfinite`` and
-    ``require_reference`` on before the render.
+    ``require_reference`` on, refuses a ``max_frames`` other than the
+    144000 block-aligned cap, and compares every sample of the
+    reference with its sign. The head stays the only exact window
+    when the run is not reward-graded.
     """
     if not isinstance(source, str):
         raise TypeError("source must be a string")
@@ -675,7 +685,14 @@ def commit_signal_check(
             )
         )
     return SignalCommit(
-        state=apply_signal(state, passed=suite.passed),
+        state=apply_signal(
+            state,
+            passed=suite.passed,
+            reward_graded=all(
+                bool(run.receipt.get("thresholds", {}).get("reward_graded"))
+                for run in suite.runs
+            ),
+        ),
         artifact_ids=tuple(artifact_ids),
         suite=suite,
     )
@@ -810,7 +827,7 @@ def _judge(
     for name in sorted(profile.stimuli):
         channels = rendered["samples"][name]
         summary, stimulus_failures, peak_error = _measure_stimulus(
-            name, channels, profile, reference
+            name, channels, profile, reference, reward_graded=reward_graded
         )
         renders[name] = summary
         failures.extend(stimulus_failures)
@@ -818,7 +835,7 @@ def _judge(
             summary["max_abs_error_nano"] = to_nano(peak_error)
     failures = sorted(set(failures))
     metrics: dict[str, Any] = {
-        "comparison": "head-exact+coarse",
+        "comparison": "reward-graded-signed" if reward_graded else "head-exact+coarse",
         "failures": failures,
         "frame_count": profile.frames,
         "head_frames": profile.head_frames,
@@ -857,8 +874,7 @@ def _judge(
         thresholds["reject_clipping"] = True
     if profile.require_reference:
         thresholds["require_reference"] = True
-    if reward_graded:
-        thresholds["reward_graded"] = True
+    thresholds["reward_graded"] = bool(reward_graded)
     receipt: dict[str, Any] = {
         "source_sha256": hashlib.sha256(source.encode("utf-8")).hexdigest(),
         "test_suite_digest": content_digest_for(profile_payload(profile)),
@@ -885,11 +901,26 @@ def _judge(
     )
 
 
+def _channels_are_dc(channels: Sequence[Sequence[float]], profile: SignalProfile) -> bool:
+    """Return whether ``channels`` are a non-silent constant."""
+    flat = [float(sample) for channel in channels for sample in channel]
+    if not flat or any(not math.isfinite(sample) for sample in flat):
+        return False
+    rms = math.sqrt(math.fsum(sample * sample for sample in flat) / len(flat))
+    if rms < profile.silence_rms:
+        return False
+    mean = math.fsum(flat) / len(flat)
+    variance = math.fsum((sample - mean) ** 2 for sample in flat) / len(flat)
+    return variance == 0.0
+
+
 def _measure_stimulus(
     name: str,
     channels: Sequence[Sequence[float]],
     profile: SignalProfile,
     reference: SignalReference | None,
+    *,
+    reward_graded: bool = False,
 ) -> tuple[dict[str, Any], list[str], float | None]:
     flat = [sample for channel in channels for sample in channel]
     nan_count = sum(1 for sample in flat if math.isnan(sample))
@@ -931,10 +962,12 @@ def _measure_stimulus(
         )
         if profile.reject_silence and silence:
             failures.append(f"{name}:silence")
-        if profile.reject_dc and dc:
-            failures.append(f"{name}:dc")
         if profile.reject_clipping and clipping:
             failures.append(f"{name}:clipping")
+    else:
+        dc = False
+    if profile.reject_dc and dc and reference is None:
+        failures.append(f"{name}:dc")
     if reference is None:
         if profile.require_reference:
             failures.append(f"{name}:reference_missing")
@@ -947,6 +980,8 @@ def _measure_stimulus(
     if len(channels) != len(expected):
         failures.append(f"{name}:channels")
         return summary, failures, peak_error
+    if profile.reject_dc and dc and not _channels_are_dc(expected, profile):
+        failures.append(f"{name}:dc")
     if not finite:
         failures.append(f"{name}:nonfinite")
         _note_impulse_tail(name, reference, profile, failures)
@@ -956,9 +991,14 @@ def _measure_stimulus(
     head = profile.head_frames
     if not isinstance(head, int):
         raise SignalHarnessError("head_frames was not resolved")
+    # Reward grading signs every sample of the render, which covers the
+    # trimmed reference. The coarse check is magnitude-only and stays
+    # as a backstop. Other runs keep the exact check on the head.
+    compared = len(quantized_candidate[0]) if reward_graded else head
+    summary["compared_frames"] = compared
     peak_error, token = compare_channels(
-        [channel[:head] for channel in quantized_candidate],
-        [channel[:head] for channel in quantized_reference],
+        [channel[:compared] for channel in quantized_candidate],
+        [channel[:compared] for channel in quantized_reference],
         atol=profile.absolute_tolerance,
         rtol=profile.relative_tolerance,
     )
@@ -1061,11 +1101,18 @@ def _prepare_render(
     """Apply reward gates and choose the impulse render length.
 
     A reward-graded run always rejects non-finite samples and requires
-    a reference. A default impulse length becomes the cap. The
-    candidate then has to cover the reference; a shorter impulse
-    reference is silence-padded out to that render.
+    a reference. Its ``max_frames`` must be the 144000 block-aligned
+    cap; a shorter cap is refused before render. A default impulse
+    length becomes the cap. The candidate then has to cover the
+    reference; a shorter impulse reference is silence-padded out to
+    that render.
     """
     if reward_graded:
+        aligned = MAX_FRAMES - (MAX_FRAMES % profile.block_size)
+        if profile.max_frames != aligned:
+            raise SignalHarnessError(
+                "reward_graded requires max_frames to be the 144000 block-aligned cap"
+            )
         profile = replace(profile, reject_nonfinite=True, require_reference=True)
     profile = _default_impulse_frames(profile)
     if reference is None:

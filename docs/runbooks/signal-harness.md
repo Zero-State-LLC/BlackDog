@@ -41,12 +41,18 @@ The head is an exact prefix of the reference. Each sample passes when
 the default cited for Faust's `filesCompare` tool. Default `rtol` is
 1e-5. This repo did not re-read `filesCompare`, and the relative term
 is the one used by `numpy.allclose`. Both citations are INFERRED.
-Near zero the absolute term still dominates.
+Near zero the absolute term still dominates. That absolute floor is
+2e-6 per sample. A sample of 1e-5 against a silent reference fails
+it. The coarse check below applies the same floor to a block RMS, so
+one 1e-5 spike in a 64-sample block (RMS about 1.25e-6) does not fail
+the coarse check.
 
 The whole render, including the head, also gets a coarse check:
 per-block RMS and spectral band energies, with the same tolerance.
-Both sides are compared on the 1e-9 grid stored in the reference
-document, so the digest binds the values that were judged.
+Those summaries use magnitudes, so a sign flip or a small time shift
+past the head can match them. Both sides are compared on the 1e-9
+grid stored in the reference document, so the digest binds the values
+that were judged.
 
 An impulse reference is built at the 144000-frame cap and trimmed to
 the last sample at or above `tail_threshold` (default 1e-8), plus a
@@ -58,8 +64,17 @@ and noise are sustained and are not tail-gated. A missing reference
 fails a profile that requires one.
 
 A receipt marked `reward_graded` forces `reject_nonfinite` and
-`require_reference` on before the render. A reference-free or
-non-finite run cannot pass that mark.
+`require_reference` on before the render, and it refuses a
+`max_frames` other than the 144000 block-aligned cap. The exact
+signed comparison then covers every sample of that render, not only
+the 2048-frame head. `thresholds.reward_graded` is always present, so
+the reproducible digest changes with the mark. A future grader must
+require that mark before `signal_passed`. A reference-free or
+non-finite run cannot pass the mark.
+
+`reject_dc` is skipped when the reference itself is a non-silent
+constant. A candidate that is DC against a moving reference still
+fails. A reference-free DC check is unchanged.
 
 The reference document carries its own sample rate, block size, frame
 count, seed and stimulus names. A comparison is refused when any of
@@ -120,7 +135,9 @@ sufficient.
 - A reference-free DC or variance check must never be rewarded.
   `reject_dc` is exact zero variance. An offset on a moving signal
   gets through it, and a suite with `require_reference` false has no
-  sample comparison.
+  sample comparison. The future grader must require
+  `thresholds.reward_graded` true. That field is part of the receipt
+  and of `reproducible_digest`.
 - `cpu_duration_ms` is the wall time of compile plus render. It is
   informational on a promotion candidate. It is not a pass threshold
   and must not be a reward term.

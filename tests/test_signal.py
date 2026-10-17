@@ -20,6 +20,7 @@ from faustcoder.signal import (
     SignalSuite,
     _note_impulse_tail,
     _prepare_render,
+    _rms,
     commit_signal_check,
     impulse_reference,
     compare_channels,
@@ -95,6 +96,16 @@ def _echo(samples: list[float], delay: int, gain: float) -> list[float]:
     for index, sample in enumerate(samples):
         delayed = samples[index - delay] if index >= delay else 0.0
         rendered.append(f32(f32(sample) + f32(delayed * gain32)))
+    return rendered
+
+
+def _delayed(samples: list[float], delay: int, gain: float) -> list[float]:
+    """Place a scaled copy of ``samples`` ``delay`` frames later."""
+    gain32 = f32(gain)
+    rendered = [0.0] * len(samples)
+    for index, sample in enumerate(samples):
+        if index >= delay:
+            rendered[index] = f32(samples[index - delay] * gain32)
     return rendered
 
 
@@ -748,3 +759,92 @@ def test_unshare_identity_is_in_the_harness_digest() -> None:
     moved = dict(preimage)
     moved["unshare_path"] = f"{path}-other"
     assert content_digest_for(preimage) != content_digest_for(moved)
+
+
+def test_sample_floor_catches_a_spike_a_block_rms_hides() -> None:
+    silence = [0.0] * 64
+    spike = [0.0] * 63 + [1e-5]
+    _, token = compare_channels(
+        [spike], [silence], atol=DEFAULT_TOLERANCE, rtol=DEFAULT_RELATIVE_TOLERANCE
+    )
+    assert token == "reference"
+    assert _rms(spike) < DEFAULT_TOLERANCE
+    assert abs(_rms(spike) - _rms(silence)) <= DEFAULT_TOLERANCE
+
+
+def test_reward_graded_refuses_a_short_cap(monkeypatch: pytest.MonkeyPatch) -> None:
+    started = {"count": 0}
+
+    def explode(*_args: object, **_kwargs: object) -> None:
+        started["count"] += 1
+        raise AssertionError("render started")
+
+    monkeypatch.setattr("faustcoder.signal.compile_source", explode)
+    monkeypatch.setattr("faustcoder.signal._render", explode)
+    for max_frames in (2048, 4096):
+        profile = SignalProfile(
+            sample_rate=48000,
+            frames=2048,
+            max_frames=max_frames,
+            stimuli=("impulse",),
+        )
+        with pytest.raises(SignalHarnessError, match="144000"):
+            _run("process = _;\n", profile, None, reward_graded=True)
+    assert started["count"] == 0
+
+
+def test_reward_graded_signs_the_whole_render() -> None:
+    profile = SignalProfile(sample_rate=48000, stimuli=("impulse",))
+    echo = impulse_reference(profile, lambda samples: _echo(samples, 24000, 0.5))
+    delayed = impulse_reference(profile, lambda samples: _delayed(samples, 2100, 1.0))
+    cases = (
+        (
+            "sign-flipped echo",
+            "process = _ <: _, (@(24000) : *( (-0.5) )) :> _;\n",
+            echo,
+        ),
+        (
+            "shifted echo",
+            "process = _ <: _, (@(24010) : *(0.5)) :> _;\n",
+            echo,
+        ),
+        (
+            "negated delay",
+            "process = @(2100) : *( (-1) );\n",
+            delayed,
+        ),
+    )
+    for label, source, reference in cases:
+        run = _run(source, profile, reference, reward_graded=True)
+        impulse = run.receipt["metrics"]["renders"]["impulse"]
+        assert run.receipt["passed"] is False, label
+        assert "impulse:reference" in run.failures, (label, run.failures)
+        assert "impulse:envelope" not in run.failures, (label, run.failures)
+        assert "impulse:bands" not in run.failures, (label, run.failures)
+        assert run.receipt["metrics"]["comparison"] == "reward-graded-signed"
+        assert run.receipt["metrics"]["head_frames"] == DEFAULT_FRAMES
+        assert impulse["compared_frames"] == run.receipt["metrics"]["frame_count"]
+        assert impulse["compared_frames"] > DEFAULT_FRAMES
+        assert run.receipt["thresholds"]["reward_graded"] is True
+
+
+def test_matching_dc_reference_is_compared_not_rejected() -> None:
+    # The tail gate still refuses a hot impulse shorter than the cap.
+    # Pinning max_frames to the render isolates the DC check.
+    profile = _profile(frames=256, max_frames=256, stimuli=("impulse",))
+    reference = _reference(profile, lambda samples: _pole(samples, 1.0))
+    matched = _run("process = + ~ _;\n", profile, reference)
+    assert matched.receipt["passed"] is True
+    assert "impulse:dc" not in matched.failures
+    assert matched.receipt["thresholds"]["reward_graded"] is False
+    flipped = {
+        **matched.receipt,
+        "thresholds": {**matched.receipt["thresholds"], "reward_graded": True},
+    }
+    assert reproducible_signal_digest(matched.receipt) != reproducible_signal_digest(flipped)
+    dry = _run("process = _;\n", profile, reference)
+    assert dry.receipt["passed"] is False
+    assert "impulse:reference" in dry.failures
+    moving = _reference(profile, lambda samples: samples)
+    against_dry = _run("process = + ~ _;\n", profile, moving)
+    assert "impulse:dc" in against_dry.failures

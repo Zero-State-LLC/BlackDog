@@ -102,6 +102,11 @@ def test_signal_edges_leave_compile_checked() -> None:
     )
     with pytest.raises(IllegalTransition):
         apply_signal(CandidateState.DRAFT, passed=True)
+    assert apply_signal(
+        CandidateState.COMPILE_CHECKED, passed=True, reward_graded=True
+    ) is CandidateState.SIGNAL_CHECKED
+    with pytest.raises(TypeError, match="reward_graded"):
+        apply_signal(CandidateState.COMPILE_CHECKED, passed=True, reward_graded=1)  # type: ignore[arg-type]
 
 
 def test_signal_guard_can_reject_without_moving() -> None:
