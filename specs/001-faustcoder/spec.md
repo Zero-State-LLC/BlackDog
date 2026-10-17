@@ -1,7 +1,7 @@
 # FaustCoder: DAG-Compliant DSP Coding Model
 
 - Status: DRAFT / refinement-ready
-- Version: 0.1.0
+- Version: 0.2.0 (training-path amendments proposed in ADR-0002; see §17)
 - Target: NVIDIA DGX Spark (128 GB unified memory)
 
 ## 1. Constitution
@@ -40,14 +40,16 @@ Parse Faust programs into a typed signal-flow representation. Validate sequentia
 - R-004: Frozen task suite including oscillators, filters, envelopes, routing, effects, modulation and stateful DSP.
 - R-005: Compiler harness records exact Faust version, flags, exit code, diagnostics and source digest.
 - R-006: Signal tests evaluate finite output, channel count, stability, spectral behavior, latency and CPU use where relevant.
-- R-007: Baseline at least one 7B/14B dense candidate and one larger reference model; choose student based on measured quality and Spark throughput.
-- R-008: LoRA-first training; QLoRA contingent on verified compatibility and throughput.
+- R-007 (amended 0.2.0, ADR-0002): Adapt an existing open base code model; never train from scratch. Baseline a 0.5B to 8B shortlist of Apache-2.0 base models (research.md) zero-shot and few-shot; choose the student by measured quality and Spark throughput, preferring the smallest model within the confidence interval of the best.
+- R-008 (amended 0.2.0, ADR-0002): Method per phase: full-parameter continued pretraining for students up to about 4B, LoRA rank 64 to 256 (alpha = 2r) for SFT and for larger students. QLoRA is not needed at or below 8B on 128 GB.
 - R-009: Immutable dataset/model/evaluation lineage and reproducible release manifest.
 - R-010: Local inference API supports generate, repair, explain and optimize with structured responses.
 - R-011: Independent evaluation cannot be satisfied by self-reported model judgments.
 - R-012: Explicit abstention and bounded repair attempts; no unbounded compiler-agent loop.
 - R-013: Security: sandbox compiler execution, resource limits, no arbitrary shell execution from generated code, and artifact integrity checks.
 - R-014: Training/evaluation data governance includes license eligibility, attribution, retention and removal procedure.
+- R-015 (amended 0.2.0, ADR-0002): Phase-gated training path P0 corpus and evaluation harness, P1 continued pretraining (skipped by rule when the cleared corpus is too small), P2 SFT, P3 compiler-feedback RL. Each phase has a timebox and an exit gate defined in ADR-0002.
+- R-016 (amended 0.2.0, ADR-0002): Synthetic training data and RL rewards come only from the sandboxed compiler and signal tests (R-005, R-006, R-011). Signal tests must reject silence, DC, NaN/Inf and trivial programs so rewards cannot be gamed.
 
 ## 6. User journeys
 
@@ -171,7 +173,7 @@ stateDiagram-v2
 
 ### 7.3 Training run lifecycle
 
-Subject: a `TrainingRun` producing an `Adapter` (R-008).
+Subject: a `TrainingRun` producing an `Adapter` or full weights (R-008), for one phase P1, P2 or P3 (R-015).
 
 - Initial state: `PLANNED`.
 - Final states: `ADMITTED`, `REJECTED`, `FAILED` (INFERRED), `INVALIDATED` (INFERRED).
@@ -282,7 +284,7 @@ Metrics: compile@1, compile@k, task pass@1, DSP correctness pass rate, repair su
 
 Test classes: syntax, arity, routing, recursion/delay, deterministic numerical response, frequency response, envelope shape, NaN/Inf, clipping, silence, boundary inputs, and performance.
 
-Frozen holdout is never used for training, prompt tuning or candidate selection. Use a separate development suite. Report confidence intervals for aggregate rates and paired comparisons against the baseline.
+Frozen holdout is never used for training, prompt tuning or candidate selection. Use a separate development suite. (amended 0.2.0, ADR-0002): Estimate compile@k and pass@k with the unbiased estimator from n >= k samples. Holdout tasks are newly written, not mined from faustlibraries or faust examples, which base models have likely seen. Report confidence intervals for aggregate rates and paired comparisons against the baseline.
 
 Provisional V0.2 aspiration: >=90% compile@1 on held-out tasks, subject to baseline measurement and task-mix calibration. No release based on compilation alone.
 
@@ -290,7 +292,7 @@ Provisional V0.2 aspiration: >=90% compile@1 on held-out tasks, subject to basel
 
 `corpus/` provenance + rights; `datasets/` transforms and split manifests; `faust/` compiler harness and graph analysis; `eval/` signal tests and benchmarks; `train/` Spark configs and launchers; `serve/` inference API; `schemas/` contracts; `receipts/` immutable evidence; `docs/` architecture, runbooks, decisions; `specs/` versioned specifications.
 
-Recommended stack: Python, PyTorch, Transformers, PEFT/TRL, Faust CLI, pytest, Parquet, MLflow (tracking only, immutable manifest authoritative), OCI containers, local model server. Verify ARM64/Blackwell compatibility on DGX Spark before pinning any training stack.
+Recommended stack: Python, PyTorch, Transformers, PEFT/TRL, Faust CLI, pytest, Parquet, MLflow (tracking only, immutable manifest authoritative), OCI containers, local model server. (amended 0.2.0, ADR-0002): until V0.3, a content-digested JSONL manifest is the artifact store and MLflow is optional. Verify ARM64/Blackwell compatibility on DGX Spark before pinning any training stack.
 
 ## 11. Security, privacy and governance
 
@@ -299,21 +301,21 @@ Execute compiler/test workers in restricted containers with no network, bounded 
 ## 12. Versioned roadmap and acceptance
 
 - V0.1 FOUNDATION: environment lock, compiler harness, schemas, corpus policy, frozen baseline suite. PASS when another operator can reproduce compiler receipts and baseline metrics from a clean checkout.
-- V0.2 SPECIALIST: rights-cleared corpus, split freeze, 7B/14B benchmark, LoRA experiment. PASS when improvement is statistically supported on development tasks and holdout remains sealed.
-- V0.3 DSP VERIFIER: signal tests, feedback graph semantics, bounded repair, optimization comparisons. PASS when known-bad DSP programs fail gates and legal delayed feedback passes.
-- V0.4 PRODUCT: local serving, API, IDE integration, telemetry and failure handling. PASS when end-to-end user journeys run on Spark with reproducible receipts.
+- V0.2 SPECIALIST (amended 0.2.0, ADR-0002): rights-cleared corpus, split freeze, base-model bake-off, P1 continued pretraining or recorded skip, P2 SFT. PASS when improvement is statistically supported on development tasks and holdout remains sealed.
+- V0.3 DSP VERIFIER (amended 0.2.0, ADR-0002): P3 compiler-feedback RL, bounded repair, optimization comparisons. Typed feedback graph semantics (§4.2) move to V0.4. PASS when known-bad DSP programs fail gates and legal delayed feedback passes.
+- V0.4 PRODUCT: local serving, API, IDE integration, telemetry and failure handling, typed feedback graph semantics. PASS when end-to-end user journeys run on Spark with reproducible receipts.
 - V1.0 RELEASE: independent review, security assessment, model/data cards, immutable manifest, rollback procedure. PASS only with signed approval and complete evidence.
 
 ## 13. Dependency-ordered implementation tasks
 
-T01 constitution + ADRs -> T02 schemas + artifact store -> T03 compiler sandbox -> T04 DSP test harness -> T05 corpus rights inventory -> T06 normalization/dedup -> T07 split freeze -> T08 baseline models -> T09 Spark throughput/memory study -> T10 training configs -> T11 evaluation and paired comparisons -> T12 decision gate -> T13 local serving -> T14 IDE integration -> T15 independent security/quality review -> T16 release.
+T01 constitution + ADRs -> T02 schemas + artifact store -> T03 compiler sandbox -> T04 DSP test harness -> T05 corpus rights inventory -> T06 normalization/dedup -> T07 split freeze -> T08 baseline models -> T09 Spark throughput/memory study -> T10 training path P1-P3 per ADR-0002 (amended 0.2.0) -> T11 evaluation and paired comparisons -> T12 decision gate -> T13 local serving -> T14 IDE integration -> T15 independent security/quality review -> T16 release.
 
 Parallelism permitted only where declared dependencies allow it. Every task requires owner, inputs, outputs, acceptance test, failure disposition and evidence path.
 
 ## 14. Open decisions
 
 - D-001: Confirm Faust DSP language (assumed).
-- D-002: Select student model after baseline: Qwen3-14B vs 7B or 30B MoE alternative.
+- D-002 (amended 0.2.0, ADR-0002): Select student model after the P0 bake-off from the 0.5B to 8B Apache-2.0 shortlist in research.md. Larger models are teacher or reference candidates only (D-006).
 - D-003: Choose initial sample rates and DSP target runtimes.
 - D-004: Determine corpus redistribution versus training-only rights.
 - D-005: Set quality gates using observed baseline and task severity.
@@ -341,3 +343,32 @@ CI workflows (`.github/workflows/`): `spec-check.yml` (required docs and Spec
 Kit structure) is the existing path. Repository hygiene adds lint, link-check,
 secret-scan and actionlint workflows; implementation tasks reuse those rather
 than adding new CI paths.
+
+## 17. Amendments 0.2.0 (ADR-0002, PROPOSED)
+
+Owner brief (OBSERVED): FaustCoder is a small specialist; build it by adapting
+an open base code model (continued pretraining, SFT, compiler-feedback RL),
+never from scratch, in weeks rather than months. Evidence is in
+[research.md](research.md).
+
+| ID | Change | Was | Label | Reason |
+|---|---|---|---|---|
+| A-01 | R-007 and D-002: 0.5B to 8B Apache-2.0 shortlist, adapt only | 7B/14B dense plus larger reference; Qwen3-14B vs 30B MoE | INFERRED | Small-model goal (OBSERVED brief); fine-tuning gains shrink with size on scarce data (research F3) |
+| A-02 | R-008: full-parameter CPT up to about 4B; LoRA for SFT and larger models; no QLoRA | LoRA-first; QLoRA contingent | INFERRED | LoRA underperforms in CPT (research F4); 128 GB fits full fine-tuning of small models |
+| A-03 | R-015: phases P0 to P3 with timeboxes and exit gates | Single T10 "training configs" | INFERRED | Gives a fast, auditable path (ADR-0002) |
+| A-04 | R-016: compiler and signal tests are the only validators and rewards | Implied by R-005, R-006, R-011 | INFERRED | Validated synthetic data drives low-resource gains (research F1) |
+| A-05 | §9: unbiased pass@k; newly written holdout | Not specified | INFERRED | Base models have likely seen public Faust code (research I6) |
+| A-06 | §10: JSONL digest manifest; MLflow optional until V0.3 | MLflow plus full artifact store | INFERRED | Same immutability guarantees, less setup |
+| A-07 | §12: V0.2 = P1 and P2; V0.3 = P3; typed graph semantics to V0.4 | V0.2 7B/14B LoRA; V0.3 graph semantics | INFERRED | Removes non-blocking work from the critical path |
+| A-08 | §7.3 TrainingRun covers P1, P2 and P3 | Adapter only | INFERRED | Full-parameter CPT produces weights, not an adapter |
+
+### Items that slow the path (flagged, not yet changed)
+
+| # | Item in the current spec | Effect | Recommendation | Label |
+|---|---|---|---|---|
+| S-1 | §4.2 typed signal-flow DAG analysis | Large compiler-analysis effort; not needed for compile and signal-test rewards | Defer to V0.4 (A-07) | INFERRED |
+| S-2 | §7.2 human `REVIEWED` step per candidate | Impossible at RL and synthetic-data volume | In training and evaluation loops, use automated independent gates (R-011); human review at promotion only | INFERRED |
+| S-3 | R-010 four API verbs and V0.4 IDE integration | Product scope before the model is proven | Keep after P3; T13 and T14 stay off the critical path | INFERRED |
+| S-4 | R-006 latency and CPU checks on every candidate | Slows data validation | Run on promotion candidates only | INFERRED |
+| S-5 | D-003, D-004, D-006 open | Block corpus clearing, harness and synthetic data | Defaults: 48 kHz, C++ backend; training-only use with a permissive allowlist; local Apache-2.0 teacher. Owner to confirm | INFERRED; not legal advice |
+| S-6 | T09 as a full study | Delays T10 | One-day smoke test that records throughput and memory receipts | INFERRED |

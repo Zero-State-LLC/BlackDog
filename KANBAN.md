@@ -13,7 +13,7 @@ All tasks are **TODO**. Dependency arrows are mandatory promotion gates.
 | T07 | v0.2 | Split freeze | T06 | Leakage checks and signed split manifest |
 | T08 | v0.2 | Baseline models | T04,T07 | Frozen baseline measurements |
 | T09 | v0.2 | DGX Spark feasibility study | T01 | ARM64/Blackwell throughput and memory receipts |
-| T10 | v0.2 | LoRA training | T08,T09 | Pinned reproducible training run |
+| T10 | v0.2 | Training path P1-P3 (ADR-0002) | T08,T09 | One pinned run and exit-gate result per phase |
 | T11 | v0.3 | Independent DSP evaluation | T10,T04 | Paired metrics and regression results |
 | T12 | v0.3 | Promotion decision | T11 | Human review and decision record |
 | T13 | v0.4 | Local serving API | T12 | Contract tests |
