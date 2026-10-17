@@ -9,8 +9,13 @@ Enforcement, in order:
    2.38 or newer) runs the process in a new network namespace with no
    interfaces, and maps the calling uid to itself. A connect fails with
    ``ENETUNREACH``. Inside that namespace the uid is not 0 and ``CapEff``
-   is 0. ``--map-root-user`` is not used: it maps the caller to uid 0 with
-   a full capability set. Node 22's ``--permission`` model does not deny
+   is 0. ``--map-root-user`` is not used for the compiler process: it maps
+   the caller to uid 0 with a full capability set. The native cross-check
+   is the one caller that enters a mount namespace. It does that only when
+   ``/usr/local/share/faust`` or ``/usr/share/faust`` exists, covers that
+   directory with an empty tmpfs, then runs Faust as the calling uid with
+   ``CapEff`` 0. Wasm compiles do not take that path. Node 22's
+   ``--permission`` model does not deny
    network and rejects ``--allow-net``; the namespace is the control that
    holds on the Node 22 line used in CI. GitHub-hosted Ubuntu sets
    ``kernel.apparmor_restrict_unprivileged_userns=1``, and ``unshare`` then
@@ -80,6 +85,7 @@ import shutil
 import signal
 import stat
 import subprocess
+import sys
 import threading
 from collections.abc import Sequence
 from dataclasses import dataclass
@@ -226,6 +232,142 @@ def node_command(
     return command
 
 
+# Faust searches -I, then these directories. A host install is visible
+# through a network namespace, so a native compile masks each one that exists.
+FAUST_FALLBACK_DIRECTORIES = (
+    Path("/usr/local/share/faust"),
+    Path("/usr/share/faust"),
+)
+
+# Runs inside unshare --mount --map-root-user. Mounts empty tmpfs directories,
+# then re-enters as the calling uid with CapEff 0 and execs the command.
+_MASK_EXEC = r"""
+import ctypes
+import os
+import sys
+
+def fail(message):
+    sys.stderr.write("faustcoder_mask_failed: " + message + "\n")
+    raise SystemExit(1)
+
+def mount_tmpfs(directory):
+    libc = ctypes.CDLL(None, use_errno=True)
+    libc.mount.argtypes = [
+        ctypes.c_char_p,
+        ctypes.c_char_p,
+        ctypes.c_char_p,
+        ctypes.c_ulong,
+        ctypes.c_char_p,
+    ]
+    libc.mount.restype = ctypes.c_int
+    # MS_RDONLY | MS_NOSUID | MS_NODEV | MS_NOEXEC
+    flags = 15
+    ret = libc.mount(
+        b"tmpfs", os.fsencode(directory), b"tmpfs", flags, b"mode=0555,size=64k"
+    )
+    if ret != 0:
+        fail("mount %s: errno %s" % (directory, ctypes.get_errno()))
+
+def drop_capabilities():
+    libc = ctypes.CDLL(None, use_errno=True)
+    libc.prctl.argtypes = [
+        ctypes.c_int, ctypes.c_ulong, ctypes.c_ulong, ctypes.c_ulong, ctypes.c_ulong
+    ]
+    libc.prctl.restype = ctypes.c_int
+    libc.prctl(47, 4, 0, 0, 0)
+
+    class Header(ctypes.Structure):
+        _fields_ = [("version", ctypes.c_uint32), ("pid", ctypes.c_int)]
+
+    class Data(ctypes.Structure):
+        _fields_ = [
+            ("effective", ctypes.c_uint32),
+            ("permitted", ctypes.c_uint32),
+            ("inheritable", ctypes.c_uint32),
+        ]
+
+    header = Header(0x20080522, 0)
+    data = (Data * 2)()
+    libc.syscall.restype = ctypes.c_long
+    if libc.syscall(126, ctypes.byref(header), data) != 0:
+        fail("capset errno %s" % ctypes.get_errno())
+    if libc.prctl(38, 1, 0, 0, 0) != 0:
+        fail("no_new_privs errno %s" % ctypes.get_errno())
+
+def main():
+    if len(sys.argv) < 4:
+        fail("mask arguments are missing")
+    uid = int(sys.argv[1])
+    gid = int(sys.argv[2])
+    count = int(sys.argv[3])
+    directories = sys.argv[4:4 + count]
+    command = sys.argv[4 + count:]
+    if not command:
+        fail("mask command is empty")
+    for directory in directories:
+        mount_tmpfs(directory)
+    ready_r, ready_w = os.pipe()
+    done_r, done_w = os.pipe()
+    writer = os.fork()
+    if writer == 0:
+        os.close(ready_w)
+        os.close(done_r)
+        os.read(ready_r, 1)
+        os.close(ready_r)
+        target = os.getppid()
+        try:
+            with open("/proc/%s/setgroups" % target, "w", encoding="ascii") as handle:
+                handle.write("deny\n")
+            with open("/proc/%s/uid_map" % target, "w", encoding="ascii") as handle:
+                handle.write("%s 0 1\n" % uid)
+            with open("/proc/%s/gid_map" % target, "w", encoding="ascii") as handle:
+                handle.write("%s 0 1\n" % gid)
+        except OSError as exc:
+            fail("uid map: %s" % exc)
+        os.write(done_w, b"1")
+        os.close(done_w)
+        os._exit(0)
+    os.close(ready_r)
+    os.close(done_w)
+    os.unshare(os.CLONE_NEWUSER)
+    os.write(ready_w, b"1")
+    os.close(ready_w)
+    if os.read(done_r, 1) != b"1":
+        fail("uid map was not written")
+    os.close(done_r)
+    os.waitpid(writer, 0)
+    drop_capabilities()
+    try:
+        os.execv(command[0], command)
+    except OSError as exc:
+        fail("exec %s: errno %s" % (command[0], exc.errno))
+
+main()
+"""
+
+
+def faust_fallback_mounts(paths: Sequence[Path] | None = None) -> tuple[Path, ...]:
+    """Return host Faust library directories a native compile must hide.
+
+    Missing paths are omitted. A symlink is refused instead of followed.
+    Faust searches these after ``-I``, so an unmasked directory is another
+    library tree the private copy does not cover.
+    """
+    selected = FAUST_FALLBACK_DIRECTORIES if paths is None else tuple(paths)
+    mounts: list[Path] = []
+    for path in selected:
+        if path.is_symlink():
+            raise SandboxError(f"Faust fallback path is a symlink: {path}")
+        if path.is_dir():
+            resolved = path.resolve()
+            if resolved not in mounts:
+                mounts.append(resolved)
+            continue
+        if path.exists():
+            raise SandboxError(f"Faust fallback path is not a directory: {path}")
+    return tuple(mounts)
+
+
 def run_in_sandbox(
     command: Sequence[str],
     *,
@@ -233,11 +375,15 @@ def run_in_sandbox(
     workdir: Path,
     limits: ResourceLimits,
     cwd: Path | None = None,
+    mask_directories: Sequence[Path] = (),
 ) -> SandboxRun:
     """Run ``command`` inside the network namespace and resource limits.
 
     ``command`` is executed as-is after ``prlimit`` and ``unshare``. The
     child environment is not a copy of the parent environment.
+    ``mask_directories`` are covered with an empty tmpfs so the command
+    cannot read the host files there. The command still runs as the
+    calling uid with ``CapEff`` 0.
     """
     if not command:
         raise SandboxError("sandbox command is empty")
@@ -250,11 +396,7 @@ def run_in_sandbox(
         f"--fsize={limits.output_bytes}",
         f"--cpu={cpu_seconds}",
         "--",
-        unshare,
-        "--net",
-        "--map-current-user",
-        "--",
-        *command,
+        *_unshare_command(unshare, command, mask_directories),
     ]
     process = subprocess.Popen(
         wrapped,
@@ -371,6 +513,33 @@ def run_in_sandbox(
         stdout_truncated=bool(stdout["truncated"]),
         stderr_truncated=bool(stderr["truncated"]),
     )
+
+
+def _unshare_command(
+    unshare: str, command: Sequence[str], mask_directories: Sequence[Path]
+) -> list[str]:
+    """Argv after ``prlimit --``. Masks use a mount namespace; other runs do not."""
+    if not mask_directories:
+        return [unshare, "--net", "--map-current-user", "--", *command]
+    masks = [str(path) for path in mask_directories]
+    return [
+        unshare,
+        "--net",
+        "--mount",
+        "--map-root-user",
+        "--propagation",
+        "private",
+        "--",
+        sys.executable,
+        "-I",
+        "-c",
+        _MASK_EXEC,
+        str(os.getuid()),
+        str(os.getgid()),
+        str(len(masks)),
+        *masks,
+        *command,
+    ]
 
 
 def _child_environment(workdir: Path) -> dict[str, str]:

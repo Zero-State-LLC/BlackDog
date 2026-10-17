@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import errno
 import fcntl
 import hashlib
 import os
@@ -42,7 +43,7 @@ from faustcoder import (
     validate,
 )
 from faustcoder.canonical import canonical_bytes
-from faustcoder.sandbox import SandboxRun, unshare_identity
+from faustcoder.sandbox import SandboxRun, faust_fallback_mounts, unshare_identity
 from faustcoder.compiler import (
     FAUSTLIBRARIES_PIN,
     FAUSTLIBRARIES_PIN_VERSION,
@@ -703,6 +704,33 @@ def test_share_lock_directory_is_refused(
     assert not (tmp_path / "share-2edec0537f53").exists()
 
 
+def test_mkdir_failure_releases_the_process_lock(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    checkout = tmp_path / "2edec0537f53"
+    _copy_library_checkout(checkout)
+    monkeypatch.setenv("FAUSTCODER_LIBRARIES", str(checkout))
+    monkeypatch.setattr("faustcoder.libraries.SHARE_LOCK_TIMEOUT_S", 0.4)
+    real_mkdir = Path.mkdir
+
+    def fail_parent(self: Path, *args: object, **kwargs: object) -> None:
+        if Path(self) == tmp_path:
+            raise OSError(errno.EACCES, "Permission denied", str(self))
+        real_mkdir(self, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "mkdir", fail_parent)
+    with pytest.raises(OSError, match="Permission denied") as first:
+        share_directory()
+    assert first.value.errno == errno.EACCES
+    assert not libraries._LOCK.locked()
+    started = time.monotonic()
+    with pytest.raises(OSError, match="Permission denied") as second:
+        share_directory()
+    assert second.value.errno == errno.EACCES
+    assert time.monotonic() - started < 0.3
+    assert not libraries._LOCK.locked()
+
+
 def test_in_process_share_lock_times_out(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -751,6 +779,51 @@ def test_thread_lock_and_flock_share_one_deadline(
         holder.wait(timeout=5)
 
 
+def test_native_sandbox_masks_a_host_faust_share(tmp_path: Path) -> None:
+    secret = tmp_path / "share"
+    secret.mkdir()
+    (secret / "stdfaust.lib").write_text("PWNED\n", encoding="ascii")
+    script = (
+        "uid=$(id -u); cap=$(awk '/^CapEff:/ {print $2}' /proc/self/status); "
+        'if [ -e "$1/stdfaust.lib" ]; then seen=visible; else seen=hidden; fi; '
+        "printf '%s %s %s\\n' \"$uid\" \"$cap\" \"$seen\""
+    )
+    command = ["/bin/sh", "-c", script, "sh", str(secret)]
+    limits = ResourceLimits(timeout_s=5)
+    masked = run_in_sandbox(
+        command,
+        stdin=b"",
+        workdir=tmp_path,
+        limits=limits,
+        mask_directories=(secret,),
+    )
+    assert masked.returncode == 0, masked.stderr
+    assert masked.stdout == f"{os.getuid()} 0000000000000000 hidden\n".encode()
+    assert (secret / "stdfaust.lib").read_text(encoding="ascii") == "PWNED\n"
+    plain = run_in_sandbox(command, stdin=b"", workdir=tmp_path, limits=limits)
+    assert plain.returncode == 0, plain.stderr
+    assert plain.stdout.endswith(b"visible\n")
+
+
+def test_faust_fallback_mounts_skip_missing_and_refuse_symlinks(tmp_path: Path) -> None:
+    missing = tmp_path / "absent"
+    present = tmp_path / "faust"
+    present.mkdir()
+    link = tmp_path / "link"
+    link.symlink_to(present)
+    assert faust_fallback_mounts((missing, present)) == (present.resolve(),)
+    with pytest.raises(SandboxError, match="symlink"):
+        faust_fallback_mounts((link,))
+    defaults = (Path("/usr/local/share/faust"), Path("/usr/share/faust"))
+    if any(path.is_symlink() for path in defaults):
+        with pytest.raises(SandboxError, match="symlink"):
+            faust_fallback_mounts()
+    else:
+        assert faust_fallback_mounts() == tuple(
+            path.resolve() for path in defaults if path.is_dir()
+        )
+
+
 def test_native_compile_uses_a_hashed_private_copy(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -762,6 +835,7 @@ def test_native_compile_uses_a_hashed_private_copy(
         assert include != live
         assert include.parent == Path(str(kwargs["workdir"]))
         assert canonical_tree_sha256(include) == FAUSTLIBRARIES_SHARE_SHA256
+        assert kwargs["mask_directories"] == faust_fallback_mounts()
         return SandboxRun(0, b"int process(){return 0;}\n", b"", "", False, False)
 
     monkeypatch.setattr("faustcoder.compiler.run_in_sandbox", fake_run)

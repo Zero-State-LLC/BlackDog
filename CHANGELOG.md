@@ -10,6 +10,8 @@ See [docs/VERSIONING.md](docs/VERSIONING.md).
 
 ### Added
 
+- T03b follow-up: creating the share lock directory happens while the in-process lock's release is armed, so a failed `mkdir` cannot stick the lock. The native sandbox masks `/usr/share/faust` and `/usr/local/share/faust` when they exist. Faust cannot fall back to them after `-I`.
+
 - T03b follow-up: the in-process share lock and the file lock share one 30-second deadline. A directory at the lock path raises `SandboxError`. Native compiles hash a private copy of the share and pass that copy as `-I`.
 
 - T03b follow-up: waiting for the faustlibraries share lock is bounded. A timeout raises `SandboxError` instead of blocking a cold publish. The lock file is opened with `O_NOFOLLOW` and a symlink is refused. After a tamper refusal, delete `share-<commit>` and re-stage; the harness does not delete that tree itself.

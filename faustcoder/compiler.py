@@ -81,8 +81,10 @@ unless it is the pinned share hash. In the same process, before compiling,
 the worker reads ``/proc/net/dev`` and requires the only interface to be
 ``lo``, then requires a connect to fail. The native 2.88.0 cross-check
 copies that share into a private directory, hashes the copy, and passes
-the copy as ``-I``. A mismatch raises before Faust starts. The logical
-``command`` records
+the copy as ``-I``. A mismatch raises before Faust starts. Faust would
+otherwise also read ``/usr/local/share/faust`` and ``/usr/share/faust``.
+Those directories are masked when they exist, so only the hashed copy is
+reachable. The logical ``command`` records
 ``--faustlibraries=2edec0537f53`` and not the host path. The tree is
 fetched on the host. The sandbox does not download it. Do not run a T06
 or T07 compile check, and do not feed a receipt into a reward, against a
@@ -179,6 +181,7 @@ from faustcoder.sandbox import (
     ResourceLimits,
     SandboxError,
     SandboxRun,
+    faust_fallback_mounts,
     node_command,
     node_executable,
     run_in_sandbox,
@@ -528,8 +531,17 @@ def compile_native(
         (workdir / "input.dsp").write_bytes(source_bytes)
         private = snapshot_share(libraries, workdir / "libraries")
         command = _native_command(binary, private, checked)
-        run = run_in_sandbox(command, stdin=b"", workdir=workdir, limits=bounds, cwd=workdir)
+        run = run_in_sandbox(
+            command,
+            stdin=b"",
+            workdir=workdir,
+            limits=bounds,
+            cwd=workdir,
+            mask_directories=faust_fallback_mounts(),
+        )
         duration_ms = int((time.monotonic() - started) * 1000)
+        if b"faustcoder_mask_failed:" in run.stderr and not run.stop_reason:
+            raise SandboxError(run.stderr.decode("utf-8", errors="replace").strip())
         if run.stop_reason:
             return _harness_receipt(
                 source_bytes,

@@ -214,8 +214,9 @@ def _publish_share(root: Path, dest: Path, expected: str) -> None:
     deadline = time.monotonic() + SHARE_LOCK_TIMEOUT_S
     _acquire_process_lock(deadline)
     lock_path = dest.parent / f"{dest.name}.lock"
-    lock_path.parent.mkdir(parents=True, exist_ok=True)
     try:
+        # A failure here, including mkdir, still releases _LOCK.
+        lock_path.parent.mkdir(parents=True, exist_ok=True)
         fd = _open_share_lock(lock_path)
         try:
             _acquire_share_lock(fd, lock_path, deadline)
