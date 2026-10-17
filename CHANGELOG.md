@@ -10,6 +10,8 @@ See [docs/VERSIONING.md](docs/VERSIONING.md).
 
 ### Added
 
+- T04: offline DSP signal harness. faustwasm renders impulse, sine and noise at 44.1 and 48 kHz inside the T03 sandbox. Receipts record hash-stable RMS, peak, NaN/Inf/denormal counts and spectral bands, and compare a candidate to a reference within an absolute tolerance. Known-good fixtures include legal delayed feedback. Library imports stay with T03b. CPU wall time is stored only for a promotion candidate.
+
 - T03b follow-up: a multi-file `source_sha256` includes the selected entry path. Publishing the shared library tree takes a process-wide file lock and does not delete a live tree. A failed network canary raises `SandboxError` instead of an `internal` receipt. The worker hashes the bytes it writes into `/usr/share/faust` and that hash has to match the Python share hash.
 
 - T03b follow-up: `environment_digest` records the resolved path and sha256 of the `unshare` binary that runs, including the system binary when `FAUSTCODER_UNSHARE` is unset. A swapped wrapper changes the digest before the network canary runs.

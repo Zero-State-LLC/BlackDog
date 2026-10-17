@@ -69,6 +69,10 @@ Enforcement, in order:
 ``prlimit`` and ``unshare`` come from util-linux. Both are on Ubuntu images
 used by GitHub-hosted runners. If either is missing, the sandbox raises
 and does not run the compiler on the host network.
+
+Staged inputs are not counted as produced output. That is the runtime
+trio, ``input.dsp``, and anything under ``inputs/`` (the signal harness
+writes its stimulus files there).
 """
 
 from __future__ import annotations
@@ -482,7 +486,7 @@ def _produced_bytes(workdir: Path) -> int:
         if not path.is_file():
             continue
         relative = path.relative_to(workdir).as_posix()
-        if relative in _IGNORED_OUTPUTS:
+        if relative in _IGNORED_OUTPUTS or relative.startswith("inputs/"):
             continue
         try:
             total += path.stat().st_size

@@ -64,3 +64,15 @@ graph TD
 Arrows point from parent to child. Validation rules (OBSERVED §3, §4.1,
 ADR-0001): parents must exist before children; no cycles; a changed payload is
 a new node.
+
+## DSPTestReceipt metrics (INFERRED)
+
+The accepted contract (spec §8) leaves `metrics` and `thresholds` as open
+objects and does not name a frame count. T04 keeps that contract. The
+harness puts the render length, stimulus names, failure tokens, per-stimulus
+RMS, peak, NaN/Inf/denormal counts, spectral bands and the float32 sample
+digest in `metrics`. Thresholds record the gates that were enforced.
+`cpu_duration_ms` is present only for a promotion candidate. The reference
+document is a separate artifact (`kind = faustcoder.signal-reference`) whose
+content digest is `reference_digest`. None of this edits the accepted spec
+text. A schema field for frames would be a Proposed amendment.
