@@ -34,8 +34,9 @@ with the method per phase in R-008 and the student chosen by the bake-off in R-0
 
 Unknowns: student model (D-002), DSP target runtimes (D-003), quality gates
 (D-005). Accepted 2026-10-16: sample rates 44.1 and 48 kHz (D-003), corpus
-rights (D-004, ADR-0003), Opus via OpenRouter as teacher with per-run spend cap
-(D-006). See [spec §18](spec.md#18-decision-log) and [research.md](research.md).
+rights (D-004, ADR-0003). Teacher (D-006r2, 2026-10-16 22:25 PT): open-weight
+`deepseek/deepseek-v4.1-flash` via OpenRouter with a per-run spend cap; Opus for
+review and judging only. See [spec §18](spec.md#18-decision-log) and [research.md](research.md).
 
 ## Constitution check
 

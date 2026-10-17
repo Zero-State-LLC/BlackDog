@@ -103,8 +103,11 @@ headline peaks; 1.5B is assumed about 2x the 3B rate. All figures INFERRED; P0 r
   INFERRED.
 - A second Spark runs evaluation and data generation in parallel with
   training; it is not needed for any single job at these sizes. INFERRED.
-- Teacher cost (Opus via OpenRouter, D-006): set per run by the approved
-  spend cap; NOT_COMPUTABLE in advance until the P2 data volume is fixed.
+- Teacher cost (D-006r2, `deepseek/deepseek-v4.1-flash` via OpenRouter):
+  listed at $0.038 per million input tokens and $0.40 per million output
+  tokens (OBSERVED, OpenRouter models API, 2026-10-16). 60k candidates at about
+  2k output tokens each, reasoning included, is about 120M output tokens, so
+  roughly $50 (INFERRED). Each run still needs its own approved cap.
 
 ## Evaluation design
 
@@ -131,7 +134,7 @@ headline peaks; 1.5B is assumed about 2x the 3B rate. All figures INFERRED; P0 r
 | D-003 | Sample rates and runtimes | ACCEPTED: 44.1 kHz and 48 kHz (Danny yes 2026-10-16 22:20 PT). Runtimes open; C++ backend suggested | OBSERVED (decision) |
 | D-004 | Redistribution versus training-only | ACCEPTED (ADR-0003, Danny yes 2026-10-16 22:20 PT): permissive allowlist; GPL training-only, never redistributed; unlicensed excluded | OBSERVED (decision) |
 | D-005 | Quality gates | Relative gates against the frozen baseline (ADR-0002) | INFERRED |
-| D-006 | Teacher model | ACCEPTED: Opus via OpenRouter, per-run spend cap approved per run (Danny yes 2026-10-16 22:20 PT) | OBSERVED (decision) |
+| D-006 | Teacher model | SUPERSEDED: Opus via OpenRouter, per-run spend cap (Danny yes 2026-10-16 22:20 PT). Now D-006r2: open-weight `deepseek/deepseek-v4.1-flash` via OpenRouter, high reasoning, per-run cap; Opus for review, grading and judging only (Danny yes 2026-10-16 22:25 PT) | OBSERVED (decision) |
 
 ## References
 

@@ -9,7 +9,7 @@ FaustCoder is pre-release. No version is supported yet; security fixes land on
 ## Reporting a vulnerability
 
 Do not open a public issue for a vulnerability. Report it privately through
-[GitHub private vulnerability reporting](https://github.com/scrimshawlife-ctrl/FaustCoder/security/advisories/new).
+[GitHub private vulnerability reporting](https://github.com/Zero-State-LLC/FaustCoder/security/advisories/new).
 
 Include the affected file or component, steps to reproduce and the impact you
 expect. You get an acknowledgement when the report is triaged. Please allow time

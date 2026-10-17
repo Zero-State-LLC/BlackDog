@@ -30,4 +30,6 @@ Mirrors the decision items on the [project board](https://github.com/users/scrim
 | LIC-001 | Split license: Apache-2.0 for specs/ and docs/, Zero State proprietary for the rest | Done (ACCEPTED 2026-10-16) | ADR-0003, #20 |
 | D-003 | Sample rates 44.1 and 48 kHz | ACCEPTED 2026-10-16 | spec §14 |
 | D-004 | Corpus allowlist; GPL training-only; unlicensed excluded | ACCEPTED 2026-10-16 | ADR-0003 |
-| D-006 | Teacher: Opus via OpenRouter, per-run spend cap | ACCEPTED 2026-10-16 | ADR-0002 |
+| D-006 | Teacher: Opus via OpenRouter, per-run spend cap | SUPERSEDED 2026-10-16 22:25 PT | ADR-0002 |
+| D-006r2 | Teacher: open-weight deepseek-v4.1-flash via OpenRouter, per-run cap; Opus for review and judging only | ACCEPTED 2026-10-16 | ADR-0002, ADR-0003 |
+| ORG-001 | Repo moved to Zero-State-LLC, stays public (public versus private open) | Done 2026-10-16 | spec §18 |

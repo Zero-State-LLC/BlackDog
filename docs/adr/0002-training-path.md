@@ -74,10 +74,20 @@ Provenance: Danny yes 2026-10-16 22:20 PT. Recorded in [spec §18](../../specs/0
   [ADR-0003](0003-licensing-and-data-rights.md). GPL sources are
   training-only and are kept outside the repository and released data;
   unlicensed sources are excluded.
-- D-006: P2 synthetic data uses Opus via OpenRouter as the teacher. Each
+- D-006 (SUPERSEDED by D-006r2, Danny yes 2026-10-16 22:25 PT): P2 synthetic data uses Opus via OpenRouter as the teacher. Each
   generation run needs its own approved spend cap before it starts, and the
   receipt records the cap and the actual spend. Sealed holdout tasks are never
   sent to the teacher (INFERRED, from spec §9).
+- D-006r2 (Danny yes 2026-10-16 22:25 PT): P2 synthetic data and repair targets come from an
+  open-weight teacher, by default `deepseek/deepseek-v4.1-flash` via
+  OpenRouter with high reasoning effort (DeepSeek-V4.1-Flash, MIT license,
+  OBSERVED on Hugging Face 2026-10-16). Each run needs its own approved spend
+  cap; the receipt records model id, reasoning setting, cap and actual spend.
+  Opus via OpenRouter is used only for review, grading and eval judging and is
+  never a source of training targets, because Anthropic's usage terms restrict
+  training competing models on its outputs. Judge scores never replace the
+  compiler and signal-test gates (R-011, R-016). The holdout rule above still
+  applies to both models.
 
 ## Consequences
 
@@ -88,14 +98,14 @@ Provenance: Danny yes 2026-10-16 22:20 PT. Recorded in [spec §18](../../specs/0
   synthetic data, score evaluations and supply the RL reward.
 - Typed signal-flow graph analysis (spec §4.2), IDE integration, and the
   serving API move after P3 (spec §17).
-- Teacher-model use follows D-006 (per-run spend cap); corpus licenses follow
+- Teacher-model use follows D-006r2 (open-weight teacher, per-run spend cap); corpus licenses follow
   D-004 (ADR-0003).
 
 ## Alternatives considered
 
 - Larger students (14B, 30B MoE): rejected for the student; they conflict with
   the small-model goal and fine-tuning gains shrink with size on scarce data
-  (research F3). The teacher is fixed by D-006.
+  (research F3). The teacher is fixed by D-006r2.
 - Prompting only (few-shot or retrieval, no training): kept as the P0 baseline
   that every phase must beat.
 - LoRA-only for every phase: rejected for CPT on small models (research F4).

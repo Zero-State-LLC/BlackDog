@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/scrimshawlife-ctrl/FaustCoder/specs/001-faustcoder/contracts/TransitionReceipt.schema.json",
+  "$id": "https://github.com/Zero-State-LLC/FaustCoder/specs/001-faustcoder/contracts/TransitionReceipt.schema.json",
   "title": "TransitionReceipt",
   "description": "Append-only receipt for every state transition (spec §7, §7.0).",
   "type": "object",
