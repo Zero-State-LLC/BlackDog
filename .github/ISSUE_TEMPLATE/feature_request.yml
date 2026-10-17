@@ -1,0 +1,27 @@
+name: Feature request
+description: Propose new behavior or a task.
+labels: ["type:feature"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What the user or maintainer cannot do today.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+    validations:
+      required: true
+  - type: input
+    id: requirements
+    attributes:
+      label: Related requirements or journeys
+      description: For example R-010, J-02. If none exist, file a spec change instead.
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance evidence
+      description: What receipt or test proves this is done.

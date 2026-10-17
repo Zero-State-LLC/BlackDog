@@ -1,15 +1,24 @@
 name: Spec structure
 on:
   push:
+    branches: [main]
   pull_request:
+permissions:
+  contents: read
 jobs:
   structure:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Check required docs
         run: |
           test -s README.md
           test -s KANBAN.md
           test -s specs/001-faustcoder/spec.md
           test -s docs/adr/0001-dag-evidence.md
+  spec-kit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Check Spec Kit structure
+        run: ./scripts/check-spec-kit.sh

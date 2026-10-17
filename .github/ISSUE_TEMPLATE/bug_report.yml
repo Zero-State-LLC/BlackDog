@@ -1,0 +1,31 @@
+name: Bug report
+description: Something behaves differently from the spec or docs.
+labels: ["type:bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Do not paste credentials, licensed datasets, restricted material or model weights. Report security issues privately (see SECURITY.md).
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: Include the command, input and actual output.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      description: Reference the spec requirement or state transition when you can (for example R-005, §7.2).
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence
+      description: Receipt digests, Faust version, logs. Redact anything sensitive.
+  - type: input
+    id: version
+    attributes:
+      label: Commit or version

@@ -14,3 +14,86 @@ artifacts/
 checkpoints/
 runs/
 receipts/local/
+
+# ---------------------------------------------------------------------------
+# Never commit data, weights or credentials (constitution V, SECURITY.md).
+# Code, schemas and small reviewed fixtures under tests/fixtures/ are fine.
+# ---------------------------------------------------------------------------
+
+# Datasets and raw corpora
+data/
+corpus/raw/
+corpus/cache/
+datasets/raw/
+datasets/cache/
+datasets/snapshots/
+holdout/
+**/holdout/
+*.arrow
+*.feather
+*.jsonl
+*.jsonl.gz
+*.jsonl.zst
+*.csv.gz
+*.tfrecord
+*.npy
+*.npz
+*.h5
+*.hdf5
+*.zst
+*.tar
+*.tar.gz
+*.tgz
+*.zip
+.cache/
+hf_cache/
+.huggingface/
+
+# Model weights, adapters and checkpoints
+*.bin
+*.onnx
+*.ggml
+*.mlmodel
+*.msgpack
+*.keras
+*.engine
+*.plan
+adapter_model.*
+models/
+weights/
+checkpoint-*/
+**/checkpoints/
+outputs/
+mlruns/
+mlartifacts/
+wandb/
+lightning_logs/
+
+# Rendered audio (keep reviewed fixtures only)
+*.wav
+*.flac
+*.aiff
+!tests/fixtures/**/*.wav
+
+# Credentials and secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+id_rsa*
+id_ed25519*
+.netrc
+credentials.json
+secrets.*
+*.secret
+.hf_token
+
+# Tooling
+node_modules/
+.DS_Store
+.idea/
+.vscode/
+*.swp
