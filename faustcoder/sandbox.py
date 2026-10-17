@@ -70,9 +70,10 @@ Enforcement, in order:
 used by GitHub-hosted runners. If either is missing, the sandbox raises
 and does not run the compiler on the host network.
 
-Staged inputs are not counted as produced output. That is the runtime
-trio, ``input.dsp``, and anything under ``inputs/`` (the signal harness
-writes its stimulus files there).
+Staged inputs count toward the output cap. The signal harness writes
+its stimulus files under ``inputs/`` before the worker starts, and a
+later write there is counted too. The runtime trio and ``input.dsp``
+are the only ignored files.
 """
 
 from __future__ import annotations
@@ -486,7 +487,7 @@ def _produced_bytes(workdir: Path) -> int:
         if not path.is_file():
             continue
         relative = path.relative_to(workdir).as_posix()
-        if relative in _IGNORED_OUTPUTS or relative.startswith("inputs/"):
+        if relative in _IGNORED_OUTPUTS:
             continue
         try:
             total += path.stat().st_size

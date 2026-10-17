@@ -11,11 +11,19 @@ and the stimuli named by the profile (impulse, sine, noise). A suite
 runs both rates. Buttons are 1 for the first block and 0 after that,
 which is sample 0 when the block size is 1.
 
-Comparison follows Faust's impulse-test style: the candidate is a
-prefix of the reference, and the maximum absolute sample difference
-must be within tolerance. The default tolerance is 2e-6. That number
-is the default cited for Faust's ``filesCompare`` tool; this change
-did not re-read that source, so the citation is INFERRED.
+Comparison has two parts. The head (default 2048 frames, or the
+whole render when that is shorter) is an exact sample check. The
+allowed gap on sample ``ref`` is ``atol + rtol * abs(ref)``. Default
+``atol`` is 2e-6, the default cited for Faust's ``filesCompare``
+tool; this change did not re-read that source, so the citation is
+INFERRED. Default ``rtol`` is 1e-5, the relative term in
+``numpy.allclose``, and that citation is INFERRED too. The rest of
+the render is a coarse check: per-block RMS and spectral band
+energies, with the same tolerance. The render follows an impulse
+reference until its tail drops below ``tail_threshold``, and it stops
+at ``max_frames`` (144000, three seconds at 48 kHz) when the tail is
+still hot. A hot impulse tail shorter than that cap fails the
+comparison. Sine and noise do not decay, so they are not tail-gated.
 
 Metrics are integers on a 1e-9 grid (RMS, peak, absolute error,
 spectral band magnitudes) plus counts of NaN, Inf and float32
@@ -68,6 +76,7 @@ from faustcoder.compiler import (
     worker_directory,
 )
 from faustcoder.compiler import _stage_runtime, _validate_options
+import faustcoder.sandbox as sandbox
 from faustcoder.sandbox import ResourceLimits, SandboxError, node_command, run_in_sandbox
 from faustcoder.schemas import validate
 from faustcoder.store import ArtifactStore
@@ -78,8 +87,11 @@ DEFAULT_BLOCK_SIZE = 64
 DEFAULT_SEED = 1
 DEFAULT_FRAMES = 2048
 DEFAULT_TOLERANCE = 2e-6
+DEFAULT_RELATIVE_TOLERANCE = 1e-5
+DEFAULT_TAIL_THRESHOLD = 1e-8
+MAX_FRAMES = 144_000
 STIMULI = ("impulse", "sine", "noise")
-METRIC_VERSION = 1
+METRIC_VERSION = 2
 SIGNAL_SCHEMA_VERSION = "0.3.2"
 _SCHEMA = "dsp-test-receipt.schema.json"
 _FLOAT32_MIN_NORMAL = 1.1754943508222875e-38
@@ -108,6 +120,8 @@ class SignalProfile:
     block_size: int = DEFAULT_BLOCK_SIZE
     seed: int = DEFAULT_SEED
     frames: int = DEFAULT_FRAMES
+    head_frames: int | None = None
+    max_frames: int | None = None
     stimuli: tuple[str, ...] = STIMULI
     sine_hz: int = 440
     sine_amplitude: float = 0.5
@@ -115,6 +129,8 @@ class SignalProfile:
     impulse_amplitude: float = 1.0
     expected_channels: int | None = None
     absolute_tolerance: float = DEFAULT_TOLERANCE
+    relative_tolerance: float = DEFAULT_RELATIVE_TOLERANCE
+    tail_threshold: float = DEFAULT_TAIL_THRESHOLD
     silence_rms: float = 1e-8
     clip_peak: float = 1.0
     reject_silence: bool = True
@@ -130,10 +146,20 @@ class SignalProfile:
             raise ValueError("sample_rate must be 44100 or 48000")
         if self.block_size < 1 or self.block_size > 4096:
             raise ValueError("block_size must be from 1 to 4096")
-        if self.frames < self.block_size or self.frames > 16384:
-            raise ValueError("frames must be from block_size to 16384")
+        cap = self.max_frames
+        if cap is None:
+            cap = MAX_FRAMES - (MAX_FRAMES % self.block_size)
+            object.__setattr__(self, "max_frames", cap)
+        if cap < self.block_size or cap > MAX_FRAMES or cap % self.block_size != 0:
+            raise ValueError("max_frames must be a block multiple up to 144000")
+        if self.frames < self.block_size or self.frames > cap:
+            raise ValueError("frames must be from block_size to max_frames")
         if self.frames % self.block_size != 0:
             raise ValueError("frames must be a multiple of block_size")
+        head = self.head_frames if self.head_frames is not None else min(DEFAULT_FRAMES, self.frames)
+        if not isinstance(head, int) or isinstance(head, bool) or head < 1 or head > self.frames:
+            raise ValueError("head_frames must lie inside the render")
+        object.__setattr__(self, "head_frames", head)
         if not isinstance(self.seed, int) or isinstance(self.seed, bool):
             raise ValueError("seed must be an integer")
         if not self.stimuli:
@@ -156,6 +182,10 @@ class SignalProfile:
             raise ValueError("expected_channels must be positive")
         if not math.isfinite(self.absolute_tolerance) or self.absolute_tolerance < 0:
             raise ValueError("absolute_tolerance must be finite and non-negative")
+        if not math.isfinite(self.relative_tolerance) or self.relative_tolerance < 0:
+            raise ValueError("relative_tolerance must be finite and non-negative")
+        if not math.isfinite(self.tail_threshold) or self.tail_threshold < 0:
+            raise ValueError("tail_threshold must be finite and non-negative")
         if not math.isfinite(self.silence_rms) or self.silence_rms < 0:
             raise ValueError("silence_rms must be finite and non-negative")
         if not math.isfinite(self.clip_peak) or self.clip_peak <= 0:
@@ -166,11 +196,57 @@ class SignalProfile:
 
 @dataclass(frozen=True)
 class SignalReference:
-    """Expected float32 samples for each stimulus, channel-major."""
+    """Expected float32 samples for one rate, block, length, seed and stimulus set.
 
-    channels: int
+    ``samples`` is channel-major. A non-finite sample is refused here,
+    before any comparison. The render that produced the samples is the
+    identity below; a profile with a different identity is not compared.
+    """
+
+    sample_rate: int
+    block_size: int
     frames: int
+    seed: int
+    stimuli: tuple[str, ...]
+    channels: int
     samples: Mapping[str, Sequence[Sequence[float]]]
+
+    def __post_init__(self) -> None:
+        if self.sample_rate not in SAMPLE_RATES:
+            raise ValueError("sample_rate must be 44100 or 48000")
+        if self.block_size < 1 or self.block_size > 4096:
+            raise ValueError("block_size must be from 1 to 4096")
+        if self.frames < 1:
+            raise ValueError("frames must be positive")
+        if not isinstance(self.seed, int) or isinstance(self.seed, bool):
+            raise ValueError("seed must be an integer")
+        if self.channels < 1:
+            raise ValueError("channels must be positive")
+        stimuli = self.stimuli
+        if not isinstance(stimuli, tuple):
+            stimuli = tuple(stimuli)
+            object.__setattr__(self, "stimuli", stimuli)
+        if not stimuli:
+            raise ValueError("stimuli must name at least one stimulus")
+        if len(set(stimuli)) != len(stimuli):
+            raise ValueError("stimuli must not repeat")
+        for name in stimuli:
+            if name not in STIMULI:
+                raise ValueError(f"unknown stimulus: {name}")
+        if set(self.samples) != set(stimuli):
+            raise ValueError("reference samples must match the stimulus names")
+        for name in stimuli:
+            channels = self.samples[name]
+            if len(channels) != self.channels:
+                raise ValueError(f"reference {name} has the wrong channel count")
+            for channel in channels:
+                if len(channel) != self.frames:
+                    raise ValueError(f"reference {name} has the wrong frame count")
+                for sample in channel:
+                    if not math.isfinite(float(sample)):
+                        raise SignalHarnessError(
+                            "non-finite reference samples are refused at load"
+                        )
 
 
 @dataclass(frozen=True)
@@ -302,6 +378,8 @@ def profile_payload(profile: SignalProfile) -> dict[str, Any]:
         "clip_peak_nano": to_nano(profile.clip_peak),
         "expected_channels": profile.expected_channels,
         "frames": profile.frames,
+        "head_frames": profile.head_frames,
+        "max_frames": profile.max_frames,
         "impulse_amplitude_nano": to_nano(profile.impulse_amplitude),
         "max_denormal_count": profile.max_denormal_count,
         "metric_version": METRIC_VERSION,
@@ -311,39 +389,42 @@ def profile_payload(profile: SignalProfile) -> dict[str, Any]:
         "reject_dc": profile.reject_dc,
         "reject_nonfinite": profile.reject_nonfinite,
         "reject_silence": profile.reject_silence,
+        "relative_tolerance_nano": to_nano(profile.relative_tolerance),
         "require_reference": profile.require_reference,
         "sample_rate": profile.sample_rate,
         "seed": profile.seed,
         "silence_rms_nano": to_nano(profile.silence_rms),
+        "tail_threshold_nano": to_nano(profile.tail_threshold),
         "sine_amplitude_nano": to_nano(profile.sine_amplitude),
         "sine_hz": profile.sine_hz,
         "stimuli": list(profile.stimuli),
-        "version": 1,
+        "version": 2,
     }
 
 
-def reference_payload(
-    profile: SignalProfile, reference: SignalReference
-) -> dict[str, Any]:
-    """Return the integer reference document stored as an artifact."""
+def reference_payload(reference: SignalReference) -> dict[str, Any]:
+    """Return the integer reference document stored as an artifact.
+
+    The identity is the reference's own rate, block, frame count, seed
+    and stimulus names. Samples are the 1e-9 grid the comparison uses.
+    """
     stimuli: dict[str, list[list[int]]] = {}
-    for name in profile.stimuli:
-        channels = reference.samples.get(name)
-        if channels is None:
-            continue
+    for name in reference.stimuli:
         stimuli[name] = [
-            [to_nano(float(sample)) for sample in channel] for channel in channels
+            [to_nano(float(sample)) for sample in channel]
+            for channel in reference.samples[name]
         ]
     return {
-        "block_size": profile.block_size,
+        "block_size": reference.block_size,
         "channels": reference.channels,
         "frames": reference.frames,
         "kind": "faustcoder.signal-reference",
         "quantization_nano": NANO,
-        "sample_rate": profile.sample_rate,
-        "seed": profile.seed,
+        "sample_rate": reference.sample_rate,
+        "seed": reference.seed,
+        "stimulus_names": list(reference.stimuli),
         "stimuli": stimuli,
-        "version": 1,
+        "version": 2,
     }
 
 
@@ -379,6 +460,8 @@ def run_signal(
     """
     if not isinstance(source, str):
         raise TypeError("source must be a string")
+    if reference is not None:
+        _require_same_setup(profile, reference)
     if source_needs_libraries(source):
         raise SignalLibrariesUnavailable(
             "pinned faustlibraries are not staged; T03b owns that tree, "
@@ -569,28 +652,44 @@ def compare_channels(
     candidate: Sequence[Sequence[float]],
     reference: Sequence[Sequence[float]],
     *,
-    tolerance: float,
+    tolerance: float | None = None,
+    atol: float | None = None,
+    rtol: float = DEFAULT_RELATIVE_TOLERANCE,
 ) -> tuple[float, str | None]:
     """Compare ``candidate`` as a prefix of ``reference``.
 
-    Returns the maximum absolute error and a failure token, or None
-    when the prefix is inside ``tolerance``.
+    A sample passes when ``abs(cand - ref) <= atol + rtol * abs(ref)``.
+    ``tolerance`` is the absolute term kept for callers that pass one
+    number. A non-finite sample on either side fails the comparison
+    and does not stop the scan of the finite samples. The returned
+    peak is the largest finite absolute gap.
     """
+    if atol is None:
+        atol = DEFAULT_TOLERANCE if tolerance is None else tolerance
+    elif tolerance is not None:
+        raise SignalHarnessError("pass atol or tolerance, not both")
     if len(candidate) != len(reference):
         return 0.0, "channels"
     if not candidate:
         return 0.0, "channels"
     peak = 0.0
+    nonfinite = False
+    exceeded = False
     for cand_channel, ref_channel in zip(candidate, reference, strict=True):
         if len(ref_channel) < len(cand_channel):
             return peak, "reference_short"
         for cand_sample, ref_sample in zip(cand_channel, ref_channel, strict=False):
             if not math.isfinite(cand_sample) or not math.isfinite(ref_sample):
-                return math.inf, "nonfinite"
+                nonfinite = True
+                continue
             gap = abs(cand_sample - ref_sample)
             if gap > peak:
                 peak = gap
-    if peak > tolerance:
+            if gap > atol + rtol * abs(ref_sample):
+                exceeded = True
+    if nonfinite:
+        return peak, "nonfinite"
+    if exceeded:
         return peak, "reference"
     return peak, None
 
@@ -610,7 +709,7 @@ def _judge(
     if profile.expected_channels is not None and outputs != profile.expected_channels:
         failures.append("channels")
     renders: dict[str, Any] = {}
-    ref_payload = reference_payload(profile, reference) if reference is not None else None
+    ref_payload = reference_payload(reference) if reference is not None else None
     for name in sorted(profile.stimuli):
         channels = rendered["samples"][name]
         summary, stimulus_failures, peak_error = _measure_stimulus(
@@ -622,9 +721,10 @@ def _judge(
             summary["max_abs_error_nano"] = to_nano(peak_error)
     failures = sorted(set(failures))
     metrics: dict[str, Any] = {
-        "comparison": "absolute-prefix",
+        "comparison": "head-exact+coarse",
         "failures": failures,
         "frame_count": profile.frames,
+        "head_frames": profile.head_frames,
         "input_channels": int(rendered["inputs"]),
         "output_channels": outputs,
         "press_buttons_first_block": profile.press_buttons_first_block,
@@ -637,7 +737,10 @@ def _judge(
     thresholds: dict[str, Any] = {
         "absolute_tolerance_nano": to_nano(profile.absolute_tolerance),
         "clip_peak_nano": to_nano(profile.clip_peak),
+        "head_frames": profile.head_frames,
+        "relative_tolerance_nano": to_nano(profile.relative_tolerance),
         "silence_rms_nano": to_nano(profile.silence_rms),
+        "tail_threshold_nano": to_nano(profile.tail_threshold),
     }
     if profile.expected_channels is not None:
         thresholds["expected_channels"] = profile.expected_channels
@@ -654,7 +757,7 @@ def _judge(
         thresholds["reject_clipping"] = True
     pin = runtime_pin()
     harness = {
-        "comparison": "absolute-prefix",
+        "comparison": "head-exact+coarse",
         "faust_version": pin.faust_version,
         "faustlibraries_version": pin.faustlibraries_version,
         "faustwasm": FAUSTWASM_VERSION,
@@ -668,6 +771,9 @@ def _judge(
             "libfaust-wasm.wasm": pin.wasm_sha256,
         },
     }
+    unshare_sha = _unshare_sha256()
+    if unshare_sha is not None:
+        harness["unshare_sha256"] = unshare_sha
     receipt: dict[str, Any] = {
         "source_sha256": hashlib.sha256(source.encode("utf-8")).hexdigest(),
         "test_suite_digest": content_digest_for(profile_payload(profile)),
@@ -756,19 +862,156 @@ def _measure_stimulus(
     if len(channels) != len(expected):
         failures.append(f"{name}:channels")
         return summary, failures, peak_error
+    if not finite:
+        failures.append(f"{name}:nonfinite")
+        _note_impulse_tail(name, reference, profile, failures)
+        return summary, failures, peak_error
+    quantized_candidate = _quantize_channels(channels)
+    quantized_reference = _quantize_channels(expected)
+    head = profile.head_frames
+    if not isinstance(head, int):
+        raise SignalHarnessError("head_frames was not resolved")
     peak_error, token = compare_channels(
-        channels, expected, tolerance=profile.absolute_tolerance
+        [channel[:head] for channel in quantized_candidate],
+        [channel[:head] for channel in quantized_reference],
+        atol=profile.absolute_tolerance,
+        rtol=profile.relative_tolerance,
     )
     if token == "reference":
         failures.append(f"{name}:reference")
     elif token == "reference_short":
         failures.append(f"{name}:reference_short")
     elif token == "nonfinite":
-        if profile.reject_nonfinite:
-            failures.append(f"{name}:nonfinite")
+        failures.append(f"{name}:nonfinite")
     elif token == "channels":
         failures.append(f"{name}:channels")
+    rms_gap, band_gap, rms_fail, band_fail = _coarse_gaps(
+        quantized_candidate, quantized_reference, profile
+    )
+    summary["coarse"] = {
+        "band_max_abs_error_nano": to_nano(band_gap),
+        "block_rms_max_abs_error_nano": to_nano(rms_gap),
+    }
+    if rms_fail:
+        failures.append(f"{name}:envelope")
+    if band_fail:
+        failures.append(f"{name}:bands")
+    _note_impulse_tail(name, reference, profile, failures)
     return summary, failures, peak_error
+
+
+def _require_same_setup(profile: SignalProfile, reference: SignalReference) -> None:
+    """Refuse a comparison whose reference was rendered under another setup."""
+    if reference.sample_rate != profile.sample_rate:
+        raise SignalHarnessError("reference sample rate does not match the profile")
+    if reference.block_size != profile.block_size:
+        raise SignalHarnessError("reference block size does not match the profile")
+    if reference.frames != profile.frames:
+        raise SignalHarnessError("reference frame count does not match the profile")
+    if reference.seed != profile.seed:
+        raise SignalHarnessError("reference seed does not match the profile")
+    if tuple(reference.stimuli) != tuple(profile.stimuli):
+        raise SignalHarnessError("reference stimulus does not match the profile")
+
+
+def _unshare_sha256() -> str | None:
+    """Hash the unshare binary when T03b exports ``unshare_executable``.
+
+    PR #40 owns that lookup and the wrapper check. This harness does not
+    resolve ``unshare`` itself. The digest omits the hash until the
+    function exists.
+    """
+    resolver = getattr(sandbox, "unshare_executable", None)
+    if resolver is None:
+        return None
+    path = Path(resolver())
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def _quantize_channels(channels: Sequence[Sequence[float]]) -> list[list[float]]:
+    """Map finite samples onto the 1e-9 grid stored in the reference."""
+    return [[to_nano(float(sample)) / NANO for sample in channel] for channel in channels]
+
+
+def _note_impulse_tail(
+    name: str,
+    reference: SignalReference,
+    profile: SignalProfile,
+    failures: list[str],
+) -> None:
+    """Fail an impulse window that ends while the reference is still hot.
+
+    Sine and noise are sustained, so they are not gated. A hot tail at
+    ``max_frames`` has been followed to the cap and is left to the
+    coarse check.
+    """
+    if name != "impulse":
+        return
+    block = profile.block_size
+    threshold = profile.tail_threshold
+    hot = False
+    for channel in reference.samples[name]:
+        tail = [float(sample) for sample in channel[-block:]]
+        if any(abs(sample) >= threshold for sample in tail):
+            hot = True
+            break
+    if not hot:
+        return
+    cap = profile.max_frames
+    if isinstance(cap, int) and profile.frames >= cap:
+        return
+    failures.append(f"{name}:reference_tail")
+
+
+def _coarse_gaps(
+    candidate: Sequence[Sequence[float]],
+    reference: Sequence[Sequence[float]],
+    profile: SignalProfile,
+) -> tuple[float, float, bool, bool]:
+    """Compare per-block RMS and per-window band energies.
+
+    Returns the maximum RMS gap, the maximum band gap, and whether
+    each exceeded ``atol + rtol * abs(reference)``.
+    """
+    atol = profile.absolute_tolerance
+    rtol = profile.relative_tolerance
+    block = profile.block_size
+    rms_peak = 0.0
+    band_peak = 0.0
+    rms_fail = False
+    band_fail = False
+    for cand, ref in zip(candidate, reference, strict=True):
+        count = min(len(cand), len(ref))
+        for start in range(0, count, block):
+            stop = min(start + block, count)
+            cand_rms = _rms(cand[start:stop])
+            ref_rms = _rms(ref[start:stop])
+            gap = abs(cand_rms - ref_rms)
+            if gap > rms_peak:
+                rms_peak = gap
+            if gap > atol + rtol * abs(ref_rms):
+                rms_fail = True
+        offset = 0
+        while offset < count:
+            window = _window_length(min(count - offset, 1024))
+            if window < 64:
+                break
+            cand_bands = _spectral(cand[offset : offset + window], profile.sample_rate)["bands_nano"]
+            ref_bands = _spectral(ref[offset : offset + window], profile.sample_rate)["bands_nano"]
+            for cand_nano, ref_nano in zip(cand_bands, ref_bands, strict=True):
+                gap = abs(cand_nano - ref_nano) / NANO
+                if gap > band_peak:
+                    band_peak = gap
+                if gap > atol + rtol * (abs(ref_nano) / NANO):
+                    band_fail = True
+            offset += window
+    return rms_peak, band_peak, rms_fail, band_fail
+
+
+def _rms(samples: Sequence[float]) -> float:
+    if not samples:
+        return 0.0
+    return math.sqrt(math.fsum(sample * sample for sample in samples) / len(samples))
 
 
 def _spectral(channel: Sequence[float], sample_rate: int) -> dict[str, Any]:

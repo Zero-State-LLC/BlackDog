@@ -98,7 +98,9 @@ specs/001-faustcoder/
    size and seed, compares against stored references in the style of Faust's
    impulse tests, and emits a DSPTestReceipt. INFERRED: metric numbers live in
    the open `metrics` object (1e-9 grid, NaN/Inf/denormal counts, spectral
-   bands). CPU wall time is recorded only for a promotion candidate.
+   bands, coarse block RMS and band energies). The head is an exact compare;
+   the render follows an impulse tail up to 144000 frames. CPU wall time is
+   recorded only for a promotion candidate and is not a reward term.
 4. **Target lanes** (T17 to T22, ADR-0004): language, plugin and embedded
    lanes in pinned containers emit TargetReceipts; the FPGA F0 spike decides
    the FPGA path.

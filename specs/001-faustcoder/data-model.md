@@ -69,10 +69,19 @@ a new node.
 
 The accepted contract (spec §8) leaves `metrics` and `thresholds` as open
 objects and does not name a frame count. T04 keeps that contract. The
-harness puts the render length, stimulus names, failure tokens, per-stimulus
-RMS, peak, NaN/Inf/denormal counts, spectral bands and the float32 sample
-digest in `metrics`. Thresholds record the gates that were enforced.
-`cpu_duration_ms` is present only for a promotion candidate. The reference
-document is a separate artifact (`kind = faustcoder.signal-reference`) whose
-content digest is `reference_digest`. None of this edits the accepted spec
+harness puts the render length, the exact-compare head, stimulus names,
+failure tokens, per-stimulus RMS, peak, NaN/Inf/denormal counts, spectral
+bands, coarse block-RMS and band-energy gaps, and the float32 sample
+digest in `metrics`. Thresholds record the gates that were enforced,
+including the absolute tolerance and the relative term. `cpu_duration_ms`
+is present only for a promotion candidate. The reference document is a
+separate artifact (`kind = faustcoder.signal-reference`) whose content
+digest is `reference_digest`. That document carries its own sample rate,
+block size, frame count, seed and stimulus names, and its samples are the
+1e-9 grid used for the comparison. None of this edits the accepted spec
 text. A schema field for frames would be a Proposed amendment.
+
+Reward use of these receipts is not wired. INFERRED: controls have to be
+swept before a receipt is a reward, a reference-free DC or variance check
+is never a reward, and wall-time CPU stays informational. See the signal
+harness runbook.

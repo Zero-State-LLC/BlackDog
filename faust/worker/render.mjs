@@ -144,7 +144,8 @@ async function main() {
   if (!Number.isInteger(blockSize) || blockSize < 1 || blockSize > 4096) {
     failClosed("block_size is out of range");
   }
-  if (!Number.isInteger(frames) || frames < blockSize || frames > 16384 || frames % blockSize !== 0) {
+  // Same cap as faustcoder.signal.MAX_FRAMES (3 s at 48 kHz).
+  if (!Number.isInteger(frames) || frames < blockSize || frames > 144000 || frames % blockSize !== 0) {
     failClosed("frames are out of range");
   }
   if (!Array.isArray(stimuli) || stimuli.length === 0) failClosed("stimuli are required");

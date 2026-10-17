@@ -10,6 +10,7 @@ import pytest
 from faustcoder.candidate_machine import CandidateState
 from faustcoder.signal import (
     DEFAULT_FRAMES,
+    DEFAULT_RELATIVE_TOLERANCE,
     DEFAULT_TOLERANCE,
     SAMPLE_RATES,
     SignalHarnessError,
@@ -17,6 +18,7 @@ from faustcoder.signal import (
     SignalProfile,
     SignalReference,
     SignalSuite,
+    _unshare_sha256,
     commit_signal_check,
     compare_channels,
     f32,
@@ -75,10 +77,23 @@ def _button(frames: int, block_size: int) -> list[float]:
 def _reference(profile: SignalProfile, transform) -> SignalReference:
     stimuli = stimuli_for(profile)
     return SignalReference(
-        channels=1,
+        sample_rate=profile.sample_rate,
+        block_size=profile.block_size,
         frames=profile.frames,
+        seed=profile.seed,
+        stimuli=profile.stimuli,
+        channels=1,
         samples={name: [transform(samples)] for name, samples in stimuli.items()},
     )
+
+
+def _echo(samples: list[float], delay: int, gain: float) -> list[float]:
+    gain32 = f32(gain)
+    rendered: list[float] = []
+    for index, sample in enumerate(samples):
+        delayed = samples[index - delay] if index >= delay else 0.0
+        rendered.append(f32(f32(sample) + f32(delayed * gain32)))
+    return rendered
 
 
 def _run(source: str, profile: SignalProfile, reference: SignalReference | None = None, **kwargs):
@@ -111,7 +126,7 @@ def test_sample_rate_is_closed() -> None:
         SignalProfile(sample_rate=22050)
 
 
-def test_prefix_comparison_uses_absolute_tolerance() -> None:
+def test_prefix_comparison_uses_absolute_and_relative_tolerance() -> None:
     candidate = [[0.0, 1.0]]
     longer = [[0.0, 1.0, 0.5]]
     assert compare_channels(candidate, longer, tolerance=2e-6) == (0.0, None)
@@ -121,6 +136,22 @@ def test_prefix_comparison_uses_absolute_tolerance() -> None:
     error, token = compare_channels(candidate, off, tolerance=2e-6)
     assert token == "reference"
     assert error > 2e-6
+    loud = [[1.0 + 1e-5]]
+    reference = [[1.0]]
+    gap, loud_token = compare_channels(loud, reference, atol=2e-6, rtol=1e-5)
+    assert loud_token is None
+    assert gap > 2e-6
+    quiet_gap, quiet_token = compare_channels([[1e-7]], [[0.0]], atol=2e-6, rtol=1e-5)
+    assert quiet_token is None
+    assert quiet_gap < 2e-6
+
+
+def test_nonfinite_comparison_scans_past_the_first_bad_sample() -> None:
+    candidate = [[float("nan"), 0.0, 5.0]]
+    reference = [[0.0, 0.0, 0.0]]
+    peak, token = compare_channels(candidate, reference, atol=2e-6, rtol=0.0)
+    assert token == "nonfinite"
+    assert peak == 5.0
 
 
 def test_reproducible_digest_drops_cpu_only() -> None:
@@ -174,7 +205,19 @@ def test_wire_matches_the_stimulus(rate: int) -> None:
     assert first.reproducible_digest == second.reproducible_digest
     assert "cpu_duration_ms" not in first.receipt["metrics"]
     for name in profile.stimuli:
-        assert first.receipt["metrics"]["renders"][name]["max_abs_error_nano"] == 0
+        rendered = first.receipt["metrics"]["renders"][name]
+        assert rendered["max_abs_error_nano"] == 0
+        assert rendered["coarse"]["block_rms_max_abs_error_nano"] == 0
+        assert rendered["coarse"]["band_max_abs_error_nano"] == 0
+    assert first.receipt["thresholds"]["relative_tolerance_nano"] == to_nano(
+        DEFAULT_RELATIVE_TOLERANCE
+    )
+    assert first.reference_payload is not None
+    assert first.reference_payload["sample_rate"] == profile.sample_rate
+    assert first.reference_payload["block_size"] == profile.block_size
+    assert first.reference_payload["frames"] == profile.frames
+    assert first.reference_payload["seed"] == profile.seed
+    assert first.reference_payload["stimulus_names"] == list(profile.stimuli)
 
 
 def test_gain_and_delay_and_button_match_closed_forms() -> None:
@@ -193,8 +236,12 @@ def test_gain_and_delay_and_button_match_closed_forms() -> None:
         _read(SIGNAL / "button.dsp"),
         profile,
         SignalReference(
-            channels=1,
+            sample_rate=profile.sample_rate,
+            block_size=profile.block_size,
             frames=profile.frames,
+            seed=profile.seed,
+            stimuli=profile.stimuli,
+            channels=1,
             samples={
                 name: [_button(profile.frames, profile.block_size)] for name in profile.stimuli
             },
@@ -337,3 +384,142 @@ def test_signal_digest_covers_the_source_bytes() -> None:
     assert run.receipt["reference_digest"].startswith("sha256:")
     assert run.receipt["harness_digest"].startswith("sha256:")
     assert run.receipt["test_suite_digest"].startswith("sha256:")
+
+
+def test_long_delay_against_dry_fails() -> None:
+    profile = _profile(frames=4096, stimuli=("impulse",))
+    reference = _reference(profile, lambda samples: _echo(samples, 4000, 1.0))
+    run = _run("process = _;\n", profile, reference)
+    impulse = run.receipt["metrics"]["renders"]["impulse"]
+    assert run.receipt["passed"] is False
+    assert impulse["max_abs_error_nano"] == 0
+    assert "impulse:envelope" in run.failures
+    assert "impulse:bands" in run.failures
+
+
+def test_half_second_echo_against_dry_fails() -> None:
+    profile = _profile(frames=24128, stimuli=("impulse",))
+    reference = _reference(profile, lambda samples: _echo(samples, 24000, 0.5))
+    run = _run("process = _;\n", profile, reference)
+    impulse = run.receipt["metrics"]["renders"]["impulse"]
+    assert profile.frames / profile.sample_rate == pytest.approx(0.502666, rel=1e-3)
+    assert run.receipt["passed"] is False
+    assert impulse["max_abs_error_nano"] == 0
+    assert "impulse:envelope" in run.failures
+    assert "impulse:bands" in run.failures
+
+
+def test_dc_after_3000_fails() -> None:
+    profile = _profile(frames=4096, stimuli=("impulse",))
+    reference = _reference(profile, lambda samples: samples)
+    run = _run(_read(SIGNAL / "late_dc.dsp"), profile, reference)
+    impulse = run.receipt["metrics"]["renders"]["impulse"]
+    assert run.receipt["passed"] is False
+    assert impulse["max_abs_error_nano"] == 0
+    assert "impulse:envelope" in run.failures
+    assert "impulse:bands" in run.failures
+
+
+def test_hot_impulse_tail_fails_before_the_cap() -> None:
+    profile = _profile(stimuli=("impulse",))
+    reference = _reference(profile, lambda samples: _pole(samples, 0.999))
+    run = _run("process = + ~ *(0.999);\n", profile, reference)
+    assert run.receipt["passed"] is False
+    assert run.receipt["metrics"]["renders"]["impulse"]["max_abs_error_nano"] == 0
+    assert "impulse:reference" not in run.failures
+    assert "impulse:reference_tail" in run.failures
+
+
+def test_nonfinite_comparison_fails_with_the_count_flag_off() -> None:
+    profile = _profile(
+        stimuli=("impulse",),
+        reject_nonfinite=False,
+        reject_silence=False,
+        reject_dc=False,
+    )
+    reference = _reference(profile, lambda samples: samples)
+    source = "process = _ * 0 + sqrt(0 - (1 - 1')) + 0.3;\n"
+    run = _run(source, profile, reference)
+    assert run.receipt["passed"] is False
+    assert any(failure.endswith(":nonfinite") for failure in run.failures)
+    assert not any(failure.endswith(":nan") or failure.endswith(":inf") for failure in run.failures)
+    assert run.receipt["metrics"]["renders"]["impulse"]["nan_count"] > 0
+
+
+def test_nonfinite_reference_is_refused_at_load() -> None:
+    profile = _profile(frames=64, block_size=64, stimuli=("impulse",))
+    base = {
+        "sample_rate": profile.sample_rate,
+        "block_size": profile.block_size,
+        "frames": profile.frames,
+        "seed": profile.seed,
+        "stimuli": profile.stimuli,
+        "channels": 1,
+    }
+    with pytest.raises(SignalHarnessError, match="non-finite"):
+        SignalReference(**base, samples={"impulse": [[float("nan")] * profile.frames]})
+    with pytest.raises(SignalHarnessError, match="non-finite"):
+        finite = [0.0] * profile.frames
+        finite[-1] = float("inf")
+        SignalReference(**base, samples={"impulse": [finite]})
+
+
+def test_reference_identity_must_match() -> None:
+    profile = _profile()
+    good = _reference(profile, lambda samples: samples)
+    mismatches = [
+        ("sample rate", SignalReference(
+            sample_rate=44100,
+            block_size=good.block_size,
+            frames=good.frames,
+            seed=good.seed,
+            stimuli=good.stimuli,
+            channels=1,
+            samples=good.samples,
+        )),
+        ("block size", SignalReference(
+            sample_rate=good.sample_rate,
+            block_size=32,
+            frames=good.frames,
+            seed=good.seed,
+            stimuli=good.stimuli,
+            channels=1,
+            samples=good.samples,
+        )),
+        ("seed", SignalReference(
+            sample_rate=good.sample_rate,
+            block_size=good.block_size,
+            frames=good.frames,
+            seed=good.seed + 1,
+            stimuli=good.stimuli,
+            channels=1,
+            samples=good.samples,
+        )),
+        ("stimulus", _reference(_profile(stimuli=("sine",)), lambda samples: samples)),
+    ]
+    short = _profile(frames=128)
+    mismatches.append(("frame count", _reference(short, lambda samples: samples)))
+    for label, reference in mismatches:
+        with pytest.raises(SignalHarnessError, match=label):
+            _run("process = _;\n", profile, reference)
+
+
+def test_staged_inputs_count_toward_the_output_cap(tmp_path: Path) -> None:
+    from faustcoder.sandbox import _produced_bytes
+
+    staged = tmp_path / "inputs"
+    staged.mkdir()
+    (staged / "impulse.f32").write_bytes(b"\x00" * 4096)
+    (tmp_path / "input.dsp").write_bytes(b"process = _;\n")
+    assert _produced_bytes(tmp_path) == 4096
+
+
+def test_unshare_identity_follows_the_sandbox_export() -> None:
+    import faustcoder.sandbox as sandbox
+
+    digest = _unshare_sha256()
+    if hasattr(sandbox, "unshare_executable"):
+        assert digest is not None
+        assert len(digest) == 64
+    else:
+        assert digest is None
