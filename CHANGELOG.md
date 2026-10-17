@@ -10,6 +10,8 @@ See [docs/VERSIONING.md](docs/VERSIONING.md).
 
 ### Added
 
+- T06: normalize pinned Faust sources, cluster exact and near-duplicates, and write a deterministic `DedupManifest`. Multi-file units stay one unit. Exclusions carry a reason code (`ffunction` for faust-stk foreign-function files). Corpus compile checks stay behind the T03b gate and default off. See [docs/runbooks/t06-normalize-dedup.md](docs/runbooks/t06-normalize-dedup.md).
+
 - T03b follow-up: a multi-file `source_sha256` includes the selected entry path. Publishing the shared library tree takes a process-wide file lock and does not delete a live tree. A failed network canary raises `SandboxError` instead of an `internal` receipt. The worker hashes the bytes it writes into `/usr/share/faust` and that hash has to match the Python share hash.
 
 - T03b follow-up: `environment_digest` records the resolved path and sha256 of the `unshare` binary that runs, including the system binary when `FAUSTCODER_UNSHARE` is unset. A swapped wrapper changes the digest before the network canary runs.

@@ -100,6 +100,13 @@ def content_digest_for(payload: object) -> str:
     return f"sha256:{digest_hex(payload)}"
 
 
+def sha256_prefixed(data: bytes) -> str:
+    """Return ``sha256:<hex>`` of raw bytes, not of canonical JSON."""
+    if not isinstance(data, (bytes, bytearray)):
+        raise CanonicalError("sha256 input must be bytes")
+    return "sha256:" + hashlib.sha256(bytes(data)).hexdigest()
+
+
 def envelope_digest_for(envelope_bytes: bytes) -> str:
     """Return ``sha256:<hex>`` of the canonical envelope file bytes.
 
