@@ -14,11 +14,15 @@ from faustcoder import (
     EXCLUDED_TIMING_FIELDS,
     FAUSTWASM_VERSION,
     NODE_SANDBOX_FLAGS,
+    NODE_STACK_SIZE_KB,
     UNGRADED_EXIT_FLOOR,
     ArtifactStore,
+    CompilerExclusion,
     NativeFaustUnavailable,
     ResourceLimits,
+    SandboxError,
     classify_diagnostic,
+    compile_directory,
     compile_source,
     cross_check_native,
     digest_hex,
@@ -28,14 +32,23 @@ from faustcoder import (
     run_in_sandbox,
     runtime_pin,
     store_compiler_receipt,
+    unshare_executable,
     validate,
 )
 from faustcoder.canonical import canonical_bytes
 from faustcoder.compiler import (
+    FAUSTLIBRARIES_PIN,
     FAUSTLIBRARIES_PIN_VERSION,
+    _native_command,
     canonical_output_bytes,
     environment_preimage,
     worker_directory,
+)
+from faustcoder.exclusions import exclusions
+from faustcoder.libraries import (
+    FAUSTLIBRARIES_TREE_SHA256,
+    canonical_tree_sha256,
+    share_directory,
 )
 
 FIXTURES = Path(__file__).resolve().parent / "fixtures" / "dsp"
@@ -295,7 +308,7 @@ def test_native_cross_check_matches_diagnostic_class() -> None:
     assert syntax.wasm.receipt["diagnostic_class"] == "parse_error"
 
 
-def test_runtime_pin_records_bundle_bytes_and_library_drift() -> None:
+def test_runtime_pin_records_the_staged_libraries_and_the_bundle() -> None:
     pin = runtime_pin()
     runtime = (
         worker_directory()
@@ -305,8 +318,11 @@ def test_runtime_pin_records_bundle_bytes_and_library_drift() -> None:
         / "libfaust-wasm"
     )
     assert pin.faust_version == "2.90.0"
-    assert pin.faustlibraries_version == "2.74.2"
-    assert pin.faustlibraries_version != FAUSTLIBRARIES_PIN_VERSION
+    assert pin.faustlibraries_version == FAUSTLIBRARIES_PIN_VERSION
+    assert pin.faustlibraries_commit == FAUSTLIBRARIES_PIN
+    assert pin.faustlibraries_tree_sha256 == FAUSTLIBRARIES_TREE_SHA256
+    assert pin.bundled_faustlibraries_version == "2.74.2"
+    assert pin.bundled_faustlibraries_version != pin.faustlibraries_version
     assert pin.data_sha256 == hashlib.sha256(
         (runtime / "libfaust-wasm.data").read_bytes()
     ).hexdigest()
@@ -324,9 +340,14 @@ def test_runtime_pin_records_bundle_bytes_and_library_drift() -> None:
         pin=pin,
     )
     assert preimage["libfaust_wasm_data_sha256"] == pin.data_sha256
+    assert preimage["faustlibraries_commit"] == FAUSTLIBRARIES_PIN
+    assert preimage["faustlibraries_tree_sha256"] == FAUSTLIBRARIES_TREE_SHA256
+    assert preimage["faustlibraries_version"] == "2.80.0"
+    assert preimage["bundled_faustlibraries_version"] == "2.74.2"
     assert preimage["runtime_sha256"]["libfaust-wasm.wasm"] == pin.wasm_sha256
     assert preimage["runtime_sha256"]["libfaust-wasm.data"] == pin.data_sha256
     assert preimage["user_map"] == "current"
+    assert f"--stack-size={NODE_STACK_SIZE_KB}" in preimage["node_flags"]
 
 
 def test_harness_failures_keep_the_success_environment() -> None:
@@ -382,10 +403,12 @@ def test_remote_url_imports_are_internal(source: str) -> None:
 
 
 def test_deep_recursion_is_internal() -> None:
+    # --stack-size=8192 lets this unroll until the worker SIGSEGVs. The
+    # catchable "Maximum call stack size exceeded" path is what a smaller
+    # stack produced. Either way the receipt stays exit 126 internal.
     compiled = compile_source(_source("recurse.dsp"), lang="wasm")
     assert compiled.receipt["exit_code"] == 126
     assert compiled.receipt["diagnostic_class"] == "internal"
-    assert "maximum call stack size exceeded" in compiled.diagnostics.lower()
     assert compiled.receipt["faust_version"] == "2.90.0"
 
 
@@ -426,3 +449,171 @@ def test_timeout_is_armed_before_stdin(tmp_path: Path) -> None:
     elapsed = time.monotonic() - started
     assert run.stop_reason == "timeout"
     assert elapsed < 3
+
+
+EXAMPLES = Path(__file__).resolve().parents[1] / "faust" / "examples" / "2.88.0"
+_MULTI_FILE_COMPILE = (
+    "SAM/16_channel_volume/16_channel_volume.dsp",
+    "SAM/chorus/chorus.dsp",
+    "SAM/effects/chorus.dsp",
+    "SAM/effects/flanger.dsp",
+    "SAM/effects/freeverb.dsp",
+    "SAM/flanger/flanger.dsp",
+    "SAM/freeverb/freeverb.dsp",
+    "SAM/virtualAnalog/virtualAnalog.dsp",
+    "filtering/multibandFilter.dsp",
+    "misc/mixer.dsp",
+)
+_MULTI_FILE_EXCLUDED = (
+    "SAM/echo/echo.dsp",
+    "SAM/effects/echo.dsp",
+    "SAM/effects/effects.dsp",
+)
+
+
+def _examples() -> Path:
+    if not EXAMPLES.is_dir():
+        pytest.fail("Faust 2.88.0 examples are missing; run scripts/fetch-faust-examples.sh")
+    return EXAMPLES
+
+
+def test_pinned_library_aliases_and_softmax_resolve() -> None:
+    for name in ("fastmath.dsp", "pinktrombone.dsp", "softmax.dsp"):
+        compiled = compile_source(_source(name))
+        assert compiled.receipt["exit_code"] == 0, compiled.diagnostics
+        assert compiled.receipt["diagnostic_class"] == "ok"
+        assert f"--faustlibraries={FAUSTLIBRARIES_PIN}" in compiled.receipt["command"]
+
+
+def test_function_removed_at_the_pin_is_unbound() -> None:
+    compiled = compile_source(_source("removed.dsp"))
+    assert compiled.receipt["exit_code"] == 1
+    assert compiled.receipt["diagnostic_class"] == "unbound_symbol"
+    assert "undefined symbol" in compiled.diagnostics
+
+
+def test_one_library_byte_changes_the_tree_hash(tmp_path: Path) -> None:
+    (tmp_path / "a.lib").write_bytes(b"a = 1;\n")
+    first = canonical_tree_sha256(tmp_path)
+    (tmp_path / "a.lib").write_bytes(b"a = 2;\n")
+    second = canonical_tree_sha256(tmp_path)
+    assert first != second
+    pin = runtime_pin()
+    preimage = environment_preimage(
+        compiler="libfaust-wasm",
+        faust_version=pin.faust_version,
+        lang="wasm",
+        options=(),
+        pin=pin,
+    )
+    mutated = dict(preimage, faustlibraries_tree_sha256=second)
+    assert hashlib.sha256(canonical_bytes(preimage)).digest() != hashlib.sha256(
+        canonical_bytes(mutated)
+    ).digest()
+
+
+def test_native_command_points_at_the_pinned_share_tree() -> None:
+    share = share_directory()
+    command = _native_command("/usr/bin/faust", share, ())
+    assert command[:4] == ["/usr/bin/faust", "-I", str(share), "-lang"]
+    assert (share / "stdfaust.lib").is_file()
+    assert (share / "fastmath.lib").is_file()
+    assert (share / "pinktrombone.lib").is_file()
+    assert (share / "dx7.lib").is_file()
+    assert (share / "old" / "music.lib").is_file()
+
+
+def test_native_preimage_uses_the_same_library_tree() -> None:
+    preimage = environment_preimage(
+        compiler="faust-cli",
+        faust_version="2.88.0",
+        lang="cpp",
+        options=(),
+        pin=None,
+    )
+    assert preimage["faustlibraries_commit"] == FAUSTLIBRARIES_PIN
+    assert preimage["faustlibraries_tree_sha256"] == FAUSTLIBRARIES_TREE_SHA256
+    assert preimage["faustlibraries_version"] == FAUSTLIBRARIES_PIN_VERSION
+    assert preimage["bundled_faustlibraries_version"] == ""
+
+
+def test_library_tree_mismatch_is_refused(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    (tmp_path / "version.lib").write_bytes(b"version = 0, 0, 0;\n")
+    monkeypatch.setenv("FAUSTCODER_LIBRARIES", str(tmp_path))
+    with pytest.raises(SandboxError, match="sha256"):
+        compile_source("process = _;\n")
+
+
+def test_sibling_import_from_the_same_directory_compiles() -> None:
+    compiled = compile_directory(FIXTURES / "multi", "main.dsp")
+    assert compiled.receipt["exit_code"] == 0, compiled.diagnostics
+    assert compiled.receipt["diagnostic_class"] == "ok"
+
+
+@pytest.mark.parametrize("entry", _MULTI_FILE_COMPILE)
+def test_faust_multi_file_example_compiles(entry: str) -> None:
+    compiled = compile_directory(
+        _examples(), entry, limits=ResourceLimits(timeout_s=60)
+    )
+    assert compiled.receipt["exit_code"] == 0, compiled.diagnostics
+    assert compiled.receipt["diagnostic_class"] == "ok"
+
+
+@pytest.mark.parametrize("entry", _MULTI_FILE_EXCLUDED)
+def test_multi_file_ffunction_is_an_exclusion_not_other(entry: str) -> None:
+    source = (_examples() / entry).read_bytes().decode("utf-8")
+    with pytest.raises(CompilerExclusion) as caught:
+        compile_source(source)
+    assert "ffunction" in caught.value.exclusion.reason
+    assert caught.value.exclusion.group == "multi_file_ffunction"
+
+
+def test_stk_ffunction_files_are_recorded_exclusions() -> None:
+    recorded = [item for item in exclusions() if item.group == "stk_ffunction"]
+    assert [item.path for item in recorded] == [
+        "physicalModeling/faust-stk/bass.dsp",
+        "physicalModeling/faust-stk/harpsi.dsp",
+        "physicalModeling/faust-stk/modalBar.dsp",
+        "physicalModeling/faust-stk/piano.dsp",
+        "physicalModeling/faust-stk/voiceForm.dsp",
+    ]
+    root = _examples()
+    for item in recorded:
+        source = (root / item.path).read_bytes().decode("utf-8")
+        assert hashlib.sha256(source.encode("utf-8")).hexdigest() == item.sha256
+        assert "ffunction" in item.reason
+        with pytest.raises(CompilerExclusion) as caught:
+            compile_source(source)
+        assert caught.value.exclusion.path == item.path
+
+
+def test_thin_plate_compiles_within_the_stack_bound() -> None:
+    assert NODE_STACK_SIZE_KB == 8192
+    assert f"--stack-size={NODE_STACK_SIZE_KB}" in NODE_SANDBOX_FLAGS
+    source = (
+        _examples() / "physicalModeling" / "fds" / "2dKirchhoffThinPlate.dsp"
+    ).read_bytes().decode("utf-8")
+    compiled = compile_source(source, limits=ResourceLimits(timeout_s=60))
+    assert compiled.receipt["exit_code"] == 0, compiled.diagnostics
+    assert compiled.receipt["diagnostic_class"] == "ok"
+
+
+def test_unshare_path_defaults_to_the_system_binary(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.delenv("FAUSTCODER_UNSHARE", raising=False)
+    system = unshare_executable()
+    assert Path(system).name == "unshare"
+    monkeypatch.setenv("FAUSTCODER_UNSHARE", system)
+    assert unshare_executable() == str(Path(system).resolve())
+    run = run_in_sandbox(
+        ["/bin/true"],
+        stdin=b"",
+        workdir=tmp_path,
+        limits=ResourceLimits(timeout_s=5),
+    )
+    assert run.returncode == 0
+    assert run.stop_reason == ""
+    monkeypatch.setenv("FAUSTCODER_UNSHARE", str(tmp_path / "missing-unshare"))
+    with pytest.raises(SandboxError, match="FAUSTCODER_UNSHARE"):
+        unshare_executable()

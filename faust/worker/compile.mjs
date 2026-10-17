@@ -4,8 +4,8 @@
 // refuses to start unless FAUSTCODER_SANDBOX=1 and Node's permission model
 // is on, so a bare `node compile.mjs` does not compile.
 
-import { writeFileSync, renameSync } from "node:fs";
-import { join } from "node:path";
+import { writeFileSync, renameSync, readdirSync, readFileSync, statSync } from "node:fs";
+import { join, relative } from "node:path";
 import { pathToFileURL, fileURLToPath } from "node:url";
 
 const FAUSTWASM_VERSION = "0.19.0";
@@ -48,6 +48,107 @@ function assertOptions(options) {
   }
 }
 
+function ensureVirtualDir(fs, path) {
+  const parts = path.split("/").filter(Boolean);
+  let acc = "";
+  for (const part of parts) {
+    acc += `/${part}`;
+    if (!fs.analyzePath(acc).exists) {
+      fs.mkdir(acc);
+    }
+  }
+}
+
+function clearVirtual(fs, dir) {
+  let names;
+  try {
+    names = fs.readdir(dir);
+  } catch {
+    return;
+  }
+  for (const name of names) {
+    if (name === "." || name === "..") {
+      continue;
+    }
+    const path = `${dir}/${name}`;
+    const info = fs.analyzePath(path);
+    if (info.object && info.object.isFolder) {
+      clearVirtual(fs, path);
+      fs.rmdir(path);
+    } else {
+      fs.unlink(path);
+    }
+  }
+}
+
+function hostLibraries(root) {
+  const files = [];
+  const walk = (dir) => {
+    for (const name of readdirSync(dir)) {
+      if (name.startsWith(".")) {
+        continue;
+      }
+      const path = join(dir, name);
+      const stat = statSync(path);
+      if (stat.isSymbolicLink()) {
+        failClosed("library tree contains a symlink");
+      }
+      if (stat.isDirectory()) {
+        walk(path);
+      } else if (stat.isFile() && name.endsWith(".lib")) {
+        files.push(path);
+      }
+    }
+  };
+  walk(root);
+  return files;
+}
+
+function stageLibraries(compiler, root) {
+  const fs = compiler.fs();
+  clearVirtual(fs, "/usr/share/faust");
+  ensureVirtualDir(fs, "/usr/share/faust");
+  for (const file of hostLibraries(root)) {
+    const rel = relative(root, file).split("\\").join("/");
+    const dest = `/usr/share/faust/${rel}`;
+    ensureVirtualDir(fs, dest.split("/").slice(0, -1).join("/"));
+    fs.writeFile(dest, readFileSync(file));
+  }
+}
+
+function assertSourcePath(path) {
+  if (typeof path !== "string" || path === "" || path.startsWith("/") || path.includes("\\")) {
+    failClosed("source path is not relative");
+  }
+  const parts = path.split("/");
+  for (const part of parts) {
+    if (part === "" || part === "." || part === "..") {
+      failClosed("source path escapes the source directory");
+    }
+    if (!/^[A-Za-z0-9_.+-]+$/.test(part)) {
+      failClosed("source path has an unsafe component");
+    }
+  }
+  if (!path.endsWith(".dsp")) {
+    failClosed("source path must be a .dsp file");
+  }
+}
+
+function stageSources(compiler, sources) {
+  const fs = compiler.fs();
+  clearVirtual(fs, "/src");
+  ensureVirtualDir(fs, "/src");
+  for (const file of sources) {
+    if (!file || typeof file.source !== "string") {
+      failClosed("source file must be a string");
+    }
+    assertSourcePath(file.path);
+    const dest = `/src/${file.path}`;
+    ensureVirtualDir(fs, dest.split("/").slice(0, -1).join("/"));
+    fs.writeFile(dest, file.source);
+  }
+}
+
 async function loadCompiler(runtimeJs) {
   const entry = fileURLToPath(
     new URL("./node_modules/@grame/faustwasm/dist/esm/index.js", import.meta.url),
@@ -65,8 +166,8 @@ function hostBytes(value) {
   return Buffer.from(value);
 }
 
-async function compileWasm(compiler, source, options) {
-  const factory = await compiler.createMonoDSPFactory("input", source, options.join(" "));
+async function compileWasm(compiler, moduleName, source, options) {
+  const factory = await compiler.createMonoDSPFactory(moduleName, source, options.join(" "));
   if (!factory || !factory.code) {
     return { compile_ok: false, diagnostics: "compiler returned failure\n", files: [] };
   }
@@ -80,9 +181,9 @@ async function compileWasm(compiler, source, options) {
   };
 }
 
-function compileCpp(compiler, source, options) {
+function compileCpp(compiler, moduleName, source, options) {
   const args = ["-lang", "cpp", "-o", "output.cpp", ...options].join(" ");
-  const ok = compiler.generateAuxFiles("input", source, args);
+  const ok = compiler.generateAuxFiles(moduleName, source, args);
   if (!ok) {
     const message = compiler.getErrorMessage() || "compiler returned failure\n";
     return {
@@ -117,14 +218,32 @@ async function main() {
   }
   const options = request.options ?? [];
   assertOptions(options);
+  const libraryRoot = process.argv[3];
+  if (!libraryRoot) {
+    failClosed("library tree argument is required");
+  }
+  const sources = request.sources ?? [];
+  if (!Array.isArray(sources)) {
+    failClosed("sources must be an array");
+  }
   const compiler = await loadCompiler(join(workdir, "runtime", "libfaust-wasm.js"));
+  stageLibraries(compiler, libraryRoot);
+  let moduleName = "input";
+  if (sources.length > 0) {
+    if (typeof request.filename !== "string") {
+      failClosed("filename is required");
+    }
+    assertSourcePath(request.filename);
+    stageSources(compiler, sources);
+    moduleName = `/src/${request.filename}`;
+  }
   const libfaustVersion = compiler.version();
   let compiled;
   try {
     compiled =
       request.lang === "wasm"
-        ? await compileWasm(compiler, request.source, options)
-        : compileCpp(compiler, request.source, options);
+        ? await compileWasm(compiler, moduleName, request.source, options)
+        : compileCpp(compiler, moduleName, request.source, options);
   } catch (error) {
     const message = error instanceof Error ? error.message : "compiler failed";
     compiled = {

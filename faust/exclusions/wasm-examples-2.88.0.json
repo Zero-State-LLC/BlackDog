@@ -1,0 +1,47 @@
+{
+  "faust_examples": "2.88.0",
+  "stk_ffunction": [
+    {
+      "path": "physicalModeling/faust-stk/bass.dsp",
+      "sha256": "da11d4df24d7f355e55f7bd4b75baf6836320edd8877a9b182d486d8347e0116",
+      "reason": "ffunction calls an STK C header. The wasm libfaust build cannot link it. Recorded exclusion."
+    },
+    {
+      "path": "physicalModeling/faust-stk/harpsi.dsp",
+      "sha256": "63b273a9bcef31c0e28213d3aa3e0eafdab41d207fd20b765c003048bc866389",
+      "reason": "ffunction calls an STK C header. The wasm libfaust build cannot link it. Recorded exclusion."
+    },
+    {
+      "path": "physicalModeling/faust-stk/modalBar.dsp",
+      "sha256": "6bc8fb79512caf5bcdce03f7ad8b9a77b0251edfea4f899386e30fac72eaa657",
+      "reason": "ffunction calls an STK C header. The wasm libfaust build cannot link it. Recorded exclusion."
+    },
+    {
+      "path": "physicalModeling/faust-stk/piano.dsp",
+      "sha256": "df6c8274b4f35a1e64343ecd8c170fa762464f3c51f5aad2c0736d52bc75085f",
+      "reason": "ffunction calls an STK C header. The wasm libfaust build cannot link it. Recorded exclusion."
+    },
+    {
+      "path": "physicalModeling/faust-stk/voiceForm.dsp",
+      "sha256": "53bd165589203332b38db3bfc4c78b4e019f0ed4a401c30d1c6c9dcd547e8e16",
+      "reason": "ffunction calls an STK C header. The wasm libfaust build cannot link it. Recorded exclusion."
+    }
+  ],
+  "multi_file_ffunction": [
+    {
+      "path": "SAM/echo/echo.dsp",
+      "sha256": "19cbb9ce942bad4ba4dec13246e038c1e2da7eef2f51a1901de0b9332dedc8f4",
+      "reason": "ffunction fastpow2 from fast_pow2.h is rejected by the wasm backend after sibling imports resolve. Recorded exclusion."
+    },
+    {
+      "path": "SAM/effects/echo.dsp",
+      "sha256": "b363d9c35c6d937bcbce13f506f8e76c088d0e9abd7fd2b5d04333c977c47288",
+      "reason": "ffunction fastpow2 from fast_pow2.h is rejected by the wasm backend after sibling imports resolve. Recorded exclusion."
+    },
+    {
+      "path": "SAM/effects/effects.dsp",
+      "sha256": "96bbb71864ccf3f70c18689ade9d5099f548ffb96d8188e7ee42f8cd884ee2e7",
+      "reason": "components echo.dsp, which embeds ffunction fastpow2. The wasm backend rejects it after sibling imports resolve. Recorded exclusion."
+    }
+  ]
+}

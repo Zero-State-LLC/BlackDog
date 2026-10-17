@@ -20,6 +20,12 @@ Exit codes 124 and above are ungraded. They are not rungs on the ladder.
 Do not score `internal` or `resource_limit` as `other`. `unbound_symbol`
 is a compiler result (exit 1), the class for libfaust `undefined symbol`.
 
+[ADR-0006](../adr/0006-source-attributable-failures.md) proposes grading
+source-attributable failures (remote import, recursion, a source-caused
+timeout or resource kill) at or below `parse_error`, leaving ungraded only
+an infrastructure fault, and alerting on the ungraded rate per policy. It
+is Proposed and awaiting Danny. It does not change this table.
+
 A receipt with exit 124 or above records the same compiler pin as a
 successful compile (`faust_version`, `environment_digest`). It is not
 evidence that another operator reproduced a successful compile of that
@@ -31,22 +37,68 @@ same digest returns the first envelope.
 
 ## What the environment digest covers
 
-The hashed object includes the embedded libfaust version, the bundled
-faustlibraries `vl.version` triplet, the sha256 of `libfaust-wasm.data`,
-the sha256 of `libfaust-wasm.js`, `.wasm` and `.data`, and the Node
-major.minor. It does not include the host name, the Node patch, or the
-job directory.
+The hashed object includes the embedded libfaust version, the staged
+faustlibraries commit `2edec0537f53`, the sha256 of that canonical `*.lib`
+tree, the staged `vl.version` (`2.80.0`), the triplet still embedded in
+`libfaust-wasm.data` (`2.74.2` on faustwasm 0.19.0), the sha256 of
+`libfaust-wasm.js`, `.wasm` and `.data`, and the Node major.minor. It does
+not include the host name, the Node patch, the job directory, or the host
+path of the library tree.
 
-`stdfaust.lib` and `all.lib` in this bundle do not declare a version.
-`version.lib` does. On faustwasm 0.19.0 that triplet is 2.74.2.
+The canonical tree hash is every regular `*.lib` file, sorted by relative
+path. Each entry is the UTF-8 path, a newline, an 8-byte big-endian
+length, and the file bytes. One changed library byte changes the hash and
+therefore `environment_digest`. A checkout that does not match the pinned
+hash is refused before a receipt is written.
 
-The ADR-0004 / T05 pin is faustlibraries commit `2edec0537f53` (2026-10-15),
-whose `version.lib` declares 2.80.0, next to native Faust 2.88.0. The wasm
-bundle is libfaust 2.90.0 with libraries 2.74.2. Those are not the same
-pin. A native cross-check can disagree because the compiler version
-differs or because the libraries differ. This harness records the bundle
-it actually ran. It does not stage the T05 commit into the Emscripten
-filesystem.
+`scripts/fetch-faustlibraries.sh` downloads the commit on the host. The
+sandbox does not. Before every wasm compile the worker deletes
+`/usr/share/faust` in the Emscripten filesystem and writes that tree,
+including the flat `old/*.lib` and `dx7/*.lib` copies from Faust's install
+script. The native 2.88.0 cross-check passes the same directory as `-I`.
+The logical command records `--faustlibraries=2edec0537f53`.
+
+The data file still contains libraries 2.74.2. Those bytes are hashed so
+the runtime identity stays in the digest. They are not the libraries the
+compiler imports. `fa.`, `pt.` and `si.softmax` resolve against the pin.
+`ts.fi`, which 2.74.2 exported and the pin does not, is `unbound_symbol`.
+
+Do not run a T06 or T07 compile check, and do not feed a receipt into a
+reward, on a harness that skipped this staging.
+
+## Multi-file sources and stack size
+
+`compile_directory` reads the `.dsp` files under one directory and stages
+them for `import` and `component`. Relative paths such as
+`../dynamic/volume.dsp` resolve when the directory is their common parent.
+Ten of the thirteen Faust 2.88.0 multi-file examples then compile. The
+other three (`SAM/echo/echo.dsp`, `SAM/effects/echo.dsp`,
+`SAM/effects/effects.dsp`) embed `ffunction` `fastpow2` and are recorded
+exclusions, not `other`.
+
+Node `--stack-size` is kilobytes of V8 stack. The default overflows on
+`physicalModeling/fds/2dKirchhoffThinPlate.dsp`. 6144 KB still overflows.
+6272 KB is the smallest size observed to compile it on Node 22. The
+harness sets `--stack-size=8192` (8 MiB). That flag is part of
+`environment_digest`. Do not raise the stack further without remeasuring
+resident memory.
+
+The resident cap is 768 MB. The plate compile stays near 510 MB.
+`SAM/virtualAnalog/virtualAnalog.dsp` exceeds 608 MB and compiles at 640
+MB, so 512 MB is not enough once its sibling is staged. 768 MB leaves
+room for the 50 ms poll. A recursive Faust definition with no base case
+hits `SIGSEGV` inside the worker at this stack size. The receipt is exit
+126 `internal`.
+
+## Recorded exclusions
+
+`faust/exclusions/wasm-examples-2.88.0.json` lists five
+`physicalModeling/faust-stk` files. Each calls `ffunction` into an STK C
+header, which this wasm build cannot link. It also lists the three
+multi-file `fastpow2` files above. `compile_source` matches the source
+sha256 and raises `CompilerExclusion` before the worker starts. That is
+not diagnostic class `other`. The example sources are fetched by
+`scripts/fetch-faust-examples.sh` and are not committed.
 
 ## Network namespace on a runner
 
@@ -60,29 +112,49 @@ The pytest job clears that sysctl only when `runner.environment` is
 
 On a DGX Spark or any self-hosted runner, do not set that sysctl. It is
 host-wide and lasts until reboot, and it re-opens unprivileged user
-namespaces for every process. Install a per-binary AppArmor profile that
-grants `userns` to the node binary used by the harness, and to `unshare`
-if the profile must name it. Do not use a profile that grants `userns` to
-every binary, and do not write `kernel.apparmor_restrict_unprivileged_userns=0`
-on those machines.
+namespaces for every process.
 
-Example profile, installed by an operator on the Spark, not by CI:
+The process that calls `unshare` and writes `uid_map` is `unshare`, not
+`node`. Node starts after the namespace exists. A profile on the system
+`/usr/bin/unshare` lets every local user create a user namespace, which is
+the global sysctl again. A shell wrapper that execs `/usr/bin/unshare` is
+the same mistake: AppArmor sees the system binary.
+
+Install a dedicated copy of the unshare binary. It is root-owned, mode
+`0750`, group `faustcoder`. The profile is attached to that path only.
+
+```bash
+sudo install -d -o root -g root -m 0755 /opt/faustcoder/bin
+sudo groupadd --system faustcoder
+sudo usermod -aG faustcoder faustcoder
+sudo install -o root -g faustcoder -m 0750 "$(command -v unshare)" /opt/faustcoder/bin/fc-unshare
+```
+
+`install` copies the binary. Do not replace it with a script.
 
 ```text
 abi <abi/4.0>,
 include <tunables/global>
 
-profile faustcoder-node /usr/bin/node flags=(unconfined) {
+profile faustcoder-unshare /opt/faustcoder/bin/fc-unshare flags=(unconfined) {
   userns,
 }
 ```
 
-The path must be the node binary the harness executes. `flags=(unconfined)`
-keeps the rest of the node's confinement unchanged and adds only the
-`userns` permission AppArmor requires before `unshare` can write the uid
-map. Reload AppArmor after installing the profile. Confirm with
-`unshare --net --map-current-user -- true` as the user that will run the
-harness, without changing the sysctl.
+Save that as `/etc/apparmor.d/faustcoder-unshare` and load it with
+`apparmor_parser -r`. `flags=(unconfined)` adds `userns` for this path and
+does not confine the rest of the process. Set
+`FAUSTCODER_UNSHARE=/opt/faustcoder/bin/fc-unshare` for the harness user.
+The sandbox reads that variable. Unset, it uses the system `unshare`. CI
+leaves it unset and keeps the github-hosted sysctl step.
+
+Confirm, without changing the sysctl:
+
+- as a user who is not in `faustcoder`, `unshare -U true` fails, and
+  `/opt/faustcoder/bin/fc-unshare` is not executable
+- as the harness user, `fc-unshare --net --map-current-user -- true`
+  succeeds
+- `unshare -U true` still fails for other users
 
 ## Remote imports
 

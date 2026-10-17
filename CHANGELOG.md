@@ -10,6 +10,8 @@ See [docs/VERSIONING.md](docs/VERSIONING.md).
 
 ### Added
 
+- T03b: stage faustlibraries commit `2edec0537f53` into `/usr/share/faust` before every compile, and point the native 2.88.0 cross-check at the same tree. `environment_digest` includes the commit and the canonical lib-tree sha256. Sibling `.dsp` imports are staged. Node `--stack-size=8192` is the bound for `2dKirchhoffThinPlate.dsp`. Five faust-stk `ffunction` files, and three multi-file `fastpow2` files, are recorded exclusions. The Spark runbook installs root-owned `/opt/faustcoder/bin/fc-unshare` (mode 0750, group `faustcoder`) instead of an AppArmor profile on `node`. ADR-0006 (Proposed, awaiting Danny) would grade source-attributable failures at or below `parse_error`; reward behavior is unchanged.
+
 - T03 follow-up: the compiler runs as the calling user (`unshare --net --map-current-user`, `CapEff` 0). Every receipt reuses the embedded libfaust pin. `environment_digest` covers the bundled faustlibraries triplet and the runtime bytes. Receipts are stored and looked up by reproducible digest. CompilerReceipt `diagnostic_class` adds `unbound_symbol`, `resource_limit` and `internal` (spec 0.3.2, ADR-0005, Danny yes 2026-10-17 1:13 PM PT).
 
 - T03: sandboxed Node.js worker around libfaust from faustwasm 0.19.0. Python drives it with no network, a wall-clock timeout, a resident-memory cap and an output-size cap, and stores a CompilerReceipt in the T02 artifact store. The native Faust 2.88.0 cross-check runs only when that binary is already installed.

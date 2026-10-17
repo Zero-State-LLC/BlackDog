@@ -34,6 +34,7 @@ from faustcoder.compiler import (
     NativeFaustUnavailable,
     RuntimePin,
     classify_diagnostic,
+    compile_directory,
     compile_native,
     compile_source,
     cross_check_native,
@@ -42,12 +43,15 @@ from faustcoder.compiler import (
     runtime_pin,
     store_compiler_receipt,
 )
+from faustcoder.exclusions import CompilerExclusion
 from faustcoder.sandbox import (
     NODE_SANDBOX_FLAGS,
+    NODE_STACK_SIZE_KB,
     ResourceLimits,
     SandboxError,
     node_command,
     run_in_sandbox,
+    unshare_executable,
 )
 from faustcoder.schemas import schema_directory, schema_names, validate
 from faustcoder.store import ArtifactStore
@@ -59,6 +63,7 @@ __all__ = [
     "CanonicalError",
     "COMPILER_SCHEMA_VERSION",
     "Compilation",
+    "CompilerExclusion",
     "CompilerHarnessError",
     "CrossCheck",
     "CycleError",
@@ -70,6 +75,7 @@ __all__ = [
     "MutationError",
     "NATIVE_FAUST_VERSION",
     "NODE_SANDBOX_FLAGS",
+    "NODE_STACK_SIZE_KB",
     "NativeFaustUnavailable",
     "ResourceLimits",
     "RuntimePin",
@@ -81,6 +87,7 @@ __all__ = [
     "build_envelope",
     "canonical_bytes",
     "classify_diagnostic",
+    "compile_directory",
     "compile_native",
     "compile_source",
     "content_digest_for",
@@ -97,5 +104,6 @@ __all__ = [
     "schema_directory",
     "schema_names",
     "store_compiler_receipt",
+    "unshare_executable",
     "validate",
 ]

@@ -18,13 +18,26 @@ Enforcement, in order:
    clears that sysctl only when ``runner.environment`` is
    ``github-hosted``, then checks ``unshare --net --map-current-user --
    true``. On a DGX Spark or any self-hosted runner, do not set that
-   sysctl. Grant ``userns`` to the node binary with a per-binary AppArmor
-   profile. See ``docs/runbooks/compiler-harness.md``. The scrubbed
-   environment also drops ``HTTP_PROXY``, ``HTTPS_PROXY``, ``ALL_PROXY``,
-   ``NODE_OPTIONS`` and the rest of the parent environment.
+   sysctl. Install a root-owned copy of the unshare binary at
+   ``/opt/faustcoder/bin/fc-unshare`` and point ``FAUSTCODER_UNSHARE`` at
+   it. See ``docs/runbooks/compiler-harness.md``. When ``FAUSTCODER_UNSHARE``
+   is unset, the sandbox uses the system ``unshare``, which is the CI
+   default. The scrubbed environment also drops ``HTTP_PROXY``,
+   ``HTTPS_PROXY``, ``ALL_PROXY``, ``NODE_OPTIONS`` and the rest of the
+   parent environment.
 2. Code generation. Node is started with
    ``--disallow-code-generation-from-strings``, which rejects ``eval`` and
    ``new Function``. faustwasm 0.19.0 still compiles under that flag.
+   ``--stack-size=8192`` sets the V8 stack to 8192 KB. Node's default
+   (about 984 KB) overflows while compiling
+   ``physicalModeling/fds/2dKirchhoffThinPlate.dsp``. 6144 KB still
+   overflows. 6272 KB is the smallest size observed to compile that file
+   on Node 22. 8192 KB is the harness bound, a round step above that
+   failure. The flag is part of the compiler identity. A Faust definition
+   with no base case then runs until the worker dies with ``SIGSEGV``
+   instead of raising a catchable JavaScript stack error. That is still
+   an internal failure. The resident cap below is what stops a compile
+   that merely allocates.
 3. Filesystem, process, and addons. ``--permission`` is on and the command
    does not pass ``--allow-child-process``, ``--allow-worker``,
    ``--allow-addons``, ``--allow-wasi`` or ``--allow-net``. Read and write
@@ -67,9 +80,13 @@ from pathlib import Path
 
 # Flags that are part of the compiler identity. Per-run filesystem allow
 # paths are absolute temp directories and are not part of this tuple.
+# --stack-size is kilobytes of V8 stack. 8192 KB is the documented bound
+# for physicalModeling/fds/2dKirchhoffThinPlate.dsp. See the module docstring.
+NODE_STACK_SIZE_KB = 8192
 NODE_SANDBOX_FLAGS = (
     "--disallow-code-generation-from-strings",
     "--permission",
+    f"--stack-size={NODE_STACK_SIZE_KB}",
 )
 
 _IGNORED_OUTPUTS = {
@@ -96,7 +113,10 @@ class ResourceLimits:
     """
 
     timeout_s: float = 15.0
-    memory_bytes: int = 512 * 1024 * 1024
+    # 768 MB covers SAM/virtualAnalog/virtualAnalog.dsp, which exceeds
+    # 608 MB and compiles at 640 MB. The 50 ms poll needs room above that
+    # peak. The plate compile stays near 510 MB.
+    memory_bytes: int = 768 * 1024 * 1024
     output_bytes: int = 8 * 1024 * 1024
     source_bytes: int = 1024 * 1024
     poll_interval_s: float = 0.05
@@ -131,6 +151,24 @@ class SandboxRun:
 def node_executable() -> str:
     """Return the absolute path of ``node`` on ``PATH``."""
     return _require_tool("node")
+
+
+def unshare_executable() -> str:
+    """Return the ``unshare`` binary this process will execute.
+
+    ``FAUSTCODER_UNSHARE`` selects a dedicated binary such as
+    ``/opt/faustcoder/bin/fc-unshare``. Unset, the system ``unshare`` is
+    used. CI leaves the variable unset. A shell wrapper is the wrong
+    binary: the ``unshare`` syscall has to come from the file AppArmor
+    names.
+    """
+    override = os.environ.get("FAUSTCODER_UNSHARE", "").strip()
+    if not override:
+        return _require_tool("unshare")
+    path = Path(override)
+    if not path.is_file() or not os.access(path, os.X_OK):
+        raise SandboxError(f"FAUSTCODER_UNSHARE is not an executable file: {override}")
+    return str(path.resolve())
 
 
 def node_command(
@@ -171,7 +209,7 @@ def run_in_sandbox(
     if not command:
         raise SandboxError("sandbox command is empty")
     prlimit = _require_tool("prlimit")
-    unshare = _require_tool("unshare")
+    unshare = unshare_executable()
     cpu_seconds = max(1, math.ceil(limits.timeout_s) + 1)
     wrapped = [
         prlimit,
