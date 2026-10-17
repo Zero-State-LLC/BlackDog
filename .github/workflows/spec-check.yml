@@ -22,6 +22,7 @@ jobs:
       - uses: actions/checkout@v7
       - name: Check Spec Kit structure
         run: ./scripts/check-spec-kit.sh
+  # Same workflow file as the spec checks (spec §16). Not a new CI path.
   pytest:
     runs-on: ubuntu-latest
     steps:
