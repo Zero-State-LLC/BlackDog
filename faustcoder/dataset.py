@@ -26,6 +26,7 @@ from faustcoder.canonical import build_envelope
 from faustcoder.errors import (
     GuardError,
     IllegalTransitionError,
+    PolicyError,
     TransitionNotImplemented,
 )
 from faustcoder.policy import assert_clearance, maximum_flags
@@ -269,7 +270,10 @@ def _rights_cleared(
         raise GuardError("eligible_for must be a list")
     reviewer = _text(effect.get("reviewer"), "reviewer")
     unit_id = _text(effect.get("unit_id"), "unit_id")
-    assert_clearance(license_name, eligible, attribution)
+    try:
+        assert_clearance(license_name, eligible, attribution)
+    except PolicyError as exc:
+        raise GuardError(str(exc)) from exc
     rights = {
         "record_type": "RightsRecord",
         "license": license_name,
@@ -339,6 +343,7 @@ def _normalized(
     blob_sha = _text(effect.get("blob_sha"), "blob_sha")
     unit_id = _text(effect.get("unit_id"), "unit_id")
     rights_digest = _rights_digest(store, source_digest)
+    rights_receipt = _receipt_digest(store, source_digest, "rights_cleared")
     example = {
         "record_type": "Example",
         "source_digest": source_digest,
@@ -356,13 +361,19 @@ def _normalized(
         input_hashes=[
             source_digest,
             rights_digest,
+            rights_receipt,
             example_envelope["content_digest"],
         ],
         from_state="RIGHTS_CLEARED",
         event="normalized",
         to_state="NORMALIZED",
         disposition="normalized",
-        parents=[source_digest, rights_digest, example_envelope["content_digest"]],
+        parents=[
+            source_digest,
+            rights_digest,
+            rights_receipt,
+            example_envelope["content_digest"],
+        ],
     )
     return [example_envelope, receipt]
 
@@ -378,15 +389,16 @@ def _normalize_failed(
     if diagnostics not in _DIAGNOSTICS:
         raise GuardError("normalize_failed diagnostics are not a known token")
     rights_digest = _rights_digest(store, source_digest)
+    rights_receipt = _receipt_digest(store, source_digest, "rights_cleared")
     receipt = _receipt_envelope(
         actor=actor,
         timestamp=timestamp,
-        input_hashes=[source_digest, rights_digest],
+        input_hashes=[source_digest, rights_digest, rights_receipt],
         from_state="RIGHTS_CLEARED",
         event="normalize_failed",
         to_state="QUARANTINED",
         disposition=f"normalize_failed: {diagnostics}",
-        parents=[source_digest, rights_digest],
+        parents=[source_digest, rights_digest, rights_receipt],
     )
     return [receipt]
 

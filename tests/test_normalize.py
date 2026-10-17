@@ -47,7 +47,7 @@ def test_utf16_bom_nul_invalid_and_empty_are_diagnostics() -> None:
 def test_slice_is_applied_before_trailing_whitespace_is_stripped() -> None:
     raw = b"keep\n drop \nkeep\n"
     result = normalize_bytes(raw, LineSlice("osc", 2, 2))
-    assert result.text == "drop"
+    assert result.text == " drop"
 
 
 def test_slice_errors() -> None:

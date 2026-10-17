@@ -53,7 +53,12 @@ stateDiagram-v2
 survey repositories and it does not import the T05 module. The
 2026-10-17 rights defaults are applied before any fetch. An eligible
 license cannot take `rights_rejected`. An ineligible license cannot
-take `rights_cleared`.
+take `rights_cleared`. A failed guard raises `GuardError` and writes
+nothing.
+
+Each receipt's parents include the previous dataset receipt for that
+source. The store therefore has one head, and `current_state` is the
+`to` field of that head.
 
 ## Compiler gate (T03b)
 

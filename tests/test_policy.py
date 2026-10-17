@@ -55,12 +55,19 @@ def test_gpl_eval_agpl_and_unrecognized_are_refused() -> None:
 
 
 def test_impulse_and_training_only_flags() -> None:
-    with pytest.raises(PolicyError, match="impulse"):
+    with pytest.raises(PolicyError, match="looser"):
         _check(
             decision="rights_cleared",
             impulse=True,
             eligible_for=["train", "eval"],
             training_only=False,
+        )
+    with pytest.raises(PolicyError, match="impulse"):
+        _check(
+            decision="rights_cleared",
+            impulse=True,
+            eligible_for=["train"],
+            training_only=True,
         )
     with pytest.raises(PolicyError, match="impulse"):
         _check(

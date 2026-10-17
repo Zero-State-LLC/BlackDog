@@ -414,12 +414,22 @@ def _unit_envelopes(
     normalized_receipt = _receipt(
         actor=actor,
         timestamp=created_at,
-        input_hashes=[source_digest, rights_digest, example_digest],
+        input_hashes=[
+            source_digest,
+            rights_digest,
+            rights_receipt["content_digest"],
+            example_digest,
+        ],
         from_state="RIGHTS_CLEARED",
         event="normalized",
         to_state="NORMALIZED",
         disposition="normalized",
-        parents=[source_digest, rights_digest, example_digest],
+        parents=[
+            source_digest,
+            rights_digest,
+            rights_receipt["content_digest"],
+            example_digest,
+        ],
     )
     if member.leak:
         event = "duplicate_or_leak_found"
@@ -467,12 +477,12 @@ def _failure_envelopes(item: _Norm, actor: str, created_at: str) -> list[dict[st
     failed = _receipt(
         actor=actor,
         timestamp=created_at,
-        input_hashes=[source_digest, rights_digest],
+        input_hashes=[source_digest, rights_digest, rights_receipt["content_digest"]],
         from_state="RIGHTS_CLEARED",
         event="normalize_failed",
         to_state="QUARANTINED",
         disposition=f"normalize_failed: {item.failure}",
-        parents=[source_digest, rights_digest],
+        parents=[source_digest, rights_digest, rights_receipt["content_digest"]],
     )
     return [source, rights, rights_receipt, failed]
 
