@@ -19,6 +19,7 @@ See [docs/VERSIONING.md](docs/VERSIONING.md).
 ### Changed
 
 - Repository transferred to the Zero-State-LLC organization; repository URLs updated. It stays public.
+- Secret scan job `gitleaks` now runs the checksum-verified gitleaks 8.30.1 CLI; gitleaks-action requires a paid license key for organization repositories.
 - D-006 superseded by D-006r2: open-weight `deepseek/deepseek-v4.1-flash` via OpenRouter generates training data; Opus is used only for review, grading and eval judging.
 
 - Licensing: split license accepted (ADR-0003). Apache-2.0 for `specs/` and `docs/`, Zero State Proprietary License 1.0 for everything else; LICENSE, LICENSE-APACHE, NOTICE and per-directory license files added; README and CONTRIBUTING updated (closes #20).
