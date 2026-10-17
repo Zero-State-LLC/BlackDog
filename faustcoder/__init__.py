@@ -1,4 +1,4 @@
-"""FaustCoder artifact store, schema validation, dataset rights, training machine, and sandboxed Faust compiler."""
+"""FaustCoder artifact store, schema validation, dataset rights, training machine, compiler, and signal harness."""
 
 from faustcoder.canonical import (
     build_envelope,
@@ -58,6 +58,11 @@ from faustcoder.compiler import (
     runtime_pin,
     store_compiler_receipt,
 )
+from faustcoder.candidate_machine import (
+    CandidateEvent,
+    CandidateState,
+    apply_signal,
+)
 from faustcoder.exclusions import CompilerExclusion
 from faustcoder.sandbox import (
     NODE_SANDBOX_FLAGS,
@@ -69,6 +74,13 @@ from faustcoder.sandbox import (
     unshare_executable,
 )
 from faustcoder.schemas import schema_directory, schema_names, validate
+from faustcoder.signal import (
+    SignalHarnessError,
+    SignalLibrariesUnavailable,
+    commit_signal_check,
+    run_signal,
+    run_signal_suite,
+)
 from faustcoder.store import ArtifactStore
 
 __all__ = [
@@ -80,6 +92,8 @@ __all__ = [
     "ArtifactStoreError",
     "CanonicalError",
     "COMPILER_SCHEMA_VERSION",
+    "CandidateEvent",
+    "CandidateState",
     "Compilation",
     "CompilerExclusion",
     "CompilerHarnessError",
@@ -104,10 +118,13 @@ __all__ = [
     "SandboxError",
     "SchemaError",
     "SchemaValidationError",
+    "SignalHarnessError",
+    "SignalLibrariesUnavailable",
     "SourceContentError",
     "TamperError",
     "TransitionNotImplemented",
     "UNGRADED_EXIT_FLOOR",
+    "apply_signal",
     "apply_transition",
     "build_envelope",
     "canonical_bytes",
@@ -116,6 +133,7 @@ __all__ = [
     "compile_directory",
     "compile_native",
     "compile_source",
+    "commit_signal_check",
     "content_digest_for",
     "cross_check_native",
     "digest_hex",
@@ -127,6 +145,8 @@ __all__ = [
     "parse_reference",
     "register_source",
     "reproducible_receipt_digest",
+    "run_signal",
+    "run_signal_suite",
     "run_in_sandbox",
     "runtime_pin",
     "schema_directory",

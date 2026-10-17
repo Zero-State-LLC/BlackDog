@@ -96,7 +96,11 @@ specs/001-faustcoder/
    2.88.0 CLI, and emits a CompilerReceipt with classified diagnostics.
 3. **Signal harness** (T04): renders with faustwasm at fixed sample rate, block
    size and seed, compares against stored references in the style of Faust's
-   impulse tests, and emits a DSPTestReceipt.
+   impulse tests, and emits a DSPTestReceipt. INFERRED: metric numbers live in
+   the open `metrics` object (1e-9 grid, NaN/Inf/denormal counts, spectral
+   bands, coarse block RMS and band energies). The head is an exact compare;
+   the render follows an impulse tail up to 144000 frames. CPU wall time is
+   recorded only for a promotion candidate and is not a reward term.
 4. **Target lanes** (T17 to T22, ADR-0004): language, plugin and embedded
    lanes in pinned containers emit TargetReceipts; the FPGA F0 spike decides
    the FPGA path.

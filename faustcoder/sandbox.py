@@ -69,6 +69,11 @@ Enforcement, in order:
 ``prlimit`` and ``unshare`` come from util-linux. Both are on Ubuntu images
 used by GitHub-hosted runners. If either is missing, the sandbox raises
 and does not run the compiler on the host network.
+
+Staged inputs count toward the output cap. The signal harness writes
+its stimulus files under ``inputs/`` before the worker starts, and a
+later write there is counted too. The runtime trio and ``input.dsp``
+are the only ignored files.
 """
 
 from __future__ import annotations
