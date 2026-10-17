@@ -9,90 +9,124 @@ from faustcoder.acquire import git_blob_sha1
 PIN = "a" * 40
 PIN_B = "b" * 40
 REPO = "acme/widgets"
-NOTICE_TEXT = b"Copyright (c) 2026 Acme Example. MIT License.\n"
 COPYRIGHT = "Copyright (c) 2026 Acme Example"
 GENERATED_AT = "2026-10-17T13:04:00Z"
 CREATED_AT = "2026-10-17T20:00:00Z"
 ACTOR = "snapshot-bot"
+REVIEWER = "Boof (delegated by Danny 2026-10-17)"
 
 
 def blob(data: bytes) -> str:
     return git_blob_sha1(data)
 
 
-def notice_ref(data: bytes = NOTICE_TEXT) -> dict[str, str]:
-    return {
-        "path": "NOTICE",
-        "blob_sha": blob(data),
-        "copyright": COPYRIGHT,
-        "license": "MIT",
-    }
-
-
-def unit(
-    unit_id: str,
+def entry(
+    entry_id: str,
     data: bytes,
     *,
     path: str | None = None,
     decision: str = "rights_cleared",
     license_name: str = "MIT",
     eligible_for: list[str] | None = None,
-    training_only: bool = False,
-    impulse: bool = False,
-    holdout: bool = False,
     pin: str = PIN,
     repo: str = REPO,
     evidence_label: str = "OBSERVED",
-    reviewer: str = "",
+    reviewer: str = REVIEWER,
     reason: str = "",
-    upstream_unit_id: str | None = None,
-    notice: dict[str, str] | None = None,
-    files: list[dict[str, str]] | None = None,
-    line_slice: dict[str, object] | None = None,
-    source_id: str | None = None,
+    function: str = "",
+    attribution: str = "Acme Example",
 ) -> dict[str, object]:
-    """One inventory row. ``files`` replaces path and blob_sha."""
+    """One T05 inventory entry for a single file or function."""
+    path = path or f"{entry_id}.dsp"
+    spec: dict[str, object] = {"path": path, "blob_sha": blob(data)}
     row: dict[str, object] = {
-        "unit_id": unit_id,
-        "source_id": source_id or f"src-{unit_id}",
+        "id": entry_id,
         "decision": decision,
-        "repo": repo,
-        "pin": pin,
         "license": license_name,
         "eligible_for": ["train", "eval", "redistribute"]
         if eligible_for is None
         else eligible_for,
+        "pin": {"repo": repo, "commit": pin, "ref": "fixture"},
         "evidence_label": evidence_label,
-        "attribution": "Acme Example",
-        "impulse": impulse,
-        "holdout": holdout,
-        "training_only": training_only,
+        "attribution": attribution,
         "reviewer": reviewer,
+        "reason": reason,
+        "file_count": 1,
     }
-    if files is None:
-        row["path"] = path or f"{unit_id}.dsp"
-        row["blob_sha"] = blob(data)
+    if function:
+        spec["function"] = function
+        row["functions"] = [spec]
     else:
-        row["files"] = files
-    if decision in {"rights_cleared", "training_only"}:
-        row["notice"] = notice if notice is not None else notice_ref()
-    if line_slice is not None:
-        row["slice"] = line_slice
-    if upstream_unit_id is not None:
-        row["upstream_unit_id"] = upstream_unit_id
-    if reason:
-        row["reason"] = reason
+        row["files"] = [spec]
     return row
 
 
-def inventory(
-    units: list[dict[str, object]], generated_at: str = GENERATED_AT
+def notice_row(
+    data: bytes,
+    *,
+    path: str,
+    license_name: str = "MIT",
+    function: str = "",
+    pin: str = PIN,
+    repo: str = REPO,
+    copyright_text: str = COPYRIGHT,
+) -> dict[str, object]:
+    """One notice-manifest row. ``function`` is null for a whole file."""
+    return {
+        "repo": repo,
+        "commit": pin,
+        "path": path,
+        "blob_sha": blob(data),
+        "function": function or None,
+        "copyright": copyright_text,
+        "license": license_name,
+        "evidence_label": "OBSERVED",
+    }
+
+
+def cleared(
+    entry_id: str,
+    data: bytes,
+    **kwargs: object,
+) -> tuple[dict[str, object], dict[str, object]]:
+    """Return a cleared entry and the notice row that matches it."""
+    options = dict(kwargs)
+    path = str(options.pop("path", None) or f"{entry_id}.dsp")
+    license_name = str(options.get("license_name") or "MIT")
+    function = str(options.get("function") or "")
+    pin = str(options.get("pin") or PIN)
+    repo = str(options.get("repo") or REPO)
+    built = entry(entry_id, data, path=path, **options)  # type: ignore[arg-type]
+    notice = notice_row(
+        data,
+        path=path,
+        license_name=license_name,
+        function=function,
+        pin=pin,
+        repo=repo,
+    )
+    return built, notice
+
+
+def inventory_doc(
+    entries: list[dict[str, object]], generated_at: str = GENERATED_AT
 ) -> dict[str, object]:
     return {
-        "schema_version": "t06-inventory.v1",
+        "schema_version": "rights-inventory.v1",
         "generated_at": generated_at,
+        "method": "fixture",
         "policy": "t05-rights-defaults-2026-10-17",
-        "units": units,
+        "entries": entries,
+    }
+
+
+def notice_doc(
+    rows: list[dict[str, object]], generated_at: str = GENERATED_AT
+) -> dict[str, object]:
+    return {
+        "schema_version": "notice-manifest.v1",
+        "generated_at": generated_at,
+        "entries": rows,
     }
 
 
@@ -102,10 +136,6 @@ def stage(root: Path, repo: str, pin: str, path: str, data: bytes) -> str:
     target.parent.mkdir(parents=True, exist_ok=True)
     target.write_bytes(data)
     return blob(data)
-
-
-def stage_notice(root: Path, pin: str = PIN, repo: str = REPO) -> None:
-    stage(root, repo, pin, "NOTICE", NOTICE_TEXT)
 
 
 def long_text(prefix: str, count: int = 60, replacement: str | None = None) -> str:

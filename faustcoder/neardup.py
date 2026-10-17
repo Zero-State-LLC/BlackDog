@@ -37,6 +37,22 @@ NGRAM_N = 5
 THRESHOLD_NUMERATOR = 4
 THRESHOLD_DENOMINATOR = 5
 MIN_TOKENS = 40
+# Short texts never reach the token shingles. A character 5-gram
+# fallback covers them. Jaccard is still an integer compare.
+# Texts of at least 32 non-space characters match at 4/5.
+# Shorter texts match only when identifier-and-number skeletons are
+# equal and the character Jaccard is at least 1/3, so a one-token
+# rename of a tiny program is a near-duplicate and a different call
+# shape is not. (INFERRED.)
+CHAR_N = 5
+CHAR_MIN_LENGTH = 32
+CHAR_NUMERATOR = 4
+CHAR_DENOMINATOR = 5
+SHORT_SKELETON_NUMERATOR = 1
+SHORT_SKELETON_DENOMINATOR = 3
+_IDENT = re.compile(r"[A-Za-z_][A-Za-z0-9_]*")
+_NUMBER = re.compile(r"[0-9]+(?:\.[0-9]+)?")
+_STRING = re.compile(r'"[^"]*"')
 
 _TOKEN = re.compile(
     r"[A-Za-z_][A-Za-z0-9_]*|[0-9]+(?:\.[0-9]+)?|==|!=|<=|>=|&&|\|\||[^\s]"
@@ -124,17 +140,64 @@ def jaccard_at_least(
     return intersection * denominator >= union * numerator
 
 
+def _compact(source: str) -> str:
+    return "".join(strip_comments(source).split())
+
+
+def _skeleton(source: str) -> str:
+    """Collapse strings, identifiers and numbers so a rename can match."""
+    compact = _compact(source)
+    compact = _STRING.sub('"s"', compact)
+    compact = _IDENT.sub("id", compact)
+    return _NUMBER.sub("n", compact)
+
+
+def char_shingles(source: str, n: int = CHAR_N) -> frozenset[str]:
+    """Return character n-grams of the comment-stripped, spaceless text."""
+    compact = _compact(source)
+    if len(compact) < n:
+        return frozenset()
+    return frozenset(compact[index : index + n] for index in range(len(compact) - n + 1))
+
+
+def short_near_duplicate(left: str, right: str) -> bool:
+    """Near-duplicate fallback for texts under ``MIN_TOKENS``.
+
+    Identical texts return ``False``. The exact-hash pass owns those.
+    """
+    if left == right:
+        return False
+    left_compact = _compact(left)
+    right_compact = _compact(right)
+    if len(left_compact) >= CHAR_MIN_LENGTH and len(right_compact) >= CHAR_MIN_LENGTH:
+        return jaccard_at_least(
+            char_shingles(left),
+            char_shingles(right),
+            CHAR_NUMERATOR,
+            CHAR_DENOMINATOR,
+        )
+    if _skeleton(left) != _skeleton(right):
+        return False
+    return jaccard_at_least(
+        char_shingles(left),
+        char_shingles(right),
+        SHORT_SKELETON_NUMERATOR,
+        SHORT_SKELETON_DENOMINATOR,
+    )
+
+
 def is_near_duplicate(left: str, right: str) -> bool:
     """Return whether two normalized texts are near-duplicates.
 
     Identical short texts return ``False``. Exact equality is the hash
-    pass in ``cluster_families``, not this predicate.
+    pass in ``cluster_families``, not this predicate. A pair under
+    ``MIN_TOKENS`` uses :func:`short_near_duplicate`.
     """
     left_tokens = tokens(left)
     right_tokens = tokens(right)
-    if len(left_tokens) < MIN_TOKENS or len(right_tokens) < MIN_TOKENS:
-        return False
-    return jaccard_at_least(shingles(left_tokens), shingles(right_tokens))
+    if len(left_tokens) >= MIN_TOKENS and len(right_tokens) >= MIN_TOKENS:
+        return jaccard_at_least(shingles(left_tokens), shingles(right_tokens))
+    return short_near_duplicate(left, right)
 
 
 def memorization_hits(
@@ -147,20 +210,20 @@ def memorization_hits(
     against the training-only set. This function does not quarantine
     and does not write artifacts.
     """
-    candidate_tokens = tokens(candidate)
-    if len(candidate_tokens) < MIN_TOKENS:
-        return ()
-    candidate_shingles = shingles(candidate_tokens)
     hits: list[tuple[str, int, int]] = []
     for corpus_id, text in corpus:
-        text_tokens = tokens(text)
-        if len(text_tokens) < MIN_TOKENS:
+        if not is_near_duplicate(candidate, text):
             continue
-        intersection, union = jaccard_counts(
-            candidate_shingles, shingles(text_tokens)
-        )
-        if union and intersection * THRESHOLD_DENOMINATOR >= union * THRESHOLD_NUMERATOR:
-            hits.append((corpus_id, intersection, union))
+        if tokens(candidate) and tokens(text):
+            intersection, union = jaccard_counts(
+                shingles(tokens(candidate)) or char_shingles(candidate),
+                shingles(tokens(text)) or char_shingles(text),
+            )
+        else:
+            intersection, union = jaccard_counts(
+                char_shingles(candidate), char_shingles(text)
+            )
+        hits.append((corpus_id, intersection, union))
     return tuple(hits)
 
 
@@ -226,16 +289,20 @@ def cluster_families(
         for item_id in group:
             union(anchor, item_id)
 
+    text_of = {item_id: text for item_id, text in items}
     ordered_ids = sorted(parent)
     for index, left in enumerate(ordered_ids):
-        if token_count[left] < MIN_TOKENS:
-            continue
         for right in ordered_ids[index + 1 :]:
-            if token_count[right] < MIN_TOKENS:
-                continue
             if find(left) == find(right):
                 continue
-            if jaccard_at_least(shingle_of[left], shingle_of[right]):
+            both_long = (
+                token_count[left] >= MIN_TOKENS and token_count[right] >= MIN_TOKENS
+            )
+            if both_long:
+                if jaccard_at_least(shingle_of[left], shingle_of[right]):
+                    union(left, right)
+                continue
+            if short_near_duplicate(text_of[left], text_of[right]):
                 union(left, right)
 
     components: dict[str, list[str]] = {}

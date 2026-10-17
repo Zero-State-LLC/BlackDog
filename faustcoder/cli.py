@@ -1,9 +1,11 @@
 """Command line for the T06 dedup snapshot.
 
-``faustcoder-snapshot`` reads one inventory, fetches pinned blobs and
-writes a ``DedupManifest`` into the artifact store. ``--created-at`` is
-required. The manifest payload does not contain that timestamp, and a
-second run with the same value stores the same envelope bytes.
+``faustcoder-snapshot`` reads a T05 ``rights-inventory.v1`` document and
+a ``notice-manifest.v1`` document, fetches pinned blobs and writes a
+``DedupManifest`` into the artifact store. ``--created-at`` is required.
+The manifest payload does not contain that timestamp, and a second run
+with the same value stores the same envelope bytes. ``generated_at`` on
+either document is not part of the manifest digest.
 
 ``--compile-check`` defaults to off. Passing it raises the T03b gate
 and does not call the compiler. Compiler receipts are not a signal for
@@ -47,9 +49,11 @@ def main(argv: Sequence[str] | None = None) -> int:
         return EXIT_USAGE if code not in (0, None) else EXIT_OK
     try:
         document = loads_strict(Path(args.inventory).read_text(encoding="utf-8"))
+        notice = loads_strict(Path(args.notice).read_text(encoding="utf-8"))
         fetcher = _fetcher(args)
         compiled = compile_snapshot(
             document,
+            notice,
             fetcher,
             actor=args.actor,
             created_at=args.created_at,
@@ -71,7 +75,16 @@ def main(argv: Sequence[str] | None = None) -> int:
 
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="faustcoder-snapshot")
-    parser.add_argument("--inventory", required=True, help="T06 inventory JSON")
+    parser.add_argument(
+        "--inventory",
+        required=True,
+        help="T05 rights-inventory.v1 JSON",
+    )
+    parser.add_argument(
+        "--notice",
+        required=True,
+        help="T05 notice-manifest.v1 JSON",
+    )
     parser.add_argument("--store", required=True, help="artifact store directory")
     parser.add_argument(
         "--created-at",

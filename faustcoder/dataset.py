@@ -1,19 +1,18 @@
-"""Dataset state machine (spec §7.1).
+"""Dataset state machine for the transitions T06 owns (spec §7.1).
 
-``TRANSITIONS`` is the spec table. T06 executes ``rights_cleared``,
-``rights_rejected``, ``normalized``, ``normalize_failed``,
-``dedup_passed`` and ``duplicate_or_leak_found``. ``split_frozen`` stays
-unimplemented: that edge writes the frozen ``DatasetSnapshot`` and the
-signed split, which is T07.
+``rights_cleared`` and ``rights_rejected`` are not in this table and
+this module does not execute them. Those edges belong to
+``faustcoder.rights`` (T05). Calling them here raises
+``TransitionNotImplemented`` and writes nothing.
 
-``rights_cleared`` here admits one inventory unit that already carries
-a decision. It does not survey repositories and it does not import the
-T05 module. The guard is license eligibility and attribution. The
-2026-10-17 defaults are applied earlier by ``faustcoder.policy``.
+T06 executes ``normalized``, ``normalize_failed``, ``dedup_passed`` and
+``duplicate_or_leak_found``. ``split_frozen`` stays unimplemented.
+``normalized`` requires a RightsRecord and a ``rights_cleared`` receipt
+whose envelope producer is ``faustcoder.rights``.
 
-Receipts use ``transition-receipt.schema.json``. State is the ``to``
-field of the latest dataset receipt whose inputs include the source
-digest. A source with no receipt is ``DISCOVERED``.
+Receipt envelopes use producer ``faustcoder.snapshot``, so they are not
+T05 rights receipts. The receipt payload still uses machine ``dataset``
+because that is the schema enum.
 """
 
 from __future__ import annotations
@@ -26,16 +25,16 @@ from faustcoder.canonical import build_envelope
 from faustcoder.errors import (
     GuardError,
     IllegalTransitionError,
-    PolicyError,
     TransitionNotImplemented,
 )
-from faustcoder.policy import assert_clearance, maximum_flags
 from faustcoder.schemas import validate
 from faustcoder.store import ArtifactStore
 
 SCHEMA_VERSION = "0.3.0"
 PRODUCER = "faustcoder.snapshot"
+RIGHTS_PRODUCER = "faustcoder.rights"
 RECEIPT_SCHEMA = "transition-receipt.schema.json"
+RIGHTS_EVENTS = frozenset({"rights_cleared", "rights_rejected"})
 MACHINE = "dataset"
 
 INITIAL_STATE = "DISCOVERED"
@@ -76,22 +75,6 @@ class Transition:
 
 
 TRANSITIONS: tuple[Transition, ...] = (
-    Transition(
-        "DISCOVERED",
-        "rights_cleared",
-        "RightsRecord shows license eligibility and attribution (R-002, R-014)",
-        "RIGHTS_CLEARED",
-        "Write RightsRecord; append receipt",
-        True,
-    ),
-    Transition(
-        "DISCOVERED",
-        "rights_rejected",
-        "License ineligible, unknown or restricted (R-014)",
-        "QUARANTINED",
-        "Write exclusion receipt with reason; content not copied into any snapshot",
-        True,
-    ),
     Transition(
         "RIGHTS_CLEARED",
         "normalized",
@@ -215,6 +198,8 @@ def apply_transition(
     _check_source(source_envelope["payload"])
     source_digest = source_envelope["content_digest"]
     state = _state_from_receipts(store, source_digest)
+    if event in RIGHTS_EVENTS:
+        raise TransitionNotImplemented(state, event)
     edge = lookup_transition(state, event)
     if edge is None:
         raise IllegalTransitionError(state, event)
@@ -242,10 +227,6 @@ def _effect_envelopes(
     actor: str,
     timestamp: str,
 ) -> list[dict[str, Any]]:
-    if edge.event == "rights_cleared":
-        return _rights_cleared(source_digest, effect, actor, timestamp)
-    if edge.event == "rights_rejected":
-        return _rights_rejected(source_digest, effect, actor, timestamp)
     if edge.event == "normalized":
         return _normalized(store, source_digest, effect, actor, timestamp)
     if edge.event == "normalize_failed":
@@ -255,72 +236,6 @@ def _effect_envelopes(
     if edge.event == "duplicate_or_leak_found":
         return _dedup(store, source_digest, effect, actor, timestamp, conflict=True)
     raise TransitionNotImplemented(edge.from_state, edge.event)
-
-
-def _rights_cleared(
-    source_digest: str,
-    effect: Mapping[str, Any],
-    actor: str,
-    timestamp: str,
-) -> list[dict[str, Any]]:
-    license_name = _text(effect.get("license"), "license")
-    attribution = _text(effect.get("attribution"), "attribution")
-    eligible = effect.get("eligible_for")
-    if not isinstance(eligible, list):
-        raise GuardError("eligible_for must be a list")
-    reviewer = _text(effect.get("reviewer"), "reviewer")
-    unit_id = _text(effect.get("unit_id"), "unit_id")
-    try:
-        assert_clearance(license_name, eligible, attribution)
-    except PolicyError as exc:
-        raise GuardError(str(exc)) from exc
-    rights = {
-        "record_type": "RightsRecord",
-        "license": license_name,
-        "eligible_for": list(eligible),
-        "attribution": attribution,
-        "reviewer": reviewer,
-        "unit_id": unit_id,
-        "subject": source_digest,
-    }
-    rights_envelope = _envelope(rights, [source_digest], timestamp)
-    disposition = f"cleared: {license_name}"
-    receipt = _receipt_envelope(
-        actor=actor,
-        timestamp=timestamp,
-        input_hashes=[source_digest, rights_envelope["content_digest"]],
-        from_state="DISCOVERED",
-        event="rights_cleared",
-        to_state="RIGHTS_CLEARED",
-        disposition=disposition,
-        parents=[source_digest, rights_envelope["content_digest"]],
-    )
-    return [rights_envelope, receipt]
-
-
-def _rights_rejected(
-    source_digest: str,
-    effect: Mapping[str, Any],
-    actor: str,
-    timestamp: str,
-) -> list[dict[str, Any]]:
-    license_name = _text(effect.get("license"), "license")
-    reason = _text(effect.get("reason"), "reason")
-    if maximum_flags(license_name) is not None:
-        raise GuardError("rights_rejected requires an ineligible license")
-    if any(key in effect for key in ("faust_source", "text", "bytes")):
-        raise GuardError("an exclusion receipt cannot carry program text")
-    receipt = _receipt_envelope(
-        actor=actor,
-        timestamp=timestamp,
-        input_hashes=[source_digest],
-        from_state="DISCOVERED",
-        event="rights_rejected",
-        to_state="QUARANTINED",
-        disposition=f"excluded: {reason}",
-        parents=[source_digest],
-    )
-    return [receipt]
 
 
 def _normalized(
@@ -342,8 +257,7 @@ def _normalized(
     original = _digest(effect.get("original_sha256"), "original_sha256")
     blob_sha = _text(effect.get("blob_sha"), "blob_sha")
     unit_id = _text(effect.get("unit_id"), "unit_id")
-    rights_digest = _rights_digest(store, source_digest)
-    rights_receipt = _receipt_digest(store, source_digest, "rights_cleared")
+    rights_digest, rights_receipt = _t05_rights(store, source_digest)
     example = {
         "record_type": "Example",
         "source_digest": source_digest,
@@ -388,8 +302,7 @@ def _normalize_failed(
     diagnostics = effect.get("diagnostics")
     if diagnostics not in _DIAGNOSTICS:
         raise GuardError("normalize_failed diagnostics are not a known token")
-    rights_digest = _rights_digest(store, source_digest)
-    rights_receipt = _receipt_digest(store, source_digest, "rights_cleared")
+    rights_digest, rights_receipt = _t05_rights(store, source_digest)
     receipt = _receipt_envelope(
         actor=actor,
         timestamp=timestamp,
@@ -420,7 +333,7 @@ def _dedup(
         raise GuardError("dedup requires the normalized example")
     if example["payload"].get("duplicate_family") != family:
         raise GuardError("duplicate family does not match the example")
-    rights_digest = _rights_digest(store, source_digest)
+    rights_digest, rights_receipt = _t05_rights(store, source_digest)
     normalize_receipt = _receipt_digest(store, source_digest, "normalized")
     if conflict:
         event = "duplicate_or_leak_found"
@@ -433,6 +346,7 @@ def _dedup(
     parents = [
         source_digest,
         rights_digest,
+        rights_receipt,
         example["content_digest"],
         normalize_receipt,
     ]
@@ -449,19 +363,29 @@ def _dedup(
     return [receipt]
 
 
-def _rights_digest(store: ArtifactStore, source_digest: str) -> str:
+def _t05_rights(store: ArtifactStore, source_digest: str) -> tuple[str, str]:
+    """Return the T05 RightsRecord digest and the rights_cleared receipt digest."""
+    receipts = [
+        envelope
+        for envelope in _receipts_for(store, source_digest)
+        if envelope.get("producer") == RIGHTS_PRODUCER
+        and envelope["payload"].get("event") == "rights_cleared"
+    ]
+    if len(receipts) != 1:
+        raise GuardError("normalized requires a T05 rights receipt")
+    receipt = receipts[0]
     found: list[str] = []
-    for artifact_id in store.list():
-        envelope = store.get(artifact_id)
+    for parent in receipt["parents"]:
+        envelope = store.get(parent)
         payload = envelope["payload"]
         if (
-            payload.get("record_type") == "RightsRecord"
-            and payload.get("subject") == source_digest
+            envelope.get("producer") == RIGHTS_PRODUCER
+            and payload.get("record_type") == "RightsRecord"
         ):
             found.append(envelope["content_digest"])
     if len(found) != 1:
-        raise GuardError("normalized requires exactly one RightsRecord")
-    return found[0]
+        raise GuardError("normalized requires a T05 RightsRecord")
+    return found[0], receipt["content_digest"]
 
 
 def _example_for(store: ArtifactStore, source_digest: str) -> dict[str, Any] | None:

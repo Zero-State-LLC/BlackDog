@@ -1,25 +1,24 @@
 """Compile a deterministic dedup manifest and commit it to the artifact store.
 
-The manifest payload is a canonical function of the inventory and the
-fetched bytes. It does not include the run timestamp. Envelope
-``created_at`` and receipt ``timestamp`` use the caller-supplied
-``created_at``, so a second run with the same value stores identical
-bytes. ``split_frozen`` is not emitted. The record type is
-``DedupManifest`` and ``lifecycle`` stays ``DEDUPED``. Spec §7.1 writes
-``DatasetSnapshot`` on the T07 freeze, together with the signed split.
+Admission is a T05 ``rights-inventory.v1`` entry plus a matching
+``notice-manifest.v1`` row. This module does not write ``rights_cleared``
+or a RightsRecord, and it never uses the actor as ``reviewer``.
 
-Vendored units are fetched only to compare normalized hashes with the
-named upstream unit. Sealed holdout units are fetched and compared in
-memory. Their text is not stored. An acquired unit in the same
-near-duplicate family is quarantined with ``duplicate_or_leak_found``.
+The manifest payload is a canonical function of the cleared units and
+the fetched bytes. ``generated_at`` and ``created_at`` are not in it.
+``split_frozen`` is not emitted. The record type is ``DedupManifest``.
+
+Near-duplicate families share rights. Every member gets the intersection
+of the family's flags. A family whose licenses differ is quarantined
+with reason ``needs-human``.
 """
 
 from __future__ import annotations
 
 import re
 from collections import defaultdict
-from collections.abc import Mapping
-from dataclasses import dataclass, field
+from collections.abc import Mapping, Sequence
+from dataclasses import dataclass, replace
 from typing import Any
 
 from faustcoder.acquire import BlobFetcher, fetch_verified
@@ -29,28 +28,30 @@ from faustcoder.dataset import PRODUCER, SCHEMA_VERSION, receipt_payload
 from faustcoder.errors import AcquireError, InventoryError, NormalizeError
 from faustcoder.inventory import (
     FFUNCTION_REASON,
-    POLICY_ID,
+    NEEDS_HUMAN_REASON,
+    Corpus,
+    InventoryExclusion,
     Notice,
     Unit,
-    parse_inventory,
+    parse_corpus,
     source_uri,
 )
 from faustcoder.neardup import (
+    CHAR_DENOMINATOR,
+    CHAR_MIN_LENGTH,
+    CHAR_N,
+    CHAR_NUMERATOR,
     MIN_TOKENS,
     NGRAM_N,
+    SHORT_SKELETON_DENOMINATOR,
+    SHORT_SKELETON_NUMERATOR,
     THRESHOLD_DENOMINATOR,
     THRESHOLD_NUMERATOR,
     cluster_families,
     tokens,
 )
-from faustcoder.normalize import (
-    LineSlice,
-    NormalizedFile,
-    NormalizedGroup,
-    combine_files,
-    normalize_bytes,
-)
-from faustcoder.policy import check_unit, ordered_flags
+from faustcoder.normalize import normalize_bytes
+from faustcoder.policy import ordered_flags
 from faustcoder.store import ArtifactStore
 
 _TIME = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$")
@@ -60,7 +61,9 @@ _MANIFEST_VERSION = "t06-dedup-manifest.v1"
 @dataclass
 class _Norm:
     unit: Unit
-    group: NormalizedGroup | None
+    text: str | None
+    original_sha256: str | None
+    normalized_sha256: str | None
     failure: str | None
     exclusion: str | None
 
@@ -72,8 +75,9 @@ class _Member:
     admitted: tuple[str, ...]
     effective: tuple[str, ...]
     narrowed: bool
-    vendored: list[dict[str, Any]] = field(default_factory=list)
     leak: bool = False
+    mixed: bool = False
+    licenses: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -87,52 +91,46 @@ class CompiledSnapshot:
 
 
 def compile_snapshot(
-    document: Mapping[str, Any],
+    inventory: Mapping[str, Any],
+    notice: Mapping[str, Any],
     fetcher: BlobFetcher,
     *,
     actor: str,
     created_at: str,
     compile_check: bool = False,
+    sealed: Sequence[Mapping[str, str]] = (),
 ) -> CompiledSnapshot:
-    """Build the manifest and its parent artifacts. Does not touch the store.
+    """Build the manifest. Does not write a rights transition.
 
     ``compile_check`` defaults to false. Turning it on raises
-    ``CompilerGateError`` and does not call the compiler. T03b has not
-    staged the pinned faustlibraries into the harness, so a compiler
-    receipt is not a signal for this corpus.
+    ``CompilerGateError`` and does not call the compiler.
     """
     assert_corpus_compile_disabled(compile_check)
     _check_run(actor, created_at)
-    units = parse_inventory(document)
-    for unit in units:
-        check_unit(unit)
+    corpus = parse_corpus(inventory, notice)
+    sealed_keys = _sealed_keys(sealed)
+    units = tuple(_mark_sealed(unit, sealed_keys) for unit in corpus.units)
     blobs = _fetch(units, fetcher)
-    prepared = [_prepare(unit, blobs) for unit in units if unit.decision != "reject"]
-    by_id = {item.unit.unit_id: item for item in prepared}
+    prepared = [_prepare(unit, blobs) for unit in units]
     comparable = [
         item
         for item in prepared
-        if item.unit.decision != "vendored"
-        and item.group is not None
-        and item.exclusion is None
+        if item.text is not None and item.exclusion is None and item.failure is None
     ]
     for item in prepared:
         if item.unit.holdout and item.failure is not None:
             raise NormalizeError(item.failure)
     families = cluster_families(
-        [
-            (item.unit.unit_id, item.group.text)
-            for item in comparable
-            if item.group is not None
-        ]
+        [(item.unit.unit_id, item.text or "") for item in comparable if item.text]
     )
     sealed_ids = {item.unit.unit_id for item in comparable if item.unit.holdout}
     tainted = {families[item_id] for item_id in sealed_ids}
     members = _members(comparable, families, tainted)
     _narrow(members)
-    excluded = _excluded(units, prepared, members)
-    _attach_vendored(prepared, by_id, members, excluded)
-    return _assemble(members, excluded, comparable, prepared, families, actor, created_at)
+    excluded = _excluded(corpus, prepared, members)
+    return _assemble(
+        members, excluded, comparable, prepared, families, corpus, actor, created_at
+    )
 
 
 def commit_snapshot(store: ArtifactStore, compiled: CompiledSnapshot) -> str:
@@ -142,47 +140,44 @@ def commit_snapshot(store: ArtifactStore, compiled: CompiledSnapshot) -> str:
     return compiled.manifest_digest
 
 
+def _mark_sealed(unit: Unit, sealed_keys: set[tuple[str, str, str, str]]) -> Unit:
+    key = (unit.repo, unit.pin, unit.path, unit.function)
+    if key not in sealed_keys:
+        return unit
+    return replace(unit, holdout=True)
+
+
+def _sealed_keys(sealed: Sequence[Mapping[str, str]]) -> set[tuple[str, str, str, str]]:
+    keys: set[tuple[str, str, str, str]] = set()
+    for item in sealed:
+        if not isinstance(item, Mapping):
+            raise InventoryError("sealed unit must be an object")
+        keys.add(
+            (
+                str(item.get("repo") or ""),
+                str(item.get("commit") or item.get("pin") or ""),
+                str(item.get("path") or ""),
+                str(item.get("function") or ""),
+            )
+        )
+    return keys
+
+
 def _prepare(unit: Unit, blobs: dict[tuple[str, str, str, str], bytes]) -> _Norm:
-    line_slice = None
-    if unit.slice is not None:
-        line_slice = LineSlice(
-            unit.slice.name, unit.slice.start_line, unit.slice.end_line
-        )
-    normalized_files: list[NormalizedFile] = []
-    for member in unit.files:
-        raw = blobs[(unit.repo, unit.pin, member.path, member.blob_sha)]
-        try:
-            normalized = normalize_bytes(raw, line_slice)
-        except NormalizeError as exc:
-            return _Norm(unit, None, exc.reason, None)
-        normalized_files.append(
-            NormalizedFile(
-                role=member.role,
-                path=member.path,
-                blob_sha=member.blob_sha,
-                normalized=normalized,
-            )
-        )
-    group = combine_files(normalized_files)
-    _require_import_references(unit, group)
-    exclusion = FFUNCTION_REASON if _has_ffunction(group) else None
-    return _Norm(unit, group, None, exclusion)
-
-
-def _require_import_references(unit: Unit, group: NormalizedGroup) -> None:
-    primary = next(item for item in group.files if item.role == "primary")
-    for item in group.files:
-        if item.role != "import":
-            continue
-        basename = item.path.rsplit("/", 1)[-1]
-        if f'"{basename}"' not in primary.normalized.text:
-            raise InventoryError(
-                f"{unit.unit_id}: import {basename} is not named by the primary file"
-            )
-
-
-def _has_ffunction(group: NormalizedGroup) -> bool:
-    return any(FFUNCTION_REASON in tokens(item.normalized.text) for item in group.files)
+    raw = blobs[(unit.repo, unit.pin, unit.path, unit.blob_sha)]
+    try:
+        normalized = normalize_bytes(raw, None)
+    except NormalizeError as exc:
+        return _Norm(unit, None, None, None, exc.reason, None)
+    exclusion = FFUNCTION_REASON if FFUNCTION_REASON in tokens(normalized.text) else None
+    return _Norm(
+        unit,
+        normalized.text,
+        normalized.original_sha256,
+        normalized.normalized_sha256,
+        None,
+        exclusion,
+    )
 
 
 def _members(
@@ -190,7 +185,7 @@ def _members(
 ) -> list[_Member]:
     members: list[_Member] = []
     for item in comparable:
-        if item.unit.holdout or item.group is None:
+        if item.unit.holdout or item.text is None:
             continue
         family = families[item.unit.unit_id]
         members.append(
@@ -207,12 +202,19 @@ def _members(
 
 
 def _narrow(members: list[_Member]) -> None:
+    """Apply one family's rights to every member of that family."""
     groups: dict[str, list[_Member]] = defaultdict(list)
     for member in members:
-        if member.leak or member.norm.group is None:
-            continue
-        groups[member.norm.group.normalized_sha256].append(member)
+        groups[member.family].append(member)
     for group in groups.values():
+        licenses = tuple(sorted({member.norm.unit.license for member in group}))
+        if len(licenses) > 1:
+            for member in group:
+                member.mixed = True
+                member.licenses = licenses
+                member.effective = ()
+                member.narrowed = True
+            continue
         common: set[str] | None = None
         for member in group:
             flags = set(member.admitted)
@@ -224,83 +226,22 @@ def _narrow(members: list[_Member]) -> None:
 
 
 def _excluded(
-    units: tuple[Unit, ...],
+    corpus: Corpus,
     prepared: list[_Norm],
     members: list[_Member],
 ) -> list[dict[str, Any]]:
-    rows: list[dict[str, Any]] = []
-    for unit in units:
-        if unit.decision == "reject":
-            rows.append(_exclusion(unit, unit.reason, None, "inventory"))
+    rows = [_inventory_exclusion(item) for item in corpus.excluded]
     for item in prepared:
-        if item.exclusion is not None and item.unit.decision != "vendored":
+        if item.exclusion is not None and not item.unit.holdout:
             rows.append(_exclusion(item.unit, item.exclusion, None, "scan"))
-        elif item.failure is not None and item.unit.decision != "vendored" and not item.unit.holdout:
+        elif item.failure is not None and not item.unit.holdout:
             rows.append(_exclusion(item.unit, item.failure, None, "normalize"))
     for member in members:
-        if member.leak:
+        if member.mixed:
+            rows.append(_exclusion(member.norm.unit, NEEDS_HUMAN_REASON, member.family, "dedup"))
+        elif member.leak:
             rows.append(_exclusion(member.norm.unit, "holdout-family", member.family, "dedup"))
     return rows
-
-
-def _attach_vendored(
-    prepared: list[_Norm],
-    by_id: dict[str, _Norm],
-    members: list[_Member],
-    excluded: list[dict[str, Any]],
-) -> None:
-    member_by_id = {member.norm.unit.unit_id: member for member in members}
-    excluded_by_id = {row["unit_id"]: row for row in excluded}
-    for item in prepared:
-        if item.unit.decision != "vendored":
-            continue
-        upstream_id = item.unit.upstream_unit_id or ""
-        upstream = by_id.get(upstream_id)
-        copy = _vendored_copy(item)
-        if (
-            upstream is None
-            or upstream.group is None
-            or item.group is None
-            or upstream.exclusion is not None
-        ):
-            reason = (
-                "vendored-unreadable"
-                if item.failure is not None
-                else "vendored-upstream-unavailable"
-            )
-            excluded.append(_exclusion(item.unit, reason, None, "vendored"))
-            continue
-        if item.group.normalized_sha256 != upstream.group.normalized_sha256:
-            excluded.append(_exclusion(item.unit, "vendored-stale", None, "vendored"))
-            continue
-        member = member_by_id.get(upstream_id)
-        if member is not None:
-            member.vendored.append(copy)
-            continue
-        row = excluded_by_id.get(upstream_id)
-        if row is not None:
-            row["vendored_copies"].append(copy)
-            continue
-        excluded.append(
-            _exclusion(item.unit, "vendored-upstream-unavailable", None, "vendored")
-        )
-
-
-def _vendored_copy(item: _Norm) -> dict[str, Any]:
-    files = []
-    if item.group is not None:
-        files = [
-            {"blob_sha": member.blob_sha, "path": member.path, "role": member.role}
-            for member in item.group.files
-        ]
-    return {
-        "blob_sha": item.unit.blob_sha,
-        "files": files,
-        "path": item.unit.path,
-        "pin": item.unit.pin,
-        "repo": item.unit.repo,
-        "unit_id": item.unit.unit_id,
-    }
 
 
 def _assemble(
@@ -309,6 +250,7 @@ def _assemble(
     comparable: list[_Norm],
     prepared: list[_Norm],
     families: dict[str, str],
+    corpus: Corpus,
     actor: str,
     created_at: str,
 ) -> CompiledSnapshot:
@@ -316,10 +258,12 @@ def _assemble(
     example_digests: list[str] = []
     manifest_units: list[dict[str, Any]] = []
     for item in sorted(prepared, key=lambda row: row.unit.unit_id):
-        if item.failure is None or item.unit.decision == "vendored" or item.unit.holdout:
+        if item.failure is None or item.unit.holdout:
             continue
         envelopes.extend(_failure_envelopes(item, actor, created_at))
     for member in sorted(members, key=lambda item: item.norm.unit.unit_id):
+        if member.mixed:
+            continue
         built = _unit_envelopes(member, actor, created_at)
         envelopes.extend(built)
         if member.leak:
@@ -329,21 +273,22 @@ def _assemble(
         )
         example_digests.append(example["content_digest"])
         manifest_units.append(_manifest_unit(member))
-    sealed = _sealed_rows(comparable, families)
     excluded_rows = sorted(excluded, key=lambda row: row["unit_id"])
-    for row in excluded_rows:
-        row["vendored_copies"] = sorted(
-            row["vendored_copies"],
-            key=lambda copy: (copy["repo"], copy["pin"], copy["path"], copy["unit_id"]),
-        )
     manifest_payload = {
         "example_digests": sorted(example_digests),
         "excluded": excluded_rows,
+        "inventory_digest": corpus.inventory_digest,
         "lifecycle": "DEDUPED",
         "near_duplicate": {
             "algorithm": "token-shingle-jaccard",
+            "char_min_length": CHAR_MIN_LENGTH,
+            "char_n": CHAR_N,
+            "char_threshold": f"{CHAR_NUMERATOR}/{CHAR_DENOMINATOR}",
             "min_tokens": MIN_TOKENS,
             "n": NGRAM_N,
+            "short_skeleton_threshold": (
+                f"{SHORT_SKELETON_NUMERATOR}/{SHORT_SKELETON_DENOMINATOR}"
+            ),
             "threshold": f"{THRESHOLD_NUMERATOR}/{THRESHOLD_DENOMINATOR}",
         },
         "normalization": {
@@ -352,9 +297,9 @@ def _assemble(
             "strip_trailing": "space-and-tab",
             "unicode_normalization": "none",
         },
-        "policy": POLICY_ID,
+        "notice_digest": corpus.notice_digest,
         "record_type": "DedupManifest",
-        "sealed": sealed,
+        "sealed": _sealed_rows(comparable, families),
         "snapshot_version": _MANIFEST_VERSION,
         "split_frozen": False,
         "units": sorted(
@@ -363,7 +308,7 @@ def _assemble(
                 row["repo"],
                 row["pin"],
                 row["path"],
-                "" if row["slice"] is None else row["slice"]["name"],
+                row["function"],
                 row["unit_id"],
             ),
         ),
@@ -383,53 +328,30 @@ def _unit_envelopes(
     member: _Member, actor: str, created_at: str
 ) -> list[dict[str, Any]]:
     unit = member.norm.unit
-    normalized = member.norm.group
-    assert normalized is not None
     source = _envelope(_source_payload(unit), [], created_at)
     source_digest = source["content_digest"]
-    rights = _envelope(_rights_payload(unit, source_digest, actor), [source_digest], created_at)
-    rights_digest = rights["content_digest"]
-    rights_receipt = _receipt(
-        actor=actor,
-        timestamp=created_at,
-        input_hashes=[source_digest, rights_digest],
-        from_state="DISCOVERED",
-        event="rights_cleared",
-        to_state="RIGHTS_CLEARED",
-        disposition=f"cleared: {unit.license}",
-        parents=[source_digest, rights_digest],
-    )
     example_payload = {
         "blob_sha": unit.blob_sha,
         "duplicate_family": member.family,
-        "faust_source": normalized.text,
-        "normalized_sha256": normalized.normalized_sha256,
-        "original_sha256": normalized.original_sha256,
+        "faust_source": member.norm.text,
+        "function": unit.function,
+        "normalized_sha256": member.norm.normalized_sha256,
+        "original_sha256": member.norm.original_sha256,
         "record_type": "Example",
         "source_digest": source_digest,
         "unit_id": unit.unit_id,
     }
-    example = _envelope(example_payload, [source_digest, rights_digest], created_at)
+    example = _envelope(example_payload, [source_digest], created_at)
     example_digest = example["content_digest"]
     normalized_receipt = _receipt(
         actor=actor,
         timestamp=created_at,
-        input_hashes=[
-            source_digest,
-            rights_digest,
-            rights_receipt["content_digest"],
-            example_digest,
-        ],
+        input_hashes=[source_digest, example_digest],
         from_state="RIGHTS_CLEARED",
         event="normalized",
         to_state="NORMALIZED",
         disposition="normalized",
-        parents=[
-            source_digest,
-            rights_digest,
-            rights_receipt["content_digest"],
-            example_digest,
-        ],
+        parents=[source_digest, example_digest],
     )
     if member.leak:
         event = "duplicate_or_leak_found"
@@ -439,12 +361,7 @@ def _unit_envelopes(
         event = "dedup_passed"
         to_state = "DEDUPED"
         disposition = f"duplicate_family={member.family}"
-    dedup_parents = [
-        source_digest,
-        rights_digest,
-        example_digest,
-        normalized_receipt["content_digest"],
-    ]
+    dedup_parents = [source_digest, example_digest, normalized_receipt["content_digest"]]
     dedup = _receipt(
         actor=actor,
         timestamp=created_at,
@@ -455,99 +372,70 @@ def _unit_envelopes(
         disposition=disposition,
         parents=dedup_parents,
     )
-    return [source, rights, rights_receipt, example, normalized_receipt, dedup]
+    return [source, example, normalized_receipt, dedup]
 
 
 def _failure_envelopes(item: _Norm, actor: str, created_at: str) -> list[dict[str, Any]]:
+    """Record a normalize failure without minting a rights clearance."""
     unit = item.unit
     source = _envelope(_source_payload(unit), [], created_at)
     source_digest = source["content_digest"]
-    rights = _envelope(_rights_payload(unit, source_digest, actor), [source_digest], created_at)
-    rights_digest = rights["content_digest"]
-    rights_receipt = _receipt(
-        actor=actor,
-        timestamp=created_at,
-        input_hashes=[source_digest, rights_digest],
-        from_state="DISCOVERED",
-        event="rights_cleared",
-        to_state="RIGHTS_CLEARED",
-        disposition=f"cleared: {unit.license}",
-        parents=[source_digest, rights_digest],
-    )
     failed = _receipt(
         actor=actor,
         timestamp=created_at,
-        input_hashes=[source_digest, rights_digest, rights_receipt["content_digest"]],
+        input_hashes=[source_digest],
         from_state="RIGHTS_CLEARED",
         event="normalize_failed",
         to_state="QUARANTINED",
         disposition=f"normalize_failed: {item.failure}",
-        parents=[source_digest, rights_digest, rights_receipt["content_digest"]],
+        parents=[source_digest],
     )
-    return [source, rights, rights_receipt, failed]
-
-
-def _rights_payload(unit: Unit, source_digest: str, actor: str) -> dict[str, Any]:
-    return {
-        "attribution": unit.attribution,
-        "eligible_for": list(unit.eligible_for),
-        "license": unit.license,
-        "record_type": "RightsRecord",
-        "reviewer": unit.reviewer or actor,
-        "subject": source_digest,
-        "unit_id": unit.unit_id,
-    }
+    return [source, failed]
 
 
 def _manifest_unit(member: _Member) -> dict[str, Any]:
     unit = member.norm.unit
-    normalized = member.norm.group
-    assert normalized is not None
     return {
         "admitted_eligible_for": list(member.admitted),
         "attribution": unit.attribution,
         "blob_sha": unit.blob_sha,
         "duplicate_family": member.family,
         "eligible_for": list(member.effective),
-        "files": _manifest_files(normalized),
+        "entry_id": unit.entry_id,
         "evidence_label": unit.evidence_label,
+        "function": unit.function,
         "impulse": unit.impulse,
         "license": unit.license,
-        "normalized_sha256": normalized.normalized_sha256,
+        "normalized_sha256": member.norm.normalized_sha256,
         "notice": _notice_payload(unit.notice),
-        "original_sha256": normalized.original_sha256,
+        "original_sha256": member.norm.original_sha256,
         "path": unit.path,
         "pin": unit.pin,
         "repo": unit.repo,
         "reviewer": unit.reviewer,
         "rights_narrowed": member.narrowed,
-        "slice": _slice_payload(unit),
-        "source_id": unit.source_id,
         "training_only": list(member.effective) == ["train"],
         "unit_id": unit.unit_id,
-        "vendored_copies": sorted(
-            member.vendored,
-            key=lambda copy: (copy["repo"], copy["pin"], copy["path"], copy["unit_id"]),
-        ),
     }
 
 
 def _sealed_rows(
     comparable: list[_Norm], families: dict[str, str]
 ) -> list[dict[str, Any]]:
-    rows: list[dict[str, Any]] = []
+    rows = []
     for item in comparable:
-        if not item.unit.holdout or item.group is None:
+        if not item.unit.holdout or item.normalized_sha256 is None:
             continue
         rows.append(
             {
                 "duplicate_family": families[item.unit.unit_id],
+                "entry_id": item.unit.entry_id,
+                "function": item.unit.function,
                 "license": item.unit.license,
-                "normalized_sha256": item.group.normalized_sha256,
+                "normalized_sha256": item.normalized_sha256,
                 "path": item.unit.path,
                 "pin": item.unit.pin,
                 "repo": item.unit.repo,
-                "source_id": item.unit.source_id,
                 "unit_id": item.unit.unit_id,
             }
         )
@@ -555,17 +443,18 @@ def _sealed_rows(
     return rows
 
 
-def _manifest_files(group: NormalizedGroup) -> list[dict[str, str]]:
-    return [
-        {
-            "blob_sha": item.blob_sha,
-            "normalized_sha256": item.normalized.normalized_sha256,
-            "original_sha256": item.normalized.original_sha256,
-            "path": item.path,
-            "role": item.role,
-        }
-        for item in group.files
-    ]
+def _inventory_exclusion(item: InventoryExclusion) -> dict[str, Any]:
+    return {
+        "duplicate_family": None,
+        "entry_id": item.entry_id,
+        "function": item.function,
+        "origin": item.origin,
+        "path": item.path,
+        "pin": item.pin,
+        "reason": item.reason,
+        "repo": item.repo,
+        "unit_id": item.unit_id,
+    }
 
 
 def _exclusion(
@@ -573,21 +462,22 @@ def _exclusion(
 ) -> dict[str, Any]:
     return {
         "duplicate_family": family,
+        "entry_id": unit.entry_id,
+        "function": unit.function,
         "origin": origin,
         "path": unit.path,
         "pin": unit.pin,
         "reason": reason,
         "repo": unit.repo,
         "unit_id": unit.unit_id,
-        "vendored_copies": [],
     }
 
 
 def _source_payload(unit: Unit) -> dict[str, Any]:
+    """Content-bearing source fields. No ``retrieved_at`` and no actor."""
     return {
         "license_claim": unit.license,
         "record_type": "SourceRecord",
-        "retrieved_at": unit.generated_at,
         "unit_id": unit.unit_id,
         "uri": source_uri(unit),
     }
@@ -599,18 +489,9 @@ def _notice_payload(notice: Notice | None) -> dict[str, str] | None:
     return {
         "blob_sha": notice.blob_sha,
         "copyright": notice.copyright,
+        "function": notice.function,
         "license": notice.license,
         "path": notice.path,
-    }
-
-
-def _slice_payload(unit: Unit) -> dict[str, Any] | None:
-    if unit.slice is None:
-        return None
-    return {
-        "end_line": unit.slice.end_line,
-        "name": unit.slice.name,
-        "start_line": unit.slice.start_line,
     }
 
 
@@ -619,50 +500,12 @@ def _fetch(
 ) -> dict[tuple[str, str, str, str], bytes]:
     cache: dict[tuple[str, str, str, str], bytes] = {}
     for unit in units:
-        if unit.decision == "reject":
-            continue
-        for member in unit.files:
-            _cached(cache, fetcher, unit.repo, unit.pin, member.path, member.blob_sha)
-        if unit.notice is not None:
-            data = _cached(
-                cache,
-                fetcher,
-                unit.repo,
-                unit.pin,
-                unit.notice.path,
-                unit.notice.blob_sha,
+        key = (unit.repo, unit.pin, unit.path, unit.blob_sha)
+        if key not in cache:
+            cache[key] = fetch_verified(
+                fetcher, unit.repo, unit.pin, unit.path, unit.blob_sha
             )
-            _require_copyright(data, unit)
     return cache
-
-
-def _cached(
-    cache: dict[tuple[str, str, str, str], bytes],
-    fetcher: BlobFetcher,
-    repo: str,
-    pin: str,
-    path: str,
-    blob_sha: str,
-) -> bytes:
-    key = (repo, pin, path, blob_sha)
-    if key not in cache:
-        cache[key] = fetch_verified(fetcher, repo, pin, path, blob_sha)
-    return cache[key]
-
-
-def _require_copyright(data: bytes, unit: Unit) -> None:
-    notice = unit.notice
-    if notice is None:
-        return
-    if data.startswith((b"\xff\xfe", b"\xfe\xff")) or b"\x00" in data:
-        raise AcquireError(f"{unit.unit_id}: notice encoding is not utf-8")
-    body = data[3:] if data.startswith(b"\xef\xbb\xbf") else data
-    try:
-        text = body.decode("utf-8")
-    except UnicodeDecodeError as exc:
-        raise AcquireError(f"{unit.unit_id}: notice encoding is not utf-8") from exc
-    if notice.copyright not in text:
-        raise AcquireError(f"{unit.unit_id}: notice blob does not contain the copyright")
 
 
 def _receipt(

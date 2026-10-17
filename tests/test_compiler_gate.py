@@ -65,6 +65,7 @@ def test_compile_check_raises_before_fetch() -> None:
     with pytest.raises(CompilerGateError, match="2edec0537f53"):
         compile_snapshot(
             {},
+            {},
             _Fetcher(),
             actor="snapshot-bot",
             created_at="2026-10-17T20:00:00Z",

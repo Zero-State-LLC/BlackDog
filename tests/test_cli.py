@@ -7,15 +7,32 @@ from pathlib import Path
 
 from faustcoder.cli import main
 
-from tests.t06support import ACTOR, CREATED_AT, PIN, REPO, inventory, stage, stage_notice, unit
+from tests.t06support import (
+    ACTOR,
+    CREATED_AT,
+    PIN,
+    REPO,
+    cleared,
+    inventory_doc,
+    notice_doc,
+    stage,
+)
 
 
-def _args(tmp_path: Path, document: dict[str, object]) -> list[str]:
+def _args(
+    tmp_path: Path,
+    entries: list[dict[str, object]],
+    notices: list[dict[str, object]],
+) -> list[str]:
     inventory_path = tmp_path / "inventory.json"
-    inventory_path.write_text(json.dumps(document), encoding="utf-8")
+    notice_path = tmp_path / "notice.json"
+    inventory_path.write_text(json.dumps(inventory_doc(entries)), encoding="utf-8")
+    notice_path.write_text(json.dumps(notice_doc(notices)), encoding="utf-8")
     return [
         "--inventory",
         str(inventory_path),
+        "--notice",
+        str(notice_path),
         "--store",
         str(tmp_path / "store"),
         "--created-at",
@@ -32,9 +49,9 @@ def _args(tmp_path: Path, document: dict[str, object]) -> list[str]:
 def test_cli_prints_the_digest_and_a_repeat_is_idempotent(tmp_path: Path, capsys) -> None:
     data = b"process = 1;\n"
     root = tmp_path / "fixtures"
-    stage_notice(root)
     stage(root, REPO, PIN, "osc.dsp", data)
-    args = _args(tmp_path, inventory([unit("osc", data, path="osc.dsp")]))
+    row, notice = cleared("osc", data, path="osc.dsp")
+    args = _args(tmp_path, [row], [notice])
     assert main(args) == 0
     first = capsys.readouterr().out.strip()
     assert len(first) == 7 + 64
@@ -44,11 +61,15 @@ def test_cli_prints_the_digest_and_a_repeat_is_idempotent(tmp_path: Path, capsys
 
 def test_cli_compile_check_and_usage_exit_2(tmp_path: Path, capsys) -> None:
     inventory_path = tmp_path / "inventory.json"
+    notice_path = tmp_path / "notice.json"
     inventory_path.write_text("{}", encoding="utf-8")
+    notice_path.write_text("{}", encoding="utf-8")
     code = main(
         [
             "--inventory",
             str(inventory_path),
+            "--notice",
+            str(notice_path),
             "--store",
             str(tmp_path / "store"),
             "--created-at",
@@ -68,12 +89,13 @@ def test_cli_compile_check_and_usage_exit_2(tmp_path: Path, capsys) -> None:
 def test_cli_acquire_and_store_exit_codes(tmp_path: Path, capsys) -> None:
     data = b"process = 1;\n"
     root = tmp_path / "fixtures"
-    stage_notice(root)
-    args = _args(tmp_path, inventory([unit("osc", data, path="missing.dsp")]))
+    row, notice = cleared("osc", data, path="missing.dsp")
+    args = _args(tmp_path, [row], [notice])
     assert main(args) == 3
     capsys.readouterr()
     stage(root, REPO, PIN, "osc.dsp", data)
-    good = _args(tmp_path, inventory([unit("osc", data, path="osc.dsp")]))
+    good_row, good_notice = cleared("osc", data, path="osc.dsp")
+    good = _args(tmp_path, [good_row], [good_notice])
     assert main(good) == 0
     capsys.readouterr()
     moved = good.copy()

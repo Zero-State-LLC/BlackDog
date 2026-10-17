@@ -1,4 +1,4 @@
-"""Dataset machine against spec §7.1. split_frozen is not executed."""
+"""Dataset machine against spec §7.1. Rights edges belong to T05."""
 
 from __future__ import annotations
 
@@ -6,11 +6,15 @@ from pathlib import Path
 
 import pytest
 
-from faustcoder.canonical import sha256_prefixed
+from faustcoder.canonical import build_envelope, sha256_prefixed
 from faustcoder.dataset import (
+    PRODUCER,
+    RIGHTS_PRODUCER,
+    SCHEMA_VERSION,
     TRANSITIONS,
     apply_transition,
     current_state,
+    receipt_payload,
     register_source,
 )
 from faustcoder.errors import (
@@ -24,38 +28,57 @@ TS = "2026-10-17T20:00:00Z"
 ACTOR = "snapshot-bot"
 TEXT = "process = 1;"
 FAMILY = sha256_prefixed(b"family")
+RIGHTS_EVENTS = frozenset({"rights_cleared", "rights_rejected"})
 
 
-def _source(store: ArtifactStore) -> str:
+def _source(store: ArtifactStore, *, license_claim: str = "MIT", unit_id: str = "osc") -> str:
     envelope = register_source(
         store,
         {
             "record_type": "SourceRecord",
-            "uri": "https://github.com/acme/widgets/blob/" + "a" * 40 + "/osc.dsp#unit=osc",
+            "uri": "https://github.com/acme/widgets/blob/" + "a" * 40 + f"/{unit_id}.dsp#unit={unit_id}",
             "retrieved_at": "2026-10-17T13:04:00Z",
-            "license_claim": "MIT",
-            "unit_id": "osc",
+            "license_claim": license_claim,
+            "unit_id": unit_id,
         },
         created_at=TS,
     )
     return envelope["content_digest"]
 
 
-def _rights(store: ArtifactStore, source: str) -> None:
-    apply_transition(
-        store,
-        source,
-        "rights_cleared",
-        {
-            "license": "MIT",
-            "attribution": "Acme Example",
+def _seed_t05(store: ArtifactStore, source: str, *, license_name: str = "MIT") -> None:
+    """Write one T05 clearance. T06 does not mint this receipt."""
+    rights = build_envelope(
+        schema_version=SCHEMA_VERSION,
+        created_at=TS,
+        producer=RIGHTS_PRODUCER,
+        parents=[],
+        payload={
+            "record_type": "RightsRecord",
+            "license": license_name,
             "eligible_for": ["train", "eval", "redistribute"],
-            "reviewer": "Danny",
-            "unit_id": "osc",
+            "attribution": "Acme Example",
+            "reviewer": "Boof (delegated by Danny 2026-10-17)",
         },
-        actor=ACTOR,
-        timestamp=TS,
     )
+    store.put(rights)
+    payload = receipt_payload(
+        actor="rights-bot",
+        timestamp=TS,
+        input_hashes=[source],
+        from_state="DISCOVERED",
+        event="rights_cleared",
+        to_state="RIGHTS_CLEARED",
+        disposition=f"cleared: {license_name}",
+    )
+    receipt = build_envelope(
+        schema_version=SCHEMA_VERSION,
+        created_at=TS,
+        producer=RIGHTS_PRODUCER,
+        parents=[rights["content_digest"]],
+        payload=payload,
+    )
+    store.put(receipt)
 
 
 def _normalized(store: ArtifactStore, source: str) -> None:
@@ -76,7 +99,7 @@ def _normalized(store: ArtifactStore, source: str) -> None:
     )
 
 
-def test_transition_table_matches_spec() -> None:
+def _spec_rows() -> list[tuple[str, ...]]:
     text = Path("specs/001-faustcoder/spec.md").read_text(encoding="utf-8")
     start = text.index("### 7.1 Dataset item lifecycle")
     end = text.index("Illegal transitions:", start)
@@ -85,9 +108,18 @@ def test_transition_table_matches_spec() -> None:
         if not line.startswith("| ") or line.startswith("| From") or line.startswith("|---"):
             continue
         rows.append(tuple(cell.strip() for cell in line.strip().strip("|").split("|")))
-    assert rows == [
+    return rows
+
+
+def test_transition_table_omits_the_rights_edges() -> None:
+    rows = _spec_rows()
+    owned = [row for row in rows if row[1] not in RIGHTS_EVENTS]
+    assert owned == [
         (row.from_state, row.event, row.guard, row.to_state, row.effect) for row in TRANSITIONS
     ]
+    assert {row[1] for row in rows} >= RIGHTS_EVENTS
+    assert {row.event for row in TRANSITIONS}.isdisjoint(RIGHTS_EVENTS)
+    assert TRANSITIONS[-1].event == "split_frozen"
     assert TRANSITIONS[-1].implemented is False
     assert all(row.implemented for row in TRANSITIONS[:-1])
 
@@ -100,10 +132,43 @@ def test_runbook_carries_the_table_and_diagram() -> None:
     assert "split_frozen" in runbook
 
 
+def test_t06_does_not_clear_rights(store: ArtifactStore) -> None:
+    """The adversary probe: a GPL claim cannot be rewritten as MIT here."""
+    source = _source(store, license_claim="GPL-2.0-or-later", unit_id="guitarix")
+    before = store.list()
+    with pytest.raises(TransitionNotImplemented):
+        apply_transition(
+            store,
+            source,
+            "rights_cleared",
+            {
+                "license": "MIT",
+                "attribution": "abc",
+                "eligible_for": ["train", "eval", "redistribute"],
+                "reviewer": "abc",
+                "unit_id": "made-up",
+            },
+            actor="bot",
+            timestamp=TS,
+        )
+    assert store.list() == before
+    assert current_state(store, source) == "DISCOVERED"
+    with pytest.raises(TransitionNotImplemented):
+        apply_transition(
+            store,
+            source,
+            "rights_rejected",
+            {"license": "GPL-2.0-or-later", "reason": "agpl"},
+            actor=ACTOR,
+            timestamp=TS,
+        )
+    assert store.list() == before
+
+
 def test_legal_path_stops_before_split_frozen(store: ArtifactStore) -> None:
     source = _source(store)
     assert current_state(store, source) == "DISCOVERED"
-    _rights(store, source)
+    _seed_t05(store, source)
     assert current_state(store, source) == "RIGHTS_CLEARED"
     _normalized(store, source)
     assert current_state(store, source) == "NORMALIZED"
@@ -116,6 +181,19 @@ def test_legal_path_stops_before_split_frozen(store: ArtifactStore) -> None:
         timestamp=TS,
     )
     assert current_state(store, source) == "DEDUPED"
+    producers = {
+        store.get(artifact_id)["producer"]
+        for artifact_id in store.list()
+        if store.get(artifact_id)["payload"].get("machine") == "dataset"
+    }
+    assert PRODUCER in producers
+    assert RIGHTS_PRODUCER in producers
+    t06 = [
+        store.get(artifact_id)
+        for artifact_id in store.list()
+        if store.get(artifact_id)["payload"].get("event") == "dedup_passed"
+    ]
+    assert t06[0]["producer"] == PRODUCER
     before = store.list()
     with pytest.raises(TransitionNotImplemented):
         apply_transition(
@@ -130,7 +208,9 @@ def test_legal_path_stops_before_split_frozen(store: ArtifactStore) -> None:
     assert current_state(store, source) == "DEDUPED"
 
 
-def test_rights_cannot_be_skipped_and_a_failed_guard_writes_nothing(store: ArtifactStore) -> None:
+def test_rights_cannot_be_skipped_and_a_snapshot_receipt_is_not_t05(
+    store: ArtifactStore,
+) -> None:
     source = _source(store)
     before = store.list()
     with pytest.raises(IllegalTransitionError):
@@ -143,65 +223,36 @@ def test_rights_cannot_be_skipped_and_a_failed_guard_writes_nothing(store: Artif
             timestamp=TS,
         )
     assert store.list() == before
-    with pytest.raises(GuardError):
-        apply_transition(
-            store,
-            source,
-            "rights_cleared",
-            {
-                "license": "AGPL-3.0-only",
-                "attribution": "Acme Example",
-                "eligible_for": ["train"],
-                "reviewer": "Danny",
-                "unit_id": "osc",
-            },
-            actor=ACTOR,
-            timestamp=TS,
-        )
-    assert store.list() == before
-    assert current_state(store, source) == "DISCOVERED"
-
-
-def test_rights_rejected_and_normalize_failed_quarantine_without_program_text(
-    store: ArtifactStore,
-) -> None:
-    rejected = register_source(
-        store,
-        {
-            "record_type": "SourceRecord",
-            "uri": "https://github.com/acme/widgets/blob/" + "a" * 40 + "/agpl.dsp#unit=agpl",
-            "retrieved_at": "2026-10-17T13:04:00Z",
-            "license_claim": "AGPL-3.0-only",
-            "unit_id": "agpl",
-        },
+    forged = build_envelope(
+        schema_version=SCHEMA_VERSION,
         created_at=TS,
-    )
-    apply_transition(
-        store,
-        rejected["content_digest"],
-        "rights_rejected",
-        {"license": "AGPL-3.0-only", "reason": "agpl"},
-        actor=ACTOR,
-        timestamp=TS,
-    )
-    assert current_state(store, rejected["content_digest"]) == "QUARANTINED"
-    with pytest.raises(IllegalTransitionError):
-        apply_transition(
-            store,
-            rejected["content_digest"],
-            "rights_cleared",
-            {
-                "license": "MIT",
-                "attribution": "Acme Example",
-                "eligible_for": ["train"],
-                "reviewer": "Danny",
-                "unit_id": "agpl",
-            },
+        producer=PRODUCER,
+        parents=[],
+        payload=receipt_payload(
             actor=ACTOR,
             timestamp=TS,
-        )
+            input_hashes=[source],
+            from_state="DISCOVERED",
+            event="rights_cleared",
+            to_state="RIGHTS_CLEARED",
+            disposition="cleared: MIT",
+        ),
+    )
+    store.put(forged)
+    with pytest.raises(GuardError, match="T05"):
+        _normalized(store, source)
+    assert current_state(store, source) == "RIGHTS_CLEARED"
+    examples = [
+        artifact_id
+        for artifact_id in store.list()
+        if store.get(artifact_id)["payload"].get("record_type") == "Example"
+    ]
+    assert examples == []
+
+
+def test_normalize_failed_quarantines_without_program_text(store: ArtifactStore) -> None:
     source = _source(store)
-    _rights(store, source)
+    _seed_t05(store, source)
     apply_transition(
         store,
         source,
@@ -215,11 +266,13 @@ def test_rights_rejected_and_normalize_failed_quarantine_without_program_text(
         payload = store.get(artifact_id)["payload"]
         assert "faust_source" not in payload
         assert payload.get("disposition", "").find("process") == -1
+        if payload.get("event") == "normalize_failed":
+            assert store.get(artifact_id)["producer"] == PRODUCER
 
 
 def test_duplicate_or_leak_found_names_the_family(store: ArtifactStore) -> None:
     source = _source(store)
-    _rights(store, source)
+    _seed_t05(store, source)
     _normalized(store, source)
     apply_transition(
         store,

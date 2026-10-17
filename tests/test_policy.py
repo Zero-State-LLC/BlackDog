@@ -1,134 +1,73 @@
-"""2026-10-17 rights defaults. Unknown spellings abort; they are not guessed."""
+"""2026-10-17 license table, and T05 inventory admission. Not a second guard."""
 
 from __future__ import annotations
 
 import pytest
 
-from faustcoder.errors import InventoryError, PolicyError
-from faustcoder.inventory import parse_inventory
-from faustcoder.policy import check_unit
+from faustcoder.errors import InventoryError
+from faustcoder.inventory import parse_corpus
+from faustcoder.policy import license_class, maximum_flags
 
-from tests.t06support import inventory, unit
-
-
-def _check(**kwargs: object) -> None:
-    data = kwargs.pop("data", b"process = 1;\n")
-    row = unit("osc", data, **kwargs)  # type: ignore[arg-type]
-    check_unit(parse_inventory(inventory([row]))[0])
+from tests.t06support import entry, inventory_doc, notice_doc, notice_row
 
 
-def test_bare_bsd_refuses_redistribution() -> None:
-    with pytest.raises(PolicyError, match="looser"):
-        _check(
-            license_name="BSD",
-            eligible_for=["train", "eval", "redistribute"],
-        )
-    _check(license_name="BSD", eligible_for=["train", "eval"], training_only=False)
+def test_license_table_records_the_2026_10_17_defaults() -> None:
+    assert maximum_flags("MIT") == frozenset({"train", "eval", "redistribute"})
+    assert maximum_flags("STK-4.3") == frozenset({"train", "eval", "redistribute"})
+    assert maximum_flags("BSD") == frozenset({"train", "eval"})
+    assert "redistribute" not in (maximum_flags("BSD") or set())
+    assert maximum_flags("GPL-3.0-only") == frozenset({"train"})
+    assert maximum_flags("AGPL-3.0-only") is None
+    assert maximum_flags("WTFPL") is None
+    assert license_class("BSD") == "bare_bsd"
+    assert license_class("GPL-2.0-or-later") == "train_only"
+    assert license_class("AGPL-3.0-only") == "excluded"
+    assert license_class("WTFPL") == "unrecognized"
 
 
-def test_stk_clears_with_notice_and_refuses_a_missing_notice() -> None:
-    _check(license_name="STK-4.3")
-    row = unit("osc", b"process = 1;\n", license_name="STK-4.3")
-    del row["notice"]
-    with pytest.raises(InventoryError, match="notice"):
-        parse_inventory(inventory([row]))
-
-
-def test_gpl_eval_agpl_and_unrecognized_are_refused() -> None:
-    with pytest.raises(PolicyError, match="looser"):
-        _check(
-            decision="training_only",
-            license_name="GPL-3.0-only",
-            eligible_for=["train", "eval"],
-            training_only=False,
-        )
-    _check(
-        decision="training_only",
-        license_name="GPL-3.0-only",
-        eligible_for=["train"],
-        training_only=True,
-    )
-    with pytest.raises(PolicyError, match="cannot be acquired"):
-        _check(license_name="AGPL-3.0-only", eligible_for=["train"], training_only=True)
-    with pytest.raises(PolicyError, match="cannot be acquired"):
-        _check(license_name="WTFPL")
-
-
-def test_impulse_and_training_only_flags() -> None:
-    with pytest.raises(PolicyError, match="looser"):
-        _check(
-            decision="rights_cleared",
-            impulse=True,
-            eligible_for=["train", "eval"],
-            training_only=False,
-        )
-    with pytest.raises(PolicyError, match="impulse"):
-        _check(
-            decision="rights_cleared",
-            impulse=True,
-            eligible_for=["train"],
-            training_only=True,
-        )
-    with pytest.raises(PolicyError, match="impulse"):
-        _check(
-            decision="training_only",
-            impulse=True,
-            holdout=True,
-            eligible_for=["train"],
-            training_only=True,
-        )
-    _check(
-        decision="training_only",
-        impulse=True,
-        eligible_for=["train"],
-        training_only=True,
-    )
-    with pytest.raises(PolicyError, match="training_only"):
-        _check(eligible_for=["train"], training_only=False)
-
-
-def test_inferred_needs_a_reviewer_and_speculative_is_refused() -> None:
+def test_inferred_clearance_needs_a_reviewer_and_speculative_is_refused() -> None:
+    data = b"process = 1;\n"
+    row = entry("osc", data, path="osc.dsp", evidence_label="INFERRED", reviewer="")
+    notice = notice_row(data, path="osc.dsp")
     with pytest.raises(InventoryError, match="reviewer"):
-        parse_inventory(
-            inventory(
-                [unit("osc", b"process = 1;\n", evidence_label="INFERRED", reviewer="")]
-            )
-        )
-    _check(evidence_label="INFERRED", reviewer="Danny")
-    with pytest.raises(InventoryError, match="speculative"):
-        parse_inventory(
-            inventory([unit("osc", b"process = 1;\n", evidence_label="SPECULATIVE")])
-        )
-
-
-def test_reject_requires_a_reason_code() -> None:
-    with pytest.raises(InventoryError, match="reason"):
-        parse_inventory(
-            inventory(
-                [
-                    unit(
-                        "stk",
-                        b"",
-                        decision="reject",
-                        eligible_for=[],
-                        license_name="unknown",
-                    )
-                ]
-            )
-        )
-    parsed = parse_inventory(
-        inventory(
-            [
-                unit(
-                    "stk",
-                    b"",
-                    decision="reject",
-                    eligible_for=[],
-                    license_name="unknown",
-                    reason="ffunction",
-                )
-            ]
-        )
+        parse_corpus(inventory_doc([row]), notice_doc([notice]))
+    named = entry(
+        "osc",
+        data,
+        path="osc.dsp",
+        evidence_label="INFERRED",
+        reviewer="Danny",
     )
-    assert parsed[0].reason == "ffunction"
-    check_unit(parsed[0])
+    corpus = parse_corpus(inventory_doc([named]), notice_doc([notice]))
+    assert corpus.units[0].reviewer == "Danny"
+    speculative = entry("osc", data, path="osc.dsp", evidence_label="SPECULATIVE")
+    with pytest.raises(InventoryError, match="label"):
+        parse_corpus(inventory_doc([speculative]), notice_doc([notice]))
+
+
+def test_rejected_and_needs_human_rows_are_not_admitted() -> None:
+    data = b"process = 1;\n"
+    rejected = entry(
+        "stk",
+        data,
+        path="foreign.dsp",
+        decision="rights_rejected",
+        eligible_for=[],
+        license_name="unknown",
+        reason="ffunction",
+        reviewer="",
+    )
+    human = entry(
+        "gap",
+        data,
+        path="gap.dsp",
+        decision="needs_human",
+        eligible_for=[],
+        license_name="unknown",
+        reason="copyright only",
+        reviewer="",
+    )
+    corpus = parse_corpus(inventory_doc([rejected, human]), notice_doc([]))
+    assert corpus.units == ()
+    reasons = {item.entry_id: item.reason for item in corpus.excluded}
+    assert reasons == {"stk": "ffunction", "gap": "copyright only"}

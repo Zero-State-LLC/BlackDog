@@ -45,6 +45,32 @@ def test_exact_short_texts_share_a_family_without_being_near_duplicates() -> Non
     assert families["a"] == families["b"]
 
 
+def test_short_texts_use_the_character_fallback() -> None:
+    """Under 40 tokens, a one-token edit matches and a different call shape does not.
+
+    Both programs are shorter than 32 non-space characters, so the
+    fallback requires an equal identifier-and-number skeleton and a
+    character 5-gram Jaccard of at least 1/3. ``fi.lowpass`` keeps the
+    skeleton and still falls under that fraction.
+    """
+    original = "process = os.osc(440);"
+    edited = "process = os.osc(441);"
+    renamed = "process = os.sine(440);"
+    other = "process = fi.lowpass(2);"
+    noise = "process = no.noise;"
+    assert is_near_duplicate(original, edited) is True
+    assert is_near_duplicate(original, renamed) is True
+    assert is_near_duplicate(original, other) is False
+    assert is_near_duplicate(original, noise) is False
+    families = cluster_families(
+        [("sealed", original), ("edited", edited), ("other", other)]
+    )
+    assert families["sealed"] == families["edited"]
+    assert families["sealed"] != families["other"]
+    hits = memorization_hits(edited, [("sealed", original), ("other", other)])
+    assert [hit[0] for hit in hits] == ["sealed"]
+
+
 def test_memorization_hits_reports_the_corpus_id() -> None:
     left = long_text("alpha")
     close = long_text("alpha", replacement="renamed")
