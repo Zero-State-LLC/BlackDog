@@ -11,10 +11,12 @@ Enforcement, in order:
    ``ENETUNREACH``. Inside that namespace the uid is not 0 and ``CapEff``
    is 0. ``--map-root-user`` is not used for the compiler process: it maps
    the caller to uid 0 with a full capability set. The native cross-check
-   is the one caller that enters a mount namespace. It does that only when
-   ``/usr/local/share/faust`` or ``/usr/share/faust`` exists, covers that
-   directory with an empty tmpfs, then runs Faust as the calling uid with
-   ``CapEff`` 0. Wasm compiles do not take that path. Node 22's
+   is the one caller that enters a mount namespace. It covers each existing
+   Faust library directory (the ``/usr`` shares, ``<binary>/../share/faust``,
+   ``<binary>/../lib/faust``, and the directories ``faust`` itself reports)
+   with an empty tmpfs, then runs Faust as the calling uid with ``CapEff``
+   0. The hashed private copy passed as ``-I`` is not masked. Wasm compiles
+   do not take that path. Node 22's
    ``--permission`` model does not deny
    network and rejects ``--allow-net``; the namespace is the control that
    holds on the Node 22 line used in CI. GitHub-hosted Ubuntu sets
@@ -232,11 +234,41 @@ def node_command(
     return command
 
 
-# Faust searches -I, then these directories. A host install is visible
+# Faust searches -I, then the install prefix, then <binary>/../share/faust
+# and <binary>/share/faust, then these two. A host install is visible
 # through a network namespace, so a native compile masks each one that exists.
 FAUST_FALLBACK_DIRECTORIES = (
     Path("/usr/local/share/faust"),
     Path("/usr/share/faust"),
+)
+
+# --libdir often names one of these. Masking it stops the dynamic linker.
+# A Faust tree under them (lib/faust, share/faust) is still masked.
+_LOADER_DIRECTORIES = frozenset(
+    {
+        Path("/lib"),
+        Path("/lib64"),
+        Path("/usr/lib"),
+        Path("/usr/lib64"),
+        Path("/usr/local/lib"),
+        Path("/usr/local/lib64"),
+        Path("/lib/x86_64-linux-gnu"),
+        Path("/usr/lib/x86_64-linux-gnu"),
+        Path("/etc"),
+        Path("/bin"),
+        Path("/usr/bin"),
+        Path("/usr/local/bin"),
+    }
+)
+
+# Information flags. Each one prints and then Faust exits. -pathslist is the
+# import and architecture search list; the others are the prefix directories.
+_FAUST_DIRECTORY_FLAGS = (
+    "--libdir",
+    "--dspdir",
+    "--includedir",
+    "--archdir",
+    "--pathslist",
 )
 
 # Runs inside unshare --mount --map-root-user. Mounts empty tmpfs directories,
@@ -349,23 +381,252 @@ main()
 def faust_fallback_mounts(paths: Sequence[Path] | None = None) -> tuple[Path, ...]:
     """Return host Faust library directories a native compile must hide.
 
-    Missing paths are omitted. A symlink is refused instead of followed.
-    Faust searches these after ``-I``, so an unmasked directory is another
-    library tree the private copy does not cover.
+    Missing paths are omitted. A symlink is resolved and the target
+    directory is masked: Faust follows it. A symlink to ``/`` or to a file
+    is refused. Faust searches these after ``-I``, so an unmasked directory
+    is another library tree the private copy does not cover.
     """
     selected = FAUST_FALLBACK_DIRECTORIES if paths is None else tuple(paths)
     mounts: list[Path] = []
     for path in selected:
-        if path.is_symlink():
-            raise SandboxError(f"Faust fallback path is a symlink: {path}")
-        if path.is_dir():
-            resolved = path.resolve()
-            if resolved not in mounts:
-                mounts.append(resolved)
+        resolved = _resolve_mask_directory(path)
+        if resolved is None or resolved in mounts:
             continue
-        if path.exists():
-            raise SandboxError(f"Faust fallback path is not a directory: {path}")
+        mounts.append(resolved)
     return tuple(mounts)
+
+
+def faust_library_mounts(
+    binary: str | Path, *, private: Path | None = None
+) -> tuple[Path, ...]:
+    """Every Faust search directory to mask, except the hashed private copy.
+
+    The binary path is resolved (symlinks followed). ``<prefix>/share/faust``
+    and ``<prefix>/lib/faust`` are masked when they exist, and so is
+    ``<binary dir>/share/faust``. ``faust --libdir``, ``--dspdir``,
+    ``--includedir``, ``--archdir`` and ``--pathslist`` add every absolute
+    directory they print. A reported loader directory such as ``/usr/lib``
+    is left in place so the compiler can start; ``lib/faust`` under it is
+    still masked. ``private`` is the hashed ``-I`` directory and is never
+    masked.
+    """
+    binary_path = Path(binary)
+    required = [
+        *FAUST_FALLBACK_DIRECTORIES,
+        *_prefix_faust_directories(binary_path),
+    ]
+    reported = _reported_faust_directories(binary_path)
+    protected = _protected_faust_paths(binary_path, private)
+    return _select_mask_directories(
+        [*required, *reported],
+        required=set(required),
+        protected=protected,
+        binary=binary_path,
+    )
+
+
+def _prefix_faust_directories(binary: Path) -> list[Path]:
+    """``share/faust`` and ``lib/faust`` next to this binary, symlinks resolved."""
+    found: list[Path] = []
+    for location in _binary_locations(binary):
+        prefix = location.parent.parent
+        exe_dir = location.parent
+        for candidate in (
+            prefix / "share" / "faust",
+            prefix / "lib" / "faust",
+            exe_dir / "share" / "faust",
+        ):
+            if candidate not in found:
+                found.append(candidate)
+    return found
+
+
+def _binary_locations(binary: Path) -> list[Path]:
+    """The path Faust will be executed as, plus one symlink and the real path.
+
+    Faust's ``exepath::get`` follows one symlink of ``argv[0]``.
+    ``Path.resolve`` follows the whole chain. Masking both prefixes covers
+    either choice.
+    """
+    absolute = Path(os.path.abspath(binary))
+    locations = [absolute]
+    if absolute.is_symlink():
+        target = os.readlink(absolute)
+        if not os.path.isabs(target):
+            target = os.path.join(absolute.parent, target)
+        locations.append(Path(os.path.normpath(target)))
+    try:
+        locations.append(absolute.resolve())
+    except OSError:
+        pass
+    unique: list[Path] = []
+    for location in locations:
+        if location not in unique:
+            unique.append(location)
+    return unique
+
+
+def _reported_faust_directories(binary: Path) -> tuple[Path, ...]:
+    """Directories ``faust`` prints. A failed query adds nothing.
+
+    The query runs in a network namespace with ``FAUST_LIB_PATH`` unset,
+    matching the scrubbed compile environment. Non-absolute lines are
+    ignored. Failure here does not drop the prefix paths.
+    """
+    if not binary.is_file():
+        return ()
+    try:
+        unshare = unshare_executable()
+    except SandboxError:
+        return ()
+    env = {
+        "PATH": "/usr/bin:/bin",
+        "LANG": "C",
+        "LC_ALL": "C",
+        "HOME": "/tmp",
+        "TMPDIR": "/tmp",
+    }
+    found: list[Path] = []
+    for flag in _FAUST_DIRECTORY_FLAGS:
+        try:
+            completed = subprocess.run(
+                [unshare, "--net", "--map-current-user", "--", str(binary), flag],
+                capture_output=True,
+                text=True,
+                timeout=10,
+                check=False,
+                env=env,
+            )
+        except (OSError, subprocess.TimeoutExpired):
+            continue
+        for line in completed.stdout.splitlines():
+            stripped = line.strip()
+            if not stripped.startswith("/"):
+                continue
+            found.append(Path(stripped))
+    return tuple(found)
+
+
+def _protected_faust_paths(binary: Path, private: Path | None) -> list[Path]:
+    protected = [Path(sys.executable), *_binary_locations(binary)]
+    if private is not None:
+        protected.append(private)
+    return protected
+
+
+def _select_mask_directories(
+    candidates: Sequence[Path],
+    *,
+    required: set[Path],
+    protected: Sequence[Path],
+    binary: Path,
+) -> tuple[Path, ...]:
+    protected_resolved: list[Path] = []
+    for item in protected:
+        try:
+            protected_resolved.append(item.resolve())
+        except OSError:
+            protected_resolved.append(Path(os.path.abspath(item)))
+    unmaskable = set(_LOADER_DIRECTORIES)
+    unmaskable.update(_shared_library_directories(binary))
+    mounts: list[Path] = []
+    for path in candidates:
+        try:
+            resolved = _resolve_mask_directory(path)
+        except SandboxError:
+            if path in required or _is_faust_library_dir(path):
+                raise
+            continue
+        if resolved is None or resolved in mounts:
+            continue
+        if _leaves_the_compiler_running(resolved, protected_resolved, unmaskable):
+            if any(resolved == item for item in protected_resolved):
+                continue
+            if path in required or _is_faust_library_dir(path):
+                raise SandboxError(
+                    "Faust library path would hide the compiler or the private "
+                    f"copy: {path}"
+                )
+            continue
+        mounts.append(resolved)
+    return tuple(mounts)
+
+
+def _leaves_the_compiler_running(
+    resolved: Path, protected: Sequence[Path], unmaskable: set[Path]
+) -> bool:
+    """True when masking ``resolved`` would hide the compiler or its libraries."""
+    if resolved in unmaskable:
+        return True
+    for item in protected:
+        if _is_ancestor(resolved, item):
+            return True
+    for loader in unmaskable:
+        if _is_ancestor(resolved, loader):
+            return True
+    return False
+
+
+def _is_ancestor(directory: Path, protected: Path) -> bool:
+    try:
+        protected.relative_to(directory)
+    except ValueError:
+        return False
+    return True
+
+
+def _is_faust_library_dir(path: Path) -> bool:
+    parts = path.parts
+    return len(parts) >= 2 and parts[-2:] in {("share", "faust"), ("lib", "faust")}
+
+
+def _shared_library_directories(binary: Path) -> set[Path]:
+    """Directories named by ``ldd``. Masking one of them stops ``exec``."""
+    if not binary.is_file():
+        return set()
+    try:
+        completed = subprocess.run(
+            ["ldd", str(binary)],
+            capture_output=True,
+            text=True,
+            timeout=5,
+            check=False,
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        return set()
+    found: set[Path] = set()
+    for line in completed.stdout.splitlines():
+        if "=>" not in line:
+            continue
+        target = line.split("=>", 1)[1].strip().split(" ", 1)[0]
+        if target.startswith("/"):
+            found.add(Path(target).resolve().parent)
+    return found
+
+
+def _resolve_mask_directory(path: Path) -> Path | None:
+    """Real directory to cover, or None when the path is absent.
+
+    Raises ``SandboxError`` when the path exists and is not a directory,
+    or when it resolves to ``/``.
+    """
+    try:
+        info = path.lstat()
+    except OSError:
+        return None
+    if stat.S_ISLNK(info.st_mode) and not path.exists():
+        return None
+    if not stat.S_ISLNK(info.st_mode) and not stat.S_ISDIR(info.st_mode):
+        raise SandboxError(f"Faust fallback path is not a directory: {path}")
+    try:
+        resolved = path.resolve()
+    except OSError as exc:
+        raise SandboxError(f"Faust fallback path cannot be resolved: {path}") from exc
+    if resolved == Path("/"):
+        raise SandboxError(f"Faust fallback path resolves to /: {path}")
+    if not resolved.is_dir():
+        raise SandboxError(f"Faust fallback path is not a directory: {path}")
+    return resolved
 
 
 def run_in_sandbox(

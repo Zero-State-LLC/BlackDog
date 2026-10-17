@@ -43,13 +43,19 @@ from faustcoder import (
     validate,
 )
 from faustcoder.canonical import canonical_bytes
-from faustcoder.sandbox import SandboxRun, faust_fallback_mounts, unshare_identity
+from faustcoder.sandbox import (
+    SandboxRun,
+    faust_fallback_mounts,
+    faust_library_mounts,
+    unshare_identity,
+)
 from faustcoder.compiler import (
     FAUSTLIBRARIES_PIN,
     FAUSTLIBRARIES_PIN_VERSION,
     _native_command,
     canonical_output_bytes,
     environment_preimage,
+    native_faust_version,
     worker_directory,
 )
 from faustcoder.exclusions import exclusion_for_source, exclusions, normalize_source
@@ -805,23 +811,25 @@ def test_native_sandbox_masks_a_host_faust_share(tmp_path: Path) -> None:
     assert plain.stdout.endswith(b"visible\n")
 
 
-def test_faust_fallback_mounts_skip_missing_and_refuse_symlinks(tmp_path: Path) -> None:
+def test_faust_fallback_mounts_skip_missing_and_resolve_symlinks(tmp_path: Path) -> None:
     missing = tmp_path / "absent"
     present = tmp_path / "faust"
     present.mkdir()
     link = tmp_path / "link"
     link.symlink_to(present)
-    assert faust_fallback_mounts((missing, present)) == (present.resolve(),)
-    with pytest.raises(SandboxError, match="symlink"):
-        faust_fallback_mounts((link,))
+    assert faust_fallback_mounts((missing, present, link)) == (present.resolve(),)
+    root = tmp_path / "root"
+    root.symlink_to("/")
+    with pytest.raises(SandboxError, match="resolves to /"):
+        faust_fallback_mounts((root,))
+    file_path = tmp_path / "file"
+    file_path.write_text("nope\n", encoding="ascii")
+    with pytest.raises(SandboxError, match="not a directory"):
+        faust_fallback_mounts((file_path,))
     defaults = (Path("/usr/local/share/faust"), Path("/usr/share/faust"))
-    if any(path.is_symlink() for path in defaults):
-        with pytest.raises(SandboxError, match="symlink"):
-            faust_fallback_mounts()
-    else:
-        assert faust_fallback_mounts() == tuple(
-            path.resolve() for path in defaults if path.is_dir()
-        )
+    assert faust_fallback_mounts() == tuple(
+        path.resolve() for path in defaults if path.exists()
+    )
 
 
 def test_native_compile_uses_a_hashed_private_copy(
@@ -835,13 +843,102 @@ def test_native_compile_uses_a_hashed_private_copy(
         assert include != live
         assert include.parent == Path(str(kwargs["workdir"]))
         assert canonical_tree_sha256(include) == FAUSTLIBRARIES_SHARE_SHA256
-        assert kwargs["mask_directories"] == faust_fallback_mounts()
+        assert kwargs["mask_directories"] == faust_library_mounts(
+            "/usr/bin/faust", private=include
+        )
         return SandboxRun(0, b"int process(){return 0;}\n", b"", "", False, False)
 
     monkeypatch.setattr("faustcoder.compiler.run_in_sandbox", fake_run)
     compiled = compile_native("process = _;\n")
     assert compiled.receipt["exit_code"] == 0
     assert compiled.receipt["compiler"] == "faust-cli"
+
+
+def test_library_mounts_cover_the_prefix_beside_the_binary(tmp_path: Path) -> None:
+    prefix = tmp_path / "fprefix"
+    binary = prefix / "bin" / "faust"
+    _fake_faust(binary)
+    share = prefix / "share" / "faust"
+    lib = prefix / "lib" / "faust"
+    share.mkdir(parents=True)
+    lib.mkdir(parents=True)
+    private = tmp_path / "private"
+    private.mkdir()
+    mounts = faust_library_mounts(binary, private=private)
+    assert share.resolve() in mounts
+    assert lib.resolve() in mounts
+    assert private.resolve() not in mounts
+
+    hidden = tmp_path / "hidden-share"
+    hidden.mkdir()
+    via = tmp_path / "via"
+    via_bin = via / "bin" / "faust"
+    _fake_faust(via_bin)
+    via_share = via / "share" / "faust"
+    via_share.parent.mkdir(parents=True)
+    via_share.symlink_to(hidden, target_is_directory=True)
+    via_mounts = faust_library_mounts(via_bin, private=private)
+    assert hidden.resolve() in via_mounts
+
+
+def test_library_mounts_mask_reported_dirs_except_the_private_copy(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    binary = tmp_path / "bin" / "faust"
+    _fake_faust(binary)
+    private = tmp_path / "private"
+    private.mkdir()
+    extra = tmp_path / "reported"
+    extra.mkdir()
+    loader = Path("/usr/lib")
+
+    def reported(_binary: Path) -> tuple[Path, ...]:
+        return (private, extra, loader)
+
+    monkeypatch.setattr("faustcoder.sandbox._reported_faust_directories", reported)
+    mounts = faust_library_mounts(binary, private=private)
+    assert extra.resolve() in mounts
+    assert private.resolve() not in mounts
+    assert loader.resolve() not in mounts
+
+
+def test_native_compile_rejects_a_library_planted_beside_the_binary(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    binary = shutil.which("faust")
+    if binary is None or native_faust_version() != "2.88.0":
+        pytest.skip("skipped-without-faust: native Faust 2.88.0 is not installed")
+    prefix = tmp_path / "fprefix"
+    planted = prefix / "bin" / "faust"
+    planted.parent.mkdir(parents=True)
+    shutil.copy2(binary, planted)
+    planted.chmod(0o755)
+    share = prefix / "share" / "faust"
+    share.mkdir(parents=True)
+    (share / "zzprobe.lib").write_text("zzprobe = 1;\n", encoding="utf-8")
+    source = 'import("zzprobe.lib"); process = zzprobe;\n'
+    dsp = tmp_path / "probe.dsp"
+    dsp.write_text(source, encoding="utf-8")
+    empty = tmp_path / "empty-inc"
+    empty.mkdir()
+    direct = subprocess.run(
+        [str(planted), "-I", str(empty), "-lang", "cpp", str(dsp)],
+        capture_output=True,
+        timeout=30,
+        check=False,
+    )
+    assert direct.returncode == 0, direct.stderr
+    monkeypatch.setenv("PATH", f"{planted.parent}{os.pathsep}{os.environ['PATH']}")
+    compiled = compile_native(source)
+    assert compiled.receipt["exit_code"] != 0
+    assert compiled.receipt["diagnostic_class"] != "ok"
+    assert "zzprobe" in compiled.diagnostics
+
+
+def _fake_faust(path: Path) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text("#!/bin/sh\nexit 1\n", encoding="ascii")
+    path.chmod(0o755)
 
 
 def test_native_compile_refuses_a_share_tampered_after_the_hash(

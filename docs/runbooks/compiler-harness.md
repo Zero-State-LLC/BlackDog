@@ -79,13 +79,19 @@ sandbox does not. Before every wasm compile the worker deletes
 `/usr/share/faust` in the Emscripten filesystem and writes that share.
 The native 2.88.0 cross-check copies that share into a private directory,
 hashes the copy, and passes the copy as `-I`. A mismatch raises before
-Faust starts. Faust searches `-I` and then `/usr/local/share/faust` and
-`/usr/share/faust`. The native sandbox does not mount a library tree on
-those paths. When either directory exists on the host, the sandbox covers
-it with an empty tmpfs in a private mount namespace before Faust runs, so
-the fallback is unreachable and only the hashed private copy can be read.
-Faust still runs as the calling user with `CapEff` 0. The logical command
-records `--faustlibraries=2edec0537f53`.
+Faust starts. After `-I`, Faust searches the install prefix, then
+`<binary dir>/../share/faust` and `<binary dir>/share/faust`, then
+`/usr/local/share/faust` and `/usr/share/faust`. A copy of the binary
+under `/tmp/fprefix/bin` therefore also reads `/tmp/fprefix/share/faust`.
+The sandbox resolves the binary (symlinks followed) and covers
+`<prefix>/share/faust` and `<prefix>/lib/faust` when they exist. It also
+runs `faust --libdir`, `--dspdir`, `--includedir`, `--archdir` and
+`--pathslist` and covers every absolute directory that output names,
+except the hashed private copy. A loader directory such as `/usr/lib` is
+left in place so the dynamic linker can start Faust; `lib/faust` under
+that prefix is still covered. Each covered directory is an empty tmpfs
+in a private mount namespace. Faust still runs as the calling user with
+`CapEff` 0. The logical command records `--faustlibraries=2edec0537f53`.
 
 The data file still contains libraries 2.74.2. Those bytes are hashed so
 the runtime identity stays in the digest. They are not the libraries the
@@ -147,9 +153,9 @@ those six stay excluded after T06 normalizes them.
 The compiler runs as `unshare --net --map-current-user`. The uid inside
 the namespace is the calling user, not 0, and `CapEff` is 0. A connect
 fails with `ENETUNREACH`. The native cross-check adds a private mount
-namespace only to mask an existing `/usr/share/faust` or
-`/usr/local/share/faust`. The Faust process itself still has the calling
-uid and `CapEff` 0.
+namespace to mask the Faust search directories above, including
+`<binary>/../share/faust` and the directories Faust prints. The Faust
+process itself still has the calling uid and `CapEff` 0.
 
 GitHub-hosted Ubuntu sets `kernel.apparmor_restrict_unprivileged_userns=1`.
 The pytest job clears that sysctl only when `runner.environment` is

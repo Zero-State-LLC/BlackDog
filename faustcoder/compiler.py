@@ -16,7 +16,9 @@ pretend to succeed.
 The native Faust 2.88.0 CLI is a cross-check, not the primary compiler.
 ``compile_native`` and ``cross_check_native`` raise
 ``NativeFaustUnavailable`` when ``faust`` is absent or is not 2.88.0.
-CI does not install native Faust, so those tests skip there. The pytest
+The pytest job installs Faust 2.88.0 so the masked native compile runs
+there. A machine without that binary skips those tests
+(``skipped-without-faust``). The pytest
 job clears Ubuntu's unprivileged-userns AppArmor restriction only on
 GitHub-hosted runners (see :mod:`faustcoder.sandbox` and
 ``docs/runbooks/compiler-harness.md``). Versions
@@ -82,9 +84,12 @@ the worker reads ``/proc/net/dev`` and requires the only interface to be
 ``lo``, then requires a connect to fail. The native 2.88.0 cross-check
 copies that share into a private directory, hashes the copy, and passes
 the copy as ``-I``. A mismatch raises before Faust starts. Faust would
-otherwise also read ``/usr/local/share/faust`` and ``/usr/share/faust``.
-Those directories are masked when they exist, so only the hashed copy is
-reachable. The logical ``command`` records
+otherwise also read ``<binary>/../share/faust``, ``<binary>/share/faust``,
+the directories it prints for ``--libdir``, ``--dspdir``, ``--includedir``,
+``--archdir`` and ``--pathslist``, and ``/usr/local/share/faust`` and
+``/usr/share/faust``. Those directories are masked when they exist, except
+the hashed copy and a loader directory the dynamic linker needs, so only
+the hashed copy is reachable. The logical ``command`` records
 ``--faustlibraries=2edec0537f53`` and not the host path. The tree is
 fetched on the host. The sandbox does not download it. Do not run a T06
 or T07 compile check, and do not feed a receipt into a reward, against a
@@ -181,7 +186,7 @@ from faustcoder.sandbox import (
     ResourceLimits,
     SandboxError,
     SandboxRun,
-    faust_fallback_mounts,
+    faust_library_mounts,
     node_command,
     node_executable,
     run_in_sandbox,
@@ -537,7 +542,7 @@ def compile_native(
             workdir=workdir,
             limits=bounds,
             cwd=workdir,
-            mask_directories=faust_fallback_mounts(),
+            mask_directories=faust_library_mounts(binary, private=private),
         )
         duration_ms = int((time.monotonic() - started) * 1000)
         if b"faustcoder_mask_failed:" in run.stderr and not run.stop_reason:

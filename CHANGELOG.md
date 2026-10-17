@@ -10,6 +10,8 @@ See [docs/VERSIONING.md](docs/VERSIONING.md).
 
 ### Added
 
+- T03b follow-up: the native sandbox also masks `<binary>/../share/faust`, `<binary>/../lib/faust`, and every directory `faust --libdir`, `--dspdir`, `--includedir`, `--archdir` and `--pathslist` print, except the hashed private copy. A library planted beside a copied `faust` binary cannot be imported. CI installs Faust 2.88.0 so that check runs.
+
 - T03b follow-up: creating the share lock directory happens while the in-process lock's release is armed, so a failed `mkdir` cannot stick the lock. The native sandbox masks `/usr/share/faust` and `/usr/local/share/faust` when they exist. Faust cannot fall back to them after `-I`.
 
 - T03b follow-up: the in-process share lock and the file lock share one 30-second deadline. A directory at the lock path raises `SandboxError`. Native compiles hash a private copy of the share and pass that copy as `-I`.
