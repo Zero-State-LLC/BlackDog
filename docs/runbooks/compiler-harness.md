@@ -148,7 +148,8 @@ hits `SIGSEGV` inside the worker at this stack size. The receipt is exit
 returns `ERROR : stack overflow in eval` instead of dying. A diagnostic
 line that is exactly that text is still exit 126 `internal`. So is
 Emscripten's `Aborted(stack overflow)` when the wasm trap is caught
-instead of `SIGSEGV`. Any other
+instead of `SIGSEGV`. A line that is exactly `Maximum call stack size exceeded`
+is the same crash when V8 reports it without the `RangeError` name. Any other
 `ERROR :` or `WARNING` is a source failure, including when the program's
 own tokens (`TypeError`, `stack overflow`, a slider label) appear inside
 the message. A JS exception is internal only when its line starts with

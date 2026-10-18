@@ -513,6 +513,7 @@ def _source_failure(diagnostics: str) -> object:
         "InternalError: too much recursion\n",
         "Aborted(stack overflow)\n",
         "Aborted(ERROR : stack overflow in eval)\n",
+        "Maximum call stack size exceeded\n",
     ],
 )
 def test_js_runtime_line_start_is_internal(diagnostics: str) -> None:
@@ -557,6 +558,8 @@ def test_echoed_crash_tokens_stay_source_errors(source: str) -> None:
         "input:2 : ERROR : syntax error, unexpected ENDDEF\n",
         "typeerror: foo is not defined\n",
         "note TypeError: foo is not a function\n",
+        "note Maximum call stack size exceeded\n",
+        "maximum call stack size exceeded\n",
     ],
 )
 def test_crash_markers_inside_source_diagnostics_stay_exit_1(diagnostics: str) -> None:

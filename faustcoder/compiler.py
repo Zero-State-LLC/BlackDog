@@ -234,6 +234,8 @@ _REMOTE_IMPORT = re.compile(
 )
 # Faust's stackOverflowDetector. The whole trimmed line, not a substring.
 _STACK_OVERFLOW_EVAL = "ERROR : stack overflow in eval"
+# V8 stores this as error.message. The RangeError name is not in the text.
+_V8_STACK_OVERFLOW = "Maximum call stack size exceeded"
 # Node/V8 exceptions. Case-sensitive and only at the start of a line.
 # A line that starts with "ERROR :" is a Faust diagnostic, never one of these.
 _JS_RUNTIME_LINE = re.compile(
@@ -1211,8 +1213,10 @@ def _is_js_runtime(diagnostics: str) -> bool:
     (``TypeError: ``, ``RangeError: ``, ``ReferenceError: ``,
     ``SyntaxError: ``, ``InternalError: ``). Emscripten's caught wasm
     abort is a line that starts with ``Aborted(stack overflow)`` or
-    ``Aborted(ERROR : stack overflow in eval)``. A crash token echoed
-    inside any other Faust error, a comment, or a declare does not match.
+    ``Aborted(ERROR : stack overflow in eval)``. A line that is exactly
+    ``Maximum call stack size exceeded`` is V8's own message for that
+    crash. A crash token echoed inside any other Faust error, a comment,
+    or a declare does not match.
     """
     stripped = [line.strip() for line in diagnostics.splitlines()]
     if any(_is_source_diagnostic_line(line) for line in stripped):
@@ -1221,7 +1225,7 @@ def _is_js_runtime(diagnostics: str) -> bool:
 
 
 def _is_runtime_crash_line(line: str) -> bool:
-    if line == _STACK_OVERFLOW_EVAL:
+    if line in {_STACK_OVERFLOW_EVAL, _V8_STACK_OVERFLOW}:
         return True
     if line.startswith("ERROR :"):
         return False
