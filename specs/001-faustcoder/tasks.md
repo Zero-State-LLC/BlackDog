@@ -71,10 +71,10 @@ Implements the dataset machine (spec §7.1) and training machine (spec §7.3).
   - Acceptance: for v0.2, cited external DGX Spark benchmarks plus a per-machine environment fingerprint receipt (R-001, amended 0.3.1); implements `env_verified`. On-hardware throughput is deferred to T10 on the dedicated, cleared Spark.
   - Workflows: production-systems.
 - [ ] T10 [J-04] Training path P1 to P3 (ADR-0002).
-  - Depends on: T08, T09, GD-1. Milestone: v0.2 (P1, P2) and v0.3 (P3).
+  - Depends on: T08, T09, GD-1, A2-PATH, EVAL-SO. Milestone: v0.2 (P1, P2) and v0.3 (P3).
   - Acceptance: one pinned, reproducible `TrainingRun` per phase with its exit-gate result (R-008, R-009, R-015); P1 may be a recorded skip; implements `run_started` to `COMPLETED`.
   - Sub-steps: P1 continued pretraining or skip; P2 SFT on validated pairs; P3 compiler-feedback RL (R-016).
-  - Amended 0.3.5 (Q4): ADR-0002 is accepted in full (Jev's call). P3 reward is the ADR-0006 grader with the Q1 binary ruling, whole-group drop, and A2-T as the only auto-attribution path. The P3 exit gate requires the graded/ungraded split, the A7 quarantine rate and the group-drop rate within pre-registered limits, and no frozen auto-attribution signature at exit. Only the ~5M-token CPT-skip threshold is ratified. The 2-point loss and compile@10 noise are paired-CI tests. GD-1 is a prerequisite, not a follow-on.
+  - Amended 0.3.5 (Q4): ADR-0002 is accepted in full (Jev's default; Danny may still choose P3 PROPOSED). P3 reward is the ADR-0006 grader with the Q1 binary ruling, whole-group drop, and A2-T as the only auto-attribution path. The P3 exit gate requires the graded/ungraded split, the A7 quarantine rate and the group-drop rate within pre-registered limits, and no frozen auto-attribution signature at exit. Only the ~5M-token CPT-skip threshold is ratified. The 2-point loss and compile@10 noise are paired-CI tests. GD-1 is a prerequisite, not a follow-on.
   - Workflows: anti-slop-code, production-systems.
 - [ ] T11 [J-04] Independent DSP evaluation.
   - Depends on: T10, T04. Milestone: v0.3.
@@ -162,29 +162,33 @@ These tasks are the implementation. This record does not change code.
   - Depends on: T03. Milestone: v0.3. Prerequisite of A2-T.
   - Acceptance: provisional thresholds 20% share, 2× rise, 500-sample window, distinct from A7. `resolved_by: "auto"` and stored evidence. A gold-canary crash freezes its signature. Reviewed against shadow data before A2-T goes live.
   - Workflows: production-systems.
+- [ ] CANARY [J-04] Scheduled gold canary: dev-suite references, cleared-corpus sample, SFT targets, run on a schedule.
+  - Depends on: T04. Milestone: v0.3. Prerequisite of A2-T.
+  - Acceptance: the canary runs on a schedule and its result is recorded. A2-T goes live only while it is clean. Any crash there freezes its signature through A7-S.
+  - Workflows: production-systems.
 - [ ] A2-T [J-04] A2-T shadow mode, then live auto-attribution.
-  - Depends on: L1, L2, L3, A7-S. Milestone: v0.3.
-  - Acceptance: shadow computes and logs attributions; humans triage. Leaves shadow only when L1–L3 have landed, agreement is on a sample fixed before shadow starts, the gold canary (dev-suite references, cleared-corpus sample, SFT targets) is clean and any crash there freezes its signature, A7-S thresholds are reviewed, and the go-live is recorded. Crash rows below ~0.1% of samples keep auto-attribution off entirely. That rate is a reason to stay off, never a reason to go live.
+  - Depends on: L1, L2, L3, A7-S, CANARY. Milestone: v0.3.
+  - Acceptance: shadow computes and logs attributions; humans triage. Shadow mode runs on a separate path that never grades: it may rerun and log attributions, but its output never reaches `reward_value` or a receipt. That path is not a training caller, so needing reruns in shadow does not conflict with A2-PATH. Leaves shadow only when L1–L3 have landed, agreement is on a sample fixed before shadow starts, the gold canary (dev-suite references, cleared-corpus sample, SFT targets) is clean and any crash there freezes its signature, A7-S thresholds are reviewed, and the go-live is recorded. Crash rows below ~0.1% of samples keep auto-attribution off entirely. That rate is a reason to stay off, never a reason to go live.
   - Workflows: production-systems, ADVERSARY review.
 - [ ] A2-PATH [J-04] Training callers must not supply the replaced path.
-  - Depends on: T03. Milestone: v0.3.
-  - Acceptance: until A2-T is live, no training caller supplies `rerun` or `known_good`. `runtime_stack_overflow` and `wasm_trap` stay ungraded without a matching native Faust 2.88.0 failure. The source-class list alone suffices only for a line-start Faust `ERROR`, a source over 1 MiB, and a remote import.
+  - Depends on: T03. Milestone: v0.3. Prerequisite of T10.
+  - Acceptance: until A2-T is live, no training caller supplies `rerun` or `known_good`. `runtime_stack_overflow` and `wasm_trap` stay ungraded without a matching native Faust 2.88.0 failure. The source-class list alone suffices only for a line-start Faust `ERROR` other than `ERROR : stack overflow` (plain or `in eval`; see EVAL-SO), a source over 1 MiB, and a remote import. Shadow mode runs on a separate path that never grades: it may rerun and log attributions, but its output never reaches `reward_value` or a receipt. That path is not a training caller, so needing reruns in shadow does not conflict with A2-PATH.
   - Workflows: production-systems, ADVERSARY review.
 - [ ] EVAL-SO [Found] Grader and compiler disagree on `ERROR : stack overflow in eval`.
-  - Depends on: T03. Milestone: v0.3. Noted after #46. Not a code change in the 0.3.5 record.
-  - Acceptance: the disagreement is recorded. Suggested treatment: that line is a stack signature and needs the Faust 2.88.0 native match.
+  - Depends on: T03. Milestone: v0.3. Noted after #46. Not a code change in the 0.3.5 record. Prerequisite of T10.
+  - Acceptance: the disagreement is recorded. Suggested treatment: that line is a stack signature and needs the Faust 2.88.0 native match. The same treatment covers the plain line-start `ERROR : stack overflow` until native evidence is collected, so neither line is in the source-class carve-out.
   - Workflows: production-systems.
 - [ ] GD-1 [J-04] GRPO whole-group drop (Q1).
   - Depends on: T04. Milestone: v0.3. Prerequisite of T10.
   - Acceptance: a group with a quarantined member is dropped whole, not masked. Rows are held only for triage and receipts and never re-enter. Rate logged per checkpoint and per prompt. The halt pauses P3 instead of resampling. A prompt dropped repeatedly goes to human triage.
   - Workflows: production-systems.
-- [ ] H2 [J-04] Slicing-path change required before the floor protocol.
-  - Depends on: T06. Milestone: v0.2.
-  - Acceptance: Jev names H2 as prior to the protocol and does not define it further here.
+- [ ] H2 [J-04] Canonical ID/NUM shingle stream on the sub-floor and containment path: a second shingle stream with identifiers → `ID` and numbers → `NUM`, keeping `lib.fn` qualified names, under the same 1/2 rule (Jev brief Q3; ADVERSARY PR39 r6 H2).
+  - Depends on: T06. Milestone: v0.2. Prerequisite of FLOOR.
+  - Acceptance: the r6 H2 probe (one edit per 5–8 tokens) is quarantined, as a regression test. The Q3 protocol does not run until H2 and H3 have landed. Jev's output cites H2/H3 from the brief. The definitions above are the brief's.
   - Workflows: production-systems.
-- [ ] H3 [J-04] Slicing-path change required before the floor protocol.
-  - Depends on: T06. Milestone: v0.2.
-  - Acceptance: same gate as H2. The protocol does not run until both have landed.
+- [ ] H3 [J-04] Unicode normalization before tokenizing: NFKC and drop category Cf/Cc; string literals collapse to one `STR` token (Jev brief Q3; ADVERSARY PR39 r6 H3).
+  - Depends on: T06. Milestone: v0.2. Prerequisite of FLOOR.
+  - Acceptance: the r6 H3 probes (U+200B between tokens; a string literal every 6 tokens) are quarantined, as a regression test. Same gate as H2: the protocol does not run until both have landed. Jev's output cites H2/H3 from the brief. The definitions above are the brief's.
   - Workflows: production-systems.
 - [ ] FLOOR [J-04] TOKEN_FLOOR measurement protocol (Q3).
   - Depends on: T06, H2, H3. Milestone: v0.2.
@@ -203,6 +207,14 @@ graph LR
     T08 --> T10
     T09 --> T10 --> T11
     T04 --> GD1["GD-1"] --> T10
+    T03 --> A2PATH["A2-PATH"] --> T10
+    T03 --> EVALSO["EVAL-SO"] --> T10
+    T03 --> L3 --> A2T["A2-T"]
+    T03 --> A7S["A7-S"] --> A2T
+    T04 --> CANARY --> A2T
+    T06 --> H2 --> FLOOR
+    T06 --> H3 --> FLOOR
+    T06 --> FLOOR
     T04 --> T11 --> T12 --> T13 --> T14 --> T15 --> T16
     T03 --> T17
     T04 --> T18

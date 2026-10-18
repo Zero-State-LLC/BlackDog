@@ -70,7 +70,7 @@ one DSP program.
 
 ## Amendment 2026-10-17 7:40 PM PT (Q1, Q2)
 
-Jev output sha256 `d9a4632ed29786182ee61e67b7c3a6b1df92c8468f011b8e1331b54e794264df`, run 2026-10-17 7:40 PM PT, authorized by Danny's instruction "use jev to make decisions" (2026-10-17 7:37 PM PT). Record: [jev-output-2026-10-17.txt](../decisions/jev-output-2026-10-17.txt). The fenced blocks are the ruling, copied verbatim from that file. A paraphrase of them is non-normative. The application sentences restate gates from those blocks and do not narrow them. If an application sentence and a fenced block ever diverge, the fenced block wins. This record does not change code.
+Jev output sha256 `d9a4632ed29786182ee61e67b7c3a6b1df92c8468f011b8e1331b54e794264df`, run 2026-10-17 7:40 PM PT, authorized by Danny's instruction "use jev to make decisions" (2026-10-17 7:37 PM PT). Record: [jev-output-2026-10-17.txt](../decisions/jev-output-2026-10-17.txt). The fenced blocks are the ruling, copied verbatim from that file. A paraphrase of them is non-normative. The application sentences restate gates from those blocks and do not loosen them. If an application sentence and a fenced block ever diverge, the fenced block wins. This record does not change code.
 
 Q3 and Q4, including acceptance of ADR-0002, are the amendment to
 [ADR-0002](0002-training-path.md). The Decision section above is unchanged.
@@ -122,7 +122,7 @@ CONDITIONS:
 
 ### Q2 application
 
-Until A2-T leaves shadow mode, no receipt is auto-attributed to the source. The §23 rerun-plus-trivial-fixture path is not sanctioned by Q2 and must not be supplied (`rerun`/`known_good`) by any training caller. A `runtime_stack_overflow` flag or `wasm_trap` kind attributes to the source only with a matching native Faust 2.88.0 failure. Until then those rows are ungraded and quarantined. The source-class list alone suffices only for a line-start Faust `ERROR`, a source over 1 MiB, and a remote import. Code follow-up: A2-PATH.
+Until A2-T leaves shadow mode, no receipt is auto-attributed to the source. The §23 rerun-plus-trivial-fixture path is not sanctioned by Q2 and must not be supplied (`rerun`/`known_good`) by any training caller. A `runtime_stack_overflow` flag or `wasm_trap` kind attributes to the source only with a matching native Faust 2.88.0 failure. Until then those rows are ungraded and quarantined. The source-class list alone suffices only for a line-start Faust `ERROR` other than `ERROR : stack overflow` (plain or `in eval`; see EVAL-SO), a source over 1 MiB, and a remote import. Shadow mode runs on a separate path that never grades: it may rerun and log attributions, but its output never reaches `reward_value` or a receipt. That path is not a training caller, so needing reruns in shadow does not conflict with A2-PATH. Code follow-up: A2-PATH.
 
 A2-T requires all of: (1) at least 2 reruns on a quiet worker with matching environment digests reproducing the same crash signature; (2) both the trivial known-good fixture and a path-matched known-good fixture (same stage and limit) passing in that environment; (3) for stack, wasm_trap, timeout and every other harness-limit signature, a matching native Faust 2.88.0 failure. If that cross-check is unavailable, the row stays ungraded. (4) The signature is not frozen by A7-S. Exit 124 is attributed only with a native or independent-runner timeout at the same limit, never on fixture evidence alone. Anything else stays ungraded and quarantined.
 
@@ -134,4 +134,4 @@ L1 and L2 have landed in #49 (`f0fcdf9`), on main that also includes #46 (`42ee1
 
 A7-S thresholds (20% share, 2× rise, 500-sample window) are provisional. They are reviewed against shadow data before going live. These numbers are not A7's 1%, 500-sample and 2× ungraded-rate alarm.
 
-After #46, the compiler stores a line that is exactly `ERROR : stack overflow in eval` as exit 126 `internal`. The grader's `_COMPILE_STACK_LINES` still tags that line as source, with no native check. KANBAN EVAL-SO records the disagreement. The suggested treatment, not a code change in this record, is to treat `ERROR : stack overflow in eval` as a stack signature that needs the Faust 2.88.0 native match.
+After #46, the compiler stores a line that is exactly `ERROR : stack overflow in eval` as exit 126 `internal`. The grader's `_COMPILE_STACK_LINES` still tags that line as source, with no native check. KANBAN EVAL-SO records the disagreement. The suggested treatment, not a code change in this record, is to treat `ERROR : stack overflow in eval` as a stack signature that needs the Faust 2.88.0 native match. The same treatment covers the plain line-start `ERROR : stack overflow` until native evidence is collected, so neither line is in the source-class carve-out.

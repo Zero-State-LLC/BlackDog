@@ -18,8 +18,11 @@ supplied (`rerun`/`known_good`) by any training caller. A
 `runtime_stack_overflow` flag or `wasm_trap` kind attributes to the
 source only with a matching native Faust 2.88.0 failure. Until then
 those rows are ungraded and quarantined. The source-class list alone
-suffices only for a line-start Faust `ERROR`, a source over 1 MiB, and
-a remote import. Code follow-up: A2-PATH. The table and the paragraphs
+suffices only for a line-start Faust `ERROR` other than
+`ERROR : stack overflow` (plain or `in eval`; see EVAL-SO), a source
+over 1 MiB, and a remote import. Shadow mode runs on a separate path
+that never grades: it may rerun and log attributions, but its output
+never reaches `reward_value` or a receipt. Code follow-up: A2-PATH. The table and the paragraphs
 below describe code Q2 replaces. They are not the accepted rule.
 
 | Exit | Class | Reward |
@@ -28,7 +31,7 @@ below describe code Q2 replaces. They are not the accepted rule.
 | 1 | `parse_error`, `type_error`, `arity_error`, `unbound_symbol`, `other` | graded; `parse_error` is the A1 rung |
 | 124 | `timeout` | replaced path only: `unattributed` until triage. The rerun is not sanctioned |
 | 125 | `resource_limit` | same as exit 124, except `resource limit: source size`, which is already `parse_error` |
-| 126 | `internal` | replaced path treats a remote import, `runtime_stack_overflow`, a `wasm_trap` kind, or a line-start `ERROR : stack overflow` as `parse_error`. Accepted rule: `runtime_stack_overflow` and `wasm_trap` stay ungraded without a native Faust 2.88.0 failure. A line-start Faust `ERROR`, a source over 1 MiB, and a remote import are the source-class carve-out |
+| 126 | `internal` | replaced path treats a remote import, `runtime_stack_overflow`, a `wasm_trap` kind, or a line-start `ERROR : stack overflow` as `parse_error`. Accepted rule: `runtime_stack_overflow` and `wasm_trap` stay ungraded without a native Faust 2.88.0 failure. A line-start Faust `ERROR` other than `ERROR : stack overflow` (plain or `in eval`, which need the native match until native evidence is collected; see EVAL-SO), a source over 1 MiB, and a remote import are the source-class carve-out |
 | 137, 139, -9 | any stored class | queued crash (`unattributed`). The replaced rerun is not sanctioned |
 
 Do not score a stored `internal` or `resource_limit` class as `other`.
