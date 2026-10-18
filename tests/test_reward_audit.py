@@ -1470,6 +1470,144 @@ def test_advance_anchor_does_not_mint_a_new_anchor_after_the_first_report(tmp_pa
     assert consumed.path.read_bytes() == before
 
 
+def test_claim_refuses_a_line_injected_before_the_anchor_refresh(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A suffix written in the append/refresh gap must not be signed."""
+    secret = _write_key(tmp_path / "reward-root.key")
+    ring = RewardKeyring(secret, run_id=RUN)
+    run_key = derive_run_key(secret, RUN)
+    loaded = _stored_pass(tmp_path, secret, "group-inject")
+    consumed = ConsumedLog(tmp_path / "inject-consumed.jsonl")
+    reports = AuditReportLog(tmp_path / "inject-reports.jsonl", consumed)
+    audit_sampled_reruns(loaded.rows, ring, rerun=_echo, consumed=consumed, reports=reports)
+    anchor = _anchor_bytes(consumed.path)
+    original = _refresh_anchor_bind
+
+    def _inject(path, key, *, locked=False, prior=None, appended=b""):
+        with path.open("ab") as handle:
+            handle.write(b"injected-suffix\n")
+        return original(path, key, locked=locked, prior=prior, appended=appended)
+
+    monkeypatch.setattr("faustcoder.reward.audit._refresh_anchor_bind", _inject)
+    with pytest.raises(RewardRecordError, match="anchor"):
+        consumed.claim(
+            "group-injected",
+            "used",
+            task_digest_full=loaded.rows[0].task_digest_full,
+            policy_checkpoint=CHECKPOINT,
+            run_key=run_key,
+        )
+    assert b"injected-suffix\n" in consumed.path.read_bytes()
+    assert _anchor_bytes(consumed.path) == anchor
+    assert consumed.disposition("group-injected") is None
+
+
+def test_claim_without_an_anchor_refuses_when_a_report_exists(tmp_path: Path) -> None:
+    secret = _write_key(tmp_path / "reward-root.key")
+    ring = RewardKeyring(secret, run_id=RUN)
+    run_key = derive_run_key(secret, RUN)
+    loaded = _stored_pass(tmp_path, secret, "group-report")
+    consumed = ConsumedLog(tmp_path / "report-consumed.jsonl")
+    reports = AuditReportLog(tmp_path / "report-reports.jsonl", consumed)
+    consumed.claim(
+        "group-report",
+        "used",
+        task_digest_full=loaded.rows[0].task_digest_full,
+        policy_checkpoint=CHECKPOINT,
+        run_key=run_key,
+    )
+    assert consumed.disposition("group-report") == "used"
+    audit_sampled_reruns(loaded.rows, ring, rerun=_echo, consumed=consumed, reports=reports)
+    kept = [
+        line
+        for line in consumed.path.read_text(encoding="utf-8").splitlines()
+        if not line.startswith("audit-anchor v1 ")
+    ]
+    consumed.path.write_text("\n".join(kept) + "\n", encoding="utf-8")
+    before = consumed.path.read_bytes()
+    assert b"audit-anchor v1 " not in before
+    assert reports.path.is_file() and reports.path.stat().st_size > 0
+    with pytest.raises(RewardRecordError, match="anchor"):
+        consumed.claim(
+            "group-after-report",
+            "used",
+            task_digest_full=loaded.rows[0].task_digest_full,
+            policy_checkpoint=CHECKPOINT,
+            run_key=run_key,
+        )
+    assert consumed.path.read_bytes() == before
+    assert consumed.disposition("group-after-report") is None
+
+
+def test_claim_refuses_when_the_report_directory_cannot_be_listed(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    secret = _write_key(tmp_path / "reward-root.key")
+    run_key = derive_run_key(secret, RUN)
+    loaded = _stored_pass(tmp_path, secret, "group-unlist")
+    consumed = ConsumedLog(tmp_path / "unlist-consumed.jsonl")
+    consumed.claim(
+        "group-unlist",
+        "used",
+        task_digest_full=loaded.rows[0].task_digest_full,
+        policy_checkpoint=CHECKPOINT,
+        run_key=run_key,
+    )
+    before = consumed.path.read_bytes()
+
+    def _unlist(_path: str) -> list[str]:
+        raise PermissionError("enumeration refused")
+
+    monkeypatch.setattr("faustcoder.reward.audit.os.listdir", _unlist)
+    with pytest.raises(RewardRecordError, match="anchor"):
+        consumed.claim(
+            "group-unlist-next",
+            "used",
+            task_digest_full=loaded.rows[0].task_digest_full,
+            policy_checkpoint=CHECKPOINT,
+            run_key=run_key,
+        )
+    assert consumed.path.read_bytes() == before
+    assert consumed.disposition("group-unlist-next") is None
+
+
+def test_refresh_refuses_when_the_anchor_disappears_after_the_prior_read(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The refresh must raise if the anchor is gone after the pre-append read."""
+    secret = _write_key(tmp_path / "reward-root.key")
+    ring = RewardKeyring(secret, run_id=RUN)
+    run_key = derive_run_key(secret, RUN)
+    loaded = _stored_pass(tmp_path, secret, "group-vanish")
+    consumed = ConsumedLog(tmp_path / "vanish-consumed.jsonl")
+    reports = AuditReportLog(tmp_path / "vanish-reports.jsonl", consumed)
+    audit_sampled_reruns(loaded.rows, ring, rerun=_echo, consumed=consumed, reports=reports)
+    assert b"audit-anchor v1 " in consumed.path.read_bytes()
+    original = _refresh_anchor_bind
+
+    def _drop_anchor(path, key, *, locked=False, prior=None, appended=b""):
+        kept = [
+            line
+            for line in path.read_bytes().splitlines(keepends=True)
+            if not line.startswith(b"audit-anchor v1 ")
+        ]
+        path.write_bytes(b"".join(kept))
+        return original(path, key, locked=locked, prior=prior, appended=appended)
+
+    monkeypatch.setattr("faustcoder.reward.audit._refresh_anchor_bind", _drop_anchor)
+    with pytest.raises(RewardRecordError, match="anchor"):
+        consumed.claim(
+            "group-vanish-next",
+            "used",
+            task_digest_full=loaded.rows[0].task_digest_full,
+            policy_checkpoint=CHECKPOINT,
+            run_key=run_key,
+        )
+    assert b"audit-anchor v1 " not in consumed.path.read_bytes()
+    assert consumed.disposition("group-vanish-next") is None
+
+
 def test_deleting_the_report_and_anchor_does_not_allow_a_new_audit(tmp_path: Path) -> None:
     secret = _write_key(tmp_path / "reward-root.key")
     ring = RewardKeyring(secret, run_id=RUN)
