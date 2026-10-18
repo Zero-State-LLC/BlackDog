@@ -24,18 +24,21 @@ spec-kit; security-relevant tasks add ADVERSARY review.
 
 ## Phase 2: Foundational (blocks every user story)
 
-- [ ] T02 [Found] JSON schemas and immutable artifact store.
+- [x] T02 [Found] JSON schemas and immutable artifact store.
+  - Done in #34 and #35 (2026-10-17).
   - Depends on: T01. Milestone: v0.1.
   - Acceptance: schema validation and digest tests; store rejects payload mutation and parent cycles (constitution II).
   - Implements: [contracts/](contracts/), [data-model.md](data-model.md).
   - Workflows: anti-slop-code, production-systems. Evidence: `receipts/T02/` (INFERRED).
-- [ ] T03 [Found] Sandboxed Faust compiler harness.
+- [x] T03 [Found] Sandboxed Faust compiler harness.
+  - Done in #38, with #40, #42 and #46 (2026-10-17).
   - Depends on: T02. Milestone: v0.1.
   - Acceptance: reproducible compiler receipts (R-005); no network, bounded resources (R-013).
   - Amended 0.3.0 (ADR-0004): wrap libfaust from faustwasm 0.19.0 in a Node.js worker; cross-check with the native Faust 2.88.0 CLI; classify diagnostics.
   - Amended 0.3.4 (ADR-0006): the R-005 reward ladder is A1–A7 in the ADR. ADR-0006 is in force in reward code (`grade_receipt`, spec §23).
   - Workflows: production-systems, ADVERSARY review. Evidence: `receipts/T03/` (INFERRED).
-- [ ] T04 [Found] DSP signal test harness.
+- [x] T04 [Found] DSP signal test harness.
+  - Done in #41, with the N6 follow-up #45 (2026-10-17). Open: the ARM goldens compare on the DGX Spark.
   - Depends on: T03. Milestone: v0.1.
   - Acceptance: known-good and known-bad fixtures; legal delayed feedback passes (ADR-0001, V0.3).
   - Amended 0.3.0 (ADR-0004): offline render with faustwasm at 44.1 and 48 kHz; reference comparison in the style of Faust `tests/impulse-tests`; CPU only on promotion candidates.
@@ -46,11 +49,13 @@ spec-kit; security-relevant tasks add ADVERSARY review.
 
 Implements the dataset machine (spec §7.1) and training machine (spec §7.3).
 
-- [ ] T05 [P] [J-04] Source rights inventory.
+- [x] T05 [P] [J-04] Source rights inventory.
+  - Done in #37 (2026-10-17).
   - Depends on: T01. Milestone: v0.1.
   - Acceptance: provenance and exclusion receipts; implements `rights_cleared` and `rights_rejected` transitions.
   - Workflows: production-systems, ADVERSARY review (poisoning, licensing). Evidence: `corpus/` records, receipts.
-- [ ] T06 [J-04] Normalization and dedup.
+- [x] T06 [J-04] Normalization and dedup.
+  - Done in #39 (2026-10-17). Open follow-ups: H2, H3 and FLOOR. `TOKEN_FLOOR=40` stays provisional.
   - Depends on: T05, T02. Milestone: v0.2.
   - Acceptance: deterministic snapshot; implements `normalized` and `dedup_passed` transitions.
   - Proposed (D-013, Danny yes 2026-10-17 1:04 PM PT): an n-gram or AST near-duplicate filter on generated `.dsp` against the training-only set, including vendored near-copies of `faust/examples`. The threshold is not set. This is a requirement to carry into the task, not an implementation in T05.
@@ -66,7 +71,8 @@ Implements the dataset machine (spec §7.1) and training machine (spec §7.3).
   - Depends on: T04, T07. Milestone: v0.2.
   - Acceptance: frozen baseline measurements (R-007); input to D-002 and D-005.
   - Workflows: production-systems.
-- [ ] T09 [P] [J-04] DGX Spark feasibility study.
+- [x] T09 [P] [J-04] DGX Spark feasibility study.
+  - Done in #36 (2026-10-17) for v0.2. On-hardware throughput is deferred to T10.
   - Depends on: T01. Milestone: v0.2.
   - Acceptance: for v0.2, cited external DGX Spark benchmarks plus a per-machine environment fingerprint receipt (R-001, amended 0.3.1); implements `env_verified`. On-hardware throughput is deferred to T10 on the dedicated, cleared Spark.
   - Workflows: production-systems.
@@ -171,10 +177,12 @@ These tasks are the implementation. This record does not change code.
   - Acceptance: shadow computes and logs attributions; humans triage. Shadow mode runs on a separate path that never grades: it may rerun and log attributions, but its output never reaches `reward_value` or a receipt. That path is not a training caller, so needing reruns in shadow does not conflict with A2-PATH. Leaves shadow only when L1–L3 have landed, agreement is on a sample fixed before shadow starts, the gold canary (dev-suite references, cleared-corpus sample, SFT targets) is clean and any crash there freezes its signature, A7-S thresholds are reviewed, and the go-live is recorded. Crash rows below ~0.1% of samples keep auto-attribution off entirely. That rate is a reason to stay off, never a reason to go live.
   - Workflows: production-systems, ADVERSARY review.
 - [ ] A2-PATH [J-04] Training callers must not supply the replaced path.
+  - Status: done in code in #51 (`cef8a14`), not fully done. The grader enforces this, but `run_signal` and `commit_signal_check` do not yet pass the task or a native receipt to `grade_receipt`. The box is checked when that live wiring lands.
   - Depends on: T03. Milestone: v0.3. Prerequisite of T10.
   - Acceptance: until A2-T is live, no training caller supplies `rerun` or `known_good`. `runtime_stack_overflow` and `wasm_trap` stay ungraded without a matching native Faust 2.88.0 failure. The source-class list alone suffices only for a line-start Faust `ERROR` other than `ERROR : stack overflow` (plain or `in eval`; see EVAL-SO), a source over 1 MiB, and a remote import. Shadow mode runs on a separate path that never grades: it may rerun and log attributions, but its output never reaches `reward_value` or a receipt. That path is not a training caller, so needing reruns in shadow does not conflict with A2-PATH.
   - Workflows: production-systems, ADVERSARY review.
 - [ ] EVAL-SO [Found] Grader must not tag either stack-overflow line as source without a native match.
+  - Status: done in code in #51 (`cef8a14`), not fully done. The grader enforces this, but `run_signal` and `commit_signal_check` do not yet pass the task or a native receipt to `grade_receipt`. The box is checked when that live wiring lands.
   - Depends on: T03. Milestone: v0.3. Noted after #46. Prerequisite of T10.
   - Acceptance: the grader no longer tags either line as source without the Faust 2.88.0 native match. That is the A2-PATH requirement for the plain line-start `ERROR : stack overflow` and for `ERROR : stack overflow in eval`.
   - Workflows: production-systems.
