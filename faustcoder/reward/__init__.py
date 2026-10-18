@@ -12,8 +12,11 @@ from faustcoder.reward.grader import (
     require_rewardable_provenance,
     reward_value,
     rl_batch,
+    RewardOutcomeHeld,
     RewardProvenanceError,
+    RewardUseRefused,
 )
+from faustcoder.reward.ledger import RewardLedger, ledger_for_store
 from faustcoder.reward.profiles import REWARD_PROFILES, reward_profiles
 from faustcoder.reward.types import (
     UNGRADED_BASELINE_MULTIPLE,
@@ -25,6 +28,7 @@ from faustcoder.reward.types import (
     RerunOutcome,
     RewardableSignalReceipt,
     SourceAttributedFailure,
+    is_minted,
     Ungraded,
     UngradedRateTracker,
     UngradedReason,
@@ -39,7 +43,10 @@ __all__ = [
     "QuarantineQueue",
     "QuarantineRecord",
     "RerunOutcome",
+    "RewardLedger",
+    "RewardOutcomeHeld",
     "RewardProvenanceError",
+    "RewardUseRefused",
     "RewardableSignalReceipt",
     "SourceAttributedFailure",
     "Ungraded",
@@ -48,6 +55,8 @@ __all__ = [
     "dataset_reward_row",
     "grade_compiler_exclusion",
     "grade_receipt",
+    "is_minted",
+    "ledger_for_store",
     "require_rewardable_provenance",
     "reward_profiles",
     "reward_value",

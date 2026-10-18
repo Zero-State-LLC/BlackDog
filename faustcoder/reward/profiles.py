@@ -1,11 +1,13 @@
 """Frozen reward profiles.
 
-``REWARD_PROFILES`` maps a ``test_suite_digest`` to a profile name.
-The digest is ``content_digest_for(profile_payload(profile))``. A
-version or tolerance change produces a new name; old receipts then
-fail closed as ``profile_not_allowlisted``. v0.2 rewards the impulse
-profile only. Nonlinear stimuli stay unrewardable until that suite
-is reviewed.
+``REWARD_PROFILES`` is the only allowlist literal. It maps a
+``test_suite_digest`` to a profile name. The digest is
+``profile_digest`` in ``faustcoder.signal``, the only function that
+hashes a signal profile. A ``profile_payload`` version change, or a
+pinned compiler flag that lands in that payload, updates this map
+and nothing else. Old receipts then fail closed as
+``profile_not_allowlisted``. v0.2 rewards the impulse profile only.
+Nonlinear stimuli stay unrewardable until that suite is reviewed.
 
 ``head_frames`` is pinned at 2048 and ``max_frames`` at the 144000
 block-aligned cap. Both are inside the digest. The reward comparison
@@ -28,21 +30,20 @@ REWARD_PROFILES: dict[str, str] = {
 
 
 @lru_cache(maxsize=1)
-def reward_profile_payloads() -> dict[str, dict[str, Any]]:
-    """Return ``{name: canonical profile payload}``."""
+def reward_signal_profiles() -> dict[str, Any]:
+    """Return ``{name: SignalProfile}`` for the frozen impulse profiles."""
     from faustcoder.signal import (
         DEFAULT_BLOCK_SIZE,
         DEFAULT_FRAMES,
         DEFAULT_SEED,
         MAX_FRAMES,
         SignalProfile,
-        profile_payload,
     )
 
     cap = MAX_FRAMES - (MAX_FRAMES % DEFAULT_BLOCK_SIZE)
-    payloads: dict[str, dict[str, Any]] = {}
+    profiles: dict[str, Any] = {}
     for rate, name in ((44100, "impulse-44100-v1"), (48000, "impulse-48000-v1")):
-        profile = SignalProfile(
+        profiles[name] = SignalProfile(
             sample_rate=rate,
             block_size=DEFAULT_BLOCK_SIZE,
             seed=DEFAULT_SEED,
@@ -53,8 +54,27 @@ def reward_profile_payloads() -> dict[str, dict[str, Any]]:
             reject_nonfinite=True,
             require_reference=True,
         )
-        payloads[name] = profile_payload(profile)
-    return payloads
+    return profiles
+
+
+def reward_signal_profile(name: str) -> Any:
+    """Return one frozen impulse profile. ``name`` is the allowlist name."""
+    profiles = reward_signal_profiles()
+    try:
+        return profiles[name]
+    except KeyError as exc:
+        raise KeyError(name) from exc
+
+
+@lru_cache(maxsize=1)
+def reward_profile_payloads() -> dict[str, dict[str, Any]]:
+    """Return ``{name: canonical profile payload}``."""
+    from faustcoder.signal import profile_payload
+
+    return {
+        name: profile_payload(profile)
+        for name, profile in reward_signal_profiles().items()
+    }
 
 
 @lru_cache(maxsize=1)
@@ -62,14 +82,15 @@ def reward_profiles() -> dict[str, str]:
     """Return the frozen ``{test_suite_digest: profile name}`` allowlist.
 
     The map checked into this module is authoritative. It must equal
-    the digests of ``reward_profile_payloads``.
+    ``profile_digest`` of ``reward_signal_profiles``. That function is
+    the only digest computation.
     """
-    from faustcoder.canonical import content_digest_for
+    from faustcoder.signal import profile_digest
 
     computed = {
-        content_digest_for(payload): name
-        for name, payload in reward_profile_payloads().items()
+        profile_digest(profile): name
+        for name, profile in reward_signal_profiles().items()
     }
     if computed != REWARD_PROFILES:
-        raise RuntimeError("REWARD_PROFILES does not match the canonical profile payloads")
+        raise RuntimeError("REWARD_PROFILES does not match profile_digest of the frozen profiles")
     return dict(REWARD_PROFILES)

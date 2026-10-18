@@ -135,13 +135,33 @@ and not the sealed holdout.
 
 ADR-0006 is in force in reward code (spec §23). `grade_receipt`
 mints a `RewardableSignalReceipt` only for an allowlisted reward
-profile. `apply_signal` takes that receipt. Diagnostic checks use
-`apply_diagnostic_signal` and are not rewards. An ungraded sample
-is dropped from reward (`None`, not 0). A2 rows (`infra_fault`,
-`harness_defect`, `unattributed`) stay in the quarantine queue.
+profile. `apply_signal` takes that receipt and checks the private
+mint table, so a receipt built with `object.__new__` is refused.
+Diagnostic checks use `apply_diagnostic_signal` and are not rewards.
+An ungraded sample is dropped from reward (`None`, not 0). A2 rows
+(`infra_fault`, `harness_defect`, `unattributed`) stay in the
+quarantine queue beside the artifact store (`reward-ledger/quarantine.jsonl`,
+append-only). `resolve` appends a resolve line. A pending row older
+than 24 hours raises the age alarm. Those 24 hours are provisional.
+
+`commit_signal_check` and a reward-graded `run_signal` pass that queue
+and the A7 tracker into `grade_receipt`. A compiler exit 124, 125 or
+126, or a worker or harness crash, is graded there. With no ledger
+the reward path raises `RewardUseRefused` and does not score the
+outcome. `compile_source` on its own is not a reward consumer.
+
 The ungraded-rate alarm uses the provisional A7 numbers: above 1%
 over a 500-sample window, or above 2× the known-good baseline,
-whichever comes first.
+whichever comes first. With no baseline it also fires at 5 ungraded
+samples, or above 1% once 100 samples are in. A baseline of 0 uses a
+1% floor and does not fire on the first row. The alarm re-arms after
+the rate recovers. `schema_invalid`, `digest_mismatch` and
+`comparison_not_full` count in that rate.
+
+Receipt signing is deferred (D3). `grade_receipt` recomputes digests.
+It does not require a signature. `REWARD_PROFILES` in
+`faustcoder/reward/profiles.py` is the only allowlist literal.
+`profile_digest` is the only profile digest computation.
 
 v0.2 rewards the impulse profiles `impulse-44100-v1` and
 `impulse-48000-v1` only. The gates below are still not a reward

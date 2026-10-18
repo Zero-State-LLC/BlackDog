@@ -78,6 +78,7 @@ import tempfile
 import time
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, replace
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -397,6 +398,16 @@ def source_needs_libraries(source: str) -> bool:
     return _LIBRARY_IMPORT.search(source) is not None
 
 
+def profile_digest(profile: SignalProfile) -> str:
+    """Return the ``test_suite_digest`` of ``profile``.
+
+    This is the only profile digest computation. Receipts and
+    ``REWARD_PROFILES`` both call it. A payload version change belongs
+    in ``profile_payload``; the digest follows from there.
+    """
+    return content_digest_for(profile_payload(profile))
+
+
 def profile_payload(profile: SignalProfile) -> dict[str, Any]:
     """Return the canonical object hashed into ``test_suite_digest``."""
     return {
@@ -539,6 +550,76 @@ def impulse_reference(
     )
 
 
+def _reward_created_at() -> str:
+    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+def _require_reward_ledger(ledger: object) -> Any:
+    if ledger is None or not hasattr(ledger, "queue") or not hasattr(ledger, "rates"):
+        from faustcoder.reward.grader import RewardUseRefused
+
+        raise RewardUseRefused(
+            "reward-graded compiler and crash outcomes require a reward ledger; "
+            "refusing to score or drop them"
+        )
+    return ledger
+
+
+def _hold_compiler_for_reward(compiled: Compilation, ledger: object) -> None:
+    """Grade a failed compile onto the ledger. Always raises."""
+    bound = _require_reward_ledger(ledger)
+    from faustcoder.compiler import COMPILER_SCHEMA_VERSION
+    from faustcoder.reward.grader import RewardOutcomeHeld, grade_receipt
+
+    envelope = build_envelope(
+        schema_version=COMPILER_SCHEMA_VERSION,
+        created_at=_reward_created_at(),
+        producer="faustcoder.compiler",
+        parents=[],
+        payload=compiled.receipt,
+    )
+    grade = grade_receipt(
+        envelope,
+        diagnostics=compiled.diagnostics,
+        policy="signal",
+        queue=bound.queue,
+        rates=bound.rates,
+    )
+    raise RewardOutcomeHeld(grade)
+
+
+def _hold_crash_for_reward(
+    reproducible_digest: str,
+    ledger: object,
+    *,
+    kind: str,
+    exit_code: int = 126,
+) -> None:
+    """Grade a worker or harness crash onto the ledger. Always raises."""
+    bound = _require_reward_ledger(ledger)
+    from faustcoder.reward.grader import RewardOutcomeHeld, grade_receipt
+
+    envelope = build_envelope(
+        schema_version=SIGNAL_SCHEMA_VERSION,
+        created_at=_reward_created_at(),
+        producer="faustcoder.signal",
+        parents=[],
+        payload={
+            "kind": kind,
+            "exit_code": exit_code,
+            "diagnostic_class": "internal",
+            "reproducible_digest": reproducible_digest,
+        },
+    )
+    grade = grade_receipt(
+        envelope,
+        policy="signal",
+        queue=bound.queue,
+        rates=bound.rates,
+    )
+    raise RewardOutcomeHeld(grade)
+
+
 def run_signal(
     source: str,
     profile: SignalProfile,
@@ -548,6 +629,7 @@ def run_signal(
     limits: ResourceLimits | None = None,
     promotion_candidate: bool = False,
     reward_graded: bool = False,
+    ledger: object | None = None,
 ) -> SignalRun:
     """Compile and render ``source``. Return a schema-valid receipt.
 
@@ -565,7 +647,9 @@ def run_signal(
     including samples past ``head_frames`` (spec §23 A4). Coarse
     magnitude checks are recorded and are not the reward pass. The
     head stays the only exact window when the run is not
-    reward-graded.
+    reward-graded. A reward-graded compiler failure or worker crash
+    is graded onto ``ledger`` (spec §23). With no ledger the call
+    raises ``RewardUseRefused`` and does not score the outcome.
     """
     if not isinstance(source, str):
         raise TypeError("source must be a string")
@@ -584,16 +668,40 @@ def run_signal(
         )
     bounds = limits or ResourceLimits()
     started = time.monotonic()
-    compiled = compile_source(source, lang="wasm", options=checked, limits=bounds)
+    try:
+        compiled = compile_source(source, lang="wasm", options=checked, limits=bounds)
+    except SandboxError:
+        if reward_graded:
+            _hold_crash_for_reward(
+                "sha256:" + hashlib.sha256(source.encode("utf-8")).hexdigest(),
+                ledger,
+                kind="harness_crash",
+            )
+        raise
     if compiled.receipt["exit_code"] != 0 or compiled.receipt["diagnostic_class"] not in {
         "ok",
         "warning",
     }:
+        if reward_graded:
+            _hold_compiler_for_reward(compiled, ledger)
         raise SignalHarnessError(
             "signal tests require a successful wasm compile "
             f"({compiled.receipt['diagnostic_class']})"
         )
-    rendered = _render(source, profile, options=checked, limits=bounds)
+    try:
+        rendered = _render(source, profile, options=checked, limits=bounds)
+    except SandboxError:
+        if reward_graded:
+            _hold_crash_for_reward(
+                compiled.reproducible_digest, ledger, kind="harness_crash"
+            )
+        raise
+    except SignalHarnessError:
+        if reward_graded:
+            _hold_crash_for_reward(
+                compiled.reproducible_digest, ledger, kind="worker_crash"
+            )
+        raise
     if rendered["libfaust_version"] != compiled.receipt["faust_version"]:
         raise SignalHarnessError("renderer libfaust version disagrees with the compiler receipt")
     wall_ms = int((time.monotonic() - started) * 1000)
@@ -663,6 +771,8 @@ def commit_signal_check(
     state: CandidateState,
     created_at: str,
     producer: str = "faustcoder.signal",
+    ledger: object | None = None,
+    policy: str = "signal",
 ) -> SignalCommit:
     """Store each DSPTestReceipt and take the signal edge.
 
@@ -702,9 +812,43 @@ def commit_signal_check(
     if any(purpose == "reward" for purpose in purposes):
         if any(purpose != "reward" for purpose in purposes):
             raise SignalHarnessError("a reward-graded suite cannot mix diagnostic receipts")
-        from faustcoder.reward.grader import Ungraded, grade_receipt
+        from faustcoder.candidate_machine import CandidateEvent, next_state
+        from faustcoder.reward.grader import (
+            SourceAttributedFailure,
+            Ungraded,
+            grade_receipt,
+        )
+        from faustcoder.reward.ledger import ledger_for_store
 
-        outcomes = tuple(grade_receipt(store.get(artifact_id)) for artifact_id in artifact_ids)
+        bound = ledger if ledger is not None else ledger_for_store(store)
+        outcomes_list: list[object] = []
+        for run, artifact_id in zip(suite.runs, artifact_ids, strict=True):
+            exit_code = run.compilation.receipt.get("exit_code")
+            if exit_code in {124, 125, 126}:
+                compiler_id = store_compiler_receipt(
+                    store,
+                    run.compilation.receipt,
+                    created_at=created_at,
+                    producer="faustcoder.compiler",
+                )
+                outcomes_list.append(
+                    grade_receipt(
+                        store.get(compiler_id),
+                        diagnostics=run.compilation.diagnostics,
+                        policy=policy,
+                        queue=bound.queue,
+                        rates=bound.rates,
+                    )
+                )
+            outcomes_list.append(
+                grade_receipt(
+                    store.get(artifact_id),
+                    policy=policy,
+                    queue=bound.queue,
+                    rates=bound.rates,
+                )
+            )
+        outcomes = tuple(outcomes_list)
         if any(isinstance(item, Ungraded) for item in outcomes):
             # Dropped from reward. Do not take signal_failed: that would
             # score an ungraded receipt as a model failure (spec §23 A2).
@@ -714,7 +858,17 @@ def commit_signal_check(
                 suite=suite,
                 outcomes=outcomes,
             )
-        chosen = next((item for item in outcomes if not item.passed), outcomes[0])
+        if any(isinstance(item, SourceAttributedFailure) for item in outcomes):
+            return SignalCommit(
+                state=next_state(state, CandidateEvent.SIGNAL_FAILED, guard_passed=True),
+                artifact_ids=tuple(artifact_ids),
+                suite=suite,
+                outcomes=outcomes,
+            )
+        rewardable = [item for item in outcomes if hasattr(item, "passed")]
+        if not rewardable:
+            raise SignalHarnessError("reward commit produced no signal receipt")
+        chosen = next((item for item in rewardable if not item.passed), rewardable[0])
         return SignalCommit(
             state=apply_signal(state, chosen),
             artifact_ids=tuple(artifact_ids),
@@ -909,7 +1063,7 @@ def _judge(
     thresholds["reward_graded"] = bool(reward_graded)
     receipt: dict[str, Any] = {
         "source_sha256": hashlib.sha256(source.encode("utf-8")).hexdigest(),
-        "test_suite_digest": content_digest_for(profile_payload(profile)),
+        "test_suite_digest": profile_digest(profile),
         "sample_rate": profile.sample_rate,
         "block_size": profile.block_size,
         "seed": profile.seed,

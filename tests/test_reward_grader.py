@@ -8,8 +8,10 @@ from faustcoder.compiler import reproducible_receipt_digest
 from faustcoder.exclusions import CompilerExclusion, SourceExclusion
 from faustcoder.reward import (
     REWARD_PROFILES,
+    UNGRADED_WINDOW,
     FixtureOutcome,
     QuarantineQueue,
+    QuarantineRecord,
     RerunOutcome,
     RewardProvenanceError,
     RewardableSignalReceipt,
@@ -311,6 +313,7 @@ def test_worker_crash_is_unattributed_until_the_fixture_stays_healthy() -> None:
     assert isinstance(pending, Ungraded)
     assert pending.reason is UngradedReason.UNATTRIBUTED
     assert queue.count("crash") == 1
+    environment = "sha256:" + "11" * 32
     attributed = grade_receipt(
         envelope,
         rerun=lambda _payload: RerunOutcome(
@@ -318,8 +321,9 @@ def test_worker_crash_is_unattributed_until_the_fixture_stays_healthy() -> None:
             exit_code=126,
             diagnostic_class="internal",
             reproducible_digest=payload["reproducible_digest"],
+            environment_digest=environment,
         ),
-        known_good=lambda: FixtureOutcome(passed=True),
+        known_good=lambda: FixtureOutcome(passed=True, environment_digest=environment),
         policy="crash",
         queue=queue,
     )
@@ -371,3 +375,310 @@ def test_stale_suite_digest_is_a_mismatch_even_when_the_envelope_hash_matches() 
     graded = grade_receipt(envelope)
     assert isinstance(graded, Ungraded)
     assert graded.reason is UngradedReason.DIGEST_MISMATCH
+
+
+def test_missing_environment_digest_stays_unattributed() -> None:
+    envelope = compiler_failure_envelope(
+        exit_code=124,
+        diagnostic_class="timeout",
+        diagnostics="timeout: wall clock limit exceeded\n",
+    )
+    queue = QuarantineQueue()
+    for rerun_digest, fixture_digest in ((None, None), ("", ""), (None, "sha256:" + "11" * 32)):
+        result = grade_receipt(
+            envelope,
+            diagnostics="timeout: wall clock limit exceeded\n",
+            rerun=lambda _payload, digest=rerun_digest: RerunOutcome(
+                failed=True,
+                exit_code=124,
+                diagnostic_class="timeout",
+                reproducible_digest=reproducible_receipt_digest(envelope["payload"]),
+                environment_digest=digest,
+            ),
+            known_good=lambda digest=fixture_digest: FixtureOutcome(
+                passed=True, environment_digest=digest
+            ),
+            policy="env",
+            queue=queue,
+        )
+        assert isinstance(result, Ungraded)
+        assert result.reason is UngradedReason.UNATTRIBUTED
+        assert reward_value(result) is None
+    assert queue.count("env") == 3
+
+
+def test_closed_failures_count_toward_the_ungraded_rate_and_exit_137_is_a_crash() -> None:
+    rates = UngradedRateTracker()
+    for _ in range(5):
+        invalid = grade_receipt({"schema_version": "0.3.4", "extra": True}, rates=rates, policy="closed")
+        assert isinstance(invalid, Ungraded)
+        assert invalid.reason is UngradedReason.SCHEMA_INVALID
+    assert rates.alarm("closed")
+    queue = QuarantineQueue()
+    crash = make_envelope(
+        {
+            "kind": "worker_crash",
+            "exit_code": 137,
+            "diagnostic_class": "internal",
+            "reproducible_digest": "sha256:" + "ab" * 32,
+        },
+        schema_version="0.3.2",
+        producer="faustcoder.signal",
+    )
+    held = grade_receipt(crash, policy="oom", queue=queue, rates=rates)
+    assert isinstance(held, Ungraded)
+    assert held.reason is UngradedReason.UNATTRIBUTED
+    assert queue.count("oom") == 1
+    assert queue.count("closed") == 0
+
+
+def test_missing_renders_is_comparison_not_full() -> None:
+    def drop(payload: dict) -> None:
+        del payload["metrics"]["renders"]
+
+    missing = grade_receipt(allowlisted_reward_envelope(mutate=drop))
+    assert isinstance(missing, Ungraded)
+    assert missing.reason is UngradedReason.COMPARISON_NOT_FULL
+
+    def replace_renders(payload: dict) -> None:
+        payload["metrics"]["renders"] = ["not-a-dict"]
+
+    bad = grade_receipt(allowlisted_reward_envelope(mutate=replace_renders))
+    assert isinstance(bad, Ungraded)
+    assert bad.reason is UngradedReason.COMPARISON_NOT_FULL
+
+
+def test_rl_batch_rejects_a_positive_reward_on_a_failed_receipt() -> None:
+    failed = grade_receipt(allowlisted_reward_envelope(passed=False))
+    row = dataset_reward_row(failed, example_id="e1")
+    assert row["reward"] == 0.0
+    row["reward"] = 1.0
+    try:
+        rl_batch([row])
+    except RewardProvenanceError as exc:
+        assert "positive" in str(exc)
+    else:
+        raise AssertionError("a failed receipt was rewarded")
+
+
+def test_unknown_envelope_field_is_schema_invalid() -> None:
+    envelope = allowlisted_reward_envelope()
+    envelope["notes"] = "extra"
+    graded = grade_receipt(envelope)
+    assert isinstance(graded, Ungraded)
+    assert graded.reason is UngradedReason.SCHEMA_INVALID
+
+
+def test_a7_early_floor_baseline_zero_and_rearm() -> None:
+    alarms: list[str] = []
+    early = UngradedRateTracker(on_alarm=lambda policy, _rate: alarms.append(policy))
+    for _ in range(4):
+        early.observe("abs", ungraded=True)
+    assert not early.alarm("abs")
+    early.observe("abs", ungraded=True)
+    assert early.alarm("abs")
+    assert alarms == ["abs"]
+    rate = UngradedRateTracker(on_alarm=lambda policy, _rate: alarms.append(policy))
+    rate.observe("rate", ungraded=True)
+    for _ in range(98):
+        rate.observe("rate", ungraded=False)
+    assert not rate.alarm("rate")
+    rate.observe("rate", ungraded=True)
+    assert rate.alarm("rate")
+    zero = UngradedRateTracker(baseline=0.0, on_alarm=lambda policy, _rate: alarms.append(policy))
+    zero.observe("zero", ungraded=True)
+    assert not zero.alarm("zero")
+    for _ in range(4):
+        zero.observe("zero", ungraded=True)
+    assert zero.alarm("zero")
+    recovered = UngradedRateTracker(on_alarm=lambda policy, _rate: alarms.append("again"))
+    for _ in range(5):
+        recovered.observe("back", ungraded=True)
+    assert "again" in alarms
+    for _ in range(UNGRADED_WINDOW):
+        recovered.observe("back", ungraded=False)
+    assert not recovered.alarm("back")
+    before = alarms.count("again")
+    for _ in range(5):
+        recovered.observe("back", ungraded=True)
+    assert recovered.alarm("back")
+    assert alarms.count("again") == before + 1
+
+
+def test_quarantine_log_resolves_and_ages(tmp_path) -> None:
+    from datetime import datetime, timezone
+
+    queue = QuarantineQueue(tmp_path / "quarantine.jsonl")
+    held = queue.hold(
+        QuarantineRecord(
+            policy="policy-a",
+            reason=UngradedReason.UNATTRIBUTED,
+            reproducible_digest="sha256:" + "ab" * 32,
+            held_at="2020-01-01T00:00:00Z",
+            record_id="row-1",
+        )
+    )
+    assert held.record_id == "row-1"
+    assert queue.count() == 1
+    stale = queue.age_alarm(now=datetime(2026, 1, 1, tzinfo=timezone.utc), limit_seconds=3600)
+    assert [row.record_id for row in stale] == ["row-1"]
+    queue.resolve("row-1")
+    assert queue.count() == 0
+    assert queue.age_alarm(now=datetime(2026, 1, 1, tzinfo=timezone.utc)) == ()
+    reloaded = QuarantineQueue(tmp_path / "quarantine.jsonl")
+    assert reloaded.count() == 0
+    text = (tmp_path / "quarantine.jsonl").read_text(encoding="utf-8")
+    assert '"op":"hold"' in text
+    assert '"op":"resolve"' in text
+
+
+def test_apply_signal_rejects_a_forged_or_mutated_receipt() -> None:
+    forged = object.__new__(RewardableSignalReceipt)
+    object.__setattr__(forged, "passed", True)
+    object.__setattr__(forged, "profile_name", "impulse-48000-v1")
+    object.__setattr__(forged, "test_suite_digest", "sha256:" + "ab" * 32)
+    object.__setattr__(forged, "reproducible_digest", "sha256:" + "cd" * 32)
+    object.__setattr__(forged, "schema_version", "0.3.4")
+    try:
+        apply_signal(CandidateState.COMPILE_CHECKED, forged)
+    except TypeError as exc:
+        assert "RewardableSignalReceipt" in str(exc)
+    else:
+        raise AssertionError("object.__new__ was accepted")
+    try:
+        exec(
+            "RewardableSignalReceipt._mint(passed=True, profile_name='x',"
+            " test_suite_digest='y', reproducible_digest='z', schema_version='0.3.4')",
+            {"__name__": "faustcoder.reward.grader", "RewardableSignalReceipt": RewardableSignalReceipt},
+        )
+    except TypeError as exc:
+        assert "grade_receipt" in str(exc)
+    else:
+        raise AssertionError("a faked module minted a receipt")
+    graded = grade_receipt(allowlisted_reward_envelope(passed=False))
+    object.__setattr__(graded, "passed", True)
+    try:
+        apply_signal(CandidateState.COMPILE_CHECKED, graded)
+    except TypeError as exc:
+        assert "RewardableSignalReceipt" in str(exc)
+    else:
+        raise AssertionError("a mutated receipt was accepted")
+
+
+def test_reward_graded_failures_are_held_on_the_ledger_or_refused(monkeypatch, tmp_path) -> None:
+    from faustcoder.compiler import Compilation
+    from faustcoder.reward import RewardLedger, RewardOutcomeHeld, RewardUseRefused
+    from faustcoder.signal import SignalHarnessError, SignalProfile, run_signal
+
+    payload = compiler_failure_envelope(
+        exit_code=124,
+        diagnostic_class="timeout",
+        diagnostics="timeout: wall clock limit exceeded\n",
+    )["payload"]
+    compilation = Compilation(
+        receipt=payload,
+        diagnostics="timeout: wall clock limit exceeded\n",
+        reproducible_digest=reproducible_receipt_digest(payload),
+    )
+    monkeypatch.setattr("faustcoder.signal.compile_source", lambda *_args, **_kwargs: compilation)
+    profile = SignalProfile(sample_rate=48000, frames=64, block_size=64, stimuli=("impulse",))
+    try:
+        run_signal("process = _;\n", profile, None, reward_graded=True)
+    except RewardUseRefused as exc:
+        assert "ledger" in str(exc)
+    else:
+        raise AssertionError("a reward failure with no ledger was scored")
+    ledger = RewardLedger(tmp_path / "ledger")
+    try:
+        run_signal("process = _;\n", profile, None, reward_graded=True, ledger=ledger)
+    except RewardOutcomeHeld as exc:
+        assert isinstance(exc.grade, Ungraded)
+        assert exc.grade.reason is UngradedReason.UNATTRIBUTED
+    else:
+        raise AssertionError("timeout was not held")
+    assert ledger.queue.count("signal") == 1
+    assert RewardLedger(tmp_path / "ledger").queue.count("signal") == 1
+
+    ok = Compilation(
+        receipt={"exit_code": 0, "diagnostic_class": "ok"},
+        diagnostics="",
+        reproducible_digest="sha256:" + "ab" * 32,
+    )
+    monkeypatch.setattr("faustcoder.signal.compile_source", lambda *_args, **_kwargs: ok)
+
+    def crash(*_args: object, **_kwargs: object) -> dict[str, object]:
+        raise SignalHarnessError("renderer stopped: internal")
+
+    monkeypatch.setattr("faustcoder.signal._render", crash)
+    try:
+        run_signal("process = _;\n", profile, None, reward_graded=True, ledger=ledger)
+    except RewardOutcomeHeld as exc:
+        assert isinstance(exc.grade, Ungraded)
+        assert exc.grade.reason is UngradedReason.UNATTRIBUTED
+    else:
+        raise AssertionError("renderer crash was not held")
+    assert ledger.queue.count("signal") == 2
+
+
+def test_commit_signal_check_grades_a_timeout_onto_the_store_ledger(store) -> None:
+    from faustcoder.compiler import Compilation
+    from faustcoder.reward.ledger import ledger_for_store
+    from faustcoder.signal import (
+        SignalRun,
+        SignalSuite,
+        commit_signal_check,
+        reproducible_signal_digest,
+    )
+
+    payload = compiler_failure_envelope(
+        exit_code=125,
+        diagnostic_class="resource_limit",
+        diagnostics="resource limit: memory\n",
+    )["payload"]
+    signal = allowlisted_reward_envelope(passed=True)["payload"]
+    run = SignalRun(
+        compilation=Compilation(
+            receipt=payload,
+            diagnostics="resource limit: memory\n",
+            reproducible_digest=reproducible_receipt_digest(payload),
+        ),
+        receipt=signal,
+        reproducible_digest=reproducible_signal_digest(signal),
+        failures=(),
+        reference_payload=None,
+    )
+    committed = commit_signal_check(
+        store,
+        SignalSuite(runs=(run,)),
+        state=CandidateState.COMPILE_CHECKED,
+        created_at="2026-10-17T00:00:00Z",
+    )
+    assert committed.state is CandidateState.COMPILE_CHECKED
+    assert any(isinstance(item, Ungraded) for item in committed.outcomes)
+    ledger = ledger_for_store(store)
+    assert ledger.queue.count("signal") == 1
+    assert ledger.rates.rate("signal") > 0
+
+
+def test_rendered_reward_impulse_grades_as_rewardable() -> None:
+    from faustcoder.canonical import build_envelope
+    from faustcoder.reward.profiles import reward_signal_profile
+    from faustcoder.signal import SIGNAL_SCHEMA_VERSION, impulse_reference, run_signal
+
+    profile = reward_signal_profile("impulse-48000-v1")
+    reference = impulse_reference(profile, lambda samples: samples)
+    run = run_signal("process = _;\n", profile, reference, reward_graded=True)
+    assert run.receipt["passed"] is True
+    assert run.receipt["purpose"] == "reward"
+    envelope = build_envelope(
+        schema_version=SIGNAL_SCHEMA_VERSION,
+        created_at="2026-10-17T00:00:00Z",
+        producer="faustcoder.signal",
+        parents=[],
+        payload=run.receipt,
+    )
+    graded = grade_receipt(envelope)
+    assert isinstance(graded, RewardableSignalReceipt)
+    assert graded.passed is True
+    assert graded.profile_name == "impulse-48000-v1"
+    assert graded.test_suite_digest == run.receipt["test_suite_digest"]

@@ -27,6 +27,15 @@ fixture passes and the candidate fails again, the failure is graded
 at the A1 ``parse_error`` rung. A remote-import or stack-overflow
 tag is already source attribution and does not wait. The rerun and
 the fixture are caller hooks: this module does not spawn a worker.
+
+Receipt signing is deferred (D3). This module recomputes digests. It
+does not require a signature.
+
+Reward-graded ``run_signal`` and ``commit_signal_check`` are the
+production path. They pass a persistent quarantine queue and the A7
+tracker into ``grade_receipt``. A reward-graded compiler failure or
+worker crash with no ledger is refused, not scored and not dropped.
+``compile_source`` by itself is not a reward consumer.
 """
 
 from __future__ import annotations
@@ -50,6 +59,7 @@ from faustcoder.reward.types import (
     Ungraded,
     UngradedRateTracker,
     UngradedReason,
+    _register_mint,
 )
 from faustcoder.schemas import validate
 from faustcoder.signal import (
@@ -66,6 +76,25 @@ _REMOTE_DIAGNOSTIC = "internal: remote import rejected\n"
 _STACK_MARKERS = ("maximum call stack size exceeded", "stack overflow")
 _EXIT_CLASS = {124: "timeout", 125: "resource_limit", 126: "internal"}
 _CRASH_KINDS = frozenset({"worker_crash", "harness_crash"})
+_CRASH_EXITS = frozenset({None, 126, 137})
+_ENVELOPE_FIELDS = frozenset(
+    {
+        "schema_version",
+        "artifact_id",
+        "content_digest",
+        "created_at",
+        "producer",
+        "parents",
+        "payload",
+    }
+)
+# Counted in the A7 rate, including the three closed failures that are
+# not A2 quarantine reasons.
+_RATE_REASONS = QUARANTINE_REASONS | {
+    UngradedReason.SCHEMA_INVALID,
+    UngradedReason.DIGEST_MISMATCH,
+    UngradedReason.COMPARISON_NOT_FULL,
+}
 _THRESHOLD_KEYS = (
     "absolute_tolerance_nano",
     "clip_peak_nano",
@@ -87,6 +116,18 @@ def reward_profile_allowlist() -> dict[str, str]:
 
 class RewardProvenanceError(Exception):
     """A reward-bearing row has no ``RewardableSignalReceipt``."""
+
+
+class RewardUseRefused(Exception):
+    """A reward-graded failure had no ledger, so it was not scored or dropped."""
+
+
+class RewardOutcomeHeld(Exception):
+    """A compiler or crash outcome was graded onto the ledger and is not a score."""
+
+    def __init__(self, grade: Grade) -> None:
+        self.grade = grade
+        super().__init__("reward outcome is held and is not a score")
 
 
 def reward_value(result: Grade) -> float | None:
@@ -150,9 +191,20 @@ def rl_batch(rows: list[Mapping[str, object]] | tuple[Mapping[str, object], ...]
     for row in rows:
         if not isinstance(row, Mapping) or "reward" not in row:
             raise RewardProvenanceError("RL batch row is missing a reward")
-        require_rewardable_provenance(row.get("provenance"))
+        graded = require_rewardable_provenance(row.get("provenance"))
+        reward = row.get("reward")
+        if graded.passed is False and _positive_reward(reward):
+            raise RewardProvenanceError(
+                "reward must not be positive when the receipt failed"
+            )
         built.append(dict(row))
     return tuple(built)
+
+
+def _positive_reward(reward: object) -> bool:
+    if isinstance(reward, bool) or not isinstance(reward, (int, float)):
+        return False
+    return reward > 0
 
 
 def grade_receipt(
@@ -200,8 +252,13 @@ def _grade(
     payload = envelope.get("payload")
     if not isinstance(payload, dict):
         return Ungraded(UngradedReason.SCHEMA_INVALID, "payload is not an object")
-    kind = payload.get("kind")
-    if kind in _CRASH_KINDS:
+    if _unknown_envelope_fields(envelope):
+        return Ungraded(UngradedReason.SCHEMA_INVALID, "envelope has a field outside the artifact schema")
+    try:
+        validate(dict(envelope), "artifact-envelope.schema.json")
+    except SchemaValidationError as exc:
+        return Ungraded(UngradedReason.SCHEMA_INVALID, exc.detail)
+    if _is_crash(payload):
         return _grade_crash(
             envelope,
             payload,
@@ -284,13 +341,32 @@ def _grade_signal(envelope: Mapping[str, Any], payload: dict[str, Any]) -> Grade
     passed = payload.get("passed")
     if not isinstance(passed, bool):
         return Ungraded(UngradedReason.SCHEMA_INVALID, "passed is not a boolean")
-    return RewardableSignalReceipt._mint(
+    return _mint_receipt(
         passed=passed,
         profile_name=name,
         test_suite_digest=recomputed_suite,
         reproducible_digest=reproducible,
         schema_version=str(version),
     )
+
+
+def _mint_receipt(
+    *,
+    passed: bool,
+    profile_name: str,
+    test_suite_digest: str,
+    reproducible_digest: str,
+    schema_version: str,
+) -> RewardableSignalReceipt:
+    """Register one receipt. The class ``_mint`` method always refuses."""
+    receipt = object.__new__(RewardableSignalReceipt)
+    object.__setattr__(receipt, "passed", passed)
+    object.__setattr__(receipt, "profile_name", profile_name)
+    object.__setattr__(receipt, "test_suite_digest", test_suite_digest)
+    object.__setattr__(receipt, "reproducible_digest", reproducible_digest)
+    object.__setattr__(receipt, "schema_version", schema_version)
+    _register_mint(receipt)
+    return receipt
 
 
 def _comparison_is_full(
@@ -311,10 +387,11 @@ def _comparison_is_full(
     if not isinstance(head, int) or isinstance(head, bool) or head < 1 or head > frames:
         return False
     renders = metrics.get("renders")
-    if isinstance(renders, dict):
-        for render in renders.values():
-            if not isinstance(render, dict) or render.get("compared_frames") != frames:
-                return False
+    if not isinstance(renders, dict) or not renders:
+        return False
+    for render in renders.values():
+        if not isinstance(render, dict) or render.get("compared_frames") != frames:
+            return False
     return True
 
 
@@ -421,9 +498,10 @@ def _grade_crash(
     digest = payload.get("reproducible_digest")
     if not isinstance(digest, str) or not digest.startswith("sha256:"):
         return Ungraded(UngradedReason.SCHEMA_INVALID, "crash record has no reproducible digest")
-    # A crash is exit 126 internal until something attributes it.
-    if payload.get("exit_code") not in (None, 126):
-        return Ungraded(UngradedReason.SCHEMA_INVALID, "a crash record uses exit 126")
+    # A crash is exit 126 internal, or exit 137 when the worker was
+    # killed, until something attributes it. Exit 137 is not schema_invalid.
+    if payload.get("exit_code") not in _CRASH_EXITS:
+        return Ungraded(UngradedReason.SCHEMA_INVALID, "a crash record uses exit 126 or 137")
     if payload.get("diagnostic_class") not in (None, "internal"):
         return Ungraded(
             UngradedReason.SCHEMA_INVALID,
@@ -471,11 +549,9 @@ def _auto_attribute(
             "rerun digest does not match the original receipt",
             digest,
         )
-    if (
-        outcome.environment_digest is not None
-        and fixture.environment_digest is not None
-        and outcome.environment_digest != fixture.environment_digest
-    ):
+    rerun_env = _present_digest(outcome.environment_digest)
+    fixture_env = _present_digest(fixture.environment_digest)
+    if rerun_env is None or fixture_env is None or rerun_env != fixture_env:
         return Ungraded(
             UngradedReason.UNATTRIBUTED,
             "rerun and known-good fixture do not share an environment digest",
@@ -521,6 +597,28 @@ def _source_tag(payload: Mapping[str, Any], diagnostics: str | None) -> str | No
     return None
 
 
+def _present_digest(value: object) -> str | None:
+    """Return a non-empty digest, or None when it is missing or blank."""
+    if isinstance(value, str) and value.strip():
+        return value
+    return None
+
+
+def _is_crash(payload: Mapping[str, Any]) -> bool:
+    """A crash record is a crash kind, or a bare exit 137 kill."""
+    if payload.get("kind") in _CRASH_KINDS:
+        return True
+    return (
+        payload.get("exit_code") == 137
+        and "passed" not in payload
+        and "faust_version" not in payload
+    )
+
+
+def _unknown_envelope_fields(envelope: Mapping[str, Any]) -> bool:
+    return any(key not in _ENVELOPE_FIELDS for key in envelope)
+
+
 def _sha256_text(text: str) -> str:
     return "sha256:" + hashlib.sha256(text.encode("utf-8")).hexdigest()
 
@@ -541,9 +639,10 @@ def _account(
     rates: UngradedRateTracker | None,
 ) -> None:
     quarantined = isinstance(result, Ungraded) and result.reason in QUARANTINE_REASONS
+    counted = isinstance(result, Ungraded) and result.reason in _RATE_REASONS
     graded = isinstance(result, (RewardableSignalReceipt, SourceAttributedFailure))
-    if rates is not None and (quarantined or graded):
-        rates.observe(policy, ungraded=quarantined)
+    if rates is not None and (counted or graded):
+        rates.observe(policy, ungraded=counted)
     if queue is None or not quarantined or not isinstance(result, Ungraded):
         return
     queue.hold(

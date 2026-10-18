@@ -130,15 +130,18 @@ Harness failures override that text:
 
 Compiler rejection of the source is exit 1. Exit 0 is ``ok`` or ``warning``.
 
-Reward consumers key on the pair ``(exit_code, diagnostic_class)``.
-Exit codes 124 and above are ungraded: they are not rungs on the R-005
-ladder. A harness failure must not score as ``other`` or as a compiler
-rejection. ``unbound_symbol`` is a compiler class (exit 1). See
-``docs/runbooks/compiler-harness.md`` and ADR-0005. A receipt whose exit
-is 124 or above is not evidence that another operator reproduced a
-successful compile of that source; compare ``environment_digest`` for the
-pin, and ``reproducible_digest`` only across receipts with the same exit
-and diagnostic class.
+Stored classes key on the pair ``(exit_code, diagnostic_class)``.
+Exit codes 124 and above are not rungs on the stored ADR-0005 table.
+A harness failure must not score as ``other`` or as a compiler
+rejection. ``unbound_symbol`` is a compiler class (exit 1). Reward
+use of those exits goes through ``grade_receipt`` on a reward ledger
+(spec §23): unattributed 124, 125 and 126 are quarantined, and a
+remote import or stack overflow is ``parse_error``. ``compile_source``
+itself does not score them. See ``docs/runbooks/compiler-harness.md``
+and ADR-0005. A receipt whose exit is 124 or above is not evidence
+that another operator reproduced a successful compile of that source;
+compare ``environment_digest`` for the pin, and ``reproducible_digest``
+only across receipts with the same exit and diagnostic class.
 
 Options are an allowlist (``-double``, ``-single``, ``-vec``, ``-scal``,
 ``-inpl``, and ``-ct``, ``-es``, ``-mcd``, ``-ftz`` with a non-negative

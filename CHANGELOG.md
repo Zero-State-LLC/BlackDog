@@ -10,6 +10,8 @@ See [docs/VERSIONING.md](docs/VERSIONING.md).
 
 ### Added
 
+- Reward grader production path (spec §23): `commit_signal_check` and reward-graded `run_signal` grade through a persistent quarantine log and the A7 tracker. Compiler exits 124, 125 and 126, and worker or harness crashes, are held or refused. `REWARD_PROFILES` is the only allowlist literal and `profile_digest` is the only profile digest. Receipt signing stays deferred (D3).
+
 - Reward grader (N4, N5, spec §23): `grade_receipt` mints a `RewardableSignalReceipt` only for an allowlisted reward profile (`impulse-44100-v1`, `impulse-48000-v1`), recomputes both digests, and rejects diagnostic receipts, tampered digests, unknown profiles, unknown schema versions and extra fields as `Ungraded`. Ungraded samples are dropped from reward (`None`, not 0). A2 reasons (`infra_fault`, `harness_defect`, `unattributed`) stay in a quarantine queue. Auto-attribution of exit 124, 125 and 126, and of worker or harness crashes, grades `parse_error` when a known-good fixture passes and the candidate fails again. Remote import and stack overflow are already that rung. Exit 126 stays `internal`. Dataset and RL builders require `RewardableSignalReceipt` provenance. The A7 alarm uses the provisional 1%, 500-sample and 2× numbers. ADR-0006 is in force in reward code.
 
 - T04: offline DSP signal harness. faustwasm renders impulse, sine and noise at 44.1 and 48 kHz inside the T03 sandbox. Receipts record hash-stable RMS, peak, NaN/Inf/denormal counts and spectral bands, and compare a candidate to a reference within an absolute tolerance. Known-good fixtures include legal delayed feedback. Library imports stay with T03b. CPU wall time is stored only for a promotion candidate.
