@@ -9,6 +9,7 @@
     "inputs": 0,
     "outputs": 1
   },
+  "effect": "linear",
   "test_profile": {
     "classes": ["syntax"]
   },

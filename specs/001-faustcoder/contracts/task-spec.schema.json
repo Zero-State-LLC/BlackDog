@@ -12,6 +12,7 @@
     "constraints",
     "expected_io",
     "test_profile",
+    "effect",
     "schema_version"
   ],
   "properties": {
@@ -34,6 +35,16 @@
     },
     "test_profile": {
       "type": "object"
+    },
+    "effect": {
+      "type": "string",
+      "enum": [
+        "linear",
+        "time_invariant",
+        "nonlinear",
+        "time_variant"
+      ],
+      "description": "Signal class (N6, D5). Only linear and time_invariant are rewardable. nonlinear and time_variant are unrewardable in v0.2. Any other spelling is rejected."
     },
     "schema_version": {
       "type": "string"

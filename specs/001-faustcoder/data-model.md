@@ -85,7 +85,24 @@ from the stored payload and accepts only a digest in `REWARD_PROFILES`.
 render up to pinned `max_frames`, including sign and timing past
 `head_frames`. Coarse magnitude checks are not the reward pass. An impulse
 reference whose `max_frames` is below the 144000 block-aligned cap
-raises `ValueError`; the cap is not raised. `cpu_duration_ms`
+raises `ValueError`; the cap is not raised. A named nonlinear suite
+(`nonlinear-suite-v1`, eight stimuli, or `nonlinear-suite-fallback-v1`,
+four) renders every stimulus at that floor and signs every sample.
+`profile_digest` stays version 2. Stimulus bytes and the pinned
+compile flags (`-ftz 0`; `-fm` is refused) are on the receipt metrics,
+not in that digest, so the frozen impulse digests do not move.
+Diagnostic and reward renders pin the same flags. THD+N, IMD and
+Farina inverse-filter diagnostics are logged on the receipt and
+omitted from `reproducible_digest`, along with per-stimulus
+`render_ms` and the worker toolchain. The suite digest is not in
+`REWARD_PROFILES`. TaskSpec `effect` is required and closed:
+`linear`, `time_invariant`, `nonlinear`, `time_variant`. Only the
+first two are rewardable. A missing or misspelled value is rejected.
+`require_task_rewardable` is that check. `dataset_reward_row` and
+`rl_batch` call it. A task with `effect` of `nonlinear` or
+`time_variant` is not a reward sample (D5, 2026-10-17). Golden
+`sample_sha256` values are the raw little-endian binary32 bytes.
+NaN payloads are not canonicalized. `cpu_duration_ms`
 is present only for a promotion candidate. The reference document is a
 separate artifact (`kind = faustcoder.signal-reference`) whose content
 digest is `reference_digest`. That document carries its own sample rate,

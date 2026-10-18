@@ -205,6 +205,127 @@ wrapper or canary changes the digest. Render and compile both go
 through `run_in_sandbox`, which calls `unshare_executable`. The
 compiler canary raises `SandboxError` before the renderer starts.
 
+## Nonlinear suite
+
+`nonlinear-suite-v1` is a named profile. It is diagnostic. Its digest
+is not in `REWARD_PROFILES`, and v0.2 does not reward nonlinear or
+time-variant tasks (D5, 2026-10-17). TaskSpec requires `effect`, one
+of `linear`, `time_invariant`, `nonlinear`, `time_variant`. Only
+`linear` and `time_invariant` are rewardable. A missing value, or
+`Nonlinear`, `non_linear`, `time-variant`, or a tuple, is rejected.
+`tag_task_unrewardable(task, reason="nonlinear")` or
+`reason="time_variant"` sets that field and `test_profile.rewardable`
+to the bool false. The string `"false"` is rejected.
+
+`require_task_rewardable` is the check. `dataset_reward_row` and
+`rl_batch` call it. A diagnostic render does not.
+`assert_reward_allowed` still refuses the suite digest. Adding that
+digest to `REWARD_PROFILES` is a later review.
+
+The profile is 48 kHz, block 64, seed 1, 144000 frames. 144000 is a
+multiple of 64. Every stimulus is that long. A shorter suite stimulus, or a
+`max_frames` under 144000, raises `ValueError`. The 144000 cap is not
+raised. The comparison is the signed per-sample check on every frame
+(`suite-signed`). Coarse magnitude checks do not cover those samples.
+
+| Stimulus | Signal | Level |
+|---|---|---|
+| `impulse` | amplitude 1 at frame 0 | full scale |
+| `ess` | 20 Hz to 20 kHz, analytic Farina phase, 2.0 s, then silence | peak −6 dBFS, 10 ms raised-cosine fades |
+| `sine_997_m1` | 997 Hz | peak −1 dBFS |
+| `sine_997_m20` | 997 Hz | peak −20 dBFS |
+| `smpte` | 60 Hz + 7 kHz, amplitude 4:1 | peak −1 dBFS |
+| `noise_m12` | xorshift64, seed 1, 64-frame fade-in | RMS −12 dBFS |
+| `noise_m30` | xorshift64, seed 2, 64-frame fade-in | RMS −30 dBFS |
+| `dc_step` | 0 until frame 4800, 0.25 for 48000 frames, then 0 | 0.25 |
+
+The sweep fade is 10 ms at each end of the 2.0 s sweep (96000 frames).
+The unfaded passband is about 20.7 Hz to 19.3 kHz (`passband_millihz`
+on the stimulus plan). The remaining 48000 frames are silence. Phase
+is `2π f1 L (exp(t/L) - 1)` with `L = T / ln(f2/f1)`, not a running
+sum of the instantaneous frequency. Samples are float32. The sine and
+`exp` used to build them are series in this process, not libm.
+`profile_digest` stays version 2 and does not include those bytes or
+the compile flags. The receipt metrics record `stimulus_sha256`,
+`stimulus_plan` and `compile_flags`. The two impulse digests stay the
+frozen `REWARD_PROFILES` entries.
+
+Every signal render pins `-ftz 0`, diagnostic and reward-graded. `-fm`
+is refused before compile, and so is any other `-ftz`. The same source
+therefore has one compiler digest on both paths.
+
+Noise levels are RMS, not peak. The generator is uniform, so its raw
+range would be a peak. A one-block fade starts at 0 and removes the
+frame-0 step. The plan records `level: rms`, `rms_dbfs`, and the
+resulting `peak_nano`.
+
+THD+N (997 Hz), SMPTE IMD and the Farina inverse-filter peaks are
+stored under `metrics.renders.<name>.diagnostics`. The inverse is the
+time-reversed sweep times `(f2/f1)^(-t/T)`. Harmonic orders 2–5 are
+read near `T ln(k) / ln(f2/f1)` before the linear peak. They are not
+pass gates and they are not part of `reproducible_digest`. Per-stimulus
+`render_ms` and the worker toolchain are timing and identity, and they
+are dropped the same way.
+
+`nonlinear-suite-fallback-v1` keeps four stimuli: `impulse`,
+`sine_997_m1`, `sine_997_m20`, and `noise_m12`. It drops the sweep,
+the twin tone, the second noise level and the DC step. It is the
+cheaper fallback (4 renders, 576000 frames). It is not in
+`REWARD_PROFILES` either. Build it with
+`nonlinear_suite_profile(fallback=True)`.
+
+The suite render needs more than the default 8 MiB output cap. When
+the caller does not pass a limit, the harness raises the cap enough
+for a float32 input and two output channels per stimulus, and it
+allows 120 seconds. A limit the caller passes is left as it is.
+
+## Cross-arch digest
+
+Bit-exactness across x86 and ARM is required. The x86 goldens are the
+DSP bank in `tests/fixtures/signal/nonlinear-x86-goldens.json`: a
+biquad cascade, a feedback comb, a denormal decay (`+ ~ *(0.999)`), a
+tanh/sin shaper (`tanh(x) = (exp(2x)-1)/(exp(2x)+1)`, then `sin`),
+and an LFO crossfade of two delays. The tanh stage replaced a cubic
+that was only named tanh. That program's sample hashes were
+recomputed for the new source. The other four programs were not
+re-rendered. Each program is
+rendered through the eight stimuli. CI is x86 only and checks those
+hashes. The ARM run is pending on the DGX Spark.
+
+The script does not need an installed package. It puts the repo root
+on `sys.path`. `python -m faustcoder.signal_cross_arch` is the same
+entry when the package is already importable.
+
+```bash
+python3 scripts/signal_cross_arch.py --out /tmp/signal-arch-arm.json
+python3 scripts/signal_cross_arch.py --goldens tests/fixtures/signal/nonlinear-x86-goldens.json
+```
+
+Exit 0 prints `match`. Exit 2 prints `infra_fault`. That mismatch is
+an infrastructure fault, not a model penalty. Do not widen `atol` or
+`rtol` to hide it. Per-arch gold references need a separate decision.
+The compare uses the suite digest, the pinned flags and the
+per-stimulus sample hashes of each program. A sample hash is SHA-256
+of the little-endian binary32 channel bytes, in channel order. Nothing
+is rewritten first. `-0.0` and `0.0` hash differently. A NaN is not
+folded to one payload: distinct quiet NaN bit patterns that survive
+the float32 store stay distinct, and a mismatch of those bytes is
+`infra_fault`. The signed compare still treats every NaN as
+non-finite. The hash is the golden identity, not the pass gate.
+The document also records
+Node, faustwasm and V8 versions and the stable Node flags
+(`--disallow-code-generation-from-strings`, `--permission`,
+`--stack-size`). Those versions are not the compare. `harness_digest`
+binds the local `unshare` binary, so it is not part of the compare.
+`python3 scripts/signal_cross_arch.py --status` prints
+`pending-dgx-spark` on x86 when the ARM document is absent.
+
+On x86 the denormal-decay impulse produced 56706 subnormal samples.
+The worker still rendered all eight stimuli of that program in 54 ms
+(`render_ms` sum). The 120 s suite cap is not approached. `wall_ms`
+on that run was about 5 s and includes compile, sandbox startup and
+the Python diagnostics.
+
 ## Failure disposition
 
 | Outcome | Receipt | Candidate |

@@ -30,6 +30,22 @@ block-aligned cap raises ``ValueError``; the cap is not raised.
 ``thresholds.reward_graded`` is stored on every receipt and is part
 of the reproducible digest. ``purpose`` is ``reward`` or
 ``diagnostic``. Diagnostic receipts are not rewards.
+``profile_payload`` stays version 2. ``profile_digest`` is the only
+profile digest, and the two impulse digests stay the frozen
+``REWARD_PROFILES`` entries. ``-fm`` is refused and ``-ftz`` is
+pinned to 0 for every signal render, diagnostic or reward, so one
+source has one compiler digest. Those flags are not inside
+``test_suite_digest``. A named nonlinear suite
+(``nonlinear-suite-v1``) renders eight float32 stimuli at the
+144000-frame floor and signs every sample. Its stimulus bytes are
+recorded on the receipt and are not part of the allowlist digest.
+THD+N, IMD and Farina inverse-filter peaks are stored on the receipt
+and are not pass gates, and they are left out of the reproducible
+digest. The suite digest is not in ``REWARD_PROFILES``. TaskSpec
+``effect`` is a closed enum. Only ``linear`` and ``time_invariant``
+are rewardable. ``dataset_reward_row`` and ``rl_batch`` call
+``require_task_rewardable``. ``nonlinear-suite-fallback-v1`` is the
+four-stimulus subset.
 ``reject_dc`` does not fire when the reference carries the same DC.
 An impulse reference is built at
 ``max_frames`` (144000, three seconds at 48 kHz) and trimmed to the
@@ -118,6 +134,57 @@ DEFAULT_TAIL_THRESHOLD = 1e-8
 DEFAULT_TAIL_MARGIN = 64
 MAX_FRAMES = 144_000
 STIMULI = ("impulse", "sine", "noise")
+# Names the worker may render. The default profile stays on STIMULI.
+KNOWN_STIMULI = (
+    "impulse",
+    "sine",
+    "noise",
+    "ess",
+    "sine_997_m1",
+    "sine_997_m20",
+    "smpte",
+    "noise_m12",
+    "noise_m30",
+    "dc_step",
+)
+# Stimuli that are not the legacy impulse/sine/noise triple. Any of
+# these pulls the render onto the 144000-frame floor.
+SUITE_STIMULI = frozenset(
+    {
+        "ess",
+        "sine_997_m1",
+        "sine_997_m20",
+        "smpte",
+        "noise_m12",
+        "noise_m30",
+        "dc_step",
+    }
+)
+NONLINEAR_SUITE_V1 = "nonlinear-suite-v1"
+NONLINEAR_SUITE_FALLBACK_V1 = "nonlinear-suite-fallback-v1"
+NONLINEAR_SUITE_STIMULI = (
+    "impulse",
+    "ess",
+    "sine_997_m1",
+    "sine_997_m20",
+    "smpte",
+    "noise_m12",
+    "noise_m30",
+    "dc_step",
+)
+NONLINEAR_SUITE_FALLBACK_STIMULI = (
+    "impulse",
+    "sine_997_m1",
+    "sine_997_m20",
+    "noise_m12",
+)
+_SUITE_STIMULI_FOR = {
+    NONLINEAR_SUITE_V1: NONLINEAR_SUITE_STIMULI,
+    NONLINEAR_SUITE_FALLBACK_V1: NONLINEAR_SUITE_FALLBACK_STIMULI,
+}
+# Faust default. Reward-graded profiles and the nonlinear suite digest this.
+PINNED_FTZ = "0"
+PINNED_COMPILE_FLAGS = ("-ftz", PINNED_FTZ)
 METRIC_VERSION = 2
 SIGNAL_SCHEMA_VERSION = "0.3.4"
 _SCHEMA = "dsp-test-receipt.schema.json"
@@ -128,7 +195,9 @@ _MASK64 = (1 << 64) - 1
 _LIBRARY_IMPORT = re.compile(
     r"""(?ix)\b(?:import|library|component)\s*\(\s*["'](?!https?://)"""
 )
-_STIMULUS_FILE = re.compile(r"^(impulse|sine|noise)$")
+_STIMULUS_FILE = re.compile(
+    r"^(impulse|sine|noise|ess|sine_997_m1|sine_997_m20|smpte|noise_m12|noise_m30|dc_step)$"
+)
 
 
 class SignalHarnessError(Exception):
@@ -185,6 +254,7 @@ class SignalProfile:
     max_denormal_count: int | None = None
     require_reference: bool = True
     press_buttons_first_block: bool = True
+    suite: str | None = None
 
     def __post_init__(self) -> None:
         if self.sample_rate not in SAMPLE_RATES:
@@ -212,7 +282,7 @@ class SignalProfile:
         if len(set(self.stimuli)) != len(self.stimuli):
             raise ValueError("stimuli must not repeat")
         for name in self.stimuli:
-            if name not in STIMULI:
+            if name not in KNOWN_STIMULI:
                 raise ValueError(f"unknown stimulus: {name}")
         if self.sine_hz < 1 or self.sine_hz >= self.sample_rate // 2:
             raise ValueError("sine_hz must be inside the Nyquist limit")
@@ -237,6 +307,23 @@ class SignalProfile:
             raise ValueError("clip_peak must be finite and positive")
         if self.max_denormal_count is not None and self.max_denormal_count < 0:
             raise ValueError("max_denormal_count must be non-negative")
+        if self.suite is not None:
+            expected = _SUITE_STIMULI_FOR.get(self.suite)
+            if expected is None:
+                raise ValueError(f"unknown signal suite: {self.suite}")
+            if tuple(self.stimuli) != expected:
+                raise ValueError("suite stimuli do not match the named profile")
+            if self.sample_rate != 48000:
+                raise ValueError("nonlinear suite sample_rate is 48000")
+            if MAX_FRAMES % self.block_size != 0:
+                raise ValueError("suite block_size must divide the 144000 frame floor")
+            if self.frames != MAX_FRAMES or self.max_frames != MAX_FRAMES:
+                raise ValueError(
+                    "suite stimulus requires frames and max_frames of at least "
+                    "the 144000 block-aligned floor"
+                )
+            if self.head_frames != self.frames:
+                raise ValueError("suite comparison covers every frame")
 
 
 @dataclass(frozen=True)
@@ -276,7 +363,7 @@ class SignalReference:
         if len(set(stimuli)) != len(stimuli):
             raise ValueError("stimuli must not repeat")
         for name in stimuli:
-            if name not in STIMULI:
+            if name not in KNOWN_STIMULI:
                 raise ValueError(f"unknown stimulus: {name}")
         if set(self.samples) != set(stimuli):
             raise ValueError("reference samples must match the stimulus names")
@@ -426,8 +513,14 @@ def stimuli_for(profile: SignalProfile) -> dict[str, list[float]]:
             built[name] = sine_samples(
                 profile.frames, profile.sample_rate, profile.sine_hz, profile.sine_amplitude
             )
-        else:
+        elif name == "noise":
             built[name] = noise_samples(profile.frames, profile.seed, profile.noise_amplitude)
+        elif name in SUITE_STIMULI:
+            from faustcoder.signal_suite import suite_stimulus
+
+            built[name] = suite_stimulus(name, profile.frames, profile.sample_rate)
+        else:
+            raise ValueError(f"unknown stimulus: {name}")
     return built
 
 
@@ -441,13 +534,19 @@ def profile_digest(profile: SignalProfile) -> str:
 
     This is the only profile digest computation. Receipts and
     ``REWARD_PROFILES`` both call it. A payload version change belongs
-    in ``profile_payload``; the digest follows from there.
+    in ``profile_payload``; the digest follows from there. Compile
+    flags are not in this payload. Pinning ``-ftz 0`` does not move
+    the frozen impulse digests.
     """
     return content_digest_for(profile_payload(profile))
 
 
 def profile_payload(profile: SignalProfile) -> dict[str, Any]:
-    """Return the canonical object hashed into ``test_suite_digest``."""
+    """Return the canonical object hashed into ``test_suite_digest``.
+
+    Version 2 is the allowlist shape. Stimulus bytes and compile flags
+    are recorded on the receipt metrics. They are not fields here.
+    """
     return {
         "absolute_tolerance_nano": to_nano(profile.absolute_tolerance),
         "block_size": profile.block_size,
@@ -505,17 +604,39 @@ def reference_payload(reference: SignalReference) -> dict[str, Any]:
 
 
 def reproducible_signal_digest(receipt: Mapping[str, Any]) -> str:
-    """Return ``sha256:`` of the receipt without CPU wall time.
+    """Return ``sha256:`` of the receipt without timing or diagnostics.
 
-    ``cpu_duration_ms`` inside ``metrics`` is the only dropped field.
-    It is present only for a promotion candidate.
+    ``cpu_duration_ms`` and ``render_ms`` are timing. Per-stimulus
+    ``diagnostics`` (THD+N, IMD, sweep harmonics) are logged and are
+    not a pass gate, so they are not part of the reward digest either.
     """
     body = {key: value for key, value in receipt.items()}
     metrics = body.get("metrics")
-    if isinstance(metrics, dict) and "cpu_duration_ms" in metrics:
-        metrics = {key: value for key, value in metrics.items() if key != "cpu_duration_ms"}
-        body["metrics"] = metrics
+    if isinstance(metrics, dict):
+        body["metrics"] = _metrics_for_digest(metrics)
     return content_digest_for(body)
+
+
+def _metrics_for_digest(metrics: Mapping[str, Any]) -> dict[str, Any]:
+    """Drop timing and diagnostic fields from a metrics object."""
+    cleaned = {
+        key: value
+        for key, value in metrics.items()
+        if key not in {"cpu_duration_ms", "render_ms", "toolchain"}
+    }
+    renders = cleaned.get("renders")
+    if not isinstance(renders, dict):
+        return cleaned
+    stripped: dict[str, Any] = {}
+    for name, summary in renders.items():
+        if isinstance(summary, dict):
+            stripped[name] = {
+                key: value for key, value in summary.items() if key != "diagnostics"
+            }
+        else:
+            stripped[name] = summary
+    cleaned["renders"] = stripped
+    return cleaned
 
 
 def impulse_decay_frames(
@@ -714,30 +835,36 @@ def run_signal(
     including samples past ``head_frames`` (spec §23 A4). Coarse
     magnitude checks are recorded and are not the reward pass. The
     head stays the only exact window when the run is not
-    reward-graded. A reward-graded compiler failure or worker crash
-    is graded onto ``ledger`` (spec §23). With no ledger the call
-    raises ``RewardUseRefused`` and does not score the outcome.
+    reward-graded. A suite stimulus below the 144000 floor raises
+    ``ValueError`` as well and signs every rendered frame. A
+    reward-graded compiler failure or worker crash is graded onto
+    ``ledger`` (spec §23). With no ledger the call raises
+    ``RewardUseRefused`` and does not score the outcome.
     ``defer_reward_failure`` returns a run with no signal receipt for
     a compiler exit 124, 125 or 126 and for a render crash, so
     ``commit_signal_check`` can grade it. A sandbox failure while
     compiling still requires ``ledger`` and is held immediately.
+    Every signal render, diagnostic or reward-graded, refuses ``-fm``
+    and a ``-ftz`` other than 0 before compile. The pinned flags are
+    ``-ftz 0``, so the same source has one compiler digest on both
+    paths. Those flags are not part of ``profile_digest``.
     """
     if not isinstance(source, str):
         raise TypeError("source must be a string")
     profile, reference = _prepare_render(
         profile, reference, reward_graded=reward_graded
     )
+    checked = _pin_compile_flags(options, pin=True)
     if source_needs_libraries(source):
         raise SignalLibrariesUnavailable(
             "pinned faustlibraries are not staged; T03b owns that tree, "
             "and this harness does not render library imports"
         )
-    checked = _validate_options(options)
     if "-double" in checked:
         raise SignalHarnessError(
             "signal render uses the float32 offline processor; -double is not supported"
         )
-    bounds = limits or ResourceLimits()
+    bounds = limits if limits is not None else _limits_for(profile)
     started = time.monotonic()
     try:
         compiled = compile_source(source, lang="wasm", options=checked, limits=bounds)
@@ -805,6 +932,7 @@ def run_signal(
         promotion_candidate=promotion_candidate,
         cpu_duration_ms=wall_ms if promotion_candidate else None,
         reward_graded=reward_graded,
+        compile_flags=checked,
     )
 
 
@@ -1206,6 +1334,7 @@ def _judge(
     promotion_candidate: bool,
     cpu_duration_ms: int | None,
     reward_graded: bool,
+    compile_flags: Sequence[str] = (),
 ) -> SignalRun:
     outputs = int(rendered["outputs"])
     failures: list[str] = []
@@ -1223,8 +1352,14 @@ def _judge(
         if peak_error is not None and math.isfinite(peak_error):
             summary["max_abs_error_nano"] = to_nano(peak_error)
     failures = sorted(set(failures))
+    if reward_graded:
+        comparison = "reward-graded-signed-full"
+    elif _suite_profile(profile):
+        comparison = "suite-signed"
+    else:
+        comparison = "head-exact+coarse"
     metrics: dict[str, Any] = {
-        "comparison": "reward-graded-signed-full" if reward_graded else "head-exact+coarse",
+        "comparison": comparison,
         "failures": failures,
         "frame_count": profile.frames,
         "head_frames": profile.head_frames,
@@ -1239,6 +1374,24 @@ def _judge(
         metrics["signed_frames"] = profile.frames
     if promotion_candidate and cpu_duration_ms is not None:
         metrics["cpu_duration_ms"] = cpu_duration_ms
+    stimulus_ms = rendered.get("stimulus_ms")
+    if isinstance(stimulus_ms, dict):
+        timing: dict[str, int] = {}
+        for name, value in stimulus_ms.items():
+            if isinstance(name, str) and isinstance(value, int) and not isinstance(value, bool):
+                timing[name] = value
+        if timing:
+            metrics["render_ms"] = timing
+    toolchain = _toolchain_metrics(rendered.get("toolchain"))
+    if toolchain:
+        metrics["toolchain"] = toolchain
+    if profile.suite is not None:
+        metrics["suite"] = profile.suite
+    metrics["compile_flags"] = list(compile_flags)
+    if _suite_profile(profile):
+        from faustcoder.signal_suite import stimulus_record
+
+        metrics.update(stimulus_record(profile))
     harness = _harness_preimage()
     metrics["unshare_path"] = harness["unshare_path"]
     metrics["unshare_sha256"] = harness["unshare_sha256"]
@@ -1266,6 +1419,8 @@ def _judge(
     if profile.require_reference:
         thresholds["require_reference"] = True
     thresholds["reward_graded"] = bool(reward_graded)
+    if profile.suite is not None:
+        thresholds["reward_allowlisted"] = False
     receipt: dict[str, Any] = {
         "source_sha256": hashlib.sha256(source.encode("utf-8")).hexdigest(),
         "test_suite_digest": profile_digest(profile),
@@ -1391,6 +1546,7 @@ def _measure_stimulus(
     if not finite:
         failures.append(f"{name}:nonfinite")
         _note_impulse_tail(name, reference, profile, failures)
+        _attach_diagnostics(name, channels, profile, summary)
         return summary, failures, peak_error
     quantized_candidate = _quantize_channels(channels)
     quantized_reference = _quantize_channels(expected)
@@ -1398,9 +1554,9 @@ def _measure_stimulus(
     if not isinstance(head, int):
         raise SignalHarnessError("head_frames was not resolved")
     # Reward grading signs the whole render, past head_frames included
-    # (spec §23 A4). Other runs keep the exact check on the head and
-    # the coarse check on the whole render.
-    compared = profile.frames if reward_graded else head
+    # (spec §23 A4). A suite profile signs every rendered frame. Other
+    # runs keep the exact check on the head.
+    compared = profile.frames if reward_graded or _suite_profile(profile) else head
     summary["compared_frames"] = compared
     peak_error, token = compare_channels(
         [channel[:compared] for channel in quantized_candidate],
@@ -1416,11 +1572,16 @@ def _measure_stimulus(
         failures.append(f"{name}:nonfinite")
     elif token == "channels":
         failures.append(f"{name}:channels")
-    # Non-reward runs keep the magnitude check on the whole render.
-    # Reward runs record it and do not fail on it: a 1e-5 spike can
-    # hide in a block RMS, and A4 requires the signed compare instead.
-    coarse_candidate = quantized_candidate
-    coarse_reference = quantized_reference
+    # Reward runs record the magnitude check on the whole render and
+    # do not fail on it. A suite has already signed every frame, so
+    # the coarse window is the samples past that compare. Other runs
+    # keep the magnitude check on the whole render.
+    if _suite_profile(profile) and not reward_graded:
+        coarse_candidate = [channel[compared:] for channel in quantized_candidate]
+        coarse_reference = [channel[compared:] for channel in quantized_reference]
+    else:
+        coarse_candidate = quantized_candidate
+        coarse_reference = quantized_reference
     rms_gap, band_gap, rms_fail, band_fail = _coarse_gaps(
         coarse_candidate, coarse_reference, profile
     )
@@ -1433,6 +1594,7 @@ def _measure_stimulus(
     if not reward_graded and band_fail:
         failures.append(f"{name}:bands")
     _note_impulse_tail(name, reference, profile, failures)
+    _attach_diagnostics(name, channels, profile, summary)
     return summary, failures, peak_error
 
 
@@ -1503,6 +1665,123 @@ def _pad_reference(reference: SignalReference, frames: int) -> SignalReference:
     )
 
 
+def _toolchain_metrics(raw: object) -> dict[str, Any] | None:
+    """Return Node, V8 and faustwasm versions recorded by the worker.
+
+    Per-run filesystem allow paths are not copied. The stable Node
+    flags are the sandbox identity flags the worker actually saw.
+    """
+    if not isinstance(raw, dict):
+        return None
+    node = raw.get("node")
+    v8 = raw.get("v8")
+    faustwasm = raw.get("faustwasm")
+    flags = raw.get("node_flags")
+    if not all(isinstance(item, str) and item for item in (node, v8, faustwasm)):
+        return None
+    if not isinstance(flags, list) or not all(isinstance(item, str) for item in flags):
+        return None
+    return {
+        "faustwasm": faustwasm,
+        "node": node,
+        "node_flags": list(flags),
+        "v8": v8,
+    }
+
+
+def _suite_profile(profile: SignalProfile) -> bool:
+    """Return whether ``profile`` uses the nonlinear suite or one of its stimuli."""
+    return profile.suite is not None or any(name in SUITE_STIMULI for name in profile.stimuli)
+
+
+def _require_suite_floor(profile: SignalProfile) -> None:
+    """Refuse a suite render shorter than the 144000-frame floor.
+
+    The block size has to divide 144000, so the floor is not rounded
+    down. Legacy impulse, sine and noise profiles are unchanged.
+    """
+    if not _suite_profile(profile):
+        return
+    if profile.block_size < 1 or MAX_FRAMES % profile.block_size != 0:
+        raise ValueError("suite block_size must divide the 144000 frame floor")
+    cap = profile.max_frames
+    if not isinstance(cap, int) or profile.frames < MAX_FRAMES or cap < MAX_FRAMES:
+        raise ValueError(
+            "suite stimulus requires frames and max_frames of at least "
+            "the 144000 block-aligned floor"
+        )
+
+
+def _pin_compile_flags(options: Sequence[str], *, pin: bool) -> tuple[str, ...]:
+    """Return compiler flags, pinning ``-ftz`` when ``pin`` is set.
+
+    ``-fm`` is refused before ``_validate_options`` when flags are
+    pinned, so a signal render never reaches the compiler with fast
+    math. A ``-ftz`` other than 0 is the same refusal. Unpinned runs
+    keep the compiler allowlist, which already rejects ``-fm``.
+    Diagnostic and reward-graded renders both pin, so one source
+    hashes one compiler digest.
+    """
+    if pin and not isinstance(options, (str, bytes)) and isinstance(options, Sequence):
+        for item in options:
+            if isinstance(item, str) and (item == "-fm" or item.startswith("-fm")):
+                raise SignalHarnessError("-fm is banned for a signal render")
+    checked = _validate_options(options)
+    if not pin:
+        return checked
+    ftz_at = None
+    for index, item in enumerate(checked):
+        if item == "-ftz":
+            ftz_at = index
+            break
+    if ftz_at is None:
+        return checked + PINNED_COMPILE_FLAGS
+    value = checked[ftz_at + 1]
+    if value != PINNED_FTZ:
+        raise SignalHarnessError(
+            f"-ftz {value} differs from the pinned value {PINNED_FTZ}"
+        )
+    return checked
+
+
+def _limits_for(profile: SignalProfile) -> ResourceLimits:
+    """Return sandbox bounds that can hold this render.
+
+    The default 8 MiB cap fits a legacy render. The eight-stimulus
+    suite writes a float32 input and up to two output channels per
+    stimulus, which is past that cap, so the suite gets a larger
+    ceiling and a longer timeout. A caller-supplied limit is kept.
+    """
+    outputs = profile.expected_channels if profile.expected_channels is not None else 2
+    if outputs < 1:
+        outputs = 1
+    needed = len(profile.stimuli) * profile.frames * 4 * (1 + outputs) + 1024 * 1024
+    default = 8 * 1024 * 1024
+    if needed <= default:
+        return ResourceLimits()
+    mebibyte = 1024 * 1024
+    output = ((needed + mebibyte - 1) // mebibyte) * mebibyte
+    if output < 16 * mebibyte:
+        output = 16 * mebibyte
+    return ResourceLimits(timeout_s=120.0, output_bytes=output)
+
+
+def _attach_diagnostics(
+    name: str,
+    channels: Sequence[Sequence[float]],
+    profile: SignalProfile,
+    summary: dict[str, Any],
+) -> None:
+    """Record suite diagnostics on ``summary`` without touching failures."""
+    if profile.suite is None or not summary.get("finite"):
+        return
+    if not channels or not channels[0]:
+        return
+    from faustcoder.signal_suite import stimulus_diagnostics
+
+    summary["diagnostics"] = stimulus_diagnostics(name, channels[0], profile.sample_rate)
+
+
 def _prepare_render(
     profile: SignalProfile,
     reference: SignalReference | None,
@@ -1514,14 +1793,19 @@ def _prepare_render(
     A reward-graded run always rejects non-finite samples and requires
     a reference. With an impulse reference, ``max_frames`` below the
     144000 block-aligned cap raises ``ValueError`` before render. The
-    cap is not raised. ``head_frames`` stays the pinned profile value.
-    The signed compare covers the whole render. A shorter impulse
-    reference is silence-padded out to that render.
+    cap is not raised. ``head_frames`` stays the pinned profile value
+    on a reward impulse, so the frozen digest does not move. The
+    signed compare covers the whole render. A shorter impulse
+    reference is silence-padded out to that render. A suite stimulus
+    below the 144000 floor raises ``ValueError`` before that impulse
+    check. The suite signs every frame.
     """
+    _require_suite_floor(profile)
     if (
         reward_graded
         and reference is not None
         and "impulse" in reference.stimuli
+        and not _suite_profile(profile)
     ):
         aligned = MAX_FRAMES - (MAX_FRAMES % profile.block_size)
         if profile.max_frames < aligned:
@@ -1533,6 +1817,8 @@ def _prepare_render(
         profile = replace(profile, reject_nonfinite=True, require_reference=True)
     profile = _default_impulse_frames(profile)
     if reference is None:
+        if _suite_profile(profile):
+            profile = replace(profile, head_frames=profile.frames)
         return profile, None
     if profile.frames < reference.frames:
         profile = replace(profile, frames=reference.frames)
@@ -1859,6 +2145,15 @@ def _normalize_digest(value: str) -> str:
 
 
 def _sample_digest(channels: Sequence[Sequence[float]]) -> str:
+    """Hash the little-endian binary32 bytes of ``channels``.
+
+    The digest is those bytes, in channel order, with nothing rewritten.
+    ``-0.0`` and ``0.0`` differ. A NaN is not replaced by one canonical
+    payload: quiet payloads that survive the float32 store stay distinct,
+    so two NaN results with different payloads do not match. The signed
+    compare still treats every NaN as non-finite. This hash is the golden
+    identity, not the pass gate.
+    """
     chunks = [_f32_bytes(channel) for channel in channels]
     return "sha256:" + hashlib.sha256(b"".join(chunks)).hexdigest()
 

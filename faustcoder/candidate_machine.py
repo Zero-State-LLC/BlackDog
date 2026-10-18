@@ -303,6 +303,7 @@ def apply_signal(state: CandidateState, receipt: object) -> CandidateState:
     ``TypeError``. This does not write the receipt;
     ``faustcoder.signal.commit_signal_check`` does. ``passed`` on the
     receipt selects ``signal_passed`` or ``signal_failed``.
+    ``nonlinear-suite-v1`` is not in ``REWARD_PROFILES`` (D5).
     """
     from faustcoder.reward.grader import is_minted
     from faustcoder.reward.types import RewardableSignalReceipt
@@ -364,7 +365,8 @@ def render_candidate_machine_markdown() -> str:
         "`apply_signal` takes a `RewardableSignalReceipt` from",
         "`grade_receipt` (spec §23 A5). The receipt must carry",
         "`thresholds.reward_graded` and a profile digest in",
-        "`REWARD_PROFILES`. Diagnostic checks use",
+        "`REWARD_PROFILES`. `nonlinear-suite-v1` is not in that",
+        "allowlist (D5, 2026-10-17). Diagnostic checks use",
         "`apply_diagnostic_signal` and are not rewards.",
         "",
         f"Initial state: `{INITIAL_STATE.value}`.",
