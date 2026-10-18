@@ -389,3 +389,18 @@ allowlisted pairing, or short idioms will be over-flagged.
 ## Amendment 2026-10-18 12:34 AM PT (D6)
 
 Danny ratified the FLOOR acceptance bounds ("continue as recommended", 5% FP budget). The bounds are [spec §25](../../specs/001-faustcoder/spec.md) and [ADR-0002](../adr/0002-training-path.md). The value stays 40 and provisional. Constants live in `faustcoder/floor_protocol.py`. Separate recorded rights ruling, not part of D6 and not Danny's ratified text: needs_human sources count as reject-class until a human clears them (fail closed). Boof (orchestrator), rights call under Danny's 2026-10-17 BlackDog rights/licensing delegation ([rights-inventory.md](../rights-inventory.md) lines 21-22), 2026-10-18 ~12:57 AM PT.
+
+## Amendment 2026-10-18 2:27 AM PT (lower-floor detections)
+
+Danny ruled option C1 ("continue as recommended"). This interprets the ratified D6 bounds and does not change their text or numbers. It closes ADVERSARY nit N9. The ruling is [spec §25](../../specs/001-faustcoder/spec.md#lower-floor-detections-038) and [FLOOR-ruling-b-recommendation-2026-10-18.md](../decisions/FLOOR-ruling-b-recommendation-2026-10-18.md).
+
+> Ruling on lower-floor detections (Danny, 2026-10-18 2:27 AM PT, "continue as recommended"; record: FLOOR-ruling-b-recommendation-2026-10-18.md). This interprets the ratified D6 bounds and does not change their text or numbers.
+>
+> 1. Ground truth for the FLOOR run is fixed before scoring and does not depend on TOKEN_FLOOR. The same gold set is used for 40, 30 and 20.
+> 2. Planted items: every planted item is a positive at every candidate floor. A planted item that a floor misses is a miss in that floor's cell, whatever its length. No item leaves a cell's denominator because it is shorter than the floor. Cells stay at n = 100 planted items.
+> 3. Natural copies: the candidate pool is the union of everything flagged at floors 40, 30 and 20, by the sub-15 exact-hash check, and by the H1 union-coverage check, on the shipping path. Each candidate is adjudicated once, on content, as COPY or NOT_COPY of reject-class text (rights_rejected, or needs_human until cleared), with a 15-token minimum and without regard to which floor flagged it. The adjudicated set is frozen before any floor is scored. Natural copies do not enter the Wilson cells.
+> 4. Item 4's first count ("detected reject-class matches left unquarantined in cleared") counts, at floor F, every adjudicated COPY and every unadjudicated candidate that F's own shipping pipeline leaves in cleared. A copy that only a lower floor detects therefore fails item 4 at every higher floor that leaves it in cleared.
+> 5. Only quarantines produced by F's shipping pipeline count for F. Manual quarantine pins may be applied for corpus hygiene but do not make F pass.
+> 6. Every natural miss is inspected and recorded with its mechanism. Per-floor natural recall (detected / adjudicated COPY) is reported and not gated, and the report states that the pool comes from the detectors themselves.
+
+Recommendation from the record, not Danny's ruling and not a clause of the ruling above. "The mitigation is to adjudicate before scoring, and to require a second reviewer for any item whose label decides the floor." "Record which floor flagged each item separately, and require a second reviewer for any floor-deciding item." For SClarinet: "Use two reviewers and record both."
