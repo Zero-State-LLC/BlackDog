@@ -16,9 +16,6 @@ from enum import StrEnum
 from pathlib import Path
 from collections.abc import Mapping
 from typing import Any, Callable
-from weakref import WeakKeyDictionary
-
-
 class UngradedReason(StrEnum):
     """Why a sample is not a reward.
 
@@ -67,10 +64,10 @@ class RewardableSignalReceipt:
 
     ``passed`` is the graded bit. Reward is 1 when it is true and 0
     when it is false. The constructor and ``_mint`` both refuse.
-    ``grade_receipt`` registers the instance in a private mint table.
-    ``apply_signal`` accepts the instance only while that table still
-    matches its fields, so ``object.__new__`` plus ``object.__setattr__``
-    cannot forge or flip one.
+    ``grade_receipt`` seals the instance in a mint table that is
+    private to that function. ``apply_signal`` accepts the instance
+    only while the seal matches this object's identity and fields, so
+    a lookalike with the same fields is not a reward.
     """
 
     __slots__ = (
@@ -121,32 +118,6 @@ class RewardableSignalReceipt:
         )
 
 
-def _mint_registry() -> tuple[
-    Callable[[RewardableSignalReceipt], None],
-    Callable[[object], bool],
-]:
-    """Close over the mint table so replacing the module global does not."""
-    registry: WeakKeyDictionary[RewardableSignalReceipt, tuple[object, ...]] = (
-        WeakKeyDictionary()
-    )
-
-    def register(receipt: RewardableSignalReceipt) -> None:
-        registry[receipt] = receipt._snapshot()
-
-    def is_minted(receipt: object) -> bool:
-        if type(receipt) is not RewardableSignalReceipt:
-            return False
-        snapshot = registry.get(receipt)
-        if snapshot is None:
-            return False
-        return snapshot == receipt._snapshot()
-
-    return register, is_minted
-
-
-_register_mint, is_minted = _mint_registry()
-
-
 @dataclass(frozen=True)
 class SourceAttributedFailure:
     """A failure ADR-0006 A1 grades at the ``parse_error`` rung.
@@ -195,6 +166,29 @@ class QuarantineRecord:
     held_at: str = ""
 
 
+class TriageAttribution(StrEnum):
+    """Who a quarantined timeout or crash is blamed on.
+
+    ``source`` re-grades the row at the A1 ``parse_error`` rung.
+    ``harness`` and ``infrastructure`` drop the row. It is never scored.
+    """
+
+    SOURCE = "source"
+    HARNESS = "harness"
+    INFRASTRUCTURE = "infrastructure"
+
+
+@dataclass(frozen=True)
+class TriageResolution:
+    """The attribution recorded when a quarantine row is resolved."""
+
+    record_id: str
+    attribution: TriageAttribution
+    triaged_by: str
+    triaged_at: str
+    grade: SourceAttributedFailure | Ungraded
+
+
 def _utc_now() -> str:
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
@@ -204,13 +198,14 @@ class QuarantineQueue:
 
     ``path`` is an append-only JSONL file. ``hold`` and ``resolve``
     append a line and fsync it. Reopening the path replays the log.
-    Resolved rows stay in the file and leave ``pending``.
+    ``resolve`` requires an attribution, who triaged the row, and when.
+    A row nobody has resolved stays in ``pending`` and is not a score.
     """
 
     def __init__(self, path: Path | str | None = None) -> None:
         self.path = Path(path) if path is not None else None
         self._rows: list[QuarantineRecord] = []
-        self._resolved: dict[str, str] = {}
+        self._resolutions: dict[str, TriageResolution] = {}
         if self.path is not None and self.path.is_file():
             self._replay()
 
@@ -239,20 +234,65 @@ class QuarantineQueue:
         )
         return record
 
-    def resolve(self, record_id: str, *, resolved_at: str | None = None) -> None:
-        """Append a resolve line. The row leaves ``pending`` and stays on disk."""
+    def resolve(
+        self,
+        record_id: str,
+        *,
+        attribution: TriageAttribution,
+        triaged_by: str,
+        triaged_at: str | None = None,
+    ) -> SourceAttributedFailure | Ungraded:
+        """Re-grade one pending row and append the triage outcome.
+
+        ``attribution`` is required. ``source`` returns the A1
+        ``parse_error`` rung. ``harness`` and ``infrastructure`` return
+        an ungraded row that is dropped and never scored. ``triaged_by``
+        and ``triaged_at`` are stored with that outcome. Calling this
+        without an attribution raises ``TypeError`` and leaves the row
+        pending.
+        """
         if not isinstance(record_id, str) or not record_id:
             raise KeyError(record_id)
-        if record_id not in {row.record_id for row in self._rows}:
+        row = next((item for item in self._rows if item.record_id == record_id), None)
+        if row is None:
             raise KeyError(record_id)
-        if record_id in self._resolved:
-            return
-        stamp = resolved_at or _utc_now()
-        self._resolved[record_id] = stamp
-        self._append({"op": "resolve", "record_id": record_id, "resolved_at": stamp})
+        existing = self._resolutions.get(record_id)
+        if existing is not None:
+            return existing.grade
+        kind = _attribution(attribution)
+        if not isinstance(triaged_by, str) or not triaged_by.strip():
+            raise ValueError("triage requires the name of who resolved the row")
+        stamp = triaged_at or _utc_now()
+        if not isinstance(stamp, str) or not stamp.strip():
+            raise ValueError("triage requires when the row was resolved")
+        grade = _triage_grade(row, kind)
+        outcome = "parse_error" if kind is TriageAttribution.SOURCE else "dropped"
+        resolution = TriageResolution(
+            record_id=record_id,
+            attribution=kind,
+            triaged_by=triaged_by.strip(),
+            triaged_at=stamp,
+            grade=grade,
+        )
+        self._resolutions[record_id] = resolution
+        self._append(
+            {
+                "op": "resolve",
+                "record_id": record_id,
+                "attribution": kind.value,
+                "triaged_by": resolution.triaged_by,
+                "triaged_at": stamp,
+                "outcome": outcome,
+            }
+        )
+        return grade
+
+    def resolution(self, record_id: str) -> TriageResolution | None:
+        """Return the triage record for ``record_id``, if it was resolved."""
+        return self._resolutions.get(record_id)
 
     def pending(self, policy: str | None = None) -> tuple[QuarantineRecord, ...]:
-        rows = [row for row in self._rows if row.record_id not in self._resolved]
+        rows = [row for row in self._rows if row.record_id not in self._resolutions]
         if policy is None:
             return tuple(rows)
         return tuple(row for row in rows if row.policy == policy)
@@ -324,24 +364,74 @@ class QuarantineQueue:
                     )
                 )
             elif op == "resolve":
-                self._resolved[str(body["record_id"])] = str(body["resolved_at"])
+                record_id = str(body["record_id"])
+                row = next((item for item in self._rows if item.record_id == record_id), None)
+                if row is None:
+                    raise ValueError(
+                        f"quarantine log line {line_number} resolves an unknown row"
+                    )
+                kind = _attribution(body.get("attribution"))
+                triaged_by = body.get("triaged_by")
+                triaged_at = body.get("triaged_at")
+                if not isinstance(triaged_by, str) or not triaged_by.strip():
+                    raise ValueError(
+                        f"quarantine log line {line_number} has no triage attribution"
+                    )
+                if not isinstance(triaged_at, str) or not triaged_at.strip():
+                    raise ValueError(
+                        f"quarantine log line {line_number} has no triage attribution"
+                    )
+                self._resolutions[record_id] = TriageResolution(
+                    record_id=record_id,
+                    attribution=kind,
+                    triaged_by=triaged_by.strip(),
+                    triaged_at=triaged_at,
+                    grade=_triage_grade(row, kind),
+                )
             else:
                 raise ValueError(f"quarantine log line {line_number} has op {op!r}")
 
 
+def _attribution(value: object) -> TriageAttribution:
+    """Return a triage attribution, or refuse a missing or unknown one."""
+    if isinstance(value, TriageAttribution):
+        return value
+    try:
+        return TriageAttribution(value)
+    except ValueError as exc:
+        raise ValueError(
+            "attribution must be source, harness, or infrastructure"
+        ) from exc
+
+
+def _triage_grade(
+    row: QuarantineRecord, attribution: TriageAttribution
+) -> SourceAttributedFailure | Ungraded:
+    """Re-grade ``row``. Source is parse_error. The other two are dropped."""
+    if attribution is TriageAttribution.SOURCE:
+        return SourceAttributedFailure(
+            detail="triage attributed the quarantined failure to the source"
+        )
+    if attribution is TriageAttribution.HARNESS:
+        return Ungraded(
+            UngradedReason.HARNESS_DEFECT,
+            "triage dropped the row; a harness defect is not scored",
+            row.reproducible_digest,
+        )
+    return Ungraded(
+        UngradedReason.INFRA_FAULT,
+        "triage dropped the row; an infrastructure fault is not scored",
+        row.reproducible_digest,
+    )
+
+
 # ADR-0006 A7 provisional starting values. Danny may tune them after
 # the first runs. They are not a silent change to the ladder.
+# Alarm only when the rate is above 1% over a full 500-sample window,
+# or above 2× the known-good baseline, whichever comes first.
 UNGRADED_WINDOW = 500
 UNGRADED_RATE_LIMIT = 0.01
 UNGRADED_BASELINE_MULTIPLE = 2.0
-# Early alarm when no baseline is configured: five ungraded samples,
-# or a rate above 1% once one hundred samples are in, before the
-# 500-sample window fills. The baseline floor stops a baseline of 0
-# from firing on the first row.
-UNGRADED_ABSOLUTE_FLOOR = 5
-UNGRADED_EARLY_MIN_SAMPLES = 100
-UNGRADED_BASELINE_MIN_SAMPLES = 5
-UNGRADED_BASELINE_RATE_FLOOR = UNGRADED_RATE_LIMIT
 # Provisional quarantine age. A pending row older than this alarms.
 QUARANTINE_MAX_AGE_SECONDS = 24 * 60 * 60
 
@@ -351,12 +441,11 @@ class UngradedRateTracker:
 
     Graded rewards and A1 ``parse_error`` outcomes count in the
     denominator. Ungraded A2 rows count, and so do ``schema_invalid``,
-    ``digest_mismatch`` and ``comparison_not_full``. With no baseline
-    the alarm also fires at five ungraded samples, or when the rate
-    is above 1% once one hundred samples are in. A baseline uses
-    ``max(2× baseline, 1%)`` and waits for five samples, so a baseline
-    of 0 does not fire on the first row. After the rate recovers the
-    alarm re-arms and can fire again.
+    ``digest_mismatch`` and ``comparison_not_full``. The alarm fires
+    when the rate is above 1% over a full 500-sample window, or above
+    2× ``baseline`` when a baseline is set, whichever comes first.
+    Five ungraded samples in 500 do not alarm. Six do. After the rate
+    recovers the alarm re-arms and can fire again.
     """
 
     def __init__(
@@ -401,18 +490,10 @@ class UngradedRateTracker:
         if not window:
             return False
         count = len(window)
-        ungraded = sum(window)
-        rate = ungraded / count
+        rate = sum(window) / count
         if count >= UNGRADED_WINDOW and rate > UNGRADED_RATE_LIMIT:
             return True
-        if self.baseline is None:
-            if ungraded >= UNGRADED_ABSOLUTE_FLOOR:
-                return True
-            if count >= UNGRADED_EARLY_MIN_SAMPLES and rate > UNGRADED_RATE_LIMIT:
-                return True
-            return False
-        floor = max(UNGRADED_BASELINE_MULTIPLE * self.baseline, UNGRADED_BASELINE_RATE_FLOOR)
-        if count >= UNGRADED_BASELINE_MIN_SAMPLES and rate > floor:
+        if self.baseline is not None and rate > UNGRADED_BASELINE_MULTIPLE * self.baseline:
             return True
         return False
 

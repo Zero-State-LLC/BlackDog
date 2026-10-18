@@ -304,7 +304,8 @@ def apply_signal(state: CandidateState, receipt: object) -> CandidateState:
     ``faustcoder.signal.commit_signal_check`` does. ``passed`` on the
     receipt selects ``signal_passed`` or ``signal_failed``.
     """
-    from faustcoder.reward.types import RewardableSignalReceipt, is_minted
+    from faustcoder.reward.grader import is_minted
+    from faustcoder.reward.types import RewardableSignalReceipt
 
     if type(receipt) is not RewardableSignalReceipt or not is_minted(receipt):
         raise TypeError("apply_signal requires a RewardableSignalReceipt from grade_receipt")

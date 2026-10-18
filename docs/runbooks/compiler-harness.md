@@ -33,10 +33,10 @@ If the fixture fails, the reason is `infra_fault`. Triage can mark
 `harness_defect`. A remote import or a stack overflow is already
 `parse_error` and does not wait. A7 alerts when the per-policy ungraded
 rate goes above 1% over a 500-sample window, or above 2× the known-good
-baseline, whichever comes first. Those numbers are provisional. With no baseline the alarm also fires
-at 5 ungraded samples, or above 1% once 100 samples are in. A baseline
-of 0 uses a 1% floor and does not fire on the first row. The alarm
-re-arms after the rate recovers. The grader does not spawn the worker.
+baseline, whichever comes first. Five ungraded samples in 500 do not
+alarm. Six do. Those numbers are provisional. The alarm re-arms after
+the rate recovers. `rates.json` is single-process. The grader does not
+spawn the worker.
 The caller supplies the rerun and the fixture. Both environment digests
 must be non-empty and equal; a missing or blank digest stays
 `unattributed`. A reward-graded `run_signal` grades exit 124, 125 and

@@ -41,8 +41,10 @@ worker crash with no ledger is refused, not scored and not dropped.
 from __future__ import annotations
 
 import hashlib
+import math
 from collections.abc import Callable, Mapping
 from typing import Any
+from weakref import WeakKeyDictionary
 
 from faustcoder.canonical import content_digest_for
 from faustcoder.compiler import reproducible_receipt_digest
@@ -59,7 +61,6 @@ from faustcoder.reward.types import (
     Ungraded,
     UngradedRateTracker,
     UngradedReason,
-    _register_mint,
 )
 from faustcoder.schemas import validate
 from faustcoder.signal import (
@@ -76,7 +77,8 @@ _REMOTE_DIAGNOSTIC = "internal: remote import rejected\n"
 _STACK_MARKERS = ("maximum call stack size exceeded", "stack overflow")
 _EXIT_CLASS = {124: "timeout", 125: "resource_limit", 126: "internal"}
 _CRASH_KINDS = frozenset({"worker_crash", "harness_crash"})
-_CRASH_EXITS = frozenset({None, 126, 137})
+_CRASH_EXITS = frozenset({None, 126, 137, 139, -9})
+_SIGNAL_KILL_EXITS = frozenset({137, 139, -9})
 _ENVELOPE_FIELDS = frozenset(
     {
         "schema_version",
@@ -192,19 +194,18 @@ def rl_batch(rows: list[Mapping[str, object]] | tuple[Mapping[str, object], ...]
         if not isinstance(row, Mapping) or "reward" not in row:
             raise RewardProvenanceError("RL batch row is missing a reward")
         graded = require_rewardable_provenance(row.get("provenance"))
-        reward = row.get("reward")
-        if graded.passed is False and _positive_reward(reward):
-            raise RewardProvenanceError(
-                "reward must not be positive when the receipt failed"
-            )
+        reward = _finite_reward(row.get("reward"))
+        if graded.passed is False and reward != 0.0:
+            raise RewardProvenanceError("reward must be zero when the receipt failed")
         built.append(dict(row))
     return tuple(built)
 
 
-def _positive_reward(reward: object) -> bool:
-    if isinstance(reward, bool) or not isinstance(reward, (int, float)):
-        return False
-    return reward > 0
+def _finite_reward(reward: object) -> float:
+    """Return a finite float reward. Bools, strings and ints are refused."""
+    if isinstance(reward, bool) or not isinstance(reward, float) or not math.isfinite(reward):
+        raise RewardProvenanceError("reward must be a finite float")
+    return reward
 
 
 def grade_receipt(
@@ -237,6 +238,57 @@ def grade_receipt(
     )
     _account(result, policy=policy, queue=queue, rates=rates)
     return result
+
+
+def _bind_grade_receipt(grade: Callable[..., Grade]) -> tuple[
+    Callable[..., Grade],
+    Callable[[object], bool],
+]:
+    """Seal receipts inside ``grade`` so the registry is not a module global.
+
+    The seal closes over a nonce and the object's identity. A lookalike
+    built with the same five fields is a different object and is rejected.
+    """
+    registry: WeakKeyDictionary[RewardableSignalReceipt, tuple[object, ...]] = (
+        WeakKeyDictionary()
+    )
+    token = object()
+
+    def is_minted(receipt: object) -> bool:
+        if type(receipt) is not RewardableSignalReceipt:
+            return False
+        row = registry.get(receipt)
+        if row is None:
+            return False
+        identity, stamp, snapshot = row
+        return identity == id(receipt) and stamp is token and snapshot == receipt._snapshot()
+
+    def grade_receipt(
+        envelope: Mapping[str, Any],
+        *,
+        diagnostics: str | None = None,
+        rerun: Rerun | None = None,
+        known_good: KnownGood | None = None,
+        triage: str | None = None,
+        policy: str = "default",
+        queue: QuarantineQueue | None = None,
+        rates: UngradedRateTracker | None = None,
+    ) -> Grade:
+        result = grade(
+            envelope,
+            diagnostics=diagnostics,
+            rerun=rerun,
+            known_good=known_good,
+            triage=triage,
+            policy=policy,
+            queue=queue,
+            rates=rates,
+        )
+        if isinstance(result, RewardableSignalReceipt):
+            registry[result] = (id(result), token, result._snapshot())
+        return result
+
+    return grade_receipt, is_minted
 
 
 def _grade(
@@ -365,8 +417,10 @@ def _mint_receipt(
     object.__setattr__(receipt, "test_suite_digest", test_suite_digest)
     object.__setattr__(receipt, "reproducible_digest", reproducible_digest)
     object.__setattr__(receipt, "schema_version", schema_version)
-    _register_mint(receipt)
     return receipt
+
+
+grade_receipt, is_minted = _bind_grade_receipt(grade_receipt)
 
 
 def _comparison_is_full(
@@ -498,10 +552,13 @@ def _grade_crash(
     digest = payload.get("reproducible_digest")
     if not isinstance(digest, str) or not digest.startswith("sha256:"):
         return Ungraded(UngradedReason.SCHEMA_INVALID, "crash record has no reproducible digest")
-    # A crash is exit 126 internal, or exit 137 when the worker was
-    # killed, until something attributes it. Exit 137 is not schema_invalid.
+    # A crash is exit 126 internal, or a kill at 137, 139, or -9, until
+    # something attributes it. Those kills are not schema_invalid.
     if payload.get("exit_code") not in _CRASH_EXITS:
-        return Ungraded(UngradedReason.SCHEMA_INVALID, "a crash record uses exit 126 or 137")
+        return Ungraded(
+            UngradedReason.SCHEMA_INVALID,
+            "a crash record uses exit 126, 137, 139, or -9",
+        )
     if payload.get("diagnostic_class") not in (None, "internal"):
         return Ungraded(
             UngradedReason.SCHEMA_INVALID,
@@ -605,11 +662,11 @@ def _present_digest(value: object) -> str | None:
 
 
 def _is_crash(payload: Mapping[str, Any]) -> bool:
-    """A crash record is a crash kind, or a bare exit 137 kill."""
+    """A crash record is a crash kind, or a bare kill at 137, 139, or -9."""
     if payload.get("kind") in _CRASH_KINDS:
         return True
     return (
-        payload.get("exit_code") == 137
+        payload.get("exit_code") in _SIGNAL_KILL_EXITS
         and "passed" not in payload
         and "faust_version" not in payload
     )

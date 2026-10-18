@@ -1,9 +1,10 @@
 """Persistent quarantine queue and A7 tracker for one artifact store.
 
 The production reward path (``run_signal`` when ``reward_graded`` is
-set, and ``commit_signal_check``) opens this ledger. The queue is
-append-only JSONL. The rate tracker is rewritten beside it so a new
-process sees the same window.
+set, ``run_signal_suite``, and ``commit_signal_check``) opens this
+ledger. The queue is append-only JSONL. ``rates.json`` is a
+single-process rewrite: two processes saving the same file can drop
+each other's windows. Run one reward consumer per store.
 """
 
 from __future__ import annotations

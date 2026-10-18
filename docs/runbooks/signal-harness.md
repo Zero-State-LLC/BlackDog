@@ -141,8 +141,13 @@ Diagnostic checks use `apply_diagnostic_signal` and are not rewards.
 An ungraded sample is dropped from reward (`None`, not 0). A2 rows
 (`infra_fault`, `harness_defect`, `unattributed`) stay in the
 quarantine queue beside the artifact store (`reward-ledger/quarantine.jsonl`,
-append-only). `resolve` appends a resolve line. A pending row older
-than 24 hours raises the age alarm. Those 24 hours are provisional.
+append-only). `resolve` requires an attribution (`source`, `harness`,
+or `infrastructure`), who triaged the row, and when. `source` re-grades
+the row at `parse_error`. `harness` and `infrastructure` drop the row
+and it is never scored. A row nobody has resolved stays pending and is
+not a score. A pending row older than 24 hours raises the age alarm.
+Those 24 hours are provisional. `rates.json` beside the log is
+single-process.
 
 `commit_signal_check` and a reward-graded `run_signal` pass that queue
 and the A7 tracker into `grade_receipt`. A compiler exit 124, 125 or
@@ -150,13 +155,14 @@ and the A7 tracker into `grade_receipt`. A compiler exit 124, 125 or
 the reward path raises `RewardUseRefused` and does not score the
 outcome. `compile_source` on its own is not a reward consumer.
 
-The ungraded-rate alarm uses the provisional A7 numbers: above 1%
-over a 500-sample window, or above 2× the known-good baseline,
-whichever comes first. With no baseline it also fires at 5 ungraded
-samples, or above 1% once 100 samples are in. A baseline of 0 uses a
-1% floor and does not fire on the first row. The alarm re-arms after
-the rate recovers. `schema_invalid`, `digest_mismatch` and
-`comparison_not_full` count in that rate.
+The ungraded-rate alarm uses the provisional A7 numbers and nothing
+else: above 1% over a full 500-sample window, or above 2× the
+known-good baseline, whichever comes first. Five ungraded samples in
+500 do not alarm. Six do. The alarm re-arms after the rate recovers.
+`schema_invalid`, `digest_mismatch` and `comparison_not_full` count
+in that rate. A reward-graded `run_signal_suite` takes the same ledger.
+Compiler exits 124, 125 and 126, and render crashes, are graded when
+that suite is committed.
 
 Receipt signing is deferred (D3). `grade_receipt` recomputes digests.
 It does not require a signature. `REWARD_PROFILES` in

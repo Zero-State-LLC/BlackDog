@@ -16,6 +16,7 @@ from faustcoder.reward import (
     RewardProvenanceError,
     RewardableSignalReceipt,
     SourceAttributedFailure,
+    TriageAttribution,
     Ungraded,
     UngradedRateTracker,
     UngradedReason,
@@ -355,11 +356,13 @@ def test_a7_alarm_hook_uses_the_provisional_window_and_baseline() -> None:
     assert early.alarm("early")
     assert alarms and alarms[0][0] == "early"
     window = UngradedRateTracker(on_alarm=lambda policy, rate: alarms.append((policy, rate)))
-    for _ in range(494):
+    for _ in range(495):
         window.observe("window", ungraded=False)
-    assert not window.alarm("window")
-    for _ in range(6):
+    for _ in range(5):
         window.observe("window", ungraded=True)
+    assert not window.alarm("window")
+    assert window.rate("window") == 0.01
+    window.observe("window", ungraded=True)
     assert window.alarm("window")
     assert alarms[-1][0] == "window"
     assert window.rate("window") > 0.01
@@ -413,7 +416,8 @@ def test_closed_failures_count_toward_the_ungraded_rate_and_exit_137_is_a_crash(
         invalid = grade_receipt({"schema_version": "0.3.4", "extra": True}, rates=rates, policy="closed")
         assert isinstance(invalid, Ungraded)
         assert invalid.reason is UngradedReason.SCHEMA_INVALID
-    assert rates.alarm("closed")
+    assert rates.rate("closed") == 1.0
+    assert not rates.alarm("closed")
     queue = QuarantineQueue()
     crash = make_envelope(
         {
@@ -452,13 +456,16 @@ def test_rl_batch_rejects_a_positive_reward_on_a_failed_receipt() -> None:
     failed = grade_receipt(allowlisted_reward_envelope(passed=False))
     row = dataset_reward_row(failed, example_id="e1")
     assert row["reward"] == 0.0
-    row["reward"] = 1.0
-    try:
-        rl_batch([row])
-    except RewardProvenanceError as exc:
-        assert "positive" in str(exc)
-    else:
-        raise AssertionError("a failed receipt was rewarded")
+    for bad in (True, False, 1, "1.0", float("nan"), float("inf"), float("-inf"), -1.0, 0.5):
+        row["reward"] = bad
+        try:
+            rl_batch([row])
+        except RewardProvenanceError as exc:
+            assert "reward" in str(exc)
+        else:
+            raise AssertionError(f"reward {bad!r} was accepted")
+    row["reward"] = 0.0
+    assert rl_batch([row])[0]["reward"] == 0.0
 
 
 def test_unknown_envelope_field_is_schema_invalid() -> None:
@@ -469,40 +476,32 @@ def test_unknown_envelope_field_is_schema_invalid() -> None:
     assert graded.reason is UngradedReason.SCHEMA_INVALID
 
 
-def test_a7_early_floor_baseline_zero_and_rearm() -> None:
+def test_a7_window_does_not_alarm_early_and_rearms() -> None:
     alarms: list[str] = []
     early = UngradedRateTracker(on_alarm=lambda policy, _rate: alarms.append(policy))
-    for _ in range(4):
-        early.observe("abs", ungraded=True)
-    assert not early.alarm("abs")
-    early.observe("abs", ungraded=True)
-    assert early.alarm("abs")
-    assert alarms == ["abs"]
-    rate = UngradedRateTracker(on_alarm=lambda policy, _rate: alarms.append(policy))
-    rate.observe("rate", ungraded=True)
-    for _ in range(98):
-        rate.observe("rate", ungraded=False)
-    assert not rate.alarm("rate")
-    rate.observe("rate", ungraded=True)
-    assert rate.alarm("rate")
+    for _ in range(6):
+        early.observe("early", ungraded=True)
+    assert not early.alarm("early")
+    assert alarms == []
+    window = UngradedRateTracker(on_alarm=lambda policy, _rate: alarms.append("again"))
+    for _ in range(495):
+        window.observe("back", ungraded=False)
+    for _ in range(5):
+        window.observe("back", ungraded=True)
+    assert not window.alarm("back")
+    window.observe("back", ungraded=True)
+    assert window.alarm("back")
+    assert alarms == ["again"]
+    for _ in range(UNGRADED_WINDOW):
+        window.observe("back", ungraded=False)
+    assert not window.alarm("back")
+    for _ in range(6):
+        window.observe("back", ungraded=True)
+    assert window.alarm("back")
+    assert alarms == ["again", "again"]
     zero = UngradedRateTracker(baseline=0.0, on_alarm=lambda policy, _rate: alarms.append(policy))
     zero.observe("zero", ungraded=True)
-    assert not zero.alarm("zero")
-    for _ in range(4):
-        zero.observe("zero", ungraded=True)
     assert zero.alarm("zero")
-    recovered = UngradedRateTracker(on_alarm=lambda policy, _rate: alarms.append("again"))
-    for _ in range(5):
-        recovered.observe("back", ungraded=True)
-    assert "again" in alarms
-    for _ in range(UNGRADED_WINDOW):
-        recovered.observe("back", ungraded=False)
-    assert not recovered.alarm("back")
-    before = alarms.count("again")
-    for _ in range(5):
-        recovered.observe("back", ungraded=True)
-    assert recovered.alarm("back")
-    assert alarms.count("again") == before + 1
 
 
 def test_quarantine_log_resolves_and_ages(tmp_path) -> None:
@@ -522,14 +521,27 @@ def test_quarantine_log_resolves_and_ages(tmp_path) -> None:
     assert queue.count() == 1
     stale = queue.age_alarm(now=datetime(2026, 1, 1, tzinfo=timezone.utc), limit_seconds=3600)
     assert [row.record_id for row in stale] == ["row-1"]
-    queue.resolve("row-1")
+    graded = queue.resolve(
+        "row-1",
+        attribution=TriageAttribution.INFRASTRUCTURE,
+        triaged_by="ada",
+        triaged_at="2026-10-18T00:00:00Z",
+    )
+    assert isinstance(graded, Ungraded)
+    assert graded.reason is UngradedReason.INFRA_FAULT
+    assert reward_value(graded) is None
     assert queue.count() == 0
     assert queue.age_alarm(now=datetime(2026, 1, 1, tzinfo=timezone.utc)) == ()
     reloaded = QuarantineQueue(tmp_path / "quarantine.jsonl")
     assert reloaded.count() == 0
+    recorded = reloaded.resolution("row-1")
+    assert recorded is not None
+    assert recorded.triaged_by == "ada"
+    assert recorded.triaged_at == "2026-10-18T00:00:00Z"
     text = (tmp_path / "quarantine.jsonl").read_text(encoding="utf-8")
     assert '"op":"hold"' in text
-    assert '"op":"resolve"' in text
+    assert '"attribution":"infrastructure"' in text
+    assert '"triaged_by":"ada"' in text
 
 
 def test_apply_signal_rejects_a_forged_or_mutated_receipt() -> None:
@@ -682,3 +694,235 @@ def test_rendered_reward_impulse_grades_as_rewardable() -> None:
     assert graded.passed is True
     assert graded.profile_name == "impulse-48000-v1"
     assert graded.test_suite_digest == run.receipt["test_suite_digest"]
+
+
+def test_resolve_without_attribution_leaves_a_stale_timeout_quarantined(tmp_path) -> None:
+    from datetime import datetime, timezone
+
+    queue = QuarantineQueue(tmp_path / "quarantine.jsonl")
+    queue.hold(
+        QuarantineRecord(
+            policy="signal",
+            reason=UngradedReason.UNATTRIBUTED,
+            reproducible_digest="sha256:" + "ab" * 32,
+            detail="timeout",
+            held_at="2020-01-01T00:00:00Z",
+            record_id="timeout-1",
+        )
+    )
+    stale = queue.age_alarm(now=datetime(2026, 10, 18, tzinfo=timezone.utc))
+    assert [row.record_id for row in stale] == ["timeout-1"]
+    try:
+        queue.resolve("timeout-1")
+    except TypeError as exc:
+        assert "attribution" in str(exc)
+    else:
+        raise AssertionError("a stale timeout was resolved without attribution")
+    assert queue.count() == 1
+    assert queue.pending()[0].reward is None
+    assert queue.resolution("timeout-1") is None
+    text = (tmp_path / "quarantine.jsonl").read_text(encoding="utf-8")
+    assert '"op":"resolve"' not in text
+
+
+def test_source_triage_is_parse_error_and_harness_is_dropped() -> None:
+    queue = QuarantineQueue()
+    queue.hold(
+        QuarantineRecord(
+            policy="signal",
+            reason=UngradedReason.UNATTRIBUTED,
+            reproducible_digest="sha256:" + "cd" * 32,
+            record_id="row-source",
+            held_at="2026-10-18T00:00:00Z",
+        )
+    )
+    source = queue.resolve(
+        "row-source",
+        attribution=TriageAttribution.SOURCE,
+        triaged_by="danny",
+        triaged_at="2026-10-18T01:00:00Z",
+    )
+    assert isinstance(source, SourceAttributedFailure)
+    assert source.rung == "parse_error"
+    assert reward_value(source) == 0.0
+    assert queue.count() == 0
+    queue.hold(
+        QuarantineRecord(
+            policy="signal",
+            reason=UngradedReason.UNATTRIBUTED,
+            reproducible_digest="sha256:" + "ef" * 32,
+            record_id="row-harness",
+            held_at="2026-10-18T00:00:00Z",
+        )
+    )
+    dropped = queue.resolve(
+        "row-harness",
+        attribution="harness",
+        triaged_by="ada",
+    )
+    assert isinstance(dropped, Ungraded)
+    assert dropped.reason is UngradedReason.HARNESS_DEFECT
+    assert reward_value(dropped) is None
+
+
+def test_kill_exits_139_and_negative_9_are_queued_crashes() -> None:
+    queue = QuarantineQueue()
+    for exit_code, digest in ((139, "ab"), (-9, "cd")):
+        envelope = make_envelope(
+            {
+                "kind": "worker_crash",
+                "exit_code": exit_code,
+                "diagnostic_class": "internal",
+                "reproducible_digest": "sha256:" + digest * 32,
+            },
+            schema_version="0.3.2",
+            producer="faustcoder.signal",
+        )
+        graded = grade_receipt(envelope, policy="kills", queue=queue)
+        assert isinstance(graded, Ungraded)
+        assert graded.reason is UngradedReason.UNATTRIBUTED
+    bare = make_envelope(
+        {
+            "exit_code": 139,
+            "diagnostic_class": "internal",
+            "reproducible_digest": "sha256:" + "ef" * 32,
+        },
+        schema_version="0.3.4",
+        producer="faustcoder.signal",
+    )
+    graded = grade_receipt(bare, policy="kills", queue=queue)
+    assert isinstance(graded, Ungraded)
+    assert graded.reason is UngradedReason.UNATTRIBUTED
+    assert queue.count("kills") == 3
+
+
+def test_lookalike_receipt_is_not_minted() -> None:
+    from faustcoder.reward.grader import is_minted
+
+    graded = grade_receipt(allowlisted_reward_envelope(passed=False))
+    assert is_minted(graded)
+    lookalike = object.__new__(RewardableSignalReceipt)
+    for name in ("passed", "profile_name", "test_suite_digest", "reproducible_digest", "schema_version"):
+        object.__setattr__(lookalike, name, getattr(graded, name))
+    assert lookalike._snapshot() == graded._snapshot()
+    assert not is_minted(lookalike)
+    try:
+        apply_signal(CandidateState.COMPILE_CHECKED, lookalike)
+    except TypeError as exc:
+        assert "RewardableSignalReceipt" in str(exc)
+    else:
+        raise AssertionError("a lookalike receipt was accepted")
+    import faustcoder.reward.grader as grader_module
+
+    assert not hasattr(grader_module, "_register_mint")
+
+
+def test_reward_suite_grades_timeout_and_crash_on_commit(monkeypatch, store, tmp_path) -> None:
+    from faustcoder.compiler import Compilation
+    from faustcoder.reward import RewardLedger, RewardOutcomeHeld, RewardUseRefused
+    from faustcoder.sandbox import SandboxError
+    from faustcoder.signal import SignalHarnessError, commit_signal_check, run_signal_suite
+
+    try:
+        run_signal_suite(
+            "process = _;\n",
+            lambda _profile: None,
+            sample_rates=(48000,),
+            frames=64,
+            block_size=64,
+            reward_graded=True,
+        )
+    except RewardUseRefused as exc:
+        assert "ledger" in str(exc)
+    else:
+        raise AssertionError("a reward suite with no ledger was accepted")
+
+    payload = compiler_failure_envelope(
+        exit_code=124,
+        diagnostic_class="timeout",
+        diagnostics="timeout: wall clock limit exceeded\n",
+    )["payload"]
+    compilation = Compilation(
+        receipt=payload,
+        diagnostics="timeout: wall clock limit exceeded\n",
+        reproducible_digest=reproducible_receipt_digest(payload),
+    )
+    monkeypatch.setattr("faustcoder.signal.compile_source", lambda *_args, **_kwargs: compilation)
+    ledger = RewardLedger(tmp_path / "suite")
+    suite = run_signal_suite(
+        "process = _;\n",
+        lambda _profile: None,
+        sample_rates=(48000,),
+        frames=64,
+        block_size=64,
+        reward_graded=True,
+        ledger=ledger,
+    )
+    assert suite.runs[0].receipt is None
+    assert suite.runs[0].compilation.receipt["exit_code"] == 124
+    committed = commit_signal_check(
+        store,
+        suite,
+        state=CandidateState.COMPILE_CHECKED,
+        created_at="2026-10-18T00:00:00Z",
+    )
+    assert committed.state is CandidateState.COMPILE_CHECKED
+    assert len(committed.outcomes) == 1
+    assert isinstance(committed.outcomes[0], Ungraded)
+    assert committed.outcomes[0].reason is UngradedReason.UNATTRIBUTED
+    assert ledger.queue.count("signal") == 1
+
+    ok_payload = compiler_failure_envelope(
+        exit_code=0,
+        diagnostic_class="ok",
+        diagnostics="",
+    )["payload"]
+    ok = Compilation(
+        receipt=ok_payload,
+        diagnostics="",
+        reproducible_digest=reproducible_receipt_digest(ok_payload),
+    )
+    monkeypatch.setattr("faustcoder.signal.compile_source", lambda *_args, **_kwargs: ok)
+
+    def crash(*_args: object, **_kwargs: object) -> dict[str, object]:
+        raise SignalHarnessError("renderer stopped: internal")
+
+    monkeypatch.setattr("faustcoder.signal._render", crash)
+    crashed = run_signal_suite(
+        "process = _;\n",
+        lambda _profile: None,
+        sample_rates=(48000,),
+        frames=64,
+        block_size=64,
+        reward_graded=True,
+        ledger=ledger,
+    )
+    assert crashed.runs[0].reward_failure == "worker_crash"
+    commit_signal_check(
+        store,
+        crashed,
+        state=CandidateState.COMPILE_CHECKED,
+        created_at="2026-10-18T00:00:00Z",
+    )
+    assert ledger.queue.count("signal") == 2
+
+    def sandbox(*_args: object, **_kwargs: object) -> Compilation:
+        raise SandboxError("worker failed")
+
+    monkeypatch.setattr("faustcoder.signal.compile_source", sandbox)
+    try:
+        run_signal_suite(
+            "process = _;\n",
+            lambda _profile: None,
+            sample_rates=(48000,),
+            frames=64,
+            block_size=64,
+            reward_graded=True,
+            ledger=ledger,
+        )
+    except RewardOutcomeHeld as exc:
+        assert isinstance(exc.grade, Ungraded)
+        assert exc.grade.reason is UngradedReason.UNATTRIBUTED
+    else:
+        raise AssertionError("a suite sandbox failure was not held")
+    assert ledger.queue.count("signal") == 3

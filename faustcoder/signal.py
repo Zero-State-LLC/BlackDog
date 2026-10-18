@@ -278,24 +278,38 @@ class SignalReference:
 
 @dataclass(frozen=True)
 class SignalRun:
-    """One rate's compile, render and DSPTestReceipt."""
+    """One rate's compile, render and DSPTestReceipt.
+
+    ``receipt`` is ``None`` when a reward-graded compile exit 124, 125
+    or 126, or a render crash, is deferred to ``commit_signal_check``.
+    ``reward_failure`` names that deferral (``compiler``,
+    ``worker_crash`` or ``harness_crash``).
+    """
 
     compilation: Compilation
-    receipt: dict[str, Any]
+    receipt: dict[str, Any] | None
     reproducible_digest: str
     failures: tuple[str, ...]
     reference_payload: dict[str, Any] | None
+    reward_failure: str | None = None
 
 
 @dataclass(frozen=True)
 class SignalSuite:
-    """Both sample rates, or the rates the caller asked for."""
+    """Both sample rates, or the rates the caller asked for.
+
+    ``ledger`` is the reward ledger a reward-graded suite was given.
+    ``commit_signal_check`` uses it when the caller does not pass one.
+    """
 
     runs: tuple[SignalRun, ...]
+    ledger: object | None = None
 
     @property
     def passed(self) -> bool:
-        return all(run.receipt["passed"] for run in self.runs)
+        return all(
+            run.receipt is not None and run.receipt["passed"] for run in self.runs
+        )
 
 
 @dataclass(frozen=True)
@@ -588,6 +602,18 @@ def _hold_compiler_for_reward(compiled: Compilation, ledger: object) -> None:
     raise RewardOutcomeHeld(grade)
 
 
+def _deferred_reward_run(compiled: Compilation, kind: str) -> SignalRun:
+    """Return a suite run whose grade happens in ``commit_signal_check``."""
+    return SignalRun(
+        compilation=compiled,
+        receipt=None,
+        reproducible_digest=compiled.reproducible_digest,
+        failures=(kind,),
+        reference_payload=None,
+        reward_failure=kind,
+    )
+
+
 def _hold_crash_for_reward(
     reproducible_digest: str,
     ledger: object,
@@ -630,6 +656,7 @@ def run_signal(
     promotion_candidate: bool = False,
     reward_graded: bool = False,
     ledger: object | None = None,
+    defer_reward_failure: bool = False,
 ) -> SignalRun:
     """Compile and render ``source``. Return a schema-valid receipt.
 
@@ -650,6 +677,10 @@ def run_signal(
     reward-graded. A reward-graded compiler failure or worker crash
     is graded onto ``ledger`` (spec §23). With no ledger the call
     raises ``RewardUseRefused`` and does not score the outcome.
+    ``defer_reward_failure`` returns a run with no signal receipt for
+    a compiler exit 124, 125 or 126 and for a render crash, so
+    ``commit_signal_check`` can grade it. A sandbox failure while
+    compiling still requires ``ledger`` and is held immediately.
     """
     if not isinstance(source, str):
         raise TypeError("source must be a string")
@@ -682,6 +713,8 @@ def run_signal(
         "ok",
         "warning",
     }:
+        if reward_graded and defer_reward_failure:
+            return _deferred_reward_run(compiled, "compiler")
         if reward_graded:
             _hold_compiler_for_reward(compiled, ledger)
         raise SignalHarnessError(
@@ -691,12 +724,16 @@ def run_signal(
     try:
         rendered = _render(source, profile, options=checked, limits=bounds)
     except SandboxError:
+        if reward_graded and defer_reward_failure:
+            return _deferred_reward_run(compiled, "harness_crash")
         if reward_graded:
             _hold_crash_for_reward(
                 compiled.reproducible_digest, ledger, kind="harness_crash"
             )
         raise
     except SignalHarnessError:
+        if reward_graded and defer_reward_failure:
+            return _deferred_reward_run(compiled, "worker_crash")
         if reward_graded:
             _hold_crash_for_reward(
                 compiled.reproducible_digest, ledger, kind="worker_crash"
@@ -729,16 +766,30 @@ def run_signal_suite(
     limits: ResourceLimits | None = None,
     promotion_candidate: bool = False,
     reward_graded: bool = False,
+    ledger: object | None = None,
     **profile_kwargs: Any,
 ) -> SignalSuite:
     """Run ``source`` at each sample rate. Default rates are 44.1 and 48 kHz.
 
     A default frame count that includes impulse is raised to the cap
     before ``reference_for`` runs, so the reference is built for the
-    window that will actually be rendered.
+    window that will actually be rendered. A reward-graded suite
+    requires ``ledger``. Compiler exits 124, 125 and 126, and render
+    crashes, stay on the returned runs so ``commit_signal_check``
+    grades them onto that ledger. A sandbox failure during compile is
+    held immediately.
     """
     if not sample_rates:
         raise ValueError("sample_rates must not be empty")
+    if reward_graded and (
+        ledger is None or not hasattr(ledger, "queue") or not hasattr(ledger, "rates")
+    ):
+        from faustcoder.reward.grader import RewardUseRefused
+
+        raise RewardUseRefused(
+            "reward-graded signal suites require a reward ledger; "
+            "refusing to score or drop compile failures and crashes"
+        )
     runs: list[SignalRun] = []
     for rate in sample_rates:
         profile = _default_impulse_frames(
@@ -759,9 +810,11 @@ def run_signal_suite(
                 limits=limits,
                 promotion_candidate=promotion_candidate,
                 reward_graded=reward_graded,
+                ledger=ledger,
+                defer_reward_failure=reward_graded,
             )
         )
-    return SignalSuite(runs=tuple(runs))
+    return SignalSuite(runs=tuple(runs), ledger=ledger)
 
 
 def commit_signal_check(
@@ -779,7 +832,10 @@ def commit_signal_check(
     The compiler receipt is stored first and is a parent. A reference
     document, when the run has one, is the other parent. A harness
     exception never reaches this function, so a failed sandbox does
-    not move the candidate.
+    not move the candidate. A reward run with no signal receipt is a
+    compiler exit 124, 125 or 126, or a render crash. Those are graded
+    here onto ``ledger`` or the suite ledger. Exit 124, 125 and 126
+    use the compiler envelope. A render crash uses a crash envelope.
     """
     if state is not CandidateState.COMPILE_CHECKED:
         raise SignalHarnessError("signal check starts from COMPILE_CHECKED")
@@ -799,16 +855,24 @@ def commit_signal_check(
                 producer="faustcoder.signal.reference",
             )
             parents.append(f"sha256:{reference_id}")
+        receipt = run.receipt
+        if receipt is None:
+            if run.reward_failure is None:
+                raise SignalHarnessError("signal run has no receipt")
+            artifact_ids.append(compiler_id)
+            continue
         artifact_ids.append(
             store_signal_receipt(
                 store,
-                run.receipt,
+                receipt,
                 created_at=created_at,
                 producer=producer,
                 parents=parents,
             )
         )
-    purposes = [run.receipt.get("purpose") for run in suite.runs]
+    purposes = [
+        "reward" if run.receipt is None else run.receipt.get("purpose") for run in suite.runs
+    ]
     if any(purpose == "reward" for purpose in purposes):
         if any(purpose != "reward" for purpose in purposes):
             raise SignalHarnessError("a reward-graded suite cannot mix diagnostic receipts")
@@ -820,7 +884,9 @@ def commit_signal_check(
         )
         from faustcoder.reward.ledger import ledger_for_store
 
-        bound = ledger if ledger is not None else ledger_for_store(store)
+        bound = ledger if ledger is not None else suite.ledger
+        if bound is None or not hasattr(bound, "queue") or not hasattr(bound, "rates"):
+            bound = ledger_for_store(store)
         outcomes_list: list[object] = []
         for run, artifact_id in zip(suite.runs, artifact_ids, strict=True):
             exit_code = run.compilation.receipt.get("exit_code")
@@ -840,6 +906,29 @@ def commit_signal_check(
                         rates=bound.rates,
                     )
                 )
+                if run.receipt is None:
+                    continue
+            if run.receipt is None and run.reward_failure in {"worker_crash", "harness_crash"}:
+                outcomes_list.append(
+                    grade_receipt(
+                        build_envelope(
+                            schema_version=SIGNAL_SCHEMA_VERSION,
+                            created_at=created_at,
+                            producer=producer,
+                            parents=[f"sha256:{artifact_id}"],
+                            payload={
+                                "kind": run.reward_failure,
+                                "exit_code": 126,
+                                "diagnostic_class": "internal",
+                                "reproducible_digest": run.compilation.reproducible_digest,
+                            },
+                        ),
+                        policy=policy,
+                        queue=bound.queue,
+                        rates=bound.rates,
+                    )
+                )
+                continue
             outcomes_list.append(
                 grade_receipt(
                     store.get(artifact_id),
