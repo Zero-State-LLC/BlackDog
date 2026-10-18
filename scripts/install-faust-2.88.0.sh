@@ -32,10 +32,24 @@ root=$(mktemp -d)
 trap 'rm -rf "$root"' EXIT
 curl -fsSL -o "$root/faust-2.88.0.tar.gz" \
   https://github.com/grame-cncm/faust/releases/download/2.88.0/faust-2.88.0.tar.gz
+# Release asset faust-2.88.0.tar.gz (81488527 bytes).
+pinned_sha256=e4e175cf236924b5b7d4784cbb8c50cc01e211159e169655dd9e6d8f92b871d9
+echo "${pinned_sha256}  ${root}/faust-2.88.0.tar.gz" | sha256sum -c -
 tar -xzf "$root/faust-2.88.0.tar.gz" -C "$root"
 make -C "$root/faust-2.88.0" compiler -j"$(nproc)"
 prefix=${PREFIX:-/usr/local}
 $SUDO make -C "$root/faust-2.88.0" install PREFIX="$prefix"
+# <prefix>/bin is mode 0777 on GitHub-hosted Ubuntu. An absent
+# <prefix>/bin/share/faust would be refused. Create the prefix library
+# directories so the sandbox masks them.
+$SUDO mkdir -p \
+  "$prefix/share/faust" \
+  "$prefix/lib/faust" \
+  "$prefix/bin/share/faust"
+$SUDO chmod 755 \
+  "$prefix/share/faust" \
+  "$prefix/lib/faust" \
+  "$prefix/bin/share/faust"
 export PATH="$prefix/bin:${PATH}"
 installed=$("$prefix/bin/faust" -v 2>&1 || true)
 echo "$installed"

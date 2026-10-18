@@ -44,7 +44,9 @@ from faustcoder import (
 )
 from faustcoder.canonical import canonical_bytes
 from faustcoder.sandbox import (
+    _MASK_EXEC,
     SandboxRun,
+    _reported_faust_directories,
     faust_fallback_mounts,
     faust_library_mounts,
     unshare_identity,
@@ -837,6 +839,10 @@ def test_native_compile_uses_a_hashed_private_copy(
 ) -> None:
     live = share_directory()
     monkeypatch.setattr("faustcoder.compiler._require_native_faust", lambda: "/usr/bin/faust")
+    monkeypatch.setattr("faustcoder.sandbox._reported_faust_directories", lambda _binary: ())
+    # /usr/share is mode 0777 on GitHub-hosted Ubuntu. This test checks the
+    # private copy, not that host mode.
+    monkeypatch.setattr("faustcoder.sandbox._is_root_only_directory", lambda _path: True)
 
     def fake_run(command: list[str], **kwargs: object) -> SandboxRun:
         include = Path(command[command.index("-I") + 1])
@@ -862,6 +868,7 @@ def test_library_mounts_cover_the_prefix_beside_the_binary(tmp_path: Path) -> No
     lib = prefix / "lib" / "faust"
     share.mkdir(parents=True)
     lib.mkdir(parents=True)
+    (prefix / "bin" / "share" / "faust").mkdir(parents=True)
     private = tmp_path / "private"
     private.mkdir()
     mounts = faust_library_mounts(binary, private=private)
@@ -877,6 +884,8 @@ def test_library_mounts_cover_the_prefix_beside_the_binary(tmp_path: Path) -> No
     via_share = via / "share" / "faust"
     via_share.parent.mkdir(parents=True)
     via_share.symlink_to(hidden, target_is_directory=True)
+    (via / "lib" / "faust").mkdir(parents=True)
+    (via / "bin" / "share" / "faust").mkdir(parents=True)
     via_mounts = faust_library_mounts(via_bin, private=private)
     assert hidden.resolve() in via_mounts
 
@@ -886,6 +895,7 @@ def test_library_mounts_mask_reported_dirs_except_the_private_copy(
 ) -> None:
     binary = tmp_path / "bin" / "faust"
     _fake_faust(binary)
+    _prefix_library_dirs(binary)
     private = tmp_path / "private"
     private.mkdir()
     extra = tmp_path / "reported"
@@ -902,6 +912,169 @@ def test_library_mounts_mask_reported_dirs_except_the_private_copy(
     assert loader.resolve() not in mounts
 
 
+def test_library_mounts_refuse_a_user_writable_absent_prefix(tmp_path: Path) -> None:
+    binary = tmp_path / "bin" / "faust"
+    _fake_faust(binary)
+    private = tmp_path / "private"
+    private.mkdir()
+    with pytest.raises(SandboxError, match="not root-only"):
+        faust_library_mounts(binary, private=private)
+
+
+def test_library_mounts_keep_absent_root_only_directories(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr("faustcoder.sandbox._reported_faust_directories", lambda _binary: ())
+    monkeypatch.setattr("faustcoder.sandbox._is_root_only_directory", lambda _path: True)
+    private = Path("/usr/lib/faustcoder-private-copy")
+    mounts = faust_library_mounts("/usr/bin/faust", private=private)
+    for path in (
+        Path("/usr/share/faust"),
+        Path("/usr/local/share/faust"),
+        Path("/usr/lib/faust"),
+        Path("/usr/bin/share/faust"),
+    ):
+        assert path in mounts or path.resolve() in mounts
+    assert private not in mounts
+
+
+def test_world_writable_usr_share_fallback_is_passed_through(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # GitHub-hosted Ubuntu runs `chmod -R 777 /usr/share`. That fallback
+    # is not the binary prefix, so it is masked later instead of refused.
+    monkeypatch.setattr("faustcoder.sandbox._reported_faust_directories", lambda _binary: ())
+
+    def root_only(path: Path) -> bool:
+        return path != Path("/usr/share")
+
+    monkeypatch.setattr("faustcoder.sandbox._is_root_only_directory", root_only)
+    private = Path("/usr/lib/faustcoder-private-copy")
+    mounts = faust_library_mounts("/usr/local/bin/faust", private=private)
+    assert Path("/usr/share/faust") in mounts or Path("/usr/share/faust").resolve() in mounts
+
+
+def test_absent_reported_directory_is_passed_through(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    binary = tmp_path / "bin" / "faust"
+    _fake_faust(binary)
+    _prefix_library_dirs(binary)
+    reported = tmp_path / "architecture"
+    monkeypatch.setattr(
+        "faustcoder.sandbox._reported_faust_directories",
+        lambda _binary: (reported,),
+    )
+    private = tmp_path / "private"
+    private.mkdir()
+    mounts = faust_library_mounts(binary, private=private)
+    assert reported in mounts
+
+
+def test_native_sandbox_passes_an_absent_mask_candidate(tmp_path: Path) -> None:
+    secret = tmp_path / "share"
+    secret.mkdir()
+    (secret / "stdfaust.lib").write_text("PWNED\n", encoding="ascii")
+    absent = tmp_path / "missing-share"
+    script = (
+        'if [ -e "$1/stdfaust.lib" ]; then seen=visible; else seen=hidden; fi; '
+        'if [ -e "$2" ]; then late=appeared; else late=absent; fi; '
+        "printf '%s %s\\n' \"$seen\" \"$late\""
+    )
+    command = ["/bin/sh", "-c", script, "sh", str(secret), str(absent)]
+    masked = run_in_sandbox(
+        command,
+        stdin=b"",
+        workdir=tmp_path,
+        limits=ResourceLimits(timeout_s=5),
+        mask_directories=(secret, absent),
+    )
+    assert masked.returncode == 0, masked.stderr
+    assert masked.stdout == b"hidden absent\n"
+    assert (secret / "stdfaust.lib").read_text(encoding="ascii") == "PWNED\n"
+    assert not absent.exists()
+
+
+def test_mask_script_fails_when_an_absent_candidate_appears(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    source = _MASK_EXEC.rsplit("\nmain()\n", 1)[0]
+    namespace: dict[str, object] = {}
+    exec(source, namespace)  # noqa: S102
+    refuse = namespace["refuse_if_unmasked"]
+    assert callable(refuse)
+    missing = tmp_path / "late"
+    refuse([str(missing)])
+    missing.mkdir()
+    with pytest.raises(SystemExit):
+        refuse([str(missing)])
+    captured = capsys.readouterr()
+    assert "faustcoder_mask_failed:" in captured.err
+    assert "exists unmasked" in captured.err
+
+
+def test_reported_faust_directories_fail_closed(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    missing = tmp_path / "missing-faust"
+    with pytest.raises(SandboxError, match="is not a file"):
+        _reported_faust_directories(missing)
+
+    binary = tmp_path / "faust"
+    binary.write_text("#!/bin/sh\nexit 7\n", encoding="ascii")
+    binary.chmod(0o755)
+    with pytest.raises(SandboxError, match="exited 7"):
+        _reported_faust_directories(binary)
+
+    binary.write_text("#!/bin/sh\nexit 0\n", encoding="ascii")
+    binary.chmod(0o755)
+    with pytest.raises(SandboxError, match="FAUST dsp library paths:"):
+        _reported_faust_directories(binary)
+
+    def timed_out(*_args: object, **_kwargs: object) -> subprocess.CompletedProcess[str]:
+        raise subprocess.TimeoutExpired(cmd="faust", timeout=10)
+
+    monkeypatch.setattr("faustcoder.sandbox.subprocess.run", timed_out)
+    with pytest.raises(SandboxError, match="timed out"):
+        _reported_faust_directories(binary)
+
+
+def test_reported_faust_directories_keep_absolute_paths(tmp_path: Path) -> None:
+    binary = tmp_path / "faust"
+    binary.write_text(
+        "#!/bin/sh\n"
+        'case "$1" in\n'
+        "  --libdir) printf '%s\\n' /tmp/reported-lib ;;\n"
+        "  --pathslist)\n"
+        "    printf '%s\\n' 'FAUST dsp library paths:' /tmp/reported-one\n"
+        "    ;;\n"
+        "esac\n"
+        "exit 0\n",
+        encoding="ascii",
+    )
+    binary.chmod(0o755)
+    found = _reported_faust_directories(binary)
+    assert Path("/tmp/reported-lib") in found
+    assert Path("/tmp/reported-one") in found
+
+
+def test_install_script_pins_the_faust_tarball(tmp_path: Path) -> None:
+    script = Path("scripts/install-faust-2.88.0.sh").read_text(encoding="utf-8")
+    pinned = "e4e175cf236924b5b7d4784cbb8c50cc01e211159e169655dd9e6d8f92b871d9"
+    assert pinned in script
+    assert script.index("sha256sum -c") < script.index("tar -xzf")
+    tarball = tmp_path / "faust-2.88.0.tar.gz"
+    tarball.write_bytes(b"not-the-release\n")
+    check = subprocess.run(
+        ["sha256sum", "-c"],
+        input=f"{pinned}  {tarball}\n",
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert check.returncode != 0
+
+
 def test_native_compile_rejects_a_library_planted_beside_the_binary(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -915,6 +1088,8 @@ def test_native_compile_rejects_a_library_planted_beside_the_binary(
     planted.chmod(0o755)
     share = prefix / "share" / "faust"
     share.mkdir(parents=True)
+    (prefix / "lib" / "faust").mkdir(parents=True)
+    (prefix / "bin" / "share" / "faust").mkdir(parents=True)
     (share / "zzprobe.lib").write_text("zzprobe = 1;\n", encoding="utf-8")
     source = 'import("zzprobe.lib"); process = zzprobe;\n'
     dsp = tmp_path / "probe.dsp"
@@ -937,8 +1112,27 @@ def test_native_compile_rejects_a_library_planted_beside_the_binary(
 
 def _fake_faust(path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text("#!/bin/sh\nexit 1\n", encoding="ascii")
+    path.write_text(
+        "#!/bin/sh\n"
+        'case "$1" in\n'
+        "  --pathslist)\n"
+        "    printf '%s\\n' 'FAUST dsp library paths:' 'FAUST architectures paths:'\n"
+        "    ;;\n"
+        "esac\n"
+        "exit 0\n",
+        encoding="ascii",
+    )
     path.chmod(0o755)
+
+
+def _prefix_library_dirs(binary: Path) -> None:
+    prefix = binary.parent.parent
+    for path in (
+        prefix / "share" / "faust",
+        prefix / "lib" / "faust",
+        binary.parent / "share" / "faust",
+    ):
+        path.mkdir(parents=True, exist_ok=True)
 
 
 def test_native_compile_refuses_a_share_tampered_after_the_hash(

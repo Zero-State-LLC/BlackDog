@@ -85,11 +85,33 @@ The sandbox resolves the binary (symlinks followed) and covers
 `<prefix>/share/faust` and `<prefix>/lib/faust` when they exist. It also
 runs `faust --libdir`, `--dspdir`, `--includedir`, `--archdir` and
 `--pathslist` and covers every absolute directory that output names,
-except the hashed private copy. A loader directory such as `/usr/lib` is
-left in place so the dynamic linker can start Faust; `lib/faust` under
-that prefix is still covered. Each covered directory is an empty tmpfs
-in a private mount namespace. Faust still runs as the calling user with
-`CapEff` 0. The logical command records `--faustlibraries=2edec0537f53`.
+except the hashed private copy. That query fails closed: each flag must
+exit 0, and `--pathslist` must print a line `FAUST dsp library paths:`.
+A path that is missing at the check is still passed to the mount. If it
+exists after the mount and was not covered, the compile fails. An absent
+`share/faust` or `lib/faust` beside the binary is refused when its
+nearest existing parent is not root-only (not owned by root, writable by
+group or others, or not a real directory). A caller cannot create that
+directory under `/tmp` after the check. A Faust prefix installed outside
+a root-only directory, such as under `/tmp`, has to already contain those
+directories or the native compile is refused. The `/usr/share/faust` and
+`/usr/local/share/faust` fallbacks are passed through even when the
+parent is writable. GitHub-hosted Ubuntu images `chmod -R 777 /usr/share` and leave
+`/usr/local/bin` mode `0777`, so refusing that fallback, or an absent
+`<prefix>/bin/share/faust`, would stop every native compile on CI. The
+install script creates `<prefix>/share/faust`, `<prefix>/lib/faust` and
+`<prefix>/bin/share/faust` so those paths are masked. The mount step
+still fails if some other absent path exists afterward and was not
+covered.
+A loader directory such as
+`/usr/lib` is left in place so the dynamic linker can start Faust;
+`lib/faust` under that prefix is still covered. Each covered directory
+is an empty tmpfs in a private mount namespace. Faust still runs as the
+calling user with `CapEff` 0.
+The logical command records `--faustlibraries=2edec0537f53`.
+`scripts/install-faust-2.88.0.sh` checks the Faust 2.88.0 tarball sha256
+`e4e175cf236924b5b7d4784cbb8c50cc01e211159e169655dd9e6d8f92b871d9` before
+it extracts.
 
 The data file still contains libraries 2.74.2. Those bytes are hashed so
 the runtime identity stays in the digest. They are not the libraries the
