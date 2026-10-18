@@ -3,8 +3,11 @@
 Every passing row, a ceil(5%) sample of graded 0.0 rows, and every signed
 canary are rerun from source. The seed is HMAC-SHA256 of the run key and
 ``d3-h2-seed`` plus the run id. Any other seed is refused. A disagreement
-leaves that row ungraded, drops its group, and persists a halt. P3 reads
-that report and does not start while the latest one is not clear.
+leaves that row ungraded, drops its group, and persists a halt. Every
+halt also appends a MAC'd halt-marker claim to the consumed log, inside
+the anchor's claim-byte coverage. A new report chain is refused while
+that marker remains and the anchor is gone. P3 reads the report and
+does not start while the latest one is not clear.
 """
 
 from __future__ import annotations
@@ -38,6 +41,8 @@ _SEED_LABEL = b"d3-h2-seed"
 _REPORT_DOMAIN = b"faustcoder.reward-audit-report.v1"
 _CONSUMED_ID_DOMAIN = b"faustcoder.consumed-id.v1"
 _ANCHOR_DOMAIN = b"faustcoder.audit-anchor.v1"
+_HALT_DOMAIN = b"faustcoder.audit-halt.v1"
+_HALT_PREFIX = b"audit-halt v1 "
 _FAIL_OUTCOMES = frozenset({"fail", "source_attributed"})
 _LOG_MODE = 0o640
 _GENESIS_MAC = "0" * 64
@@ -217,7 +222,18 @@ class AuditReportLog:
                 # The report line is durable before the anchor moves. A crash
                 # in between leaves the tail ahead of the anchor. The next
                 # read and the next append both fail closed. There is no repair.
-                _advance_anchor(self.consumed, run_key, seq, signed["mac"])
+                # A halt marker is written in that same anchor update, so the
+                # new anchor MAC covers it.
+                mac = signed["mac"]
+                if type(mac) is not str:
+                    raise RewardRecordError("audit report mac does not verify")
+                _advance_anchor(
+                    self.consumed,
+                    run_key,
+                    seq,
+                    mac,
+                    record_ids=_marker_ids(signed),
+                )
             finally:
                 fcntl.flock(fd, fcntl.LOCK_UN)
         finally:
@@ -387,7 +403,8 @@ def audit_sampled_reruns(
     audit = _audit_from(keyring.run_id, derived, sample, audited, disagreements, claimed, rows)
     _persist(reports, keyring, audit)
     # Claims follow the report so a fresh halt can still open its chain.
-    # The claim refresh moves the anchor MAC over the new claim bytes.
+    # The halt marker is already in the claim bytes. A claim refreshes
+    # the anchor MAC over those bytes.
     for group_id in claimed:
         _claim_dropped(consumed, rows, group_id, _run_key(keyring))
     return audit
@@ -621,7 +638,11 @@ def _next_link(existing: str, run_key: bytes, consumed: ConsumedLog) -> tuple[in
     """The next sequence and prev MAC, or a rollback error."""
     anchor = _read_anchor(consumed, run_key)
     if not existing.strip():
-        if anchor is not None or _dropped_audit_remains(consumed):
+        if (
+            anchor is not None
+            or _dropped_audit_remains(consumed)
+            or _unresolved_halt_marker(consumed, run_key)
+        ):
             raise RewardRecordError("audit report log was rolled back")
         return 1, _GENESIS_MAC
     _reject_tamper(existing, run_key)
@@ -697,6 +718,103 @@ def _dropped_audit_remains(consumed: ConsumedLog) -> bool:
     return False
 
 
+def _marker_ids(signed: Mapping[str, object]) -> tuple[str, ...] | None:
+    """Disagreement ids for a halt line, or None when the line is not a halt."""
+    if signed.get("type") != "audit_report":
+        return None
+    report = signed.get("report")
+    if not isinstance(report, dict) or report.get("p3") != "halt":
+        return None
+    items = report.get("disagreements")
+    if not isinstance(items, list) or not items:
+        raise RewardRecordError("audit halt marker is not usable")
+    found: list[str] = []
+    for item in items:
+        if not isinstance(item, dict):
+            raise RewardRecordError("audit halt marker is not usable")
+        record_id = item.get("record_id")
+        if type(record_id) is not str or record_id == "" or "\n" in record_id:
+            raise RewardRecordError("audit halt marker is not usable")
+        found.append(record_id)
+    return tuple(sorted(set(found)))
+
+
+def _halt_body(seq: int, report_mac: str, consumed_id: str, record_ids: tuple[str, ...]) -> dict[str, object]:
+    return {
+        "consumed_id": consumed_id,
+        "record_ids": list(record_ids),
+        "report_mac": report_mac,
+        "seq": seq,
+        "state": "unresolved",
+        "type": "audit_halt",
+    }
+
+
+def _halt_mac(run_key: bytes, body: Mapping[str, object]) -> str:
+    message = _HALT_DOMAIN + b"\n" + canonical_bytes(dict(body))
+    return hmac.new(run_key, message, hashlib.sha256).hexdigest()
+
+
+def _halt_line(
+    run_key: bytes,
+    seq: int,
+    line_mac: str,
+    consumed_id: str,
+    record_ids: tuple[str, ...],
+) -> bytes:
+    body = _halt_body(seq, line_mac, consumed_id, record_ids)
+    body["mac"] = _halt_mac(run_key, body)
+    return _HALT_PREFIX + canonical_bytes(body) + b"\n"
+
+
+def _unresolved_halt_marker(consumed: ConsumedLog, run_key: bytes) -> bool:
+    """True when a halt marker is still in the log and the anchor is gone.
+
+    The marker is MAC'd under the run key. A bad marker fails closed.
+    With the anchor removed, that halt is unresolved.
+    """
+    if not consumed.path.is_file():
+        return False
+    data = _read_consumed_bytes(consumed.path)
+    if _anchor_offset(data) is not None:
+        return False
+    found = False
+    for raw in data.splitlines():
+        if not raw.startswith(_HALT_PREFIX):
+            continue
+        _verify_halt_line(raw, run_key, consumed.path)
+        found = True
+    return found
+
+
+def _verify_halt_line(raw: bytes, run_key: bytes, path: Path) -> None:
+    if not raw.startswith(_HALT_PREFIX) or len(raw) == len(_HALT_PREFIX):
+        raise RewardRecordError("audit halt marker is not usable")
+    try:
+        body = loads_strict(raw[len(_HALT_PREFIX) :].decode("utf-8"))
+    except (UnicodeDecodeError, CanonicalError) as exc:
+        raise RewardRecordError("audit halt marker is not usable") from exc
+    if not isinstance(body, dict):
+        raise RewardRecordError("audit halt marker is not usable")
+    mac = body.get("mac")
+    if type(mac) is not str or len(mac) != 64:
+        raise RewardRecordError("audit halt marker is not usable")
+    unsigned = {key: value for key, value in body.items() if key != "mac"}
+    expected = _halt_mac(run_key, unsigned)
+    if not hmac.compare_digest(mac, expected):
+        raise RewardRecordError("audit halt marker is not usable")
+    consumed_id = body.get("consumed_id")
+    expected_id = _consumed_id(run_key, path)
+    if (
+        body.get("type") != "audit_halt"
+        or body.get("state") != "unresolved"
+        or type(consumed_id) is not str
+        or len(consumed_id) != len(expected_id)
+        or not hmac.compare_digest(consumed_id, expected_id)
+    ):
+        raise RewardRecordError("audit halt marker is not usable")
+
+
 def _anchor_text(seq: int, line_mac: str, consumed_id: str, bind: str) -> bytes:
     text = f"audit-anchor v1 seq={seq:020d} mac={line_mac} id={consumed_id} bind={bind}\n"
     if len(text) != _ANCHOR_LEN:
@@ -761,26 +879,29 @@ def _read_consumed_bytes(path: Path) -> bytes:
         os.close(fd)
 
 
-def _read_anchor(consumed: ConsumedLog, run_key: bytes) -> tuple[int, str, str] | None:
-    if not consumed.path.is_file():
-        return None
-    data = _read_consumed_bytes(consumed.path)
+def _verified_anchor(data: bytes, run_key: bytes, path: Path) -> tuple[int, str, str] | None:
     offset = _anchor_offset(data)
     if offset is None:
         return None
-    seq, line_mac, consumed_id, bind = _parse_anchor(data[offset:offset + _ANCHOR_LEN])
-    expected_id = _consumed_id(run_key, consumed.path)
+    seq, line_mac, consumed_id, bind = _parse_anchor(data[offset : offset + _ANCHOR_LEN])
+    expected_id = _consumed_id(run_key, path)
     expected_bind = _anchor_bind(
         run_key,
         seq=seq,
         line_mac=line_mac,
         consumed_id=consumed_id,
-        path=consumed.path,
+        path=path,
         claim_digest=_claim_digest(data),
     )
     if not hmac.compare_digest(consumed_id, expected_id) or not hmac.compare_digest(bind, expected_bind):
         raise RewardRecordError("audit anchor is not usable")
     return seq, line_mac, consumed_id
+
+
+def _read_anchor(consumed: ConsumedLog, run_key: bytes) -> tuple[int, str, str] | None:
+    if not consumed.path.is_file():
+        return None
+    return _verified_anchor(_read_consumed_bytes(consumed.path), run_key, consumed.path)
 
 
 def _pwrite_all(fd: int, data: bytes, offset: int) -> None:
@@ -839,7 +960,18 @@ def refresh_anchor_bind(path: Path, run_key: bytes, *, locked: bool = False) -> 
         os.close(fd)
 
 
-def _advance_anchor(consumed: ConsumedLog, run_key: bytes, seq: int, line_mac: str) -> None:
+def _advance_anchor(
+    consumed: ConsumedLog,
+    run_key: bytes,
+    seq: int,
+    line_mac: str,
+    *,
+    record_ids: tuple[str, ...] | None = None,
+) -> None:
+    """Move the anchor. A halt appends its marker under the same lock.
+
+    The marker is claim bytes, so the anchor MAC written here covers it.
+    """
     consumed_id = _consumed_id(run_key, consumed.path)
     consumed.path.parent.mkdir(parents=True, exist_ok=True)
     flags = os.O_RDWR | os.O_CLOEXEC
@@ -861,6 +993,11 @@ def _advance_anchor(consumed: ConsumedLog, run_key: bytes, seq: int, line_mac: s
                 chunks.append(block)
             data = b"".join(chunks)
             offset = _anchor_offset(data)
+            if record_ids is not None:
+                os.lseek(fd, 0, os.SEEK_END)
+                marker = _halt_line(run_key, seq, line_mac, consumed_id, record_ids)
+                _write_all(fd, marker)
+                data += marker
             bind = _anchor_bind(
                 run_key,
                 seq=seq,
