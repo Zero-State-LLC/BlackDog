@@ -136,7 +136,9 @@ Harness failures override that text:
   ``RangeError: Maximum call stack size exceeded``), case-sensitive, a
   diagnostic line that is exactly ``ERROR : stack overflow in eval``
   (the evaluator crash libfaust-wasm sometimes returns instead of
-  dying), a remote ``import`` / ``library`` / ``component`` URL rejected
+  dying), Emscripten's ``Aborted(stack overflow)`` line when that trap
+  is caught instead, a remote ``import`` / ``library`` / ``component``
+  URL rejected
   before spawn, a worker crash (including ``SIGSEGV`` from a recursive
   source once ``--stack-size=8192`` lets it pass the old V8 limit), or
   an unreadable result -> ``internal``, exit 126. Any other line that
@@ -236,6 +238,11 @@ _STACK_OVERFLOW_EVAL = "ERROR : stack overflow in eval"
 # A line that starts with "ERROR :" is a Faust diagnostic, never one of these.
 _JS_RUNTIME_LINE = re.compile(
     r"^(?:TypeError|RangeError|ReferenceError|SyntaxError|InternalError): "
+)
+# Emscripten abort when the wasm trap is caught instead of SIGSEGV.
+# The line has to start with this; a crash token later in an ERROR line does not.
+_EMSCRIPTEN_STACK_ABORT = re.compile(
+    r"^Aborted\((?:stack overflow|ERROR : stack overflow in eval)\)"
 )
 _PIN_LOCK = threading.Lock()
 _PIN_CACHE: dict[tuple[str, ...], "RuntimePin"] = {}
@@ -1202,22 +1209,31 @@ def _is_js_runtime(diagnostics: str) -> bool:
 
     JS exceptions match only at the start of a line, case-sensitive
     (``TypeError: ``, ``RangeError: ``, ``ReferenceError: ``,
-    ``SyntaxError: ``, ``InternalError: ``). A crash token echoed inside
-    a Faust error, a comment, or a declare does not match.
+    ``SyntaxError: ``, ``InternalError: ``). Emscripten's caught wasm
+    abort is a line that starts with ``Aborted(stack overflow)`` or
+    ``Aborted(ERROR : stack overflow in eval)``. A crash token echoed
+    inside any other Faust error, a comment, or a declare does not match.
     """
     stripped = [line.strip() for line in diagnostics.splitlines()]
-    source_error = any(
-        line != _STACK_OVERFLOW_EVAL and ("ERROR :" in line or "WARNING" in line)
-        for line in stripped
-    )
-    if source_error:
+    if any(_is_source_diagnostic_line(line) for line in stripped):
         return False
-    if any(line == _STACK_OVERFLOW_EVAL for line in stripped):
+    return any(_is_runtime_crash_line(line) for line in stripped)
+
+
+def _is_runtime_crash_line(line: str) -> bool:
+    if line == _STACK_OVERFLOW_EVAL:
         return True
-    return any(
-        not line.startswith("ERROR :") and _JS_RUNTIME_LINE.match(line) is not None
-        for line in stripped
-    )
+    if line.startswith("ERROR :"):
+        return False
+    if _EMSCRIPTEN_STACK_ABORT.match(line) is not None:
+        return True
+    return _JS_RUNTIME_LINE.match(line) is not None
+
+
+def _is_source_diagnostic_line(line: str) -> bool:
+    if _is_runtime_crash_line(line):
+        return False
+    return "ERROR :" in line or "WARNING" in line
 
 
 def _normalize_digest(value: str) -> str:

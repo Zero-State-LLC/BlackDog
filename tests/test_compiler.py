@@ -428,7 +428,7 @@ def test_deep_recursion_is_internal() -> None:
     # catchable "Maximum call stack size exceeded" path is what a smaller
     # stack produced. Either way the receipt stays exit 126 internal.
     compiled = compile_source(_source("recurse.dsp"), lang="wasm")
-    assert compiled.receipt["exit_code"] == 126
+    assert compiled.receipt["exit_code"] == 126, repr(compiled.diagnostics)
     assert compiled.receipt["diagnostic_class"] == "internal"
     assert compiled.receipt["faust_version"] == "2.90.0"
 
@@ -511,6 +511,8 @@ def _source_failure(diagnostics: str) -> object:
         "TypeError: foo is not a function\n",
         "SyntaxError: Unexpected token\n",
         "InternalError: too much recursion\n",
+        "Aborted(stack overflow)\n",
+        "Aborted(ERROR : stack overflow in eval)\n",
     ],
 )
 def test_js_runtime_line_start_is_internal(diagnostics: str) -> None:
@@ -548,6 +550,7 @@ def test_echoed_crash_tokens_stay_source_errors(source: str) -> None:
         "ERROR : too much arguments : 2, instead of : 1\nwhen applying : typeerror\nto : (1,2)\n",
         'ERROR : min = 1 should be less than max = 0 in '
         "'hslider(\"stack overflow\",0.0f,1.0f,0.0f,0.1f)'\n",
+        "ERROR : unable to open file Aborted(stack overflow).dsp\n",
         "// TypeError: Maximum call stack size exceeded\n"
         "input:2 : ERROR : syntax error, unexpected ENDDEF\n",
         'declare name "ReferenceError: allocate is not defined";\n'

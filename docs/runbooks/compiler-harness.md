@@ -146,7 +146,9 @@ room for the 50 ms poll. A recursive Faust definition with no base case
 hits `SIGSEGV` inside the worker at this stack size. The receipt is exit
 126 `internal`. libfaust-wasm sometimes catches the same overflow and
 returns `ERROR : stack overflow in eval` instead of dying. A diagnostic
-line that is exactly that text is still exit 126 `internal`. Any other
+line that is exactly that text is still exit 126 `internal`. So is
+Emscripten's `Aborted(stack overflow)` when the wasm trap is caught
+instead of `SIGSEGV`. Any other
 `ERROR :` or `WARNING` is a source failure, including when the program's
 own tokens (`TypeError`, `stack overflow`, a slider label) appear inside
 the message. A JS exception is internal only when its line starts with
