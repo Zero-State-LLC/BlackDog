@@ -2,8 +2,11 @@
 
 from __future__ import annotations
 
+import errno
+import fcntl
 import hashlib
 import os
+import selectors
 import shutil
 import subprocess
 import sys
@@ -26,6 +29,7 @@ from faustcoder import (
     SandboxError,
     classify_diagnostic,
     compile_directory,
+    compile_native,
     compile_source,
     cross_check_native,
     digest_hex,
@@ -39,16 +43,23 @@ from faustcoder import (
     validate,
 )
 from faustcoder.canonical import canonical_bytes
-from faustcoder.sandbox import unshare_identity
+from faustcoder.sandbox import (
+    SandboxRun,
+    faust_fallback_mounts,
+    faust_library_mounts,
+    unshare_identity,
+)
 from faustcoder.compiler import (
     FAUSTLIBRARIES_PIN,
     FAUSTLIBRARIES_PIN_VERSION,
     _native_command,
     canonical_output_bytes,
     environment_preimage,
+    native_faust_version,
     worker_directory,
 )
 from faustcoder.exclusions import exclusion_for_source, exclusions, normalize_source
+import faustcoder.libraries as libraries
 from faustcoder.libraries import (
     FAUSTLIBRARIES_SHARE_SHA256,
     FAUSTLIBRARIES_TREE_SHA256,
@@ -613,6 +624,390 @@ def test_concurrent_processes_publish_one_share(tmp_path: Path) -> None:
     assert len(paths) == 1
     assert (tmp_path / "share-2edec0537f53").is_dir()
     assert (tmp_path / "share-2edec0537f53.lock").is_file()
+    assert not (tmp_path / "share-2edec0537f53.lock").is_symlink()
+
+
+def test_hung_share_lock_times_out(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    checkout = tmp_path / "2edec0537f53"
+    _copy_library_checkout(checkout)
+    lock_path = tmp_path / "share-2edec0537f53.lock"
+    holder = subprocess.Popen(
+        [
+            sys.executable,
+            "-c",
+            "import fcntl, os, sys, time\n"
+            "fd = os.open(sys.argv[1], os.O_CREAT | os.O_RDWR, 0o644)\n"
+            "fcntl.flock(fd, fcntl.LOCK_EX)\n"
+            "print('held', flush=True)\n"
+            "time.sleep(8)\n",
+            str(lock_path),
+        ],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+    try:
+        assert _read_line(holder, 5) == b"held\n"
+        monkeypatch.setenv("FAUSTCODER_LIBRARIES", str(checkout))
+        monkeypatch.setattr("faustcoder.libraries.SHARE_LOCK_TIMEOUT_S", 0.4)
+        started = time.monotonic()
+        with pytest.raises(
+            SandboxError, match="timed out waiting for the faustlibraries share lock"
+        ):
+            share_directory()
+        assert time.monotonic() - started < 3
+        assert not (tmp_path / "share-2edec0537f53").exists()
+    finally:
+        holder.kill()
+        holder.wait(timeout=5)
+
+
+def test_share_lock_symlink_is_refused(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    checkout = tmp_path / "2edec0537f53"
+    _copy_library_checkout(checkout)
+    target = tmp_path / "lock-target"
+    fd = os.open(target, os.O_CREAT | os.O_RDWR, 0o644)
+    fcntl.flock(fd, fcntl.LOCK_EX)
+    lock_path = tmp_path / "share-2edec0537f53.lock"
+    lock_path.symlink_to(target)
+    monkeypatch.setenv("FAUSTCODER_LIBRARIES", str(checkout))
+    # A follow of this symlink would block on the held target, then time out.
+    monkeypatch.setattr("faustcoder.libraries.SHARE_LOCK_TIMEOUT_S", 0.4)
+    real_open = os.open
+    real_is_symlink = Path.is_symlink
+    opened: list[int] = []
+
+    def spy_open(
+        path: object, flags: int, mode: int = 0o777, *, dir_fd: int | None = None
+    ) -> int:
+        if Path(str(path)) == lock_path:
+            opened.append(flags)
+        return real_open(path, flags, mode, dir_fd=dir_fd)
+
+    def hide_lock_symlink(self: Path) -> bool:
+        if self == lock_path:
+            return False
+        return real_is_symlink(self)
+
+    monkeypatch.setattr(os, "open", spy_open)
+    monkeypatch.setattr(Path, "is_symlink", hide_lock_symlink)
+    started = time.monotonic()
+    try:
+        with pytest.raises(SandboxError, match="share lock is a symlink"):
+            share_directory()
+        assert time.monotonic() - started < 2
+        assert not (tmp_path / "share-2edec0537f53").exists()
+        assert opened
+        assert all(flags & os.O_NOFOLLOW for flags in opened)
+    finally:
+        fcntl.flock(fd, fcntl.LOCK_UN)
+        os.close(fd)
+
+
+def test_share_lock_directory_is_refused(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    checkout = tmp_path / "2edec0537f53"
+    _copy_library_checkout(checkout)
+    (tmp_path / "share-2edec0537f53.lock").mkdir()
+    monkeypatch.setenv("FAUSTCODER_LIBRARIES", str(checkout))
+    with pytest.raises(SandboxError, match="share lock is a directory"):
+        share_directory()
+    assert not (tmp_path / "share-2edec0537f53").exists()
+
+
+def test_mkdir_failure_releases_the_process_lock(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    checkout = tmp_path / "2edec0537f53"
+    _copy_library_checkout(checkout)
+    monkeypatch.setenv("FAUSTCODER_LIBRARIES", str(checkout))
+    monkeypatch.setattr("faustcoder.libraries.SHARE_LOCK_TIMEOUT_S", 0.4)
+    real_mkdir = Path.mkdir
+
+    def fail_parent(self: Path, *args: object, **kwargs: object) -> None:
+        if Path(self) == tmp_path:
+            raise OSError(errno.EACCES, "Permission denied", str(self))
+        real_mkdir(self, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "mkdir", fail_parent)
+    with pytest.raises(OSError, match="Permission denied") as first:
+        share_directory()
+    assert first.value.errno == errno.EACCES
+    assert not libraries._LOCK.locked()
+    started = time.monotonic()
+    with pytest.raises(OSError, match="Permission denied") as second:
+        share_directory()
+    assert second.value.errno == errno.EACCES
+    assert time.monotonic() - started < 0.3
+    assert not libraries._LOCK.locked()
+
+
+def test_in_process_share_lock_times_out(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    checkout = tmp_path / "2edec0537f53"
+    _copy_library_checkout(checkout)
+    monkeypatch.setenv("FAUSTCODER_LIBRARIES", str(checkout))
+    monkeypatch.setattr("faustcoder.libraries.SHARE_LOCK_TIMEOUT_S", 0.4)
+    assert libraries._LOCK.acquire(timeout=1)
+    try:
+        started = time.monotonic()
+        with pytest.raises(SandboxError, match="another thread in this process"):
+            share_directory()
+        assert time.monotonic() - started < 3
+        assert not (tmp_path / "share-2edec0537f53").exists()
+    finally:
+        libraries._LOCK.release()
+
+
+def test_thread_lock_and_flock_share_one_deadline(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    checkout = tmp_path / "2edec0537f53"
+    _copy_library_checkout(checkout)
+    holder = _hold_share_lock(tmp_path / "share-2edec0537f53.lock")
+    monkeypatch.setenv("FAUSTCODER_LIBRARIES", str(checkout))
+    monkeypatch.setattr("faustcoder.libraries.SHARE_LOCK_TIMEOUT_S", 1.0)
+
+    class DelayedLock:
+        def acquire(self, blocking: bool = True, timeout: float = -1) -> bool:
+            time.sleep(0.6)
+            return True
+
+        def release(self) -> None:
+            return None
+
+    monkeypatch.setattr("faustcoder.libraries._LOCK", DelayedLock())
+    try:
+        started = time.monotonic()
+        with pytest.raises(SandboxError, match="another process holds"):
+            share_directory()
+        # A second full timeout after the 0.6s thread-lock delay would pass 1.6s.
+        assert time.monotonic() - started < 1.35
+        assert not (tmp_path / "share-2edec0537f53").exists()
+    finally:
+        holder.kill()
+        holder.wait(timeout=5)
+
+
+def test_native_sandbox_masks_a_host_faust_share(tmp_path: Path) -> None:
+    secret = tmp_path / "share"
+    secret.mkdir()
+    (secret / "stdfaust.lib").write_text("PWNED\n", encoding="ascii")
+    script = (
+        "uid=$(id -u); cap=$(awk '/^CapEff:/ {print $2}' /proc/self/status); "
+        'if [ -e "$1/stdfaust.lib" ]; then seen=visible; else seen=hidden; fi; '
+        "printf '%s %s %s\\n' \"$uid\" \"$cap\" \"$seen\""
+    )
+    command = ["/bin/sh", "-c", script, "sh", str(secret)]
+    limits = ResourceLimits(timeout_s=5)
+    masked = run_in_sandbox(
+        command,
+        stdin=b"",
+        workdir=tmp_path,
+        limits=limits,
+        mask_directories=(secret,),
+    )
+    assert masked.returncode == 0, masked.stderr
+    assert masked.stdout == f"{os.getuid()} 0000000000000000 hidden\n".encode()
+    assert (secret / "stdfaust.lib").read_text(encoding="ascii") == "PWNED\n"
+    plain = run_in_sandbox(command, stdin=b"", workdir=tmp_path, limits=limits)
+    assert plain.returncode == 0, plain.stderr
+    assert plain.stdout.endswith(b"visible\n")
+
+
+def test_faust_fallback_mounts_skip_missing_and_resolve_symlinks(tmp_path: Path) -> None:
+    missing = tmp_path / "absent"
+    present = tmp_path / "faust"
+    present.mkdir()
+    link = tmp_path / "link"
+    link.symlink_to(present)
+    assert faust_fallback_mounts((missing, present, link)) == (present.resolve(),)
+    root = tmp_path / "root"
+    root.symlink_to("/")
+    with pytest.raises(SandboxError, match="resolves to /"):
+        faust_fallback_mounts((root,))
+    file_path = tmp_path / "file"
+    file_path.write_text("nope\n", encoding="ascii")
+    with pytest.raises(SandboxError, match="not a directory"):
+        faust_fallback_mounts((file_path,))
+    defaults = (Path("/usr/local/share/faust"), Path("/usr/share/faust"))
+    assert faust_fallback_mounts() == tuple(
+        path.resolve() for path in defaults if path.exists()
+    )
+
+
+def test_native_compile_uses_a_hashed_private_copy(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    live = share_directory()
+    monkeypatch.setattr("faustcoder.compiler._require_native_faust", lambda: "/usr/bin/faust")
+
+    def fake_run(command: list[str], **kwargs: object) -> SandboxRun:
+        include = Path(command[command.index("-I") + 1])
+        assert include != live
+        assert include.parent == Path(str(kwargs["workdir"]))
+        assert canonical_tree_sha256(include) == FAUSTLIBRARIES_SHARE_SHA256
+        assert kwargs["mask_directories"] == faust_library_mounts(
+            "/usr/bin/faust", private=include
+        )
+        return SandboxRun(0, b"int process(){return 0;}\n", b"", "", False, False)
+
+    monkeypatch.setattr("faustcoder.compiler.run_in_sandbox", fake_run)
+    compiled = compile_native("process = _;\n")
+    assert compiled.receipt["exit_code"] == 0
+    assert compiled.receipt["compiler"] == "faust-cli"
+
+
+def test_library_mounts_cover_the_prefix_beside_the_binary(tmp_path: Path) -> None:
+    prefix = tmp_path / "fprefix"
+    binary = prefix / "bin" / "faust"
+    _fake_faust(binary)
+    share = prefix / "share" / "faust"
+    lib = prefix / "lib" / "faust"
+    share.mkdir(parents=True)
+    lib.mkdir(parents=True)
+    private = tmp_path / "private"
+    private.mkdir()
+    mounts = faust_library_mounts(binary, private=private)
+    assert share.resolve() in mounts
+    assert lib.resolve() in mounts
+    assert private.resolve() not in mounts
+
+    hidden = tmp_path / "hidden-share"
+    hidden.mkdir()
+    via = tmp_path / "via"
+    via_bin = via / "bin" / "faust"
+    _fake_faust(via_bin)
+    via_share = via / "share" / "faust"
+    via_share.parent.mkdir(parents=True)
+    via_share.symlink_to(hidden, target_is_directory=True)
+    via_mounts = faust_library_mounts(via_bin, private=private)
+    assert hidden.resolve() in via_mounts
+
+
+def test_library_mounts_mask_reported_dirs_except_the_private_copy(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    binary = tmp_path / "bin" / "faust"
+    _fake_faust(binary)
+    private = tmp_path / "private"
+    private.mkdir()
+    extra = tmp_path / "reported"
+    extra.mkdir()
+    loader = Path("/usr/lib")
+
+    def reported(_binary: Path) -> tuple[Path, ...]:
+        return (private, extra, loader)
+
+    monkeypatch.setattr("faustcoder.sandbox._reported_faust_directories", reported)
+    mounts = faust_library_mounts(binary, private=private)
+    assert extra.resolve() in mounts
+    assert private.resolve() not in mounts
+    assert loader.resolve() not in mounts
+
+
+def test_native_compile_rejects_a_library_planted_beside_the_binary(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    binary = shutil.which("faust")
+    if binary is None or native_faust_version() != "2.88.0":
+        pytest.skip("skipped-without-faust: native Faust 2.88.0 is not installed")
+    prefix = tmp_path / "fprefix"
+    planted = prefix / "bin" / "faust"
+    planted.parent.mkdir(parents=True)
+    shutil.copy2(binary, planted)
+    planted.chmod(0o755)
+    share = prefix / "share" / "faust"
+    share.mkdir(parents=True)
+    (share / "zzprobe.lib").write_text("zzprobe = 1;\n", encoding="utf-8")
+    source = 'import("zzprobe.lib"); process = zzprobe;\n'
+    dsp = tmp_path / "probe.dsp"
+    dsp.write_text(source, encoding="utf-8")
+    empty = tmp_path / "empty-inc"
+    empty.mkdir()
+    direct = subprocess.run(
+        [str(planted), "-I", str(empty), "-lang", "cpp", str(dsp)],
+        capture_output=True,
+        timeout=30,
+        check=False,
+    )
+    assert direct.returncode == 0, direct.stderr
+    monkeypatch.setenv("PATH", f"{planted.parent}{os.pathsep}{os.environ['PATH']}")
+    compiled = compile_native(source)
+    assert compiled.receipt["exit_code"] != 0
+    assert compiled.receipt["diagnostic_class"] != "ok"
+    assert "zzprobe" in compiled.diagnostics
+
+
+def _fake_faust(path: Path) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text("#!/bin/sh\nexit 1\n", encoding="ascii")
+    path.chmod(0o755)
+
+
+def test_native_compile_refuses_a_share_tampered_after_the_hash(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    checkout = tmp_path / "2edec0537f53"
+    _copy_library_checkout(checkout)
+    monkeypatch.setenv("FAUSTCODER_LIBRARIES", str(checkout))
+    share_directory()
+
+    def tamper_after_hash() -> Path:
+        path = libraries.share_directory()
+        maths = path / "maths.lib"
+        maths.write_bytes(maths.read_bytes() + b"PWNED = 42;\n")
+        return path
+
+    monkeypatch.setattr("faustcoder.compiler.share_directory", tamper_after_hash)
+    monkeypatch.setattr("faustcoder.compiler._require_native_faust", lambda: "/usr/bin/faust")
+
+    def fail_run(*_args: object, **_kwargs: object) -> SandboxRun:
+        raise AssertionError("native compile started after a tampered snapshot")
+
+    monkeypatch.setattr("faustcoder.compiler.run_in_sandbox", fail_run)
+    with pytest.raises(SandboxError, match="share"):
+        compile_native("process = _;\n")
+
+
+def _hold_share_lock(path: Path) -> subprocess.Popen[bytes]:
+    process = subprocess.Popen(
+        [
+            sys.executable,
+            "-c",
+            "import fcntl, os, sys, time\n"
+            "fd = os.open(sys.argv[1], os.O_CREAT | os.O_RDWR, 0o644)\n"
+            "fcntl.flock(fd, fcntl.LOCK_EX)\n"
+            "print('held', flush=True)\n"
+            "time.sleep(30)\n",
+            str(path),
+        ],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+    try:
+        assert _read_line(process, 5) == b"held\n"
+    except Exception:
+        process.kill()
+        process.wait(timeout=5)
+        raise
+    return process
+
+
+def _read_line(process: subprocess.Popen[bytes], timeout: float) -> bytes:
+    assert process.stdout is not None
+    selector = selectors.DefaultSelector()
+    selector.register(process.stdout, selectors.EVENT_READ)
+    if not selector.select(timeout):
+        process.kill()
+        err = process.stderr.read() if process.stderr is not None else b""
+        raise AssertionError(err.decode() or "share-lock holder produced no output")
+    return process.stdout.readline()
 
 
 def test_sibling_import_from_the_same_directory_compiles() -> None:
@@ -713,6 +1108,24 @@ def test_tampered_share_is_refused(tmp_path: Path, monkeypatch: pytest.MonkeyPat
     assert (share / ".tree-sha256").is_file()
     with pytest.raises(SandboxError, match="share"):
         compile_source("process = ma.PWNED;\n")
+    assert share.is_dir()
+
+
+def test_deleting_a_tampered_share_restages_it(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    checkout = tmp_path / "2edec0537f53"
+    _copy_library_checkout(checkout)
+    monkeypatch.setenv("FAUSTCODER_LIBRARIES", str(checkout))
+    share = share_directory()
+    maths = share / "maths.lib"
+    maths.write_bytes(maths.read_bytes() + b"PWNED = 42;\n")
+    with pytest.raises(SandboxError, match="share"):
+        share_directory()
+    shutil.rmtree(share)
+    restored = share_directory()
+    assert canonical_tree_sha256(restored) == FAUSTLIBRARIES_SHARE_SHA256
+    assert b"PWNED" not in (restored / "maths.lib").read_bytes()
 
 
 def test_compiler_exclusion_of_model_output_is_a_failure_not_a_pass() -> None:
