@@ -695,4 +695,8 @@ Approval: Danny 2026-10-18 12:34 AM PT. Exact words: "continue as recommended". 
 >
 > TOKEN_FLOOR stays 40 and provisional until the FLOOR run applies these bounds.
 
-Reviewer rulings (rights calls delegated to Boof): `needs_human` sources count as reject-class until a human clears them (fail closed). A copy that only a lower floor detects counts as a recall miss for the higher floors.
+The figure of at most 4 misses at n = 100 depends on a two-sided Wilson interval with z = 1.96 and no continuity correction.
+
+Separate recorded rights ruling, not part of D6 and not Danny's ratified text: needs_human sources count as reject-class until a human clears them (fail closed). Boof (orchestrator), rights call under Danny's 2026-10-17 BlackDog rights/licensing delegation ([rights-inventory.md](../../docs/rights-inventory.md) lines 21-22), 2026-10-18 ~12:57 AM PT.
+
+Open question for Danny, not a rule: whether a hit that shows up only when the floor is lowered is scored as a miss in a higher floor's recall cell. The ratified D6 cells govern until he decides.

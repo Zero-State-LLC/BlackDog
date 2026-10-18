@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import faustcoder.floor_protocol as floor_protocol
 from faustcoder.floor_protocol import (
     FLOOR_BUCKETS,
     FLOOR_BOUNDS_STATUS,
@@ -16,6 +15,7 @@ from faustcoder.floor_protocol import (
     FLOOR_MIN_DISTINCT_WINDOWS,
     FLOOR_RECALL_LOWER_BOUND,
     FLOOR_UNION_COVERAGE,
+    NEEDS_HUMAN_REJECT_CLASS,
     fp_budget,
     max_misses,
     wilson_lower,
@@ -39,6 +39,7 @@ def test_fp_budget_is_ceil_of_five_percent() -> None:
 
 
 def test_four_misses_pass_and_five_miss() -> None:
+    """4 misses at n = 100 is the plain two-sided Wilson interval, z = 1.96."""
     assert FLOOR_CELL_N == 100
     assert FLOOR_RECALL_LOWER_BOUND == 0.90
     assert max_misses(100) == 4
@@ -91,11 +92,26 @@ def test_sample_and_coverage_constants() -> None:
     assert FLOOR_UNION_COVERAGE == (1, 2)
 
 
-def test_reviewer_rulings_stay_in_the_protocol() -> None:
-    """Boof's rights delegation and the recall-miss ruling are part of D6."""
-    text = floor_protocol.__doc__ or ""
-    assert "rights calls delegated to Boof" in text
-    assert "needs_human" in text
-    assert "reject-class" in text
-    assert "fail closed" in text
-    assert "recall miss" in text
+def test_wilson_bounds_stay_inside_the_unit_interval() -> None:
+    for n in (1, 2, 35, 100):
+        for k in (0, n // 2, n):
+            lower = wilson_lower(k, n)
+            upper = wilson_upper(k, n)
+            assert 0.0 <= lower <= upper <= 1.0
+
+
+def test_needs_human_reject_class_is_a_separate_rights_ruling() -> None:
+    """Boof's fail-closed call is data on the protocol, not a docstring scrape."""
+    ruling = NEEDS_HUMAN_REJECT_CLASS
+    assert ruling.text == (
+        "needs_human sources count as reject-class until a human "
+        "clears them (fail closed)"
+    )
+    assert ruling.who == "Boof (orchestrator)"
+    assert ruling.authority == (
+        "rights call under Danny's 2026-10-17 BlackDog "
+        "rights/licensing delegation"
+    )
+    assert ruling.record == "rights-inventory.md:21-22"
+    assert ruling.when == "2026-10-18 ~12:57 AM PT"
+    assert ruling.part_of_d6 is False

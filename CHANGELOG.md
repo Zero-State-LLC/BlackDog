@@ -70,7 +70,7 @@ See [docs/VERSIONING.md](docs/VERSIONING.md).
 
 ### Changed
 
-- FLOOR acceptance bounds ratified (D6, Danny 2026-10-18 12:34 AM PT, 5% FP budget); `faustcoder/floor_protocol.py` constants; TOKEN_FLOOR stays 40, provisional. `needs_human` sources count as reject-class until a human clears them (fail closed; rights calls delegated to Boof). A copy that only a lower floor detects counts as a recall miss for the higher floors.
+- FLOOR acceptance bounds ratified (D6, Danny 2026-10-18 12:34 AM PT, 5% FP budget); `faustcoder/floor_protocol.py` constants; TOKEN_FLOOR stays 40, provisional. Separate recorded rights ruling, not part of D6: needs_human sources count as reject-class until a human clears them (fail closed). Boof (orchestrator), rights call under Danny's 2026-10-17 BlackDog rights/licensing delegation (rights-inventory.md:21-22), 2026-10-18 ~12:57 AM PT.
 
 - A native stack match is a sealed Faust 2.88.0 `faust-cli` receipt with `lang` `cpp`, a `faust` command, and exit 1. Exits 124, 125, 126, 137, 139 and -9, and any signal exit, are not a match. The wasm and native stack-line text must be equal. A raw dict is not a match. `reward_value` calls `require_task_rewardable` before it returns a receipt score, and the reward builders refuse a receipt that `is_minted` does not accept. The installer walks the parent chain to `/`, refuses a group-writable or non-root directory, refuses to adopt a pre-existing directory that is not already root-owned mode `0755`, and chmods through an `O_NOFOLLOW` directory fd.
 

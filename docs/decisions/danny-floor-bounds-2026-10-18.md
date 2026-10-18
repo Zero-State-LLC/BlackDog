@@ -47,16 +47,21 @@ D6 (FLOOR bounds) moves from PROVISIONAL to **RATIFIED**. This ruling replaces J
 >
 > TOKEN_FLOOR stays 40 and provisional until the FLOOR run applies these bounds.
 
+The figure of at most 4 misses at n = 100 depends on a two-sided Wilson interval with z = 1.96 and no continuity correction.
+
 ## Known correction carried with the ruling
 
 The correction was that the 26 floor-20 declare-stripped survivors were **unlabeled survivors, not confirmed FPs.** Jev's D6 sentence that 25 "sits above" both 14 and 26 was wrong for floor 20, and the FP count has to come from labels. Those survivors are now labelled. Summary counts, reading A (COPY / FP / UNDECIDED), are in [t06-short-kernel-floor.md](../analysis/t06-short-kernel-floor.md) (Amendment 2026-10-18). The labels file is not in this repository. It quotes `rights_rejected` and `needs_human` source, which [ADR-0003](../adr/0003-licensing-and-data-rights.md) forbids redistributing.
 
-## Reviewer rulings
+## Separate rights ruling
 
-Rights calls are delegated to Boof (Danny, 2026-10-17; [rights inventory](../rights-inventory.md)).
+Not part of D6, and not Danny's ratified text.
 
-- `needs_human` sources count as reject-class until a human clears them (fail closed).
-- A copy that only a lower floor detects counts as a recall miss for the higher floors.
+needs_human sources count as reject-class until a human clears them (fail closed). Boof (orchestrator), rights call under Danny's 2026-10-17 BlackDog rights/licensing delegation ([rights-inventory.md](../rights-inventory.md) lines 21-22), 2026-10-18 ~12:57 AM PT.
+
+## Open question for Danny
+
+Not a rule, and not part of the ratified bounds. Danny has not decided whether a hit that shows up only when the floor is lowered is scored as a miss in a higher floor's recall cell. The ratified D6 cells govern until he decides.
 
 ## Preconditions unchanged
 
