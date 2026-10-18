@@ -132,10 +132,12 @@ Harness failures override that text:
   diagnostic ``resource limit: ...``
 - a JS runtime exception (``allocate is not defined``, ``Maximum call
   stack size exceeded``, ``ReferenceError``, ``RangeError``, ``TypeError``,
-  and the same family), a remote ``import`` / ``library`` / ``component``
-  URL rejected before spawn, a worker crash (including ``SIGSEGV`` from a
-  recursive source once ``--stack-size=8192`` lets it pass the old V8
-  limit), or an unreadable result -> ``internal``, exit 126
+  and the same family), Faust's ``ERROR : stack overflow in eval`` (the
+  evaluator crash libfaust-wasm sometimes returns instead of dying), a
+  remote ``import`` / ``library`` / ``component`` URL rejected before
+  spawn, a worker crash (including ``SIGSEGV`` from a recursive source
+  once ``--stack-size=8192`` lets it pass the old V8 limit), or an
+  unreadable result -> ``internal``, exit 126
 
 Compiler rejection of the source is exit 1. Exit 0 is ``ok`` or ``warning``.
 
@@ -227,6 +229,7 @@ _REMOTE_IMPORT = re.compile(
 _JS_RUNTIME = (
     "allocate is not defined",
     "maximum call stack size exceeded",
+    "stack overflow",
     "referenceerror",
     "rangeerror",
     "typeerror",
@@ -1188,8 +1191,15 @@ def _digest(data: bytes) -> str:
 
 
 def _is_js_runtime(diagnostics: str) -> bool:
-    if "ERROR :" in diagnostics or "WARNING" in diagnostics:
-        return False
+    """True when the text is a compiler crash, not a source diagnostic.
+
+    Markers win over the ``ERROR :`` prefix. Faust throws
+    ``ERROR : stack overflow in eval`` when the evaluator's stack
+    detector trips, and libfaust-wasm puts that string in the worker
+    result. The same source sometimes dies with ``SIGSEGV`` first. Both
+    stay ``internal``. A source diagnostic such as ``ERROR : syntax
+    error`` does not match a crash marker and stays a compiler rejection.
+    """
     folded = diagnostics.lower()
     return any(marker in folded for marker in _JS_RUNTIME)
 

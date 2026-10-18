@@ -10,6 +10,8 @@ See [docs/VERSIONING.md](docs/VERSIONING.md).
 
 ### Added
 
+- T03b follow-up: `ERROR : stack overflow in eval` stays exit 126 `internal`. libfaust-wasm sometimes returns that evaluator crash instead of dying with `SIGSEGV`. It is not scored as a source failure.
+
 - T03b follow-up: an absent Faust mask candidate is still passed into the mount namespace, and the compile fails if that path exists unmasked after the mount. An absent `share/faust` or `lib/faust` beside the binary is refused when its nearest existing parent is not root-only. The `/usr` fallbacks are still passed through, including where `/usr/share` is mode `0777`. `faust --libdir`, `--dspdir`, `--includedir`, `--archdir` and `--pathslist` fail closed unless each exits 0 and `--pathslist` prints `FAUST dsp library paths:`. `scripts/install-faust-2.88.0.sh` checks the release tarball sha256 `e4e175cf236924b5b7d4784cbb8c50cc01e211159e169655dd9e6d8f92b871d9` before it extracts.
 
 - T03b follow-up: the native sandbox also masks `<binary>/../share/faust`, `<binary>/../lib/faust`, and every directory `faust --libdir`, `--dspdir`, `--includedir`, `--archdir` and `--pathslist` print, except the hashed private copy. A library planted beside a copied `faust` binary cannot be imported. CI installs Faust 2.88.0 so that check runs.

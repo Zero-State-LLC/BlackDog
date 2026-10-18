@@ -143,7 +143,9 @@ The resident cap is 768 MB. The plate compile stays near 510 MB.
 MB, so 512 MB is not enough once its sibling is staged. 768 MB leaves
 room for the 50 ms poll. A recursive Faust definition with no base case
 hits `SIGSEGV` inside the worker at this stack size. The receipt is exit
-126 `internal`.
+126 `internal`. libfaust-wasm sometimes catches the same overflow and
+returns `ERROR : stack overflow in eval` instead of dying. That text is
+still exit 126 `internal`, not a source failure.
 
 ## Recorded exclusions
 

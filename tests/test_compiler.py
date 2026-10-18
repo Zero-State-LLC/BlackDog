@@ -59,6 +59,7 @@ from faustcoder.compiler import (
     environment_preimage,
     native_faust_version,
     worker_directory,
+    _build,
 )
 from faustcoder.exclusions import exclusion_for_source, exclusions, normalize_source
 import faustcoder.libraries as libraries
@@ -430,6 +431,38 @@ def test_deep_recursion_is_internal() -> None:
     assert compiled.receipt["exit_code"] == 126
     assert compiled.receipt["diagnostic_class"] == "internal"
     assert compiled.receipt["faust_version"] == "2.90.0"
+
+
+def test_stack_overflow_in_eval_stays_internal() -> None:
+    # libfaust-wasm catches Faust's stackOverflowDetector and writes
+    # "ERROR : stack overflow in eval" into the worker result. The same
+    # source sometimes SIGSEGVs first. Both are internal crashes.
+    compiled = _build(
+        b"f(n) = f(n - 1) + 1;\n",
+        compiler="libfaust-wasm",
+        faust_version="2.90.0",
+        lang="wasm",
+        options=(),
+        compile_ok=False,
+        diagnostics="ERROR : stack overflow in eval\n",
+        outputs=[],
+        duration_ms=1,
+    )
+    assert compiled.receipt["exit_code"] == 126
+    assert compiled.receipt["diagnostic_class"] == "internal"
+    syntax = _build(
+        b"process = ;\n",
+        compiler="libfaust-wasm",
+        faust_version="2.90.0",
+        lang="wasm",
+        options=(),
+        compile_ok=False,
+        diagnostics="input:1 : ERROR : syntax error, unexpected ENDDEF\n",
+        outputs=[],
+        duration_ms=1,
+    )
+    assert syntax.receipt["exit_code"] == 1
+    assert syntax.receipt["diagnostic_class"] == "parse_error"
 
 
 def test_sandbox_uid_is_unprivileged_and_offline(tmp_path: Path) -> None:
