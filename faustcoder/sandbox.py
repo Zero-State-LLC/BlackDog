@@ -11,10 +11,18 @@ Enforcement, in order:
    ``ENETUNREACH``. Inside that namespace the uid is not 0 and ``CapEff``
    is 0. ``--map-root-user`` is not used for the compiler process: it maps
    the caller to uid 0 with a full capability set. The native cross-check
-   is the one caller that enters a mount namespace. It covers each existing
+   is the one caller that enters a mount namespace. It covers each
    Faust library directory (the ``/usr`` shares, ``<binary>/../share/faust``,
    ``<binary>/../lib/faust``, and the directories ``faust`` itself reports)
-   with an empty tmpfs, then runs Faust as the calling uid with ``CapEff``
+   with an empty tmpfs, including candidates that are not there yet. If
+   one of those appears during the mount and stays unmasked, the compile
+   fails. An absent prefix ``share/faust`` or ``lib/faust`` whose
+   nearest existing parent is not root-only is refused. An absent
+   fallback or reported directory is refused unless ``realpath`` of its
+   parent is root-owned and not group- or world-writable, so the caller
+   cannot create it before exec. A symlink such as ``/usr/share`` is
+   judged at that resolved directory. Faust's own directory
+   query fails closed. Faust then runs as the calling uid with ``CapEff``
    0. The hashed private copy passed as ``-I`` is not masked. Wasm compiles
    do not take that path. Node 22's
    ``--permission`` model does not deny
@@ -331,6 +339,11 @@ def drop_capabilities():
     if libc.prctl(38, 1, 0, 0, 0) != 0:
         fail("no_new_privs errno %s" % ctypes.get_errno())
 
+def refuse_if_unmasked(absent):
+    for directory in absent:
+        if os.path.lexists(directory):
+            fail("exists unmasked: %s" % directory)
+
 def main():
     if len(sys.argv) < 4:
         fail("mask arguments are missing")
@@ -341,8 +354,16 @@ def main():
     command = sys.argv[4 + count:]
     if not command:
         fail("mask command is empty")
+    present = []
+    absent = []
     for directory in directories:
+        if os.path.lexists(directory):
+            present.append(directory)
+        else:
+            absent.append(directory)
+    for directory in present:
         mount_tmpfs(directory)
+    refuse_if_unmasked(absent)
     ready_r, ready_w = os.pipe()
     done_r, done_w = os.pipe()
     writer = os.fork()
@@ -410,21 +431,28 @@ def faust_library_mounts(
     and ``<prefix>/lib/faust`` are masked when they exist, and so is
     ``<binary dir>/share/faust``. ``faust --libdir``, ``--dspdir``,
     ``--includedir``, ``--archdir`` and ``--pathslist`` add every absolute
-    directory they print. A reported loader directory such as ``/usr/lib``
-    is left in place so the compiler can start; ``lib/faust`` under it is
-    still masked. ``private`` is the hashed ``-I`` directory and is never
-    masked.
+    directory they print. A candidate that is not there yet is still
+    returned. The mount step covers it if it has appeared, and fails if it
+    exists afterward and was not covered. An absent prefix, fallback, or
+    reported directory is refused unless the ``realpath`` of its parent
+    is root-owned and not group- or world-writable. The caller cannot
+    create that directory in the window before exec. A symlink such as
+    ``/usr/share`` is judged at the resolved directory. A reported loader
+    directory such
+    as ``/usr/lib`` is left in place so the compiler can start;
+    ``lib/faust`` under it is still masked. ``private`` is the hashed
+    ``-I`` directory and is never masked. The directory query fails closed.
     """
     binary_path = Path(binary)
-    required = [
-        *FAUST_FALLBACK_DIRECTORIES,
-        *_prefix_faust_directories(binary_path),
-    ]
+    prefix = _prefix_faust_directories(binary_path)
+    required = [*FAUST_FALLBACK_DIRECTORIES, *prefix]
     reported = _reported_faust_directories(binary_path)
     protected = _protected_faust_paths(binary_path, private)
     return _select_mask_directories(
         [*required, *reported],
         required=set(required),
+        prefix=set(prefix),
+        reported=set(reported),
         protected=protected,
         binary=binary_path,
     )
@@ -472,18 +500,16 @@ def _binary_locations(binary: Path) -> list[Path]:
 
 
 def _reported_faust_directories(binary: Path) -> tuple[Path, ...]:
-    """Directories ``faust`` prints. A failed query adds nothing.
+    """Directories ``faust`` prints. A failed query raises ``SandboxError``.
 
-    The query runs in a network namespace with ``FAUST_LIB_PATH`` unset,
-    matching the scrubbed compile environment. Non-absolute lines are
-    ignored. Failure here does not drop the prefix paths.
+    Every flag must exit 0. ``--pathslist`` must print a line
+    ``FAUST dsp library paths:``. The query runs in a network namespace
+    with ``FAUST_LIB_PATH`` unset, matching the scrubbed compile
+    environment. Non-absolute lines are ignored.
     """
     if not binary.is_file():
-        return ()
-    try:
-        unshare = unshare_executable()
-    except SandboxError:
-        return ()
+        raise SandboxError(f"faust directory query failed: {binary} is not a file")
+    unshare = unshare_executable()
     env = {
         "PATH": "/usr/bin:/bin",
         "LANG": "C",
@@ -492,6 +518,7 @@ def _reported_faust_directories(binary: Path) -> tuple[Path, ...]:
         "TMPDIR": "/tmp",
     }
     found: list[Path] = []
+    header = "FAUST dsp library paths:"
     for flag in _FAUST_DIRECTORY_FLAGS:
         try:
             completed = subprocess.run(
@@ -502,13 +529,24 @@ def _reported_faust_directories(binary: Path) -> tuple[Path, ...]:
                 check=False,
                 env=env,
             )
-        except (OSError, subprocess.TimeoutExpired):
-            continue
-        for line in completed.stdout.splitlines():
+        except subprocess.TimeoutExpired as exc:
+            raise SandboxError(f"faust directory query failed: {flag} timed out") from exc
+        except OSError as exc:
+            raise SandboxError(f"faust directory query failed: {flag}: {exc}") from exc
+        if completed.returncode != 0:
+            raise SandboxError(
+                f"faust directory query failed: {flag} exited {completed.returncode}"
+            )
+        lines = completed.stdout.splitlines()
+        if flag == "--pathslist" and not any(line.strip() == header for line in lines):
+            raise SandboxError(
+                "faust directory query failed: --pathslist did not print "
+                f"'{header}'"
+            )
+        for line in lines:
             stripped = line.strip()
-            if not stripped.startswith("/"):
-                continue
-            found.append(Path(stripped))
+            if stripped.startswith("/"):
+                found.append(Path(stripped))
     return tuple(found)
 
 
@@ -523,6 +561,8 @@ def _select_mask_directories(
     candidates: Sequence[Path],
     *,
     required: set[Path],
+    prefix: set[Path],
+    reported: set[Path],
     protected: Sequence[Path],
     binary: Path,
 ) -> tuple[Path, ...]:
@@ -536,6 +576,22 @@ def _select_mask_directories(
     unmaskable.update(_shared_library_directories(binary))
     mounts: list[Path] = []
     for path in candidates:
+        info = _lstat_or_none(path)
+        if info is not None and stat.S_ISLNK(info.st_mode) and not path.exists():
+            if path in required or _is_faust_library_dir(path):
+                raise SandboxError(f"Faust library path is a dangling symlink: {path}")
+            continue
+        if info is None:
+            _pass_absent_mask(
+                path,
+                mounts,
+                required,
+                prefix,
+                reported,
+                protected_resolved,
+                unmaskable,
+            )
+            continue
         try:
             resolved = _resolve_mask_directory(path)
         except SandboxError:
@@ -555,6 +611,108 @@ def _select_mask_directories(
             continue
         mounts.append(resolved)
     return tuple(mounts)
+
+
+def _lstat_or_none(path: Path) -> os.stat_result | None:
+    try:
+        return path.lstat()
+    except OSError:
+        return None
+
+
+def _pass_absent_mask(
+    path: Path,
+    mounts: list[Path],
+    required: set[Path],
+    prefix: set[Path],
+    reported: set[Path],
+    protected: Sequence[Path],
+    unmaskable: set[Path],
+) -> None:
+    """Pass an absent candidate through, or refuse a parent the caller can write.
+
+    An absent prefix, fallback, or reported directory is refused unless
+    ``realpath`` of its parent is a root-owned directory that group and
+    others cannot write. The mount does not cover a path that is missing,
+    so a caller who can create it can plant a library before exec.
+    ``/usr/share`` may be a symlink; the check follows it.
+    """
+    absolute = Path(os.path.abspath(path))
+    if absolute in mounts:
+        return
+    if _leaves_the_compiler_running(absolute, protected, unmaskable):
+        if path in required or _is_faust_library_dir(path):
+            raise SandboxError(
+                "Faust library path would hide the compiler or the private "
+                f"copy: {path}"
+            )
+        return
+    if _absent_mask_must_be_root_only(path, absolute, prefix, reported):
+        parent = _resolved_parent(absolute)
+        if not _is_root_only_directory(parent):
+            _refuse_unsafe_parent(
+                absolute,
+                parent,
+                "Faust mask parent is not root-only, so an absent directory "
+                "cannot be masked safely",
+            )
+    mounts.append(absolute)
+
+
+def _absent_mask_must_be_root_only(
+    path: Path, absolute: Path, prefix: set[Path], reported: set[Path]
+) -> bool:
+    if path in prefix or absolute in {Path(os.path.abspath(item)) for item in prefix}:
+        return True
+    if absolute in _fallback_absolutes():
+        return True
+    return absolute in {Path(os.path.abspath(item)) for item in reported}
+
+
+def _fallback_absolutes() -> set[Path]:
+    return {Path(os.path.abspath(path)) for path in FAUST_FALLBACK_DIRECTORIES}
+
+
+def _resolved_parent(path: Path) -> Path:
+    """Directory a caller would create ``path`` in, after symlinks.
+
+    ``os.path.realpath`` resolves existing ancestors and leaves the missing
+    leaf in place. The parent of that result is the directory to check.
+    """
+    try:
+        resolved = Path(os.path.realpath(path))
+    except OSError as exc:
+        raise SandboxError(f"Faust library path could not be resolved: {path}") from exc
+    return _nearest_existing_ancestor(resolved)
+
+
+def _refuse_unsafe_parent(path: Path, ancestor: Path, reason: str) -> None:
+    info = _lstat_or_none(ancestor)
+    mode = 0 if info is None else info.st_mode & 0o777
+    uid = -1 if info is None else info.st_uid
+    raise SandboxError(f"{reason}: {path} (parent {ancestor}, uid {uid}, mode {mode:o})")
+
+
+def _nearest_existing_ancestor(path: Path) -> Path:
+    current = Path(os.path.abspath(path))
+    while True:
+        parent = current.parent
+        if parent == current:
+            return current
+        if _lstat_or_none(parent) is None:
+            current = parent
+            continue
+        return parent
+
+
+def _is_root_only_directory(path: Path) -> bool:
+    """True when ``path`` is a real directory only root can write."""
+    info = _lstat_or_none(path)
+    if info is None or not stat.S_ISDIR(info.st_mode):
+        return False
+    if info.st_uid != 0 or info.st_mode & 0o022:
+        return False
+    return True
 
 
 def _leaves_the_compiler_running(

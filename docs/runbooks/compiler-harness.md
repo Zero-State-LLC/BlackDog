@@ -115,11 +115,38 @@ The sandbox resolves the binary (symlinks followed) and covers
 `<prefix>/share/faust` and `<prefix>/lib/faust` when they exist. It also
 runs `faust --libdir`, `--dspdir`, `--includedir`, `--archdir` and
 `--pathslist` and covers every absolute directory that output names,
-except the hashed private copy. A loader directory such as `/usr/lib` is
-left in place so the dynamic linker can start Faust; `lib/faust` under
-that prefix is still covered. Each covered directory is an empty tmpfs
-in a private mount namespace. Faust still runs as the calling user with
-`CapEff` 0. The logical command records `--faustlibraries=2edec0537f53`.
+except the hashed private copy. That query fails closed: each flag must
+exit 0, and `--pathslist` must print a line `FAUST dsp library paths:`.
+A path that is missing at the check is still passed to the mount. If it
+exists after the mount and was not covered, the compile fails. An absent
+`share/faust` or `lib/faust` beside the binary is refused when its
+nearest existing parent is not root-only (not owned by root, writable by
+group or others, or not a real directory). A caller cannot create that
+directory under `/tmp` after the check. A Faust prefix installed outside
+a root-only directory, such as under `/tmp`, has to already contain those
+directories or the native compile is refused. An absent fallback or
+reported directory is refused unless `realpath` of its parent is
+root-owned and not group- or world-writable. The mount does not cover a
+missing path, so a user who can create it can plant a library before
+exec. Distros that symlink `/usr/share` are checked at the resolved
+directory. GitHub-hosted Ubuntu images `chmod -R 777 /usr/share` and leave
+`/usr/local/bin` mode `0777`. `scripts/install-faust-2.88.0.sh` creates
+root-owned mode `0755` `/usr/share/faust` and `/usr/local/share/faust`,
+plus `<prefix>/share/faust`, `<prefix>/lib/faust`,
+`<prefix>/bin/share/faust` and `<prefix>/bin/architecture`, so those
+paths exist and are masked. `faust --pathslist` names
+`<prefix>/bin/architecture`, and `<prefix>/bin` is mode `0777`. The mount step
+still fails if some other absent path exists afterward and was not
+covered.
+A loader directory such as
+`/usr/lib` is left in place so the dynamic linker can start Faust;
+`lib/faust` under that prefix is still covered. Each covered directory
+is an empty tmpfs in a private mount namespace. Faust still runs as the
+calling user with `CapEff` 0.
+The logical command records `--faustlibraries=2edec0537f53`.
+`scripts/install-faust-2.88.0.sh` checks the Faust 2.88.0 tarball sha256
+`e4e175cf236924b5b7d4784cbb8c50cc01e211159e169655dd9e6d8f92b871d9` before
+it extracts.
 
 The data file still contains libraries 2.74.2. Those bytes are hashed so
 the runtime identity stays in the digest. They are not the libraries the
@@ -151,7 +178,17 @@ The resident cap is 768 MB. The plate compile stays near 510 MB.
 MB, so 512 MB is not enough once its sibling is staged. 768 MB leaves
 room for the 50 ms poll. A recursive Faust definition with no base case
 hits `SIGSEGV` inside the worker at this stack size. The receipt is exit
-126 `internal`.
+126 `internal`. libfaust-wasm sometimes catches the same overflow and
+returns `ERROR : stack overflow in eval` instead of dying. A diagnostic
+line that is exactly that text is still exit 126 `internal`. So is
+Emscripten's `Aborted(stack overflow)` when the wasm trap is caught
+instead of `SIGSEGV`. A line that is exactly `Maximum call stack size exceeded`
+is the same crash when V8 reports it without the `RangeError` name. Any other
+`ERROR :` or `WARNING` is a source failure, including when the program's
+own tokens (`TypeError`, `stack overflow`, a slider label) appear inside
+the message. A JS exception is internal only when its line starts with
+`TypeError:`, `RangeError:`, `ReferenceError:`, `SyntaxError:`, or
+`InternalError:` followed by a space.
 
 ## Recorded exclusions
 

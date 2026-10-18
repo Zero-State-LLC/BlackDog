@@ -130,12 +130,21 @@ Harness failures override that text:
 - wall clock or CPU backstop -> ``timeout``, exit 124
 - memory, output size or source size -> ``resource_limit``, exit 125,
   diagnostic ``resource limit: ...``
-- a JS runtime exception (``allocate is not defined``, ``Maximum call
-  stack size exceeded``, ``ReferenceError``, ``RangeError``, ``TypeError``,
-  and the same family), a remote ``import`` / ``library`` / ``component``
+- a JS runtime exception at the start of its own line
+  (``TypeError:``, ``RangeError:``, ``ReferenceError:``,
+  ``SyntaxError:``, ``InternalError:`` followed by a space, including
+  ``RangeError: Maximum call stack size exceeded``), case-sensitive, a
+  diagnostic line that is exactly ``ERROR : stack overflow in eval``
+  (the evaluator crash libfaust-wasm sometimes returns instead of
+  dying), a line that is exactly ``Maximum call stack size exceeded``,
+  Emscripten's ``Aborted(stack overflow)`` line when that trap
+  is caught instead, a remote ``import`` / ``library`` / ``component``
   URL rejected before spawn, a worker crash (including ``SIGSEGV`` from a
   recursive source once ``--stack-size=8192`` lets it pass the old V8
-  limit), or an unreadable result -> ``internal``, exit 126.
+  limit), or an unreadable result -> ``internal``, exit 126. Any other
+  line that contains ``ERROR :`` or ``WARNING`` is a source diagnostic,
+  even when Faust echoes a crash token from the program. Lines split on
+  ``\\n`` only.
   The receipt records ``termination_signal`` when the process died on a
   signal, ``runtime_stack_overflow`` when a RangeError message is
   exactly ``Maximum call stack size exceeded``, and
@@ -234,6 +243,20 @@ _LIB_VERSION = re.compile(
 _REMOTE_IMPORT = re.compile(
     r"""(?ix)\b(?:import|library|component)\s*\(\s*["']https?://"""
 )
+# Faust's stackOverflowDetector. The whole trimmed line, not a substring.
+_STACK_OVERFLOW_EVAL = "ERROR : stack overflow in eval"
+# V8 stores this as error.message. The RangeError name is not in the text.
+_V8_STACK_OVERFLOW = "Maximum call stack size exceeded"
+# Node/V8 exceptions. Case-sensitive and only at the start of a line.
+# A line that starts with "ERROR :" is a Faust diagnostic, never one of these.
+_JS_RUNTIME_LINE = re.compile(
+    r"^(?:TypeError|RangeError|ReferenceError|SyntaxError|InternalError): "
+)
+# Emscripten abort when the wasm trap is caught instead of SIGSEGV.
+# The line has to start with this; a crash token later in an ERROR line does not.
+_EMSCRIPTEN_STACK_ABORT = re.compile(
+    r"^Aborted\((?:stack overflow|ERROR : stack overflow in eval)\)"
+)
 
 
 def _code_without_comments(source: str) -> str:
@@ -271,6 +294,8 @@ def _code_without_comments(source: str) -> str:
         out.append(character)
         index += 1
     return "".join(out)
+
+
 # Kinds the worker may put in ``wasm_trap``. The grader attributes only these.
 # faust/worker/termination.mjs keeps the same list.
 WASM_TRAP_KINDS = frozenset(
@@ -285,16 +310,6 @@ WASM_TRAP_KINDS = frozenset(
         "indirect call to null",
         "uninitialized element",
     }
-)
-_JS_RUNTIME = (
-    "allocate is not defined",
-    "maximum call stack size exceeded",
-    "referenceerror",
-    "rangeerror",
-    "typeerror",
-    "syntaxerror",
-    "is not defined",
-    "is not a function",
 )
 _PIN_LOCK = threading.Lock()
 _PIN_CACHE: dict[tuple[str, ...], "RuntimePin"] = {}
@@ -1289,10 +1304,47 @@ def _wasm_trap(value: object) -> str | None:
 
 
 def _is_js_runtime(diagnostics: str) -> bool:
-    if "ERROR :" in diagnostics or "WARNING" in diagnostics:
+    """True when the text is a compiler crash, not a source diagnostic.
+
+    ``ERROR :`` or ``WARNING`` anywhere is a source diagnostic. The one
+    exception is a line that is exactly ``ERROR : stack overflow in eval``
+    after trimming: Faust throws that when the evaluator's stack detector
+    trips, and libfaust-wasm puts that string in the worker result. The
+    same source sometimes dies with ``SIGSEGV`` first. Both stay
+    ``internal``.
+
+    JS exceptions match only at the start of a line, case-sensitive
+    (``TypeError: ``, ``RangeError: ``, ``ReferenceError: ``,
+    ``SyntaxError: ``, ``InternalError: ``). Emscripten's caught wasm
+    abort is a line that starts with ``Aborted(stack overflow)`` or
+    ``Aborted(ERROR : stack overflow in eval)``. A line that is exactly
+    ``Maximum call stack size exceeded`` is V8's own message for that
+    crash. A crash token echoed inside any other Faust error, a comment,
+    or a declare does not match. Lines are split on ``\\n`` only.
+    """
+    # splitlines() also breaks on U+2028, U+2029, NEL, VT, FF, and the
+    # file separators. A source token can plant one and look like a JS
+    # exception at the start of the next piece.
+    stripped = [line.strip() for line in diagnostics.split("\n")]
+    if any(_is_source_diagnostic_line(line) for line in stripped):
         return False
-    folded = diagnostics.lower()
-    return any(marker in folded for marker in _JS_RUNTIME)
+    return any(_is_runtime_crash_line(line) for line in stripped)
+
+
+def _is_runtime_crash_line(line: str) -> bool:
+    if line in {_STACK_OVERFLOW_EVAL, _V8_STACK_OVERFLOW}:
+        return True
+    if line.startswith("ERROR :"):
+        return False
+    if _EMSCRIPTEN_STACK_ABORT.match(line) is not None:
+        return True
+    return _JS_RUNTIME_LINE.match(line) is not None
+
+
+def _is_source_diagnostic_line(line: str) -> bool:
+    if _is_runtime_crash_line(line):
+        return False
+    return "ERROR :" in line or "WARNING" in line
 
 
 def _normalize_digest(value: str) -> str:

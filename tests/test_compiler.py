@@ -8,6 +8,7 @@ import hashlib
 import os
 import selectors
 import shutil
+import stat
 import subprocess
 import sys
 import time
@@ -44,7 +45,9 @@ from faustcoder import (
 )
 from faustcoder.canonical import canonical_bytes
 from faustcoder.sandbox import (
+    _MASK_EXEC,
     SandboxRun,
+    _reported_faust_directories,
     faust_fallback_mounts,
     faust_library_mounts,
     unshare_identity,
@@ -57,6 +60,7 @@ from faustcoder.compiler import (
     environment_preimage,
     native_faust_version,
     worker_directory,
+    _build,
 )
 from faustcoder.exclusions import exclusion_for_source, exclusions, normalize_source
 import faustcoder.libraries as libraries
@@ -431,9 +435,9 @@ def test_remote_url_imports_are_internal(source: str) -> None:
 
 def test_deep_recursion_is_internal(store, tmp_path: Path) -> None:
     # --stack-size=8192 lets this unroll until the worker SIGSEGVs. The
-    # raw receipt stays exit 126 internal, with the signal number and
-    # none of the recursion markers. Commit reruns it beside a known-good
-    # fixture and the outcome is parse_error.
+    # catchable "Maximum call stack size exceeded" path is what a smaller
+    # stack produced. Either way the raw receipt stays exit 126 internal.
+    # Commit reruns it beside a known-good fixture and the outcome is parse_error.
     import signal
 
     from faustcoder.candidate_machine import CandidateState
@@ -442,7 +446,7 @@ def test_deep_recursion_is_internal(store, tmp_path: Path) -> None:
 
     source = _source("recurse.dsp")
     compiled = compile_source(source, lang="wasm")
-    assert compiled.receipt["exit_code"] == 126
+    assert compiled.receipt["exit_code"] == 126, repr(compiled.diagnostics)
     assert compiled.receipt["diagnostic_class"] == "internal"
     assert compiled.receipt["faust_version"] == "2.90.0"
     assert "wasm_trap" not in compiled.receipt
@@ -476,6 +480,171 @@ def test_deep_recursion_is_internal(store, tmp_path: Path) -> None:
     assert isinstance(outcome, SourceAttributedFailure)
     assert outcome.rung == "parse_error"
     assert ledger.queue.count() == 0
+
+
+def test_stack_overflow_in_eval_stays_internal() -> None:
+    # libfaust-wasm catches Faust's stackOverflowDetector and writes
+    # "ERROR : stack overflow in eval" into the worker result. The same
+    # source sometimes SIGSEGVs first. Both are internal crashes.
+    compiled = _build(
+        b"f(n) = f(n - 1) + 1;\n",
+        compiler="libfaust-wasm",
+        faust_version="2.90.0",
+        lang="wasm",
+        options=(),
+        compile_ok=False,
+        diagnostics="ERROR : stack overflow in eval\n",
+        outputs=[],
+        duration_ms=1,
+    )
+    assert compiled.receipt["exit_code"] == 126
+    assert compiled.receipt["diagnostic_class"] == "internal"
+    syntax = _build(
+        b"process = ;\n",
+        compiler="libfaust-wasm",
+        faust_version="2.90.0",
+        lang="wasm",
+        options=(),
+        compile_ok=False,
+        diagnostics="input:1 : ERROR : syntax error, unexpected ENDDEF\n",
+        outputs=[],
+        duration_ms=1,
+    )
+    assert syntax.receipt["exit_code"] == 1
+    assert syntax.receipt["diagnostic_class"] == "parse_error"
+    padded = _build(
+        b"f(n) = f(n - 1) + 1;\n",
+        compiler="libfaust-wasm",
+        faust_version="2.90.0",
+        lang="wasm",
+        options=(),
+        compile_ok=False,
+        diagnostics="  ERROR : stack overflow in eval  \n",
+        outputs=[],
+        duration_ms=1,
+    )
+    assert padded.receipt["exit_code"] == 126
+    near = _build(
+        b"process = 1;\n",
+        compiler="libfaust-wasm",
+        faust_version="2.90.0",
+        lang="wasm",
+        options=(),
+        compile_ok=False,
+        diagnostics="ERROR : stack overflow in eval happened\n",
+        outputs=[],
+        duration_ms=1,
+    )
+    assert near.receipt["exit_code"] == 1
+
+
+def _source_failure(diagnostics: str) -> object:
+    return _build(
+        b"process = 1;\n",
+        compiler="libfaust-wasm",
+        faust_version="2.90.0",
+        lang="wasm",
+        options=(),
+        compile_ok=False,
+        diagnostics=diagnostics,
+        outputs=[],
+        duration_ms=1,
+    )
+
+
+@pytest.mark.parametrize("separator", ["\u2028", "\u0085", "\v"])
+def test_unicode_separators_do_not_fake_a_runtime_line(separator: str) -> None:
+    compiled = _source_failure(f"x{separator}TypeError: y")
+    assert compiled.receipt["exit_code"] == 1
+    assert compiled.receipt["diagnostic_class"] != "internal"
+
+
+def test_real_newline_still_starts_a_runtime_line() -> None:
+    compiled = _source_failure("x\nTypeError: y\n")
+    assert compiled.receipt["exit_code"] == 126
+    assert compiled.receipt["diagnostic_class"] == "internal"
+
+
+@pytest.mark.parametrize(
+    "diagnostics",
+    [
+        "RangeError: Maximum call stack size exceeded\n",
+        "ReferenceError: allocate is not defined\n",
+        "TypeError: foo is not a function\n",
+        "SyntaxError: Unexpected token\n",
+        "InternalError: too much recursion\n",
+        "Aborted(stack overflow)\n",
+        "Aborted(ERROR : stack overflow in eval)\n",
+        "Maximum call stack size exceeded\n",
+    ],
+)
+def test_js_runtime_line_start_is_internal(diagnostics: str) -> None:
+    compiled = _source_failure(diagnostics)
+    assert compiled.receipt["exit_code"] == 126
+    assert compiled.receipt["diagnostic_class"] == "internal"
+
+
+@pytest.mark.parametrize(
+    "source",
+    [
+        "process = TypeError;\n",
+        "process = rangeerror;\n",
+        "process = SyntaxError;\n",
+        'process = component("stack overflow.dsp");\n',
+        'process = library("TypeError.lib");\n',
+        "typeerror(x) = x <: _, _;\nprocess = typeerror(1, 2);\n",
+        'process = hslider("stack overflow", 0, 1, 0, 0.1);\n',
+    ],
+)
+def test_echoed_crash_tokens_stay_source_errors(source: str) -> None:
+    compiled = compile_source(source, lang="wasm")
+    assert compiled.receipt["exit_code"] == 1
+    assert compiled.receipt["diagnostic_class"] != "internal"
+
+
+@pytest.mark.parametrize(
+    "diagnostics",
+    [
+        "input:1 : ERROR : undefined symbol : TypeError\n",
+        "input:1 : ERROR : undefined symbol : rangeerror\n",
+        "input:1 : ERROR : undefined symbol : SyntaxError\n",
+        "ERROR : unable to open file stack overflow.dsp\n",
+        "ERROR : unable to open file TypeError.lib\n",
+        "ERROR : too much arguments : 2, instead of : 1\nwhen applying : typeerror\nto : (1,2)\n",
+        'ERROR : min = 1 should be less than max = 0 in '
+        "'hslider(\"stack overflow\",0.0f,1.0f,0.0f,0.1f)'\n",
+        "ERROR : unable to open file Aborted(stack overflow).dsp\n",
+        "// TypeError: Maximum call stack size exceeded\n"
+        "input:2 : ERROR : syntax error, unexpected ENDDEF\n",
+        'declare name "ReferenceError: allocate is not defined";\n'
+        "input:2 : ERROR : syntax error, unexpected ENDDEF\n",
+        "typeerror: foo is not defined\n",
+        "note TypeError: foo is not a function\n",
+        "note Maximum call stack size exceeded\n",
+        "maximum call stack size exceeded\n",
+    ],
+)
+def test_crash_markers_inside_source_diagnostics_stay_exit_1(diagnostics: str) -> None:
+    compiled = _source_failure(diagnostics)
+    assert compiled.receipt["exit_code"] == 1
+    assert compiled.receipt["diagnostic_class"] != "internal"
+
+
+@pytest.mark.parametrize(
+    "source",
+    [
+        "// TypeError: Maximum call stack size exceeded\n"
+        "// RangeError: Maximum call stack size exceeded\n"
+        "process = ;\n",
+        'declare name "ReferenceError: allocate is not defined";\n'
+        'declare author "SyntaxError: is not a function";\n'
+        "process = ;\n",
+    ],
+)
+def test_crash_markers_in_comments_and_declares_stay_exit_1(source: str) -> None:
+    compiled = compile_source(source, lang="wasm")
+    assert compiled.receipt["exit_code"] == 1
+    assert compiled.receipt["diagnostic_class"] != "internal"
 
 
 def test_sandbox_uid_is_unprivileged_and_offline(tmp_path: Path) -> None:
@@ -885,6 +1054,10 @@ def test_native_compile_uses_a_hashed_private_copy(
 ) -> None:
     live = share_directory()
     monkeypatch.setattr("faustcoder.compiler._require_native_faust", lambda: "/usr/bin/faust")
+    monkeypatch.setattr("faustcoder.sandbox._reported_faust_directories", lambda _binary: ())
+    # /usr/share is mode 0777 on GitHub-hosted Ubuntu. This test checks the
+    # private copy, not that host mode.
+    monkeypatch.setattr("faustcoder.sandbox._is_root_only_directory", lambda _path: True)
 
     def fake_run(command: list[str], **kwargs: object) -> SandboxRun:
         include = Path(command[command.index("-I") + 1])
@@ -910,6 +1083,7 @@ def test_library_mounts_cover_the_prefix_beside_the_binary(tmp_path: Path) -> No
     lib = prefix / "lib" / "faust"
     share.mkdir(parents=True)
     lib.mkdir(parents=True)
+    (prefix / "bin" / "share" / "faust").mkdir(parents=True)
     private = tmp_path / "private"
     private.mkdir()
     mounts = faust_library_mounts(binary, private=private)
@@ -925,6 +1099,8 @@ def test_library_mounts_cover_the_prefix_beside_the_binary(tmp_path: Path) -> No
     via_share = via / "share" / "faust"
     via_share.parent.mkdir(parents=True)
     via_share.symlink_to(hidden, target_is_directory=True)
+    (via / "lib" / "faust").mkdir(parents=True)
+    (via / "bin" / "share" / "faust").mkdir(parents=True)
     via_mounts = faust_library_mounts(via_bin, private=private)
     assert hidden.resolve() in via_mounts
 
@@ -934,6 +1110,7 @@ def test_library_mounts_mask_reported_dirs_except_the_private_copy(
 ) -> None:
     binary = tmp_path / "bin" / "faust"
     _fake_faust(binary)
+    _prefix_library_dirs(binary)
     private = tmp_path / "private"
     private.mkdir()
     extra = tmp_path / "reported"
@@ -950,6 +1127,201 @@ def test_library_mounts_mask_reported_dirs_except_the_private_copy(
     assert loader.resolve() not in mounts
 
 
+def test_library_mounts_refuse_a_user_writable_absent_prefix(tmp_path: Path) -> None:
+    binary = tmp_path / "bin" / "faust"
+    _fake_faust(binary)
+    private = tmp_path / "private"
+    private.mkdir()
+    with pytest.raises(SandboxError, match="not root-only"):
+        faust_library_mounts(binary, private=private)
+
+
+def test_library_mounts_keep_absent_root_only_directories(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr("faustcoder.sandbox._reported_faust_directories", lambda _binary: ())
+    monkeypatch.setattr("faustcoder.sandbox._is_root_only_directory", lambda _path: True)
+    private = Path("/usr/lib/faustcoder-private-copy")
+    mounts = faust_library_mounts("/usr/bin/faust", private=private)
+    for path in (
+        Path("/usr/share/faust"),
+        Path("/usr/local/share/faust"),
+        Path("/usr/lib/faust"),
+        Path("/usr/bin/share/faust"),
+    ):
+        assert path in mounts or path.resolve() in mounts
+    assert private not in mounts
+
+
+def _mount_with_absent_candidate(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, missing: Path, *, kind: str
+) -> tuple[Path, ...]:
+    binary = tmp_path / "opt" / "bin" / "faust"
+    _fake_faust(binary)
+    _prefix_library_dirs(binary)
+    if kind == "fallback":
+        monkeypatch.setattr("faustcoder.sandbox.FAUST_FALLBACK_DIRECTORIES", (missing,))
+        monkeypatch.setattr("faustcoder.sandbox._reported_faust_directories", lambda _binary: ())
+    else:
+        monkeypatch.setattr("faustcoder.sandbox.FAUST_FALLBACK_DIRECTORIES", ())
+        monkeypatch.setattr(
+            "faustcoder.sandbox._reported_faust_directories",
+            lambda _binary: (missing,),
+        )
+    private = tmp_path / "private"
+    private.mkdir()
+    return faust_library_mounts(binary, private=private)
+
+
+@pytest.mark.parametrize("kind", ["fallback", "reported"])
+def test_absent_mask_refuses_a_group_writable_parent(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, kind: str
+) -> None:
+    parent = tmp_path / "share"
+    parent.mkdir()
+    parent.chmod(0o775)
+    missing = parent / "faust"
+    with pytest.raises(SandboxError, match="not root-only"):
+        _mount_with_absent_candidate(tmp_path, monkeypatch, missing, kind=kind)
+
+
+@pytest.mark.parametrize("kind", ["fallback", "reported"])
+def test_absent_mask_refuses_a_non_root_parent(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, kind: str
+) -> None:
+    parent = tmp_path / "share"
+    parent.mkdir()
+    parent.chmod(0o755)
+    missing = parent / "faust"
+    with pytest.raises(SandboxError, match="not root-only"):
+        _mount_with_absent_candidate(tmp_path, monkeypatch, missing, kind=kind)
+
+
+@pytest.mark.parametrize("kind", ["fallback", "reported"])
+def test_absent_mask_accepts_a_symlink_to_a_root_only_parent(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, kind: str
+) -> None:
+    target = Path("/usr")
+    info = target.stat()
+    assert info.st_uid == 0
+    assert stat.S_ISDIR(info.st_mode)
+    assert info.st_mode & 0o022 == 0
+    link = tmp_path / "share"
+    link.symlink_to(target)
+    missing = link / "faustcoder-absent-mask"
+    assert not missing.exists()
+    mounts = _mount_with_absent_candidate(tmp_path, monkeypatch, missing, kind=kind)
+    assert missing in mounts
+
+
+def test_native_sandbox_passes_an_absent_mask_candidate(tmp_path: Path) -> None:
+    secret = tmp_path / "share"
+    secret.mkdir()
+    (secret / "stdfaust.lib").write_text("PWNED\n", encoding="ascii")
+    absent = tmp_path / "missing-share"
+    script = (
+        'if [ -e "$1/stdfaust.lib" ]; then seen=visible; else seen=hidden; fi; '
+        'if [ -e "$2" ]; then late=appeared; else late=absent; fi; '
+        "printf '%s %s\\n' \"$seen\" \"$late\""
+    )
+    command = ["/bin/sh", "-c", script, "sh", str(secret), str(absent)]
+    masked = run_in_sandbox(
+        command,
+        stdin=b"",
+        workdir=tmp_path,
+        limits=ResourceLimits(timeout_s=5),
+        mask_directories=(secret, absent),
+    )
+    assert masked.returncode == 0, masked.stderr
+    assert masked.stdout == b"hidden absent\n"
+    assert (secret / "stdfaust.lib").read_text(encoding="ascii") == "PWNED\n"
+    assert not absent.exists()
+
+
+def test_mask_script_fails_when_an_absent_candidate_appears(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    source = _MASK_EXEC.rsplit("\nmain()\n", 1)[0]
+    namespace: dict[str, object] = {}
+    exec(source, namespace)  # noqa: S102
+    refuse = namespace["refuse_if_unmasked"]
+    assert callable(refuse)
+    missing = tmp_path / "late"
+    refuse([str(missing)])
+    missing.mkdir()
+    with pytest.raises(SystemExit):
+        refuse([str(missing)])
+    captured = capsys.readouterr()
+    assert "faustcoder_mask_failed:" in captured.err
+    assert "exists unmasked" in captured.err
+
+
+def test_reported_faust_directories_fail_closed(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    missing = tmp_path / "missing-faust"
+    with pytest.raises(SandboxError, match="is not a file"):
+        _reported_faust_directories(missing)
+
+    binary = tmp_path / "faust"
+    binary.write_text("#!/bin/sh\nexit 7\n", encoding="ascii")
+    binary.chmod(0o755)
+    with pytest.raises(SandboxError, match="exited 7"):
+        _reported_faust_directories(binary)
+
+    binary.write_text("#!/bin/sh\nexit 0\n", encoding="ascii")
+    binary.chmod(0o755)
+    with pytest.raises(SandboxError, match="FAUST dsp library paths:"):
+        _reported_faust_directories(binary)
+
+    def timed_out(*_args: object, **_kwargs: object) -> subprocess.CompletedProcess[str]:
+        raise subprocess.TimeoutExpired(cmd="faust", timeout=10)
+
+    monkeypatch.setattr("faustcoder.sandbox.subprocess.run", timed_out)
+    with pytest.raises(SandboxError, match="timed out"):
+        _reported_faust_directories(binary)
+
+
+def test_reported_faust_directories_keep_absolute_paths(tmp_path: Path) -> None:
+    binary = tmp_path / "faust"
+    binary.write_text(
+        "#!/bin/sh\n"
+        'case "$1" in\n'
+        "  --libdir) printf '%s\\n' /tmp/reported-lib ;;\n"
+        "  --pathslist)\n"
+        "    printf '%s\\n' 'FAUST dsp library paths:' /tmp/reported-one\n"
+        "    ;;\n"
+        "esac\n"
+        "exit 0\n",
+        encoding="ascii",
+    )
+    binary.chmod(0o755)
+    found = _reported_faust_directories(binary)
+    assert Path("/tmp/reported-lib") in found
+    assert Path("/tmp/reported-one") in found
+
+
+def test_install_script_pins_the_faust_tarball(tmp_path: Path) -> None:
+    script = Path("scripts/install-faust-2.88.0.sh").read_text(encoding="utf-8")
+    pinned = "e4e175cf236924b5b7d4784cbb8c50cc01e211159e169655dd9e6d8f92b871d9"
+    assert pinned in script
+    assert script.index("sha256sum -c") < script.index("tar -xzf")
+    assert "/usr/share/faust" in script
+    assert "/usr/local/share/faust" in script
+    assert script.index("chmod 755") < script.index("already on PATH")
+    assert "chown root:root" in script
+    tarball = tmp_path / "faust-2.88.0.tar.gz"
+    tarball.write_bytes(b"not-the-release\n")
+    check = subprocess.run(
+        ["sha256sum", "-c"],
+        input=f"{pinned}  {tarball}\n",
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert check.returncode != 0
+
+
 def test_native_compile_rejects_a_library_planted_beside_the_binary(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -963,7 +1335,10 @@ def test_native_compile_rejects_a_library_planted_beside_the_binary(
     planted.chmod(0o755)
     share = prefix / "share" / "faust"
     share.mkdir(parents=True)
+    (prefix / "lib" / "faust").mkdir(parents=True)
+    (prefix / "bin" / "share" / "faust").mkdir(parents=True)
     (share / "zzprobe.lib").write_text("zzprobe = 1;\n", encoding="utf-8")
+    _create_writable_reported_directories(planted)
     source = 'import("zzprobe.lib"); process = zzprobe;\n'
     dsp = tmp_path / "probe.dsp"
     dsp.write_text(source, encoding="utf-8")
@@ -985,8 +1360,45 @@ def test_native_compile_rejects_a_library_planted_beside_the_binary(
 
 def _fake_faust(path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text("#!/bin/sh\nexit 1\n", encoding="ascii")
+    path.write_text(
+        "#!/bin/sh\n"
+        'case "$1" in\n'
+        "  --pathslist)\n"
+        "    printf '%s\\n' 'FAUST dsp library paths:' 'FAUST architectures paths:'\n"
+        "    ;;\n"
+        "esac\n"
+        "exit 0\n",
+        encoding="ascii",
+    )
     path.chmod(0o755)
+
+
+def _create_writable_reported_directories(binary: Path) -> None:
+    """Create absent directories this binary reports under a writable parent.
+
+    The sandbox refuses an absent reported path unless ``realpath`` of its
+    parent is root-only. A prefix under tmp has to contain those
+    directories so the compile can mask them. Root-only parents are left
+    absent.
+    """
+    for path in _reported_faust_directories(binary):
+        if path.exists():
+            continue
+        parent = Path(os.path.realpath(path)).parent
+        info = parent.stat()
+        if info.st_uid == 0 and stat.S_ISDIR(info.st_mode) and info.st_mode & 0o022 == 0:
+            continue
+        path.mkdir(parents=True, exist_ok=True)
+
+
+def _prefix_library_dirs(binary: Path) -> None:
+    prefix = binary.parent.parent
+    for path in (
+        prefix / "share" / "faust",
+        prefix / "lib" / "faust",
+        binary.parent / "share" / "faust",
+    ):
+        path.mkdir(parents=True, exist_ok=True)
 
 
 def test_native_compile_refuses_a_share_tampered_after_the_hash(
