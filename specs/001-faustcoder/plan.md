@@ -1,4 +1,4 @@
-# Implementation plan: FaustCoder (spec 001)
+# Implementation plan: BlackDog (spec 001)
 
 - Spec: [spec.md](spec.md)
 - Constitution: [.specify/memory/constitution.md](../../.specify/memory/constitution.md)

@@ -1,4 +1,4 @@
-# Research: FaustCoder (spec 001)
+# Research: BlackDog (spec 001)
 
 - Date: 2026-10-16 (0.3.0 additions: F10 corrected, F15 to F27, I7 to I9)
 - Plan: [plan.md](plan.md). Decision record: [ADR-0002](../../docs/adr/0002-training-path.md).

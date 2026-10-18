@@ -1,6 +1,6 @@
 # DGX Spark feasibility study
 
-T09 records whether a FaustCoder training phase can run on one NVIDIA DGX
+T09 records whether a BlackDog training phase can run on one NVIDIA DGX
 Spark. This repository does not have access to the Zero State machines, so
 the pages below separate published hardware facts from estimates and from
 checks that still have to be run on a Spark.
@@ -19,7 +19,7 @@ stays SPECULATIVE until bitsandbytes imports on the machine.
 
 R-001 was amended 0.3.1 (Danny yes 2026-10-17 12:54 PM PT, spec §20). For
 v0.2, the benchmarks cited below plus one environment-fingerprint receipt
-per machine satisfy R-001. On-hardware FaustCoder throughput is T10, on the
+per machine satisfy R-001. On-hardware BlackDog throughput is T10, on the
 cleared Spark. That amendment does not pin PyTorch: `stack_pin_allowed`
 stays false until both probes complete.
 
@@ -222,11 +222,11 @@ The table note defines those rates as
 does not define the window behind the higher prose peaks. Planning in this
 study uses Table 1 only. The prose peaks are not targets.
 
-INFERRED ranges for the FaustCoder shortlist, transferred from those Llama
+INFERRED ranges for the BlackDog shortlist, transferred from those Llama
 rows. The transfer is weak: model shape, LoRA rank, and sequence length
 differ, and the article does not state the LoRA rank. These ranges are not
 G10 thresholds. They are the external training benchmarks the 0.3.1
-amendment cites for v0.2 planning. They are not FaustCoder measurements.
+amendment cites for v0.2 planning. They are not BlackDog measurements.
 
 | Phase and method | Planning range | Why |
 |---|---|---|
@@ -246,7 +246,7 @@ before quoting it as a schedule.
 
 Amended 0.3.1 (Danny yes 2026-10-17 12:54 PM PT). For v0.2, the benchmarks
 in this section plus one `env_verified` fingerprint receipt per Spark
-satisfy R-001. On-hardware throughput for the FaustCoder recipe is deferred
+satisfy R-001. On-hardware throughput for the BlackDog recipe is deferred
 to T10, on the dedicated Spark after it has been cleared. spec §20 records
 the amendment. The fingerprint path is the first command in the runbook.
 `stack_pin_allowed` may be false on that receipt.
@@ -260,10 +260,10 @@ workloads the page names, not measured tokens/s.
 | [NVIDIA performance article](https://developer.nvidia.com/blog/how-nvidia-dgx-sparks-performance-enables-intensive-ai-tasks/), Table 1 | Training rates quoted above: Llama 3.2 3B full fine-tune 13,519.54 tokens/s, Llama 3.1 8B LoRA 6,969.59, Llama 3.3 70B QLoRA 759.79. Sequence 2048, 64 steps | OBSERVED. Planning ranges for 1.5B–4B full AdamW and 7.6B LoRA |
 | [DGX Spark playbook, performance guide](https://github.com/NVIDIA/dgx-spark-playbooks/blob/main/nvidia/connect-two-sparks/assets/performance_benchmarking_guide.md) | Fine-tuning section names three runs and does not publish a token-rate table: Llama 3 8B LoRA (`Llama3_8B_LoRA_finetuning.py --use_torch_compile`), Llama 3 70B qLoRA, Llama 3 3B full fine-tune. Inference sections name TensorRT-LLM, vLLM, SGLang and llama.cpp. The page says DGX Spark uses an LTS host stack and that newer CUDA belongs in NGC containers; installing CUDA on the host is outside the supported stack | OBSERVED as the workload list and the host-stack rule. No rate taken from this page |
 | [LMSYS DGX Spark review](https://www.lmsys.org/blog/2025-10-13-nvidia-dgx-spark/) (Jerry Zhou and Richard Chen, 2025-10-13) | Inference, not training. GPT-OSS 20B MXFP4 in Ollama: 2,053 tps prefill / 49.7 tps decode, against 10,108 / 215 on an RTX Pro 6000 Blackwell and 8,519 / 205 on an RTX 5090. Llama 3.1 8B in SGLang: 7,991 prefill / 20.5 decode at batch 1, and 7,949 / 368 at batch 32. Llama 3.1 70B FP8: 803 prefill / 2.7 decode. The review's hardware recap matches GB10, 128 GB coherent unified memory, 273 GB/s, and up to 405B FP4 on two Sparks. Bandwidth is the limiter they report | OBSERVED inference. Confirms the machine serves an 8B-class model and that bandwidth, not a missing kernel, is the published bottleneck. Not a training rate |
-| [Unsloth DGX Spark tutorial](https://unsloth.ai/docs/blog/fine-tuning-llms-with-nvidia-dgx-spark-and-unsloth) | Unsloth claims fine-tuning up to 200B parameters on Spark, and says gpt-oss-120b QLoRA 4-bit uses around 68 GB. The tutorial itself is gpt-oss-20b reinforcement learning. The published Dockerfile starts from `nvcr.io/nvidia/pytorch:25.09-py3` and installs `bitsandbytes==0.48.0` | OBSERVED as Unsloth's claim. It is QLoRA and their container, not full AdamW, and it is not a FaustCoder measurement |
+| [Unsloth DGX Spark tutorial](https://unsloth.ai/docs/blog/fine-tuning-llms-with-nvidia-dgx-spark-and-unsloth) | Unsloth claims fine-tuning up to 200B parameters on Spark, and says gpt-oss-120b QLoRA 4-bit uses around 68 GB. The tutorial itself is gpt-oss-20b reinforcement learning. The published Dockerfile starts from `nvcr.io/nvidia/pytorch:25.09-py3` and installs `bitsandbytes==0.48.0` | OBSERVED as Unsloth's claim. It is QLoRA and their container, not full AdamW, and it is not a BlackDog measurement |
 | [Unsloth issue 4867](https://github.com/unslothai/unsloth/issues/4867) | One operator's environment table: DGX Spark GB10, aarch64, 121 GB unified memory, compute capability 12.1, CUDA 13.0, driver 580.x, NGC `nvcr.io/nvidia/pytorch:25.11-py3`, PyTorch 2.10.0a0. Inference needed manual `transformers` patches for `kernels-community/vllm-flash-attn3`. A later comment reports LoRA training of Qwen3-0.6B and a 27B 4-bit run with `attn_implementation="eager"`, again listing 121 GB. Unsloth closed the issue on 2026-10-11, saying current Unsloth loads GPT-OSS without those patches | OBSERVED third-party report. The 121 GB figure is why 121.6 GB AdamW static is a no-go before the policy margin. Unsloth on Linux aarch64 has been fragile; ADR-0002 does not require it |
 
-Nothing in this table is a FaustCoder tokens/s number. T10 measures that
+Nothing in this table is a BlackDog tokens/s number. T10 measures that
 recipe on the cleared machine.
 
 ## Software stack on ARM64 and Blackwell

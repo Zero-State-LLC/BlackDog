@@ -2,14 +2,14 @@
 
 ## Supported versions
 
-FaustCoder is pre-release. No version is supported yet; security fixes land on
+BlackDog is pre-release. No version is supported yet; security fixes land on
 `main`. This section changes when v0.1.0 ships (see
 [docs/VERSIONING.md](docs/VERSIONING.md)).
 
 ## Reporting a vulnerability
 
 Do not open a public issue for a vulnerability. Report it privately through
-[GitHub private vulnerability reporting](https://github.com/Zero-State-LLC/FaustCoder/security/advisories/new).
+[GitHub private vulnerability reporting](https://github.com/Zero-State-LLC/BlackDog/security/advisories/new).
 
 Include the affected file or component, steps to reproduce and the impact you
 expect. You get an acknowledgement when the report is triaged. Please allow time

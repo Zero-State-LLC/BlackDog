@@ -1,4 +1,4 @@
-# Data model: FaustCoder (spec 001)
+# Data model: BlackDog (spec 001)
 
 Entities come from spec §3. Fields come from spec §8 where listed; fields not in
 the spec are labeled INFERRED. JSON Schemas live in [contracts/](contracts/).

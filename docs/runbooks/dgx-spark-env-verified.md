@@ -42,7 +42,7 @@ python -m pip install --disable-pip-version-check -e .
 ```
 
 Do not pip-install torch, transformers wheels, or model weights as part of
-this run. `pip install -e .` installs FaustCoder and its schema dependencies
+this run. `pip install -e .` installs BlackDog and its schema dependencies
 only. The NVIDIA playbook cited in the feasibility study runs newer CUDA
 from an NGC container and treats a host CUDA install as outside the
 supported stack. This runbook does not install that container.

@@ -1,4 +1,6 @@
-# FaustCoder implementation backlog
+# BlackDog implementation backlog
+
+Formerly FaustCoder; renamed 2026-10-17 PT.
 
 All tasks are **TODO**. Dependency arrows are mandatory promotion gates.
 
