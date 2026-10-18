@@ -150,8 +150,8 @@ line that is exactly that text is still exit 126 `internal`. Any other
 `ERROR :` or `WARNING` is a source failure, including when the program's
 own tokens (`TypeError`, `stack overflow`, a slider label) appear inside
 the message. A JS exception is internal only when its line starts with
-`TypeError: `, `RangeError: `, `ReferenceError: `, `SyntaxError: ` or
-`InternalError: `.
+`TypeError:`, `RangeError:`, `ReferenceError:`, `SyntaxError:`, or
+`InternalError:` followed by a space.
 
 ## Recorded exclusions
 
