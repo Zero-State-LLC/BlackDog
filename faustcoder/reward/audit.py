@@ -36,8 +36,12 @@ from faustcoder.reward.records import (
 _SAMPLE_PERCENT = 5
 _SEED_LABEL = b"d3-h2-seed"
 _REPORT_DOMAIN = b"faustcoder.reward-audit-report.v1"
+_CONSUMED_ID_DOMAIN = b"faustcoder.consumed-id.v1"
+_ANCHOR_DOMAIN = b"faustcoder.audit-anchor.v1"
 _FAIL_OUTCOMES = frozenset({"fail", "source_attributed"})
 _LOG_MODE = 0o640
+_GENESIS_MAC = "0" * 64
+_ANCHOR_LEN = 248
 
 
 @dataclass(frozen=True)
@@ -58,6 +62,7 @@ class RerunAudit:
     seed: str
     sample_ids: tuple[str, ...]
     audited_ids: tuple[str, ...]
+    row_ids: tuple[str, ...]
     disagreements: tuple[AuditDisagreement, ...]
     dropped_groups: tuple[str, ...]
     late_groups: tuple[str, ...]
@@ -86,6 +91,8 @@ class RerunAudit:
                 {"disposition": "late", "group_id": group_id} for group_id in self.late_groups
             ],
             "p3": "halt" if self.halted else "clear",
+            "row_ids": list(self.row_ids),
+            "row_ids_digest": _row_ids_digest(self.row_ids),
             "run_id": self.run_id,
             "sample_ids": list(self.sample_ids),
             "seed": self.seed,
@@ -104,13 +111,19 @@ class AuditReportLog:
     does not replace it.
     """
 
-    def __init__(self, path: Path | str) -> None:
+    def __init__(self, path: Path | str, consumed: ConsumedLog) -> None:
+        if not isinstance(consumed, ConsumedLog):
+            raise RewardRecordError("audit report requires its consumed log")
         self.path = Path(path)
+        self.consumed = consumed
 
     def append(self, keyring: RewardKeyring, report: Mapping[str, object]) -> None:
         """Persist ``report``. A clear report cannot cover an open halt."""
         run_key = _run_key(keyring)
-        body = _report_body(keyring.run_id, report)
+        stored = dict(report)
+        stored["consumed_id"] = _consumed_id(run_key, self.consumed.path)
+        stored["consumed_path"] = os.path.realpath(self.consumed.path)
+        body = _report_body(keyring.run_id, stored)
         self._append_line(run_key, body)
 
     def record_triage(
@@ -170,12 +183,11 @@ class AuditReportLog:
             found.append(body)
         if not found:
             raise RewardRecordError("audit report log is not usable")
+        _check_chain(found)
         return tuple(found)
 
     def _append_line(self, run_key: bytes, body: dict[str, object]) -> None:
-        signed = dict(body)
-        signed["mac"] = _line_mac(run_key, body)
-        encoded = canonical_bytes(signed) + b"\n"
+        """Append one chained line and move the consumed-log anchor with it."""
         self.path.parent.mkdir(parents=True, exist_ok=True)
         fd, created = _open_consumed(self.path)
         try:
@@ -184,20 +196,25 @@ class AuditReportLog:
             try:
                 os.lseek(fd, 0, os.SEEK_SET)
                 existing = _read_text(fd)
-                if existing.strip():
-                    _reject_tamper(existing, run_key)
-                    if body.get("type") == "audit_report":
-                        report = body.get("report")
-                        if (
-                            isinstance(report, dict)
-                            and report.get("p3") == "clear"
-                            and _untriaged(_bodies(existing, run_key))
-                        ):
-                            raise RewardRecordError("audit halt is not cleared by another report")
-                _write_all(fd, encoded)
+                seq, prev = _next_link(existing, run_key, self.consumed)
+                chained = dict(body)
+                chained["prev"] = prev
+                chained["seq"] = seq
+                if chained.get("type") == "audit_report" and existing.strip():
+                    report = chained.get("report")
+                    if (
+                        isinstance(report, dict)
+                        and report.get("p3") == "clear"
+                        and _untriaged(_bodies(existing, run_key))
+                    ):
+                        raise RewardRecordError("audit halt is not cleared by another report")
+                signed = dict(chained)
+                signed["mac"] = _line_mac(run_key, chained)
+                _write_all(fd, canonical_bytes(signed) + b"\n")
                 os.fsync(fd)
                 if created:
                     _fsync_dir(self.path.parent)
+                _advance_anchor(self.consumed, run_key, seq, signed["mac"])
             finally:
                 fcntl.flock(fd, fcntl.LOCK_UN)
         finally:
@@ -217,19 +234,34 @@ def derive_audit_seed(keyring: RewardKeyring, run_id: str) -> str:
     return hmac.new(keyring.run_key(run_id), message, hashlib.sha256).hexdigest()
 
 
-def p3_may_proceed(run_id: str, *, keyring: RewardKeyring, reports: AuditReportLog) -> bool:
+def p3_may_proceed(
+    run_id: str,
+    *,
+    keyring: RewardKeyring,
+    reports: AuditReportLog,
+    consumed: ConsumedLog,
+) -> bool:
     """True only when this run's latest persisted report is clear.
 
-    An open halt stays closed until triage is recorded for each
-    disagreement. A missing report is not clear. A bad MAC raises.
+    The report must be the chain anchored in ``consumed``. An open halt
+    stays closed until triage is recorded for each disagreement. A
+    missing report is not clear. A bad MAC, a foreign consumed log, or
+    a truncated chain raises.
     """
     if not isinstance(reports, AuditReportLog):
         raise RewardRecordError("P3 requires the persisted audit report")
+    if not isinstance(consumed, ConsumedLog):
+        raise RewardRecordError("P3 requires the consumed log")
     if not isinstance(keyring, RewardKeyring) or type(run_id) is not str or keyring.run_id != run_id:
         raise RewardRecordError("audit report run id does not match")
+    if os.path.realpath(reports.consumed.path) != os.path.realpath(consumed.path):
+        raise RewardRecordError("audit report consumed log does not match")
     if not reports.path.is_file():
         return False
     lines = reports._verified(keyring)
+    run_key = _run_key(keyring)
+    _require_consumed_binding(lines, run_key, consumed.path)
+    _require_anchor(consumed, run_key, lines)
     if _untriaged(lines):
         return False
     latest = _latest_report(lines)
@@ -238,6 +270,42 @@ def p3_may_proceed(run_id: str, *, keyring: RewardKeyring, reports: AuditReportL
     if latest.get("p3") == "clear":
         return True
     return _halt_ids(lines) <= _triaged_ids(lines)
+
+
+def require_audit_coverage(
+    run_id: str,
+    records: Sequence[RewardRowRecord],
+    *,
+    keyring: RewardKeyring,
+    reports: AuditReportLog,
+    consumed: ConsumedLog,
+) -> None:
+    """Refuse a batch row the persisted audits did not cover.
+
+    Every record id must sit in the union of ``row_ids``. A pass or a
+    signed canary must also sit in the union of ``audited_ids``.
+    """
+    if not reports.path.is_file():
+        raise RewardRecordError("P3 audit did not cover this row")
+    lines = reports._verified(keyring)
+    run_key = _run_key(keyring)
+    _require_consumed_binding(lines, run_key, consumed.path)
+    _require_anchor(consumed, run_key, lines)
+    covered: set[str] = set()
+    rerun: set[str] = set()
+    for line in lines:
+        if line.get("type") != "audit_report":
+            continue
+        report = line.get("report")
+        if not isinstance(report, dict) or report.get("run_id") != run_id:
+            raise RewardRecordError("audit report is not usable")
+        covered.update(_id_list(report.get("row_ids"), report.get("row_ids_digest")))
+        rerun.update(_plain_ids(report.get("audited_ids")))
+    for record in records:
+        if record.record_id not in covered:
+            raise RewardRecordError("P3 audit did not cover this row")
+        if (record.outcome == "pass" or record.canary is True) and record.record_id not in rerun:
+            raise RewardRecordError("P3 audit did not cover this row")
 
 
 def select_fail_sample(record_ids: Sequence[str], seed: str) -> tuple[str, ...]:
@@ -332,6 +400,7 @@ def _audit_from(
         seed=seed,
         sample_ids=sample,
         audited_ids=audited,
+        row_ids=tuple(sorted({row.record_id for row in rows})),
         disagreements=tuple(disagreements),
         dropped_groups=dropped,
         late_groups=late,
@@ -463,6 +532,12 @@ def _verify_line(body: dict[str, object], run_key: bytes, run_id: str) -> None:
     expected = _line_mac(run_key, unsigned)
     if not hmac.compare_digest(mac, expected):
         raise RewardRecordError("audit report mac does not verify")
+    seq = body.get("seq")
+    prev = body.get("prev")
+    if type(seq) is not int or isinstance(seq, bool) or seq < 1:
+        raise RewardRecordError("audit report sequence is not usable")
+    if type(prev) is not str or len(prev) != 64:
+        raise RewardRecordError("audit report chain does not verify")
     if body.get("run_id") != run_id:
         raise RewardRecordError("audit report run id does not match")
     kind = body.get("type")
@@ -472,12 +547,268 @@ def _verify_line(body: dict[str, object], run_key: bytes, run_id: str) -> None:
             raise RewardRecordError("audit report is not usable")
         if report.get("p3") not in {"halt", "clear"}:
             raise RewardRecordError("audit report is not usable")
+        _id_list(report.get("row_ids"), report.get("row_ids_digest"))
+        audited = set(_plain_ids(report.get("audited_ids")))
+        if not audited <= set(_plain_ids(report.get("row_ids"))):
+            raise RewardRecordError("audit report row ids are not usable")
+        if type(report.get("consumed_id")) is not str or type(report.get("consumed_path")) is not str:
+            raise RewardRecordError("audit report consumed log does not match")
         return
     if kind == "audit_triage":
         if type(body.get("record_id")) is not str or type(body.get("triaged_by")) is not str:
             raise RewardRecordError("audit triage is not usable")
         return
     raise RewardRecordError("audit report is not usable")
+
+
+def _row_ids_digest(record_ids: Sequence[str]) -> str:
+    return hashlib.sha256(canonical_bytes(list(record_ids))).hexdigest()
+
+
+def _plain_ids(value: object) -> tuple[str, ...]:
+    if not isinstance(value, list) or any(type(item) is not str or item == "" for item in value):
+        raise RewardRecordError("audit report row ids are not usable")
+    return tuple(value)
+
+
+def _id_list(value: object, digest: object) -> tuple[str, ...]:
+    ids = _plain_ids(value)
+    if list(ids) != sorted(set(ids)):
+        raise RewardRecordError("audit report row ids are not usable")
+    expected = _row_ids_digest(ids)
+    if type(digest) is not str or len(digest) != len(expected) or not hmac.compare_digest(digest, expected):
+        raise RewardRecordError("audit report row ids are not usable")
+    return ids
+
+
+def _check_chain(lines: Sequence[Mapping[str, object]]) -> None:
+    previous = _GENESIS_MAC
+    for index, body in enumerate(lines, start=1):
+        seq = body.get("seq")
+        prev = body.get("prev")
+        if seq != index or prev != previous:
+            raise RewardRecordError("audit report chain does not verify")
+        mac = body.get("mac")
+        if type(mac) is not str:
+            raise RewardRecordError("audit report mac does not verify")
+        previous = mac
+
+
+def _next_link(existing: str, run_key: bytes, consumed: ConsumedLog) -> tuple[int, str]:
+    """The next sequence and prev MAC, or a rollback error."""
+    anchor = _read_anchor(consumed, run_key)
+    if not existing.strip():
+        if anchor is not None:
+            raise RewardRecordError("audit report log was rolled back")
+        return 1, _GENESIS_MAC
+    _reject_tamper(existing, run_key)
+    lines = _bodies(existing, run_key)
+    _check_chain(lines)
+    tail = lines[-1]
+    seq = tail.get("seq")
+    mac = tail.get("mac")
+    if type(seq) is not int or isinstance(seq, bool) or type(mac) is not str:
+        raise RewardRecordError("audit report chain does not verify")
+    if anchor is None or anchor[0] != seq or not hmac.compare_digest(anchor[1], mac):
+        raise RewardRecordError("audit report log was rolled back")
+    return seq + 1, mac
+
+
+def _consumed_id(run_key: bytes, path: Path) -> str:
+    resolved = os.path.realpath(path).encode("utf-8")
+    return hmac.new(run_key, _CONSUMED_ID_DOMAIN + b"\n" + resolved, hashlib.sha256).hexdigest()
+
+
+def _anchor_bind(run_key: bytes, *, seq: int, line_mac: str, consumed_id: str, path: Path) -> str:
+    message = (
+        _ANCHOR_DOMAIN
+        + b"\n"
+        + str(seq).encode("ascii")
+        + b"\n"
+        + line_mac.encode("ascii")
+        + b"\n"
+        + consumed_id.encode("ascii")
+        + b"\n"
+        + os.path.realpath(path).encode("utf-8")
+    )
+    return hmac.new(run_key, message, hashlib.sha256).hexdigest()
+
+
+def _anchor_text(seq: int, line_mac: str, consumed_id: str, bind: str) -> bytes:
+    text = f"audit-anchor v1 seq={seq:020d} mac={line_mac} id={consumed_id} bind={bind}\n"
+    if len(text) != _ANCHOR_LEN:
+        raise RewardRecordError("audit anchor is not usable")
+    return text.encode("ascii")
+
+
+def _parse_anchor(line: bytes) -> tuple[int, str, str, str]:
+    if len(line) != _ANCHOR_LEN or not line.startswith(b"audit-anchor v1 seq=") or line[-1:] != b"\n":
+        raise RewardRecordError("audit anchor is not usable")
+    text = line[:-1].decode("ascii")
+    if text[40:45] != " mac=" or text[109:113] != " id=" or text[177:183] != " bind=":
+        raise RewardRecordError("audit anchor is not usable")
+    seq_text = text[20:40]
+    line_mac = text[45:109]
+    consumed_id = text[113:177]
+    bind = text[183:247]
+    if not seq_text.isdigit() or len(line_mac) != 64 or len(consumed_id) != 64 or len(bind) != 64:
+        raise RewardRecordError("audit anchor is not usable")
+    seq = int(seq_text)
+    if seq < 1:
+        raise RewardRecordError("audit anchor is not usable")
+    return seq, line_mac, consumed_id, bind
+
+
+def _anchor_offset(data: bytes) -> int | None:
+    prefix = b"audit-anchor v1 "
+    offsets: list[int] = []
+    start = 0
+    while True:
+        index = data.find(prefix, start)
+        if index < 0:
+            break
+        if index == 0 or data[index - 1:index] == b"\n":
+            offsets.append(index)
+        start = index + len(prefix)
+    if not offsets:
+        return None
+    if len(offsets) != 1:
+        raise RewardRecordError("audit anchor is not usable")
+    offset = offsets[0]
+    if data[offset + _ANCHOR_LEN - 1:offset + _ANCHOR_LEN] != b"\n":
+        raise RewardRecordError("audit anchor is not usable")
+    return offset
+
+
+def _read_consumed_bytes(path: Path) -> bytes:
+    fd = os.open(path, os.O_RDONLY | os.O_CLOEXEC)
+    try:
+        fcntl.flock(fd, fcntl.LOCK_SH)
+        try:
+            chunks: list[bytes] = []
+            while True:
+                block = os.read(fd, 1024 * 1024)
+                if not block:
+                    break
+                chunks.append(block)
+            return b"".join(chunks)
+        finally:
+            fcntl.flock(fd, fcntl.LOCK_UN)
+    finally:
+        os.close(fd)
+
+
+def _read_anchor(consumed: ConsumedLog, run_key: bytes) -> tuple[int, str, str] | None:
+    if not consumed.path.is_file():
+        return None
+    data = _read_consumed_bytes(consumed.path)
+    offset = _anchor_offset(data)
+    if offset is None:
+        return None
+    seq, line_mac, consumed_id, bind = _parse_anchor(data[offset:offset + _ANCHOR_LEN])
+    expected_id = _consumed_id(run_key, consumed.path)
+    expected_bind = _anchor_bind(
+        run_key,
+        seq=seq,
+        line_mac=line_mac,
+        consumed_id=consumed_id,
+        path=consumed.path,
+    )
+    if not hmac.compare_digest(consumed_id, expected_id) or not hmac.compare_digest(bind, expected_bind):
+        raise RewardRecordError("audit anchor is not usable")
+    return seq, line_mac, consumed_id
+
+
+def _pwrite_all(fd: int, data: bytes, offset: int) -> None:
+    view = memoryview(data)
+    at = offset
+    while view:
+        written = os.pwrite(fd, view, at)
+        if written <= 0:
+            raise RewardRecordError("reward record log write failed")
+        at += written
+        view = view[written:]
+
+
+def _advance_anchor(consumed: ConsumedLog, run_key: bytes, seq: int, line_mac: str) -> None:
+    consumed_id = _consumed_id(run_key, consumed.path)
+    bind = _anchor_bind(run_key, seq=seq, line_mac=line_mac, consumed_id=consumed_id, path=consumed.path)
+    encoded = _anchor_text(seq, line_mac, consumed_id, bind)
+    consumed.path.parent.mkdir(parents=True, exist_ok=True)
+    flags = os.O_RDWR | os.O_CLOEXEC
+    try:
+        fd = os.open(consumed.path, flags | os.O_CREAT | os.O_EXCL, _LOG_MODE)
+        created = True
+    except FileExistsError:
+        fd = os.open(consumed.path, flags)
+        created = False
+    try:
+        os.fchmod(fd, _LOG_MODE)
+        fcntl.flock(fd, fcntl.LOCK_EX)
+        try:
+            chunks: list[bytes] = []
+            while True:
+                block = os.read(fd, 1024 * 1024)
+                if not block:
+                    break
+                chunks.append(block)
+            data = b"".join(chunks)
+            offset = _anchor_offset(data)
+            if offset is None:
+                os.lseek(fd, 0, os.SEEK_END)
+                _write_all(fd, encoded)
+            else:
+                _pwrite_all(fd, encoded, offset)
+            os.fsync(fd)
+            if created:
+                _fsync_dir(consumed.path.parent)
+        finally:
+            fcntl.flock(fd, fcntl.LOCK_UN)
+    finally:
+        os.close(fd)
+
+
+def _require_anchor(consumed: ConsumedLog, run_key: bytes, lines: Sequence[Mapping[str, object]]) -> None:
+    anchor = _read_anchor(consumed, run_key)
+    if not lines:
+        raise RewardRecordError("audit report log is not usable")
+    tail = lines[-1]
+    seq = tail.get("seq")
+    mac = tail.get("mac")
+    if (
+        anchor is None
+        or type(seq) is not int
+        or isinstance(seq, bool)
+        or type(mac) is not str
+        or anchor[0] != seq
+        or not hmac.compare_digest(anchor[1], mac)
+    ):
+        raise RewardRecordError("audit report log was rolled back")
+
+
+def _require_consumed_binding(lines: Sequence[Mapping[str, object]], run_key: bytes, path: Path) -> None:
+    expected_id = _consumed_id(run_key, path)
+    expected_path = os.path.realpath(path)
+    saw_report = False
+    for line in lines:
+        if line.get("type") != "audit_report":
+            continue
+        saw_report = True
+        report = line.get("report")
+        if not isinstance(report, dict):
+            raise RewardRecordError("audit report consumed log does not match")
+        consumed_id = report.get("consumed_id")
+        consumed_path = report.get("consumed_path")
+        if (
+            type(consumed_id) is not str
+            or type(consumed_path) is not str
+            or len(consumed_id) != len(expected_id)
+            or not hmac.compare_digest(consumed_id, expected_id)
+            or consumed_path != expected_path
+        ):
+            raise RewardRecordError("audit report consumed log does not match")
+    if not saw_report:
+        raise RewardRecordError("audit report is not usable")
 
 
 def _bodies(text: str, run_key: bytes) -> tuple[dict[str, object], ...]:

@@ -1346,6 +1346,8 @@ class ConsumedLog:
         for number, line in enumerate(text.splitlines(), start=1):
             if not line.strip():
                 continue
+            if line.startswith("audit-anchor v1 "):
+                continue
             try:
                 body = loads_strict(line)
             except Exception as exc:
@@ -1386,7 +1388,9 @@ def rl_batch_from_records(
     ``expected_run_id`` is the run this builder accepts. ``policy_checkpoints``
     is the allowlist for ``policy_checkpoint``. A mismatch raises before
     any group is claimed. ``reports`` is the persisted D3-H2 audit. P3
-    does not start unless the latest report for the run is clear. A1
+    does not start unless the latest report for the run is clear, every
+    batch row is in the record ids that report covered, and the report
+    is bound to this consumed log. A1
     source failures are graded ``0.0`` members. Ungraded, quarantined,
     stale, incomplete and duplicate groups contribute no row. A group id
     already in ``consumed`` is refused.
@@ -1401,10 +1405,17 @@ def rl_batch_from_records(
         raise RewardRecordError("reward record run id does not match")
     if any(record.policy_checkpoint not in allowed for record in records):
         raise RewardRecordError("reward record checkpoint is not allowed")
-    from faustcoder.reward.audit import p3_may_proceed
+    from faustcoder.reward.audit import p3_may_proceed, require_audit_coverage
 
-    if not p3_may_proceed(expected_run_id, keyring=keyring, reports=reports):
+    if not p3_may_proceed(expected_run_id, keyring=keyring, reports=reports, consumed=consumed):
         raise RewardRecordError("P3 has no clear audit report")
+    require_audit_coverage(
+        expected_run_id,
+        records,
+        keyring=keyring,
+        reports=reports,
+        consumed=consumed,
+    )
     header_by_id: dict[str, GroupHeader] = {}
     for header in headers:
         verify(header, keyring)

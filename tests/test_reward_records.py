@@ -171,15 +171,16 @@ def _batch(
 
     ring = RewardKeyring(root, run_id=run_id)
     loaded = load_records(path, ring)
-    reports = AuditReportLog(consumed.path.with_name(consumed.path.name + ".audit.jsonl"))
+    reports = AuditReportLog(
+        consumed.path.with_name(consumed.path.name + ".audit.jsonl"),
+        consumed,
+    )
     if not reports.path.is_file():
         audit_sampled_reruns(
             loaded.rows,
             ring,
             rerun=lambda record: record.outcome,
-            consumed=ConsumedLog(
-                consumed.path.with_name(consumed.path.name + ".audit-consumed.jsonl")
-            ),
+            consumed=consumed,
             reports=reports,
         )
     return rl_batch_from_records(
@@ -992,7 +993,7 @@ def test_cross_run_replay_and_checkpoint_mismatch_are_refused(tmp_path: Path) ->
             queue=QuarantineQueue(tmp_path / "q.jsonl"),
             rates=UngradedRateTracker(),
             consumed=consumed,
-            reports=AuditReportLog(tmp_path / "audit-reports.jsonl"),
+            reports=AuditReportLog(tmp_path / "audit-reports.jsonl", consumed),
         )
     assert consumed.disposition("group-replay") is None
     retired = derive_run_key(secret, "run-a")
