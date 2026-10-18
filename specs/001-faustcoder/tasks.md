@@ -181,6 +181,22 @@ These tasks are the implementation. This record does not change code.
   - Depends on: T04. Milestone: v0.3. Prerequisite of T10.
   - Acceptance: a persisted row carries an HMAC tag under a per-run key derived from a mode `0400` root key owned by `fc-grader`. Every load re-checks the MAC, the pins, the source, the full task, the reference and the profile, then `grade_receipt` with no `rerun`, `known_good` or `triage`. `passed` is true only when `metrics.failures` is empty. A group with a missing, duplicate, ungraded or quarantined member is dropped and claimed so it does not re-enter. A stale pin is not regraded into training. A1 stays `0.0`. Unattributed 124/125/126, crashes, internal errors and a `ShadowLog` stay ungraded. Done in the D3-H1 change.
   - Workflows: production-systems, ADVERSARY review.
+- [ ] D3-H1-N9 [J-04] Re-check the stored native envelope on load.
+  - Depends on: D3-H1. Milestone: v0.3. Does not block T10. Follow-up from the D3-H1 adversary review (N9).
+  - Acceptance: `regrade_record` passes the stored native envelope into `grade_receipt`. A row whose rollout grade used a native stack match is re-checked, instead of always dropping as `outcome`.
+  - Workflows: production-systems.
+- [ ] D3-H1-N10 [J-04] Consumed-log integrity and incremental re-read.
+  - Depends on: D3-H1. Milestone: v0.3. Does not block T10. Follow-up from the D3-H1 adversary review (N10).
+  - Acceptance: the consumed log has an integrity check. A torn last line does not fail every later load. `rl_batch_from_records` can re-read an append-only row log without refusing a group that was already consumed in an earlier prefix, and a mid-batch failure does not leave a `used` claim without returning that group's rows.
+  - Workflows: production-systems.
+- [ ] D3-H1-N11 [J-04] Bind a reward envelope to the task it was graded for.
+  - Depends on: D3-H1. Milestone: v0.3. Does not block T10. Follow-up from the D3-H1 adversary review (N11).
+  - Acceptance: `grade_receipt` does not mint a process-local seal for an arbitrary task passed in beside a task-agnostic envelope. A key holder cannot sign a task-X envelope under task Y and receive a reward.
+  - Workflows: production-systems.
+- [ ] D3-H1-N12 [J-04] `rl_batch_from_records` rewards go through the minted-receipt builders.
+  - Depends on: D3-H1. Milestone: v0.3. Does not block T10. Follow-up from the D3-H1 adversary review (N12).
+  - Acceptance: `rl_batch_from_records` does not compute `reward` inline. It uses `reward_value` or `rl_batch`, and it checks `is_minted`.
+  - Workflows: production-systems.
 - [ ] D3-H2 [J-04] Sampled rerun-from-source audit.
   - Depends on: D3-H1. Milestone: v0.3. Before P3. Does not block P1 or P2.
   - Acceptance: a pass-weighted sample of training rows is re-executed from source. A disagreement halts. P3 does not exit while an audit disagreement is unresolved or the consumed log is not intact. Ed25519 is out of scope.

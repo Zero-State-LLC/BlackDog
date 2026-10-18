@@ -349,6 +349,14 @@ class QuarantineQueue:
         """Return the triage record for ``record_id``, if it was resolved."""
         return self._resolutions.get(record_id)
 
+    def holds(self) -> tuple[QuarantineRecord, ...]:
+        """Every hold, including rows triage has resolved.
+
+        The reward builder indexes these so a quarantined group cannot
+        return after the hold leaves ``pending``.
+        """
+        return tuple(self._rows)
+
     def pending(self, policy: str | None = None) -> tuple[QuarantineRecord, ...]:
         rows = [row for row in self._rows if row.record_id not in self._resolutions]
         if policy is None:
@@ -388,8 +396,9 @@ class QuarantineQueue:
             return
         self.path.parent.mkdir(parents=True, exist_ok=True)
         line = json.dumps(row, separators=(",", ":"), sort_keys=True) + "\n"
-        fd = os.open(self.path, os.O_CREAT | os.O_APPEND | os.O_WRONLY, 0o644)
+        fd = os.open(self.path, os.O_CREAT | os.O_APPEND | os.O_WRONLY | os.O_CLOEXEC, 0o640)
         try:
+            os.fchmod(fd, 0o640)
             fcntl.flock(fd, fcntl.LOCK_EX)
             try:
                 os.write(fd, line.encode("utf-8"))

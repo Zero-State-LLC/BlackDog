@@ -1,17 +1,18 @@
 """MAC'd reward-row records (ADR-0006 D3, option H).
 
-A rollout persists a ``GroupHeader`` and then one ``RewardRowRecord``
-per member, including ungraded members. The tag is HMAC-SHA256 under a
-per-run key. The run key is HKDF-SHA256 of a per-Spark root key and the
-run id. The root key is read from a file that is mode ``0400`` and
-owned by the dedicated ``fc-grader`` uid. This module does not generate,
-print or log key bytes.
+The library can persist a ``GroupHeader`` and then one ``RewardRowRecord``
+per member, including ungraded members. T10 wires that writer into a
+rollout. The tag is HMAC-SHA256 under a key scoped to one run. The run
+key is HKDF-SHA256 of a per-Spark root key and that run id. The root key
+is read from a file that is mode ``0400`` and owned by the dedicated
+``fc-grader`` uid. This module does not generate, print or log key bytes.
 
 ``load_records`` and ``rl_batch_from_records`` re-check every row:
 MAC, pins, source, task, reference and profile, then ``grade_receipt``
 with no ``rerun``, ``known_good`` or ``triage``. Rewards are not read
 off the row. A group with a missing, ungraded or quarantined member is
-dropped and claimed in the consumed log so it is not re-entered.
+dropped and claimed in the consumed log so it is not re-entered. A
+re-check does not observe A7 rates.
 
 The pass-weighted re-execution audit and Ed25519 are not this module.
 """
@@ -65,10 +66,12 @@ _STAMP = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$")
 _OUTCOME = re.compile(r"^(pass|fail|source_attributed|ungraded:[a-z0-9_]+)$")
 _KINDS = frozenset({"signal", "compiler", "crash"})
 _GRADER_SOURCES = (
+    "faustcoder/canonical.py",
     "faustcoder/compiler.py",
     "faustcoder/sandbox.py",
     "faustcoder/schemas.py",
     "faustcoder/signal.py",
+    "faustcoder/signal_suite.py",
     "faustcoder/reward/__init__.py",
     "faustcoder/reward/grader.py",
     "faustcoder/reward/ledger.py",
@@ -76,6 +79,8 @@ _GRADER_SOURCES = (
     "faustcoder/reward/records.py",
     "faustcoder/reward/types.py",
 )
+_LOG_MODE = 0o640
+_grader_digest_cache: str | None = None
 _HEADER_STATEMENT = (
     "group_id",
     "group_size",
@@ -125,9 +130,12 @@ def grader_digest() -> str:
     """SHA-256 over the reward, signal, compiler, sandbox and schema sources.
 
     The digest is the bytes on disk, not a git sha, so a dirty tree is
-    a different pin. It is computed from the files, not cached across
-    processes.
+    a different pin. It is computed once in this process. ``canonical.py``
+    and ``signal_suite.py`` are part of the pin.
     """
+    global _grader_digest_cache
+    if _grader_digest_cache is not None:
+        return _grader_digest_cache
     root = Path(__file__).resolve().parents[2]
     files: list[tuple[str, Path]] = [(name, root / name) for name in _GRADER_SOURCES]
     schema_root = schema_directory()
@@ -140,7 +148,8 @@ def grader_digest() -> str:
         hasher.update(b"\0")
         hasher.update(len(data).to_bytes(8, "big"))
         hasher.update(data)
-    return "sha256:" + hasher.hexdigest()
+    _grader_digest_cache = "sha256:" + hasher.hexdigest()
+    return _grader_digest_cache
 
 
 def profiles_allowlist_digest() -> str:
@@ -171,18 +180,41 @@ def _grader_uid() -> int:
     return user.pw_uid
 
 
-def load_root_key(path: Path | str, *, grader_uid: int | None = None) -> bytes:
+def _key_directory(parent: Path) -> os.stat_result:
+    """Refuse a symlink or a group- or world-writable directory.
+
+    The owner is checked after the file, so a wrong file uid still
+    reports the file. Root may own the directory (``/etc/faustcoder``).
+    """
+    try:
+        info = os.lstat(parent)
+    except OSError as exc:
+        raise RewardKeyError("reward root key directory cannot be used") from exc
+    if stat.S_ISLNK(info.st_mode) or not stat.S_ISDIR(info.st_mode):
+        raise RewardKeyError("reward root key directory cannot be used")
+    if stat.S_IMODE(info.st_mode) & 0o022:
+        raise RewardKeyError("reward root key directory cannot be used")
+    return info
+
+
+def load_root_key(path: Path | str | None = None, *, grader_uid: int | None = None) -> bytes:
     """Read the 32-byte root key. Mode must be ``0400`` and the owner the grader uid.
 
-    ``grader_uid`` defaults to the ``fc-grader`` account. Tests pass the
-    uid that owns their temporary file. The returned bytes are the key.
-    This function does not log them.
+    ``path`` defaults to ``ROOT_KEY_PATH``. ``grader_uid`` defaults to the
+    ``fc-grader`` account. Tests pass the uid that owns their temporary
+    file. Uid 0 is refused. The returned bytes are the key. This function
+    does not log them.
     """
+    location = ROOT_KEY_PATH if path is None else Path(path)
     expected = _grader_uid() if grader_uid is None else grader_uid
-    if type(expected) is not int or isinstance(expected, bool) or expected < 0:
+    if type(expected) is not int or isinstance(expected, bool) or expected <= 0:
         raise RewardKeyError("reward root key must be owned by the grader uid")
+    directory = _key_directory(location.parent)
     try:
-        fd = os.open(path, os.O_RDONLY | os.O_NOFOLLOW | os.O_CLOEXEC)
+        fd = os.open(
+            location,
+            os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK | os.O_CLOEXEC,
+        )
     except OSError as exc:
         raise RewardKeyError("reward root key cannot be opened") from exc
     try:
@@ -193,8 +225,10 @@ def load_root_key(path: Path | str, *, grader_uid: int | None = None) -> bytes:
             raise RewardKeyError("reward root key must be mode 0400")
         if info.st_nlink != 1:
             raise RewardKeyError("reward root key must not be linked elsewhere")
-        if info.st_uid != expected:
+        if info.st_uid == 0 or info.st_uid != expected:
             raise RewardKeyError("reward root key must be owned by the grader uid")
+        if directory.st_uid != expected and directory.st_uid != 0:
+            raise RewardKeyError("reward root key directory cannot be used")
         if info.st_size != _ROOT_KEY_BYTES:
             raise RewardKeyError("reward root key must be 32 bytes")
         key = os.read(fd, _ROOT_KEY_BYTES)
@@ -236,44 +270,60 @@ def key_id_for(run_key: bytes) -> str:
 
 
 class RewardKeyring:
-    """Derives run keys from one root. Retired run keys can be remembered.
+    """One run's keys. A row that claims another run does not resolve.
 
-    ``repr`` does not include key bytes.
+    The root key is not kept after the run key is derived. ``repr`` does
+    not include key bytes. Pickle is refused.
     """
 
-    def __init__(self, root_key: bytes) -> None:
+    def __init__(self, root_key: bytes, *, run_id: str) -> None:
         if type(root_key) is not bytes or len(root_key) != _ROOT_KEY_BYTES:
             raise RewardKeyError("reward root key must be 32 bytes")
-        self._root = bytes(root_key)
+        if type(run_id) is not str or _RUN_ID.fullmatch(run_id) is None:
+            raise RewardKeyError("reward run id is not usable")
+        run_key = derive_run_key(root_key, run_id)
+        self._run_id = run_id
+        self._run_key = run_key
+        self._key_id = key_id_for(run_key)
         self._retired: dict[str, bytes] = {}
 
     def __repr__(self) -> str:
         return "RewardKeyring(redacted)"
 
+    def __getstate__(self) -> None:
+        raise RewardKeyError("reward keyring cannot be serialized")
+
+    def __setstate__(self, state: object) -> None:
+        raise RewardKeyError("reward keyring cannot be serialized")
+
+    @property
+    def run_id(self) -> str:
+        return self._run_id
+
     def run_key(self, run_id: str) -> bytes:
-        return derive_run_key(self._root, run_id)
+        if type(run_id) is not str or run_id != self._run_id:
+            raise RewardKeyError("reward key id is not in the keyring")
+        return bytes(self._run_key)
 
     def key_id(self, run_id: str) -> str:
-        return key_id_for(self.run_key(run_id))
+        if type(run_id) is not str or run_id != self._run_id:
+            raise RewardKeyError("reward key id is not in the keyring")
+        return self._key_id
 
     def remember(self, run_key: bytes) -> str:
-        """Keep a retired run key until its rows age out. The id is public."""
+        """Keep a retired key for this run only. The id is public."""
         ident = key_id_for(run_key)
         self._retired[ident] = bytes(run_key)
         return ident
 
     def resolve(self, *, key_id: str, run_id: str) -> bytes:
-        if type(key_id) is not str:
+        if type(key_id) is not str or type(run_id) is not str or run_id != self._run_id:
             raise RewardKeyError("reward key id is not in the keyring")
-        try:
-            current = self.run_key(run_id)
-        except RewardKeyError:
-            raise RewardKeyError("reward key id is not in the keyring") from None
-        if _equal(key_id_for(current), key_id):
-            return current
+        if _equal(self._key_id, key_id):
+            return bytes(self._run_key)
         retired = self._retired.get(key_id)
         if retired is not None and _equal(key_id_for(retired), key_id):
-            return retired
+            return bytes(retired)
         raise RewardKeyError("reward key id is not in the keyring")
 
 
@@ -284,7 +334,11 @@ def _equal(expected: str, presented: object) -> bool:
 
 
 def _tag(domain: bytes, statement: Mapping[str, Any], run_key: bytes) -> str:
-    message = domain + b"\n" + canonical_bytes(dict(statement))
+    try:
+        payload = canonical_bytes(dict(statement))
+    except UnicodeEncodeError as exc:
+        raise RewardRecordError("reward record is not usable") from exc
+    message = domain + b"\n" + payload
     return hmac.new(run_key, message, hashlib.sha256).hexdigest()
 
 
@@ -447,6 +501,60 @@ def sign_group_header(
     )
 
 
+def _refuse_passed_contradiction(payload: Mapping[str, Any]) -> None:
+    """Refuse a row whose ``passed`` bit does not match ``metrics.failures``."""
+    if "passed" not in payload:
+        return
+    passed = payload.get("passed")
+    metrics = payload.get("metrics")
+    failures = metrics.get("failures") if isinstance(metrics, dict) else None
+    if (
+        type(passed) is not bool
+        or not isinstance(failures, list)
+        or any(type(item) is not str for item in failures)
+        or passed is not (failures == [])
+    ):
+        raise RewardRecordError("passed does not match failures")
+
+
+def _signal_shaped(kind: str, envelope: Mapping[str, Any], payload: Mapping[str, Any]) -> bool:
+    schema = envelope.get("schema_version")
+    return (
+        kind == "signal"
+        or schema == SIGNAL_SCHEMA_VERSION
+        or "passed" in payload
+        or payload.get("purpose") == "reward"
+    )
+
+
+def _payload_has_signal_pins(payload: Mapping[str, Any]) -> bool:
+    if any(name in payload for name in ("profile", "test_suite_digest", "reference_digest", "harness_digest")):
+        return True
+    metrics = payload.get("metrics")
+    return isinstance(metrics, dict) and "stimulus" in metrics
+
+
+def _signal_pin_values(payload: Mapping[str, Any]) -> tuple[str, str, str]:
+    """Profile, reference and stimulus digests. Harness is checked by the caller."""
+    suite = payload.get("test_suite_digest")
+    profile = payload.get("profile")
+    if type(suite) is not str or not isinstance(profile, dict):
+        raise RewardRecordError("reward record profile is not usable")
+    if suite != content_digest_for(profile):
+        raise RewardRecordError("reward record profile is not usable")
+    reference = payload.get("reference_digest", "")
+    if type(reference) is not str:
+        raise RewardRecordError("reward record reference is not usable")
+    stimulus = ""
+    metrics = payload.get("metrics")
+    if isinstance(metrics, dict) and "stimulus" in metrics:
+        stimulus = content_digest_for(metrics["stimulus"])
+    harness = payload.get("harness_digest")
+    if type(harness) is not str or _DIGEST.fullmatch(harness) is None:
+        raise RewardRecordError("reward record harness is not usable")
+    return suite, reference, stimulus
+
+
 def sign_reward_row(
     *,
     run_key: bytes,
@@ -467,9 +575,10 @@ def sign_reward_row(
 ) -> RewardRowRecord:
     """Sign one member. This does not grade. The loader grades again.
 
-    ``outcome`` is what the rollout claims. A later re-check refuses the
-    row when ``grade_receipt`` disagrees, including a ``passed`` bit that
-    does not match ``metrics.failures``.
+    ``outcome`` is what the writer claims. A ``passed`` bit that does not
+    match ``metrics.failures`` is refused here. A signal envelope cannot
+    be signed as another kind. Compiler and crash envelopes that carry a
+    harness, profile, reference or stimulus are checked the same way.
     """
     if isinstance(outcome, str) and outcome.startswith("shadow"):
         raise RewardRecordError("a shadow log is not a reward row")
@@ -496,27 +605,19 @@ def sign_reward_row(
     payload = frozen_envelope.get("payload")
     if not isinstance(payload, dict):
         raise RewardRecordError("reward record envelope has no payload")
+    _refuse_passed_contradiction(payload)
+    if _signal_shaped(kind, frozen_envelope, payload) and kind != "signal":
+        raise RewardRecordError("reward record kind does not match the envelope")
     source_sha = hashlib.sha256(source).hexdigest()
     if kind == "signal" and payload.get("source_sha256") != source_sha:
         raise RewardRecordError("reward record source does not match the envelope")
     profile_digest = ""
     reference_digest = ""
     stimulus_digest = ""
-    if kind == "signal":
-        suite = payload.get("test_suite_digest")
-        profile = payload.get("profile")
-        if type(suite) is not str or not isinstance(profile, dict):
-            raise RewardRecordError("reward record profile is not usable")
-        if suite != content_digest_for(profile):
-            raise RewardRecordError("reward record profile is not usable")
-        profile_digest = suite
-        reference = payload.get("reference_digest", "")
-        if type(reference) is not str:
-            raise RewardRecordError("reward record reference is not usable")
-        reference_digest = reference
-        metrics = payload.get("metrics")
-        if isinstance(metrics, dict) and "stimulus" in metrics:
-            stimulus_digest = content_digest_for(metrics["stimulus"])
+    if kind == "signal" or _payload_has_signal_pins(payload):
+        profile_digest, reference_digest, stimulus_digest = _signal_pin_values(payload)
+        if payload.get("harness_digest") != current_harness_digest():
+            raise RewardRecordError("reward record harness is not usable")
     native_frozen: dict[str, Any] | None
     if native_envelope is None:
         native_frozen = None
@@ -652,7 +753,12 @@ def regrade_record(
     queue: QuarantineQueue | None = None,
     rates: UngradedRateTracker | None = None,
 ) -> RowCheck:
-    """Re-check one row. Pins and binding failures do not call ``grade_receipt``."""
+    """Re-check one row. Pins and binding failures do not call ``grade_receipt``.
+
+    ``rates`` is ignored. The rollout already counted the sample, and a
+    reload must not observe it again.
+    """
+    del rates
     verify(record, keyring)
     if _pins_stale(record):
         return RowCheck("stale_pin")
@@ -662,7 +768,6 @@ def regrade_record(
         record.envelope,
         task=record.task,
         queue=queue,
-        rates=rates,
         row_record_id=record.record_id,
         group_id=record.group_id,
     )
@@ -693,6 +798,34 @@ def _pins_stale(record: RewardRowRecord) -> bool:
     return record.native_faust_version != NATIVE_FAUST_VERSION
 
 
+def _signal_pins_mismatch(record: RewardRowRecord, payload: Mapping[str, Any]) -> bool:
+    """Harness, profile, reference and stimulus. Used for every kind."""
+    profile = payload.get("profile")
+    suite = payload.get("test_suite_digest")
+    if not isinstance(profile, dict) or type(suite) is not str:
+        return True
+    try:
+        if suite != content_digest_for(profile) or record.profile_digest != suite:
+            return True
+    except Exception:
+        return True
+    reference = payload.get("reference_digest", "")
+    if type(reference) is not str or record.reference_digest != reference:
+        return True
+    stimulus = ""
+    metrics = payload.get("metrics")
+    if isinstance(metrics, dict) and "stimulus" in metrics:
+        try:
+            stimulus = content_digest_for(metrics["stimulus"])
+        except Exception:
+            return True
+    if record.stimulus_digest != stimulus:
+        return True
+    if payload.get("harness_digest") != record.harness_digest:
+        return True
+    return False
+
+
 def _binding_failed(record: RewardRowRecord) -> bool:
     digest = hashlib.sha256(record.source).hexdigest()
     if digest != record.source_sha256:
@@ -701,31 +834,24 @@ def _binding_failed(record: RewardRowRecord) -> bool:
     if not isinstance(payload, dict):
         return True
     payload_source = payload.get("source_sha256")
-    if record.kind == "signal":
+    shaped = _signal_shaped(record.kind, record.envelope, payload)
+    if shaped and record.kind != "signal":
+        return True
+    if record.kind == "signal" or shaped:
         if payload_source != digest:
             return True
-        profile = payload.get("profile")
-        suite = payload.get("test_suite_digest")
-        if not isinstance(profile, dict) or type(suite) is not str:
+        if _signal_pins_mismatch(record, payload):
             return True
-        if suite != content_digest_for(profile) or record.profile_digest != suite:
+    else:
+        if isinstance(payload_source, str) and payload_source != digest:
             return True
-        reference = payload.get("reference_digest", "")
-        if type(reference) is not str or record.reference_digest != reference:
+        if (
+            _payload_has_signal_pins(payload)
+            or record.profile_digest
+            or record.reference_digest
+            or record.stimulus_digest
+        ) and _signal_pins_mismatch(record, payload):
             return True
-        stimulus = ""
-        metrics = payload.get("metrics")
-        if isinstance(metrics, dict) and "stimulus" in metrics:
-            try:
-                stimulus = content_digest_for(metrics["stimulus"])
-            except Exception:
-                return True
-        if record.stimulus_digest != stimulus:
-            return True
-        if payload.get("harness_digest") != record.harness_digest:
-            return True
-    elif isinstance(payload_source, str) and payload_source != digest:
-        return True
     try:
         if task_digest_full(record.task) != record.task_digest_full:
             return True
@@ -734,6 +860,20 @@ def _binding_failed(record: RewardRowRecord) -> bool:
     except Exception:
         return True
     return False
+
+
+def _read_text(fd: int) -> str:
+    """Read a log until EOF. A single capped ``os.read`` drops the tail."""
+    chunks: list[bytes] = []
+    while True:
+        block = os.read(fd, 1024 * 1024)
+        if not block:
+            break
+        chunks.append(block)
+    try:
+        return b"".join(chunks).decode("utf-8")
+    except UnicodeDecodeError as exc:
+        raise RewardRecordError("reward record log is not utf-8") from exc
 
 
 def _write_all(fd: int, data: bytes) -> None:
@@ -773,8 +913,13 @@ class RewardRecordStore:
 
     def _append(self, body: Mapping[str, Any]) -> None:
         line = canonical_bytes(dict(body)) + b"\n"
-        fd = os.open(self.path, os.O_CREAT | os.O_APPEND | os.O_WRONLY, 0o644)
+        fd = os.open(
+            self.path,
+            os.O_CREAT | os.O_APPEND | os.O_WRONLY | os.O_CLOEXEC,
+            _LOG_MODE,
+        )
         try:
+            os.fchmod(fd, _LOG_MODE)
             fcntl.flock(fd, fcntl.LOCK_EX)
             try:
                 _write_all(fd, line)
@@ -928,37 +1073,49 @@ def _row_from_body(body: Mapping[str, Any], log_index: int) -> RewardRowRecord:
         raise RewardRecordError("reward record native envelope is not an object")
     return RewardRowRecord(
         record_id=record_id,
-        run_id=str(body["run_id"]),
-        rollout_id=str(body["rollout_id"]),
-        policy_checkpoint=str(body["policy_checkpoint"]),
-        group_id=str(body["group_id"]),
+        run_id=_exact_str(body["run_id"], "run id"),
+        rollout_id=_exact_str(body["rollout_id"], "rollout id"),
+        policy_checkpoint=_exact_str(body["policy_checkpoint"], "checkpoint"),
+        group_id=_exact_str(body["group_id"], "group id"),
         group_size=_count(body["group_size"], "group size"),
         member_index=_count(body["member_index"], "member index", zero=True),
-        source_sha256=str(body["source_sha256"]),
-        task_digest_full=str(body["task_digest_full"]),
-        task_binding_digest=str(body["task_binding_digest"]),
-        profile_digest=str(body["profile_digest"]),
-        reference_digest=str(body["reference_digest"]),
-        stimulus_digest=str(body["stimulus_digest"]),
-        harness_digest=str(body["harness_digest"]),
-        compiler_schema_version=str(body["compiler_schema_version"]),
-        signal_schema_version=str(body["signal_schema_version"]),
-        native_faust_version=str(body["native_faust_version"]),
+        source_sha256=_exact_str(body["source_sha256"], "source hash"),
+        task_digest_full=_exact_str(body["task_digest_full"], "task digest"),
+        task_binding_digest=_exact_str(body["task_binding_digest"], "task binding"),
+        profile_digest=_exact_str(body["profile_digest"], "profile digest"),
+        reference_digest=_exact_str(body["reference_digest"], "reference digest"),
+        stimulus_digest=_exact_str(body["stimulus_digest"], "stimulus digest"),
+        harness_digest=_exact_str(body["harness_digest"], "harness digest"),
+        compiler_schema_version=_exact_str(body["compiler_schema_version"], "compiler schema"),
+        signal_schema_version=_exact_str(body["signal_schema_version"], "signal schema"),
+        native_faust_version=_exact_str(body["native_faust_version"], "native faust version"),
         node_flags=tuple(node_flags),
-        grader_digest=str(body["grader_digest"]),
-        grader_commit=str(body["grader_commit"]),
-        profiles_allowlist_digest=str(body["profiles_allowlist_digest"]),
-        kind=str(body["kind"]),
+        grader_digest=_exact_str(body["grader_digest"], "grader digest"),
+        grader_commit=_exact_str(body["grader_commit"], "grader commit"),
+        profiles_allowlist_digest=_exact_str(
+            body["profiles_allowlist_digest"], "profiles allowlist"
+        ),
+        kind=_exact_str(body["kind"], "kind"),
         envelope=envelope,
         native_envelope=native,
-        outcome=str(body["outcome"]),
-        graded_at=str(body["graded_at"]),
-        key_id=str(body["key_id"]),
+        outcome=_exact_str(body["outcome"], "outcome"),
+        graded_at=_exact_str(body["graded_at"], "graded_at"),
+        key_id=_exact_str(body["key_id"], "key id"),
         mac=mac_value,
         task=task,
         source=source,
         log_index=log_index,
     )
+
+
+def _exact_str(value: object, label: str) -> str:
+    if type(value) is not str:
+        raise RewardRecordError(f"reward record {label} is not usable")
+    try:
+        value.encode("utf-8")
+    except UnicodeEncodeError as exc:
+        raise RewardRecordError(f"reward record {label} is not usable") from exc
+    return value
 
 
 class ConsumedLog:
@@ -991,13 +1148,18 @@ class ConsumedLog:
         }
         encoded = canonical_bytes(line) + b"\n"
         self.path.parent.mkdir(parents=True, exist_ok=True)
-        fd = os.open(self.path, os.O_CREAT | os.O_RDWR, 0o644)
+        fd = os.open(
+            self.path,
+            os.O_CREAT | os.O_RDWR | os.O_APPEND | os.O_CLOEXEC,
+            _LOG_MODE,
+        )
         try:
+            os.fchmod(fd, _LOG_MODE)
             fcntl.flock(fd, fcntl.LOCK_EX)
             try:
                 self._seen.clear()
                 os.lseek(fd, 0, os.SEEK_SET)
-                self._ingest(os.read(fd, 1024 * 1024 * 16).decode("utf-8"))
+                self._ingest(_read_text(fd))
                 if group_id in self._seen:
                     raise RewardRecordError("reward group was already consumed")
                 _write_all(fd, encoded)
@@ -1009,11 +1171,11 @@ class ConsumedLog:
             os.close(fd)
 
     def _replay(self) -> None:
-        fd = os.open(self.path, os.O_RDONLY)
+        fd = os.open(self.path, os.O_RDONLY | os.O_CLOEXEC)
         try:
             fcntl.flock(fd, fcntl.LOCK_SH)
             try:
-                text = os.read(fd, 1024 * 1024 * 16).decode("utf-8")
+                text = _read_text(fd)
             finally:
                 fcntl.flock(fd, fcntl.LOCK_UN)
         finally:
@@ -1052,16 +1214,30 @@ def rl_batch_from_records(
     records: tuple[RewardRowRecord, ...] | list[RewardRowRecord],
     *,
     keyring: RewardKeyring,
+    expected_run_id: str,
+    policy_checkpoints: str | tuple[str, ...] | list[str],
     queue: QuarantineQueue,
     rates: UngradedRateTracker,
     consumed: ConsumedLog,
 ) -> RecordBatch:
     """Build a binary batch. A bad member drops its whole group.
 
-    A1 source failures are graded ``0.0`` members. Ungraded, quarantined,
-    stale, incomplete and duplicate groups contribute no row. A group id
-    already in ``consumed`` is refused.
+    ``expected_run_id`` is the run this builder accepts. ``policy_checkpoints``
+    is the allowlist for ``policy_checkpoint``. A mismatch raises before
+    any group is claimed. A1 source failures are graded ``0.0`` members.
+    Ungraded, quarantined, stale, incomplete and duplicate groups
+    contribute no row. A group id already in ``consumed`` is refused.
     """
+    allowed = _checkpoint_allowlist(policy_checkpoints)
+    if (
+        type(expected_run_id) is not str
+        or keyring.run_id != expected_run_id
+        or any(header.run_id != expected_run_id for header in headers)
+        or any(record.run_id != expected_run_id for record in records)
+    ):
+        raise RewardRecordError("reward record run id does not match")
+    if any(record.policy_checkpoint not in allowed for record in records):
+        raise RewardRecordError("reward record checkpoint is not allowed")
     header_by_id: dict[str, GroupHeader] = {}
     for header in headers:
         verify(header, keyring)
@@ -1124,10 +1300,27 @@ def rl_batch_from_records(
     return RecordBatch(rows=tuple(rows), drops=tuple(drops))
 
 
+def _checkpoint_allowlist(value: str | tuple[str, ...] | list[str]) -> frozenset[str]:
+    if type(value) is str:
+        items: tuple[object, ...] = (value,)
+    elif isinstance(value, (list, tuple)):
+        items = tuple(value)
+    else:
+        raise RewardRecordError("reward record checkpoint is not allowed")
+    allowed: set[str] = set()
+    for item in items:
+        if type(item) is not str or _DIGEST.fullmatch(item) is None:
+            raise RewardRecordError("reward record checkpoint is not allowed")
+        allowed.add(item)
+    if not allowed:
+        raise RewardRecordError("reward record checkpoint is not allowed")
+    return frozenset(allowed)
+
+
 def _quarantine_index(queue: QuarantineQueue) -> tuple[set[str], set[str]]:
     groups: set[str] = set()
     rows: set[str] = set()
-    for held in queue.pending():
+    for held in queue.holds():
         if held.group_id:
             groups.add(held.group_id)
         if held.row_record_id:

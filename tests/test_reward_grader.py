@@ -421,6 +421,8 @@ def test_rl_batch_refuses_a_duplicate_row() -> None:
     second = grade_receipt(allowlisted_reward_envelope(passed=False), task=other)
     other_row = dataset_reward_row(second, task=other, example_id="e2")
     assert len(rl_batch([row, other_row])) == 2
+    same_program = dataset_reward_row(graded, task=task, example_id="e3")
+    assert len(rl_batch([row, same_program])) == 2
 
 
 def test_unattributed_exits_stay_queued_until_triage() -> None:

@@ -279,6 +279,22 @@ def dataset_reward_row(
     return row
 
 
+def _row_identities(row: Mapping[str, object]) -> tuple[tuple[object, ...], ...]:
+    """Row and group identity. Receipt content is not an identity."""
+    found: list[tuple[object, ...]] = []
+    record_id = row.get("record_id")
+    if type(record_id) is str and record_id:
+        found.append(("record", record_id))
+    example_id = row.get("example_id")
+    if type(example_id) is str and example_id:
+        found.append(("example", example_id))
+    group_id = row.get("group_id")
+    member = row.get("member_index")
+    if type(group_id) is str and group_id and type(member) is int and not isinstance(member, bool):
+        found.append(("member", group_id, member))
+    return tuple(found)
+
+
 def rl_batch(rows: list[Mapping[str, object]] | tuple[Mapping[str, object], ...]) -> tuple[dict[str, object], ...]:
     """Copy ``rows`` after every reward row proves its provenance.
 
@@ -310,15 +326,10 @@ def rl_batch(rows: list[Mapping[str, object]] | tuple[Mapping[str, object], ...]
                 raise RewardProvenanceError("reward must be 1.0 when the receipt passed")
         elif reward != 0.0:
             raise RewardProvenanceError("reward must be zero when the receipt failed")
-        marker = (
-            graded.reproducible_digest,
-            graded.task_digest,
-            graded.task_digest_full,
-            graded.passed,
-        )
-        if marker in seen:
-            raise RewardProvenanceError("RL batch row is a duplicate")
-        seen.add(marker)
+        for marker in _row_identities(row):
+            if marker in seen:
+                raise RewardProvenanceError("RL batch row is a duplicate")
+            seen.add(marker)
         built.append(dict(row))
     return tuple(built)
 
