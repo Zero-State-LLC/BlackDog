@@ -24,12 +24,15 @@ exit 124, 125 or 126, or a worker or harness crash, is
 ``internal``. Auto-attribution reruns the same reproducible digest
 on a quiet worker and runs a known-good fixture alongside. If the
 fixture passes and the candidate fails again, the failure is graded
-at the A1 ``parse_error`` rung. A remote-import or stack-overflow
-tag is already source attribution and does not wait. A wasm trap,
-``ERROR : stack overflow in eval``, or a deep-recursion signature on
-an otherwise untagged worker crash is the same source rung. The
-rerun and the fixture are caller hooks: this module does not spawn
-a worker.
+at the A1 ``parse_error`` rung. A remote import, a source over the
+size limit, a JS ``runtime_stack_overflow`` flag, a ``wasm_trap``
+kind, or a line-start Faust ``ERROR : stack overflow`` in the
+compile diagnostics of that same stage is already source
+attribution and does not wait. Marker matching is case-sensitive
+and does not read harness text or a later render crash. An
+untagged exit 126 stays unattributed when the known-good fixture
+fails or the failure does not reproduce. The rerun and the fixture
+are caller hooks: this module does not spawn a worker.
 
 Receipt signing is deferred (D3). This module recomputes digests. It
 does not require a signature.
@@ -50,7 +53,7 @@ from typing import Any
 from weakref import WeakKeyDictionary
 
 from faustcoder.canonical import content_digest_for
-from faustcoder.compiler import reproducible_receipt_digest
+from faustcoder.compiler import WASM_TRAP_KINDS, reproducible_receipt_digest
 from faustcoder.errors import SchemaValidationError
 from faustcoder.reward.profiles import reward_profiles
 from faustcoder.reward.types import (
@@ -77,14 +80,14 @@ ACCEPTED_SIGNAL_SCHEMA_VERSIONS = frozenset({SIGNAL_SCHEMA_VERSION})
 ACCEPTED_COMPILER_SCHEMA_VERSIONS = frozenset({"0.3.2"})
 FULL_COMPARISON = "reward-graded-signed-full"
 _REMOTE_DIAGNOSTIC = "internal: remote import rejected\n"
-_STACK_MARKERS = (
-    "maximum call stack size exceeded",
-    "stack overflow",
-    "stack overflow in eval",
-    "deep recursion",
-    "wasm trap",
-    "unreachable",
+_SOURCE_SIZE_DIAGNOSTIC = "resource limit: source size\n"
+# Faust's own compile diagnostic, at the start of a line, case-sensitive.
+# Harness prose and render exceptions are not in this list.
+_COMPILE_STACK_LINES = (
+    "ERROR : stack overflow in eval",
+    "ERROR : stack overflow",
 )
+_HARNESS_PREFIXES = ("internal:", "resource limit:", "timeout:", "renderer stopped:")
 _EXIT_CLASS = {124: "timeout", 125: "resource_limit", 126: "internal"}
 _CRASH_KINDS = frozenset({"worker_crash", "harness_crash"})
 _CRASH_EXITS = frozenset({None, 126, 137, 139, -9})
@@ -507,7 +510,7 @@ def _grade_compiler(
         return Ungraded(UngradedReason.SCHEMA_INVALID, exc.detail)
     if _envelope_digest_mismatch(envelope, payload):
         return Ungraded(UngradedReason.DIGEST_MISMATCH, "envelope digest does not match the payload")
-    tagged = _source_tag(payload, diagnostics)
+    tagged = _source_tag(payload, diagnostics, stage="compile")
     if tagged == "mismatch":
         return Ungraded(
             UngradedReason.DIGEST_MISMATCH,
@@ -549,6 +552,16 @@ def _grade_compiler(
         return Ungraded(
             UngradedReason.SCHEMA_INVALID,
             "exit_code does not match diagnostic_class",
+        )
+    # An untagged 126 is a worker failure. The fixture failing, or the
+    # candidate not failing the same way again, stays unattributed.
+    # Exit 124 and 125 keep the infra_fault fixture result.
+    if exit_code == 126:
+        return _auto_attribute(
+            digest,
+            rerun=rerun,
+            known_good=known_good,
+            fixture_failure="unattributed",
         )
     return _auto_attribute(digest, rerun=rerun, known_good=known_good)
 
@@ -601,12 +614,19 @@ def _grade_crash(
         )
     if triage not in (None,):
         return Ungraded(UngradedReason.SCHEMA_INVALID, "triage is not source, harness or infra")
-    # A segfault carries no source tag. The commit path still passes the
-    # captured diagnostics. A stack-overflow or deep-recursion signature
-    # is the source, same as a wasm trap or `stack overflow in eval`.
-    if _recursion_signature(diagnostics) or _payload_recursion(payload):
-        return SourceAttributedFailure(detail="stack overflow")
-    return _auto_attribute(digest, rerun=rerun, known_good=known_good)
+    # Render exception text is not a marker source. A stack overflow or
+    # wasm trap on this stage is the structured field, not a compile
+    # warning from an earlier stage and not harness prose.
+    del diagnostics
+    tagged = _structured_source(payload)
+    if tagged is not None:
+        return SourceAttributedFailure(detail=tagged)
+    return _auto_attribute(
+        digest,
+        rerun=rerun,
+        known_good=known_good,
+        fixture_failure="unattributed",
+    )
 
 
 def _auto_attribute(
@@ -614,6 +634,7 @@ def _auto_attribute(
     *,
     rerun: Rerun | None,
     known_good: KnownGood | None,
+    fixture_failure: str = "infra",
 ) -> Grade:
     """Rerun on a quiet worker. Source only if the fixture stays healthy."""
     if rerun is None or known_good is None:
@@ -645,6 +666,12 @@ def _auto_attribute(
             detail="auto-attributed: known-good fixture passed and the candidate failed again"
         )
     if not fixture.passed:
+        if fixture_failure == "unattributed":
+            return Ungraded(
+                UngradedReason.UNATTRIBUTED,
+                "known-good fixture failed; quarantined until triage",
+                digest,
+            )
         return Ungraded(
             UngradedReason.INFRA_FAULT,
             "known-good fixture failed under the same harness",
@@ -657,45 +684,54 @@ def _auto_attribute(
     )
 
 
-def _source_tag(payload: Mapping[str, Any], diagnostics: str | None) -> str | None:
+def _source_tag(
+    payload: Mapping[str, Any],
+    diagnostics: str | None,
+    *,
+    stage: str,
+) -> str | None:
     """Return a source tag, ``mismatch``, or ``None``.
 
-    Remote import is tagged by the harness diagnostic
-    ``internal: remote import rejected``. A stack overflow, a wasm
-    trap, or a deep-recursion signature is tagged when the diagnostics
-    that hash to ``stderr_digest`` contain it. Both are already
-    attributed to the source. A crash record has no stderr digest;
-    its captured diagnostics are checked separately.
+    Remote import and ``resource limit: source size`` are exact harness
+    diagnostics and are already the source. A JS stack overflow or a
+    wasm trap is a structured field. Faust's own ``ERROR : stack
+    overflow`` is a line-start, case-sensitive match on the compile
+    diagnostics of this stage only. Harness prose is not scanned.
+    Render exceptions are not scanned here.
     """
     stderr = payload.get("stderr_digest")
     if stderr == _sha256_text(_REMOTE_DIAGNOSTIC):
         return "remote import"
-    if diagnostics is None:
+    if stderr == _sha256_text(_SOURCE_SIZE_DIAGNOSTIC):
+        return "source size"
+    structured = _structured_source(payload)
+    if structured is not None:
+        return structured
+    if stage != "compile" or diagnostics is None:
         return None
     if _sha256_text(diagnostics) != stderr:
         return "mismatch"
-    folded = diagnostics.casefold()
-    if "remote import rejected" in folded:
-        return "remote import"
-    if _recursion_signature(diagnostics):
+    if diagnostics.startswith(_HARNESS_PREFIXES):
+        return None
+    if _compile_stack_line(diagnostics):
         return "stack overflow"
     return None
 
 
-def _recursion_signature(text: str | None) -> bool:
-    """True when text names a stack overflow, wasm trap, or deep recursion."""
-    if not isinstance(text, str) or not text:
-        return False
-    folded = text.casefold()
-    return any(marker in folded for marker in _STACK_MARKERS)
+def _structured_source(payload: Mapping[str, Any]) -> str | None:
+    """Source tag from the worker's structured fields, or None."""
+    if payload.get("runtime_stack_overflow") is True:
+        return "stack overflow"
+    trap = payload.get("wasm_trap")
+    if isinstance(trap, str) and trap in WASM_TRAP_KINDS:
+        return "wasm trap"
+    return None
 
 
-def _payload_recursion(payload: Mapping[str, Any]) -> bool:
-    """True when the receipt itself carries a recursion signature."""
-    for key, value in payload.items():
-        if not isinstance(value, str) or key.endswith("digest"):
-            continue
-        if key in {"source_tag", "diagnostics", "detail"} and _recursion_signature(value):
+def _compile_stack_line(text: str) -> bool:
+    """True when a compile diagnostic line starts with Faust's stack error."""
+    for line in text.splitlines():
+        if any(line.startswith(prefix) for prefix in _COMPILE_STACK_LINES):
             return True
     return False
 

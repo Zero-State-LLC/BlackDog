@@ -135,7 +135,14 @@ Harness failures override that text:
   and the same family), a remote ``import`` / ``library`` / ``component``
   URL rejected before spawn, a worker crash (including ``SIGSEGV`` from a
   recursive source once ``--stack-size=8192`` lets it pass the old V8
-  limit), or an unreadable result -> ``internal``, exit 126
+  limit), or an unreadable result -> ``internal``, exit 126.
+  The receipt records ``termination_signal`` when the process died on a
+  signal, ``runtime_stack_overflow`` when the worker caught a JS
+  ``RangeError`` or ``Maximum call stack size exceeded``, and
+  ``wasm_trap`` when the worker caught a wasm trap. Harness text stays
+  ``internal: worker failed`` for a signal death. Reward grading reads
+  the structured fields. It does not treat that harness text as a
+  recursion marker.
 
 Compiler rejection of the source is exit 1. Exit 0 is ``ok`` or ``warning``.
 
@@ -264,6 +271,21 @@ def _code_without_comments(source: str) -> str:
         out.append(character)
         index += 1
     return "".join(out)
+# Kinds the worker may put in ``wasm_trap``. The grader attributes only these.
+# faust/worker/termination.mjs keeps the same list.
+WASM_TRAP_KINDS = frozenset(
+    {
+        "unreachable",
+        "memory access out of bounds",
+        "indirect call type mismatch",
+        "indirect call signature mismatch",
+        "table index is out of bounds",
+        "call stack exhausted",
+        "null function",
+        "indirect call to null",
+        "uninitialized element",
+    }
+)
 _JS_RUNTIME = (
     "allocate is not defined",
     "maximum call stack size exceeded",
@@ -490,6 +512,7 @@ def compile_source(
                 duration_ms=duration_ms,
                 faust_version=pin.faust_version,
                 pin=pin,
+                termination_signal=_signal_number(run),
             )
         return _receipt_from_worker(
             source_bytes,
@@ -599,6 +622,7 @@ def compile_native(
                 duration_ms=duration_ms,
                 faust_version=NATIVE_FAUST_VERSION,
                 compiler="faust-cli",
+                termination_signal=_signal_number(run),
             )
         diagnostics = _normalize_diagnostics(run.stderr.decode("utf-8", errors="replace"), workdir)
         compile_ok = run.returncode == 0
@@ -615,6 +639,7 @@ def compile_native(
             diagnostics=diagnostics,
             outputs=outputs,
             duration_ms=duration_ms,
+            termination_signal=_signal_number(run),
         )
 
 
@@ -970,6 +995,7 @@ def _receipt_from_worker(
     pin: RuntimePin,
 ) -> Compilation:
     result_path = workdir / "result.json"
+    killed = _signal_number(run)
     if run.returncode != 0 or not result_path.is_file():
         return _harness_receipt(
             source_bytes,
@@ -979,6 +1005,7 @@ def _receipt_from_worker(
             duration_ms=duration_ms,
             faust_version=pin.faust_version,
             pin=pin,
+            termination_signal=killed,
         )
     try:
         body = json.loads(result_path.read_text(encoding="utf-8"))
@@ -1090,6 +1117,9 @@ def _receipt_from_worker(
         duration_ms=duration_ms,
         pin=pin,
         mounted_share_sha256=mounted,
+        termination_signal=killed,
+        runtime_stack_overflow=body.get("runtime_stack_overflow") is True,
+        wasm_trap=_wasm_trap(body.get("wasm_trap")),
     )
 
 
@@ -1103,6 +1133,7 @@ def _harness_receipt(
     faust_version: str,
     compiler: str = "libfaust-wasm",
     pin: RuntimePin | None = None,
+    termination_signal: int | None = None,
 ) -> Compilation:
     messages = {
         "timeout": "timeout: wall clock limit exceeded\n",
@@ -1132,6 +1163,7 @@ def _harness_receipt(
         duration_ms=duration_ms,
         pin=pin,
         harness=reason,
+        termination_signal=termination_signal,
     )
 
 
@@ -1149,6 +1181,9 @@ def _build(
     pin: RuntimePin | None = None,
     harness: str | None = None,
     mounted_share_sha256: str | None = None,
+    termination_signal: int | None = None,
+    runtime_stack_overflow: bool = False,
+    wasm_trap: str | None = None,
 ) -> Compilation:
     runtime_failure = harness is None and not compile_ok and _is_js_runtime(diagnostics)
     if harness == "timeout":
@@ -1192,6 +1227,12 @@ def _build(
         "options": list(options),
         "diagnostic_class": diagnostic_class,
     }
+    if isinstance(termination_signal, int) and 1 <= termination_signal <= 64:
+        receipt["termination_signal"] = termination_signal
+    if runtime_stack_overflow:
+        receipt["runtime_stack_overflow"] = True
+    if wasm_trap is not None:
+        receipt["wasm_trap"] = wasm_trap
     validate(receipt, _COMPILER_SCHEMA)
     return Compilation(
         receipt=receipt,
@@ -1228,6 +1269,23 @@ def _normalize_diagnostics(text: str, workdir: Path) -> str:
 
 def _digest(data: bytes) -> str:
     return "sha256:" + hashlib.sha256(data).hexdigest()
+
+
+def _signal_number(run: SandboxRun) -> int | None:
+    """Return the signal that killed ``run``, or None when it exited."""
+    if run.returncode >= 0:
+        return None
+    number = -run.returncode
+    if 1 <= number <= 64:
+        return number
+    return None
+
+
+def _wasm_trap(value: object) -> str | None:
+    """Return a worker-reported trap kind, or None."""
+    if isinstance(value, str) and value in WASM_TRAP_KINDS:
+        return value
+    return None
 
 
 def _is_js_runtime(diagnostics: str) -> bool:

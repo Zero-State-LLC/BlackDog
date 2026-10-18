@@ -156,12 +156,16 @@ single-process.
 `commit_signal_check` and a reward-graded `run_signal` pass that queue
 and the A7 tracker into `grade_receipt`. A compiler exit 124, 125 or
 126, a deferred compiler failure, or a worker or harness crash, is
-graded there. A wasm trap, `ERROR : stack overflow in eval`, or a
-deep-recursion signature on those diagnostics is `parse_error` and
-is not queued. A segfault with none of those signatures stays
-`unattributed`. With no ledger the reward path raises
-`RewardUseRefused` and does not score the outcome. `compile_source`
-on its own is not a reward consumer.
+graded there. An untagged exit 126 whose run still has its source is
+recompiled on the same worker beside `process = _;`. The fixture
+passing and the same failure reproducing is `parse_error`. The fixture
+failing, or the failure not reproducing, stays `unattributed`. A JS
+stack overflow and a wasm trap are structured fields on the stage that
+failed. Harness prose is not a marker, and a compile warning does not
+attribute a later render crash. `triaged_at` is not earlier than the
+row's hold. With no ledger the reward path raises `RewardUseRefused`
+and does not score the outcome. `compile_source` on its own is not a
+reward consumer.
 
 The ungraded-rate alarm uses the provisional A7 numbers and nothing
 else: above 1% over a full 500-sample window, or above 2× the

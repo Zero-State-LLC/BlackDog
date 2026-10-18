@@ -244,14 +244,14 @@ def test_timeout_and_allocate_forever_become_parse_error_after_auto_attribution(
 
 def test_fixture_failure_is_infra_and_harness_triage_is_separate() -> None:
     envelope = compiler_failure_envelope(
-        exit_code=126,
-        diagnostic_class="internal",
-        diagnostics="internal: worker failed\n",
+        exit_code=124,
+        diagnostic_class="timeout",
+        diagnostics="timeout: wall clock limit exceeded\n",
     )
     queue = QuarantineQueue()
     infra = grade_receipt(
         envelope,
-        diagnostics="internal: worker failed\n",
+        diagnostics="timeout: wall clock limit exceeded\n",
         rerun=lambda _payload: _rerun(envelope, failed=True),
         known_good=lambda: FixtureOutcome(
             passed=False,
@@ -266,7 +266,7 @@ def test_fixture_failure_is_infra_and_harness_triage_is_separate() -> None:
     assert queue.count("infra") == 1
     harness = grade_receipt(
         envelope,
-        diagnostics="internal: worker failed\n",
+        diagnostics="timeout: wall clock limit exceeded\n",
         triage="harness",
         policy="harness",
         queue=queue,
@@ -291,14 +291,30 @@ def test_remote_import_and_stack_overflow_are_already_source_attributed() -> Non
     assert isinstance(graded, SourceAttributedFailure)
     assert graded.detail == "remote import"
     assert called["rerun"] == 0
-    stack = "RangeError: Maximum call stack size exceeded\n"
     stack_envelope = compiler_failure_envelope(
-        exit_code=126, diagnostic_class="internal", diagnostics=stack
+        exit_code=126,
+        diagnostic_class="internal",
+        diagnostics="internal: worker failed\n",
     )
-    stacked = grade_receipt(stack_envelope, diagnostics=stack)
+    payload = dict(stack_envelope["payload"])
+    payload["runtime_stack_overflow"] = True
+    stack_envelope = make_envelope(
+        payload, schema_version="0.3.2", producer="faustcoder.compiler"
+    )
+    stacked = grade_receipt(stack_envelope, diagnostics="internal: worker failed\n")
     assert isinstance(stacked, SourceAttributedFailure)
     assert stacked.detail == "stack overflow"
     assert reward_value(stacked) == 0.0
+    prose = compiler_failure_envelope(
+        exit_code=126,
+        diagnostic_class="internal",
+        diagnostics="RangeError: Maximum call stack size exceeded\n",
+    )
+    untagged = grade_receipt(
+        prose, diagnostics="RangeError: Maximum call stack size exceeded\n"
+    )
+    assert isinstance(untagged, Ungraded)
+    assert untagged.reason is UngradedReason.UNATTRIBUTED
 
 
 def test_worker_crash_is_unattributed_until_the_fixture_stays_healthy() -> None:
@@ -745,14 +761,14 @@ def test_source_triage_is_parse_error_and_harness_is_dropped() -> None:
             reason=UngradedReason.UNATTRIBUTED,
             reproducible_digest="sha256:" + "cd" * 32,
             record_id="row-source",
-            held_at="2026-10-18T00:00:00Z",
+            held_at="2026-10-17T00:00:00Z",
         )
     )
     source = queue.resolve(
         "row-source",
         attribution=TriageAttribution.SOURCE,
         triaged_by="danny",
-        triaged_at="2026-10-17T00:00:00Z",
+        triaged_at="2026-10-17T12:00:00Z",
         evidence="sha256:" + "ab" * 32,
     )
     assert isinstance(source, SourceAttributedFailure)
@@ -1078,94 +1094,179 @@ def test_compiler_kill_exits_are_queued_crashes() -> None:
     assert queue.count("compiler-kill") == 3
 
 
-def test_recursive_program_is_parse_error_under_each_outcome(store, tmp_path) -> None:
-    import hashlib
-    from pathlib import Path
-
-    from faustcoder.compiler import Compilation
-    from faustcoder.reward import RewardLedger
-    from faustcoder.signal import SignalRun, SignalSuite, commit_signal_check
-
-    source = Path("tests/fixtures/dsp/recurse.dsp").read_text(encoding="utf-8")
-    assert "f(n) = f(n - 1)" in source
-    source_sha = hashlib.sha256(source.encode("utf-8")).hexdigest()
-    ledger = RewardLedger(tmp_path / "recursion")
-
-    def commit_compiler(exit_code: int, diagnostic_class: str, diagnostics: str) -> None:
-        envelope = compiler_failure_envelope(
-            exit_code=exit_code,
-            diagnostic_class=diagnostic_class,
-            diagnostics=diagnostics,
-        )
-        payload = dict(envelope["payload"])
-        payload["source_sha256"] = source_sha
-        payload = make_envelope(
-            payload,
-            schema_version="0.3.2",
-            producer="faustcoder.compiler",
-        )["payload"]
-        run = SignalRun(
-            compilation=Compilation(
-                receipt=payload,
-                diagnostics=diagnostics,
-                reproducible_digest=reproducible_receipt_digest(payload),
-            ),
-            receipt=None,
-            reproducible_digest=reproducible_receipt_digest(payload),
-            failures=("compiler",),
-            reference_payload=None,
-            reward_failure="compiler",
-        )
-        committed = commit_signal_check(
-            store,
-            SignalSuite(runs=(run,), ledger=ledger),
-            state=CandidateState.COMPILE_CHECKED,
-            created_at="2026-10-18T00:00:00Z",
-        )
-        assert committed.state is CandidateState.REJECTED
-        assert len(committed.outcomes) == 1
-        outcome = committed.outcomes[0]
-        assert isinstance(outcome, SourceAttributedFailure)
-        assert outcome.rung == "parse_error"
-        assert outcome.detail == "stack overflow"
-
-    commit_compiler(1, "other", "RuntimeError: unreachable\nwasm trap\n")
-    commit_compiler(126, "internal", "ERROR : stack overflow in eval\n")
-
-    crashed = compiler_failure_envelope(
-        exit_code=0,
-        diagnostic_class="ok",
-        diagnostics="",
+def test_compile_stack_lines_are_source_and_harness_prose_is_not() -> None:
+    exact = "ERROR : stack overflow in eval\n"
+    envelope = compiler_failure_envelope(
+        exit_code=126, diagnostic_class="internal", diagnostics=exact
     )
-    payload = dict(crashed["payload"])
-    payload["source_sha256"] = source_sha
-    payload = make_envelope(
-        payload,
+    graded = grade_receipt(envelope, diagnostics=exact)
+    assert isinstance(graded, SourceAttributedFailure)
+    assert graded.detail == "stack overflow"
+    for prose in (
+        "error : stack overflow in eval\n",
+        "note ERROR : stack overflow in eval\n",
+        "internal: worker failed\ndeep recursion\n",
+        "worker segfault\ndeep recursion\n",
+    ):
+        buried = compiler_failure_envelope(
+            exit_code=126, diagnostic_class="internal", diagnostics=prose
+        )
+        pending = grade_receipt(buried, diagnostics=prose)
+        assert isinstance(pending, Ungraded), prose
+        assert pending.reason is UngradedReason.UNATTRIBUTED
+    crash = make_envelope(
+        {
+            "kind": "worker_crash",
+            "exit_code": 126,
+            "diagnostic_class": "internal",
+            "reproducible_digest": "sha256:" + "ab" * 32,
+        },
         schema_version="0.3.2",
-        producer="faustcoder.compiler",
-    )["payload"]
-    digest = reproducible_receipt_digest(payload)
-    segfault = SignalRun(
-        compilation=Compilation(
-            receipt=payload,
-            diagnostics="worker segfault\ndeep recursion\n",
+        producer="faustcoder.signal",
+    )
+    # A compile warning, even a line-start stack error, does not attribute
+    # a later render crash. The render stage has its own structured fields.
+    later = grade_receipt(crash, diagnostics=exact)
+    assert isinstance(later, Ungraded)
+    assert later.reason is UngradedReason.UNATTRIBUTED
+    trap_payload = dict(
+        compiler_failure_envelope(
+            exit_code=126,
+            diagnostic_class="internal",
+            diagnostics="internal: worker failed\n",
+        )["payload"]
+    )
+    trap_payload["wasm_trap"] = "unreachable"
+    trap = make_envelope(trap_payload, schema_version="0.3.2", producer="faustcoder.compiler")
+    trapped = grade_receipt(trap, diagnostics="internal: worker failed\n")
+    assert isinstance(trapped, SourceAttributedFailure)
+    assert trapped.detail == "wasm trap"
+
+
+def test_injected_infra_crash_stays_unattributed_when_the_fixture_fails() -> None:
+    diagnostics = "internal: worker failed\n"
+    envelope = compiler_failure_envelope(
+        exit_code=126, diagnostic_class="internal", diagnostics=diagnostics
+    )
+    payload = dict(envelope["payload"])
+    payload["termination_signal"] = 11
+    envelope = make_envelope(payload, schema_version="0.3.2", producer="faustcoder.compiler")
+    queue = QuarantineQueue()
+    environment = envelope["payload"]["environment_digest"]
+    digest = reproducible_receipt_digest(envelope["payload"])
+    failed = grade_receipt(
+        envelope,
+        diagnostics=diagnostics,
+        rerun=lambda _payload: RerunOutcome(
+            failed=True,
+            exit_code=126,
+            diagnostic_class="internal",
             reproducible_digest=digest,
+            environment_digest=environment,
         ),
-        receipt=None,
-        reproducible_digest=digest,
-        failures=("worker_crash",),
-        reference_payload=None,
-        reward_failure="worker_crash",
+        known_good=lambda: FixtureOutcome(passed=False, environment_digest=environment),
+        policy="infra-crash",
+        queue=queue,
     )
-    committed = commit_signal_check(
-        store,
-        SignalSuite(runs=(segfault,), ledger=ledger),
-        state=CandidateState.COMPILE_CHECKED,
-        created_at="2026-10-18T00:00:00Z",
+    assert isinstance(failed, Ungraded)
+    assert failed.reason is UngradedReason.UNATTRIBUTED
+    assert reward_value(failed) is None
+    assert queue.count("infra-crash") == 1
+    quiet = grade_receipt(
+        envelope,
+        diagnostics=diagnostics,
+        rerun=lambda _payload: RerunOutcome(
+            failed=False,
+            exit_code=0,
+            diagnostic_class="ok",
+            reproducible_digest=digest,
+            environment_digest=environment,
+        ),
+        known_good=lambda: FixtureOutcome(passed=True, environment_digest=environment),
+        policy="infra-crash",
+        queue=queue,
     )
-    assert committed.state is CandidateState.REJECTED
-    outcome = committed.outcomes[0]
-    assert isinstance(outcome, SourceAttributedFailure)
-    assert outcome.rung == "parse_error"
-    assert outcome.detail == "stack overflow"
-    assert ledger.queue.count() == 0
+    assert isinstance(quiet, Ungraded)
+    assert quiet.reason is UngradedReason.UNATTRIBUTED
+
+
+def test_source_over_one_mib_is_parse_error() -> None:
+    from faustcoder.compiler import compile_source
+
+    source = "process = _;\n" + (" " * (1024 * 1024))
+    compiled = compile_source(source, lang="wasm")
+    assert compiled.receipt["exit_code"] == 125
+    assert compiled.receipt["diagnostic_class"] == "resource_limit"
+    assert compiled.diagnostics == "resource limit: source size\n"
+    envelope = make_envelope(
+        compiled.receipt, schema_version="0.3.2", producer="faustcoder.compiler"
+    )
+    called = {"rerun": 0}
+
+    def rerun(_payload: dict) -> RerunOutcome:
+        called["rerun"] += 1
+        return _rerun(envelope)
+
+    graded = grade_receipt(
+        envelope,
+        diagnostics=compiled.diagnostics,
+        rerun=rerun,
+        known_good=lambda: FixtureOutcome(passed=False),
+    )
+    assert isinstance(graded, SourceAttributedFailure)
+    assert graded.rung == "parse_error"
+    assert graded.detail == "source size"
+    assert reward_value(graded) == 0.0
+    assert called["rerun"] == 0
+
+
+def test_triage_refuses_a_timestamp_earlier_than_the_hold(tmp_path) -> None:
+    queue = QuarantineQueue()
+    queue.hold(
+        QuarantineRecord(
+            policy="signal",
+            reason=UngradedReason.UNATTRIBUTED,
+            reproducible_digest="sha256:" + "ab" * 32,
+            record_id="row-1",
+            held_at="2026-10-17T12:00:00Z",
+        )
+    )
+    try:
+        queue.resolve(
+            "row-1",
+            attribution=TriageAttribution.INFRASTRUCTURE,
+            triaged_by="ada",
+            triaged_at="2026-10-17T11:00:00Z",
+        )
+    except ValueError as exc:
+        assert "earlier than the quarantine hold" in str(exc)
+    else:
+        raise AssertionError("a triage earlier than the hold was accepted")
+    assert queue.count() == 1
+    graded = queue.resolve(
+        "row-1",
+        attribution=TriageAttribution.INFRASTRUCTURE,
+        triaged_by="ada",
+        triaged_at="2026-10-17T12:00:00Z",
+    )
+    assert isinstance(graded, Ungraded)
+    assert queue.count() == 0
+    path = tmp_path / "early.jsonl"
+    path.write_text(
+        _quarantine_log(
+            _held_timeout(),
+            _resolve_line(
+                attribution="infrastructure",
+                outcome="drop",
+                evidence="",
+                triaged_at="2019-01-01T00:00:00Z",
+            ),
+        ),
+        encoding="utf-8",
+    )
+    try:
+        QuarantineQueue(path)
+    except ValueError as exc:
+        assert "earlier than the quarantine hold" in str(exc)
+    else:
+        raise AssertionError("a replayed triage earlier than the hold was accepted")

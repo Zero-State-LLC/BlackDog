@@ -16,8 +16,8 @@ reward code. `grade_receipt` is the consumer.
 | 0 | `ok` or `warning` | not this row; a signal receipt is graded separately |
 | 1 | `parse_error`, `type_error`, `arity_error`, `unbound_symbol`, `other` | graded; `parse_error` is the A1 rung |
 | 124 | `timeout` | `unattributed` until triage or auto-attribution |
-| 125 | `resource_limit` | same as exit 124 |
-| 126 | `internal` | `unattributed`, unless already a remote import, a stack overflow, a wasm trap, or a deep-recursion signature |
+| 125 | `resource_limit` | same as exit 124, except `resource limit: source size`, which is already `parse_error` |
+| 126 | `internal` | `unattributed`, unless already a remote import, `runtime_stack_overflow`, a `wasm_trap` kind, or a line-start `ERROR : stack overflow` on that compile |
 | 137, 139, -9 | any stored class | queued crash (`unattributed`), not `schema_invalid` |
 
 Do not score a stored `internal` or `resource_limit` class as `other`.
@@ -31,12 +31,15 @@ not 0. The row stays in the quarantine queue. Auto-attribution reruns
 the same digest on a quiet worker with a known-good fixture. If the
 fixture passes and the candidate fails again, the rung is `parse_error`.
 If the fixture fails, the reason is `infra_fault`. Triage can mark
-`harness_defect`. A remote import or a stack overflow is already
-`parse_error` and does not wait. A wasm trap (`unreachable`),
-`ERROR : stack overflow in eval`, or a deep-recursion signature on a
-worker crash is the same rung on the ledger commit path. The crash
-payload itself has no source tag; the captured diagnostics carry it.
-A segfault with none of those signatures stays `unattributed`. A7 alerts
+`harness_defect`. A remote import, a source over 1 MiB, a JS
+`runtime_stack_overflow` flag, or a `wasm_trap` kind is already
+`parse_error` and does not wait. Faust's `ERROR : stack overflow`
+counts only as a case-sensitive line-start on the compile diagnostics
+of the stage that failed. Harness text such as `internal: worker failed`
+is not a marker. An untagged exit 126 on the ledger commit path is
+rerun on the same worker beside `process = _;`. The fixture passing
+and the same failure reproducing is `parse_error`. The fixture failing,
+or the failure not reproducing, stays `unattributed`. A7 alerts
 when the per-policy ungraded rate goes above 1% over a 500-sample window,
 or above 2× the known-good baseline, whichever comes first. Five ungraded samples in 500 do not
 alarm. Six do. Those numbers are provisional. The alarm re-arms after

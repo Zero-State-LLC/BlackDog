@@ -251,9 +251,9 @@ class QuarantineQueue:
         ``harness`` and ``infrastructure`` return an ungraded row that
         is dropped and never scored. ``triaged_by`` and ``triaged_at``
         are stored with that outcome. ``triaged_at`` is a timezone-aware
-        ISO-8601 timestamp and is not in the future. Calling this
-        without an attribution raises ``TypeError`` and leaves the row
-        pending.
+        ISO-8601 timestamp, is not in the future, and is not earlier
+        than the row's ``held_at``. Calling this without an attribution
+        raises ``TypeError`` and leaves the row pending.
         """
         if not isinstance(record_id, str) or not record_id:
             raise KeyError(record_id)
@@ -266,7 +266,7 @@ class QuarantineQueue:
         kind = _attribution(attribution)
         if not isinstance(triaged_by, str) or not triaged_by.strip():
             raise ValueError("triage requires the name of who resolved the row")
-        stamp = _require_triaged_at(triaged_at or _utc_now())
+        stamp = _require_triaged_at(triaged_at or _utc_now(), held_at=row.held_at)
         note = _require_evidence(kind, evidence)
         grade = _triage_grade(row, kind)
         outcome = _outcome_for(kind)
@@ -386,7 +386,9 @@ class QuarantineQueue:
                         f"quarantine log line {line_number} has no triage attribution"
                     )
                 try:
-                    triaged_at = _require_triaged_at(body.get("triaged_at"))
+                    triaged_at = _require_triaged_at(
+                        body.get("triaged_at"), held_at=row.held_at
+                    )
                     evidence = _require_evidence(kind, body.get("evidence", ""))
                 except ValueError as exc:
                     raise ValueError(
@@ -438,8 +440,12 @@ def _require_evidence(attribution: TriageAttribution, evidence: object) -> str:
     return note
 
 
-def _require_triaged_at(value: object) -> str:
-    """Return a timezone-aware ISO-8601 timestamp that is not in the future."""
+def _require_triaged_at(value: object, *, held_at: str | None = None) -> str:
+    """Return a timezone-aware ISO-8601 timestamp that is not in the future.
+
+    When ``held_at`` is set, the stamp must not be earlier than the
+    quarantine hold.
+    """
     if not isinstance(value, str) or not value.strip():
         raise ValueError("triaged_at must be a timezone-aware ISO-8601 timestamp")
     text = value.strip()
@@ -451,6 +457,19 @@ def _require_triaged_at(value: object) -> str:
         raise ValueError("triaged_at must be a timezone-aware ISO-8601 timestamp")
     if parsed > datetime.now(timezone.utc):
         raise ValueError("triaged_at must not be in the future")
+    if held_at is not None:
+        if not isinstance(held_at, str) or not held_at.strip():
+            raise ValueError("triaged_at must not be earlier than the quarantine hold")
+        try:
+            held = datetime.fromisoformat(held_at.strip().replace("Z", "+00:00"))
+        except ValueError as exc:
+            raise ValueError(
+                "triaged_at must not be earlier than the quarantine hold"
+            ) from exc
+        if held.tzinfo is None or held.tzinfo.utcoffset(held) is None:
+            raise ValueError("triaged_at must not be earlier than the quarantine hold")
+        if parsed < held:
+            raise ValueError("triaged_at must not be earlier than the quarantine hold")
     return text
 
 

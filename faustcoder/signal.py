@@ -132,7 +132,25 @@ _STIMULUS_FILE = re.compile(r"^(impulse|sine|noise)$")
 
 
 class SignalHarnessError(Exception):
-    """The harness failed before it could judge the signal."""
+    """The harness failed before it could judge the signal.
+
+    ``termination`` is the structured worker report for this stage:
+    signal number, JS stack overflow, and wasm trap kind. The message
+    is the render exception text and is not a reward marker.
+    """
+
+    def __init__(
+        self, message: str, *, termination: Mapping[str, Any] | None = None
+    ) -> None:
+        super().__init__(message)
+        reported = termination or {}
+        signal = reported.get("termination_signal")
+        trap = reported.get("wasm_trap")
+        self.termination = {
+            "termination_signal": signal if isinstance(signal, int) else None,
+            "runtime_stack_overflow": reported.get("runtime_stack_overflow") is True,
+            "wasm_trap": trap if isinstance(trap, str) and trap else None,
+        }
 
 
 class SignalLibrariesUnavailable(SignalHarnessError):
@@ -292,6 +310,12 @@ class SignalRun:
     failures: tuple[str, ...]
     reference_payload: dict[str, Any] | None
     reward_failure: str | None = None
+    source: str | None = None
+    options: tuple[str, ...] = ()
+    limits: ResourceLimits | None = None
+    termination_signal: int | None = None
+    runtime_stack_overflow: bool = False
+    wasm_trap: str | None = None
 
 
 @dataclass(frozen=True)
@@ -602,7 +626,17 @@ def _hold_compiler_for_reward(compiled: Compilation, ledger: object) -> None:
     raise RewardOutcomeHeld(grade)
 
 
-def _deferred_reward_run(compiled: Compilation, kind: str) -> SignalRun:
+def _deferred_reward_run(
+    compiled: Compilation,
+    kind: str,
+    *,
+    source: str,
+    options: tuple[str, ...] = (),
+    limits: ResourceLimits | None = None,
+    termination_signal: int | None = None,
+    runtime_stack_overflow: bool = False,
+    wasm_trap: str | None = None,
+) -> SignalRun:
     """Return a suite run whose grade happens in ``commit_signal_check``."""
     return SignalRun(
         compilation=compiled,
@@ -611,6 +645,12 @@ def _deferred_reward_run(compiled: Compilation, kind: str) -> SignalRun:
         failures=(kind,),
         reference_payload=None,
         reward_failure=kind,
+        source=source,
+        options=options,
+        limits=limits,
+        termination_signal=termination_signal,
+        runtime_stack_overflow=runtime_stack_overflow,
+        wasm_trap=wasm_trap,
     )
 
 
@@ -714,7 +754,9 @@ def run_signal(
         "warning",
     }:
         if reward_graded and defer_reward_failure:
-            return _deferred_reward_run(compiled, "compiler")
+            return _deferred_reward_run(
+                compiled, "compiler", source=source, options=checked, limits=bounds
+            )
         if reward_graded:
             _hold_compiler_for_reward(compiled, ledger)
         raise SignalHarnessError(
@@ -725,15 +767,27 @@ def run_signal(
         rendered = _render(source, profile, options=checked, limits=bounds)
     except SandboxError:
         if reward_graded and defer_reward_failure:
-            return _deferred_reward_run(compiled, "harness_crash")
+            return _deferred_reward_run(
+                compiled, "harness_crash", source=source, options=checked, limits=bounds
+            )
         if reward_graded:
             _hold_crash_for_reward(
                 compiled.reproducible_digest, ledger, kind="harness_crash"
             )
         raise
-    except SignalHarnessError:
+    except SignalHarnessError as exc:
         if reward_graded and defer_reward_failure:
-            return _deferred_reward_run(compiled, "worker_crash")
+            reported = exc.termination
+            return _deferred_reward_run(
+                compiled,
+                "worker_crash",
+                source=source,
+                options=checked,
+                limits=bounds,
+                termination_signal=reported["termination_signal"],
+                runtime_stack_overflow=reported["runtime_stack_overflow"],
+                wasm_trap=reported["wasm_trap"],
+            )
         if reward_graded:
             _hold_crash_for_reward(
                 compiled.reproducible_digest, ledger, kind="worker_crash"
@@ -817,6 +871,54 @@ def run_signal_suite(
     return SignalSuite(runs=tuple(runs), ledger=ledger)
 
 
+def _untagged_worker_hooks(run: SignalRun) -> dict[str, Any]:
+    """Rerun an untagged exit 126 on this worker, plus ``process = _;``.
+
+    Structured stack and trap fields are already source tags, so they
+    do not start another compile. A render crash is a different stage
+    and is not explained by recompiling.
+    """
+    if not isinstance(run.source, str) or not run.source:
+        return {}
+    receipt = run.compilation.receipt
+    if receipt.get("exit_code") != 126 or receipt.get("diagnostic_class") != "internal":
+        return {}
+    if receipt.get("runtime_stack_overflow") is True or isinstance(receipt.get("wasm_trap"), str):
+        return {}
+    if run.compilation.diagnostics == "internal: remote import rejected\n":
+        return {}
+    from faustcoder.reward.types import FixtureOutcome, RerunOutcome
+
+    source = run.source
+    options = run.options
+    limits = run.limits or ResourceLimits()
+
+    def rerun(_payload: dict[str, Any]) -> RerunOutcome:
+        again = compile_source(source, lang="wasm", options=options, limits=limits)
+        return RerunOutcome(
+            failed=again.receipt["exit_code"] != 0,
+            exit_code=int(again.receipt["exit_code"]),
+            diagnostic_class=str(again.receipt["diagnostic_class"]),
+            reproducible_digest=again.reproducible_digest,
+            environment_digest=str(again.receipt["environment_digest"]),
+        )
+
+    def known_good() -> FixtureOutcome:
+        fixture = compile_source(
+            "process = _;\n", lang="wasm", options=options, limits=limits
+        )
+        passed = fixture.receipt["exit_code"] == 0 and fixture.receipt["diagnostic_class"] in {
+            "ok",
+            "warning",
+        }
+        return FixtureOutcome(
+            passed=passed,
+            environment_digest=str(fixture.receipt["environment_digest"]),
+        )
+
+    return {"rerun": rerun, "known_good": known_good}
+
+
 def commit_signal_check(
     store: ArtifactStore,
     suite: SignalSuite,
@@ -835,10 +937,12 @@ def commit_signal_check(
     not move the candidate. A reward run with no signal receipt is a
     compiler failure or a render crash. Those are graded here onto
     ``ledger`` or the suite ledger. Exit 124, 125 and 126, and a
-    deferred compiler failure, use the compiler envelope. A wasm
-    trap or ``stack overflow in eval`` in those diagnostics is source
-    attribution. A render crash uses a crash envelope; a deep-recursion
-    signature on its diagnostics is the same attribution.
+    deferred compiler failure, use the compiler envelope. An untagged
+    exit 126 whose run still has its source is rerun on this worker
+    beside ``process = _;``. The known-good fixture passing and the
+    same failure reproducing is ``parse_error``. A render crash uses
+    a crash envelope. Its exception text is not a marker. Structured
+    ``runtime_stack_overflow`` and ``wasm_trap`` on that crash are.
     """
     if state is not CandidateState.COMPILE_CHECKED:
         raise SignalHarnessError("signal check starts from COMPILE_CHECKED")
@@ -900,6 +1004,7 @@ def commit_signal_check(
                     created_at=created_at,
                     producer="faustcoder.compiler",
                 )
+                hooks = _untagged_worker_hooks(run)
                 outcomes_list.append(
                     grade_receipt(
                         store.get(compiler_id),
@@ -907,11 +1012,24 @@ def commit_signal_check(
                         policy=policy,
                         queue=bound.queue,
                         rates=bound.rates,
+                        **hooks,
                     )
                 )
                 if run.receipt is None:
                     continue
             if run.receipt is None and run.reward_failure in {"worker_crash", "harness_crash"}:
+                crash_payload: dict[str, Any] = {
+                    "kind": run.reward_failure,
+                    "exit_code": 126,
+                    "diagnostic_class": "internal",
+                    "reproducible_digest": run.compilation.reproducible_digest,
+                }
+                if run.termination_signal is not None:
+                    crash_payload["termination_signal"] = run.termination_signal
+                if run.runtime_stack_overflow:
+                    crash_payload["runtime_stack_overflow"] = True
+                if run.wasm_trap:
+                    crash_payload["wasm_trap"] = run.wasm_trap
                 outcomes_list.append(
                     grade_receipt(
                         build_envelope(
@@ -919,14 +1037,8 @@ def commit_signal_check(
                             created_at=created_at,
                             producer=producer,
                             parents=[f"sha256:{artifact_id}"],
-                            payload={
-                                "kind": run.reward_failure,
-                                "exit_code": 126,
-                                "diagnostic_class": "internal",
-                                "reproducible_digest": run.compilation.reproducible_digest,
-                            },
+                            payload=crash_payload,
                         ),
-                        diagnostics=run.compilation.diagnostics,
                         policy=policy,
                         queue=bound.queue,
                         rates=bound.rates,
@@ -1585,6 +1697,25 @@ def _spectral(channel: Sequence[float], sample_rate: int) -> dict[str, Any]:
     }
 
 
+def _render_termination(run: object, body: Mapping[str, Any] | None) -> dict[str, Any]:
+    """Structured fields for the render stage. The exception text stays separate."""
+    from faustcoder.compiler import WASM_TRAP_KINDS
+
+    reported: dict[str, Any] = {}
+    returncode = getattr(run, "returncode", 0)
+    if isinstance(returncode, int) and returncode < 0:
+        number = -returncode
+        if 1 <= number <= 64:
+            reported["termination_signal"] = number
+    if isinstance(body, Mapping):
+        if body.get("runtime_stack_overflow") is True:
+            reported["runtime_stack_overflow"] = True
+        trap = body.get("wasm_trap")
+        if isinstance(trap, str) and trap in WASM_TRAP_KINDS:
+            reported["wasm_trap"] = trap
+    return reported
+
+
 def _render(
     source: str,
     profile: SignalProfile,
@@ -1627,11 +1758,17 @@ def _render(
         run = run_in_sandbox(command, stdin=request, workdir=workdir, limits=limits)
         _raise_if_canary_failed(run)
         if run.stop_reason:
-            raise SignalHarnessError(f"renderer stopped: {run.stop_reason}")
+            raise SignalHarnessError(
+                f"renderer stopped: {run.stop_reason}",
+                termination=_render_termination(run, None),
+            )
         result_path = workdir / "result.json"
         if run.returncode != 0 or not result_path.is_file():
             detail = run.stderr.decode("utf-8", errors="replace").strip()
-            raise SignalHarnessError(detail or "renderer failed")
+            raise SignalHarnessError(
+                detail or "renderer failed",
+                termination=_render_termination(run, None),
+            )
         try:
             body = json.loads(result_path.read_text(encoding="utf-8"))
         except (OSError, UnicodeError, json.JSONDecodeError) as exc:
@@ -1641,7 +1778,10 @@ def _render(
         if body.get("compile_ok") is not True:
             diagnostic = body.get("diagnostics")
             text = diagnostic if isinstance(diagnostic, str) else "render compile failed"
-            raise SignalHarnessError(text.strip() or "render compile failed")
+            raise SignalHarnessError(
+                text.strip() or "render compile failed",
+                termination=_render_termination(run, body),
+            )
         samples = _read_outputs(workdir, body, profile)
         body["samples"] = samples
         return body

@@ -300,7 +300,7 @@ MODIFIED 0.3.0 (R-004): adds `category` (faustlibraries library name), `target` 
 
 MODIFIED 0.3.0 (R-005): adds `compiler` (`libfaust-wasm` or `faust-cli`), `lang` (output backend), `options` and `diagnostic_class` (`ok`, `warning`, `type_error`, `arity_error`, `parse_error`, `timeout`, `other`).
 
-MODIFIED 0.3.2 (ADR-0005, Danny yes 2026-10-17 1:13 PM PT): `diagnostic_class` adds `unbound_symbol`, `resource_limit` and `internal`.
+MODIFIED 0.3.2 (ADR-0005, Danny yes 2026-10-17 1:13 PM PT): `diagnostic_class` adds `unbound_symbol`, `resource_limit` and `internal`. Optional `termination_signal`, `runtime_stack_overflow` and `wasm_trap` record a worker signal, a JS RangeError or stack overflow from the runtime itself, and a wasm trap kind.
 
 ### DSPTestReceipt
 
@@ -537,7 +537,7 @@ The inventory that applies these calls is [docs/rights-inventory.md](../../docs/
 
 ## 23. Amendments 0.3.4 (ADR-0006, ACCEPTED)
 
-Approval: Danny 2026-10-17 4:11 PM PT. A2 extended 2026-10-17 4:28 PM PT. Decision: [ADR-0006](../../docs/adr/0006-source-attributable-failures.md). This amends the R-005 reward ladder. A1–A7 are that record. ADR-0006 is in force in reward code. `grade_receipt` (N4) mints a `RewardableSignalReceipt` only for an allowlisted reward profile, recomputes both digests, and drops every other sample from reward. A2 rows are retained in the quarantine queue. Auto-attribution reruns an unattributed exit 124, 125 or 126, or a worker or harness crash, on a quiet worker with the same digest and a known-good fixture. If the fixture passes and the candidate fails again, the rung is `parse_error`. A remote import or a stack overflow is already that rung. A7's 1%, 500-sample and 2× numbers are provisional starting values. The signal runbook records the reward-graded comparison.
+Approval: Danny 2026-10-17 4:11 PM PT. A2 extended 2026-10-17 4:28 PM PT. Decision: [ADR-0006](../../docs/adr/0006-source-attributable-failures.md). This amends the R-005 reward ladder. A1–A7 are that record. ADR-0006 is in force in reward code. `grade_receipt` (N4) mints a `RewardableSignalReceipt` only for an allowlisted reward profile, recomputes both digests, and drops every other sample from reward. A2 rows are retained in the quarantine queue. Auto-attribution reruns an unattributed exit 124, 125 or 126, or a worker or harness crash, on a quiet worker with the same digest and a known-good fixture. If the fixture passes and the candidate fails again, the rung is `parse_error`. An untagged exit 126 whose fixture also fails, or whose failure does not reproduce, stays `unattributed`. A remote import, a source over 1 MiB, a `runtime_stack_overflow` flag, a `wasm_trap` kind, or a line-start Faust `ERROR : stack overflow` on the compile stage that failed is already that rung. Harness prose is not a marker, and a compile warning does not attribute a later render crash. A7's 1%, 500-sample and 2× numbers are provisional starting values. The signal runbook records the reward-graded comparison.
 
 A1. A failure the source caused gets the `parse_error` rung, the lowest graded rung. That covers: a remote import, library or component; recursion or any other stack overflow caused by the source; a timeout or resource kill the source ran into; any `CompilerExclusion` matched by model output; and any non-finite (NaN/Inf), silent, DC or trivial render in a reward-graded run. A timeout or resource kill counts as source-attributable only once triage attributes it to the source.
 

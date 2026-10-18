@@ -429,14 +429,48 @@ def test_remote_url_imports_are_internal(source: str) -> None:
     assert compiled.receipt["duration_ms"] == 0
 
 
-def test_deep_recursion_is_internal() -> None:
+def test_deep_recursion_is_internal(store, tmp_path: Path) -> None:
     # --stack-size=8192 lets this unroll until the worker SIGSEGVs. The
-    # catchable "Maximum call stack size exceeded" path is what a smaller
-    # stack produced. Either way the receipt stays exit 126 internal.
-    compiled = compile_source(_source("recurse.dsp"), lang="wasm")
+    # raw receipt stays exit 126 internal, with the signal number and
+    # none of the recursion markers. Commit reruns it beside a known-good
+    # fixture and the outcome is parse_error.
+    import signal
+
+    from faustcoder.candidate_machine import CandidateState
+    from faustcoder.reward import RewardLedger, SourceAttributedFailure
+    from faustcoder.signal import SignalRun, SignalSuite, commit_signal_check
+
+    source = _source("recurse.dsp")
+    compiled = compile_source(source, lang="wasm")
     assert compiled.receipt["exit_code"] == 126
     assert compiled.receipt["diagnostic_class"] == "internal"
+    assert compiled.diagnostics == "internal: worker failed\n"
+    assert compiled.receipt["termination_signal"] == signal.SIGSEGV
+    assert "runtime_stack_overflow" not in compiled.receipt
+    assert "wasm_trap" not in compiled.receipt
     assert compiled.receipt["faust_version"] == "2.90.0"
+    ledger = RewardLedger(tmp_path / "recursion")
+    run = SignalRun(
+        compilation=compiled,
+        receipt=None,
+        reproducible_digest=compiled.reproducible_digest,
+        failures=("compiler",),
+        reference_payload=None,
+        reward_failure="compiler",
+        source=source,
+    )
+    committed = commit_signal_check(
+        store,
+        SignalSuite(runs=(run,), ledger=ledger),
+        state=CandidateState.COMPILE_CHECKED,
+        created_at="2026-10-18T00:00:00Z",
+    )
+    assert committed.state is CandidateState.REJECTED
+    assert len(committed.outcomes) == 1
+    outcome = committed.outcomes[0]
+    assert isinstance(outcome, SourceAttributedFailure)
+    assert outcome.rung == "parse_error"
+    assert ledger.queue.count() == 0
 
 
 def test_sandbox_uid_is_unprivileged_and_offline(tmp_path: Path) -> None:

@@ -3,7 +3,7 @@
   "$id": "https://github.com/Zero-State-LLC/FaustCoder/specs/001-faustcoder/contracts/CompilerReceipt.schema.json",
   "title": "CompilerReceipt",
   "$comment": "schema_version 0.3.2",
-  "description": "Spec §8 CompilerReceipt (R-005). Fields compiler, lang, options and diagnostic_class added in spec 0.3.0 (ADR-0004). diagnostic_class values unbound_symbol, resource_limit and internal added in spec 0.3.2 (ADR-0005, Danny yes 2026-10-17 1:13 PM PT). schema_version 0.3.2.",
+  "description": "Spec §8 CompilerReceipt (R-005). Fields compiler, lang, options and diagnostic_class added in spec 0.3.0 (ADR-0004). diagnostic_class values unbound_symbol, resource_limit and internal added in spec 0.3.2 (ADR-0005, Danny yes 2026-10-17 1:13 PM PT). Optional termination_signal, runtime_stack_overflow and wasm_trap record how the worker stopped. schema_version 0.3.2.",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -80,6 +80,21 @@
         "resource_limit",
         "internal"
       ]
+    },
+    "termination_signal": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 64,
+      "description": "POSIX signal that killed the worker. Absent when the process exited on its own."
+    },
+    "runtime_stack_overflow": {
+      "type": "boolean",
+      "description": "True when the JS runtime itself raised RangeError or Maximum call stack size exceeded. Absent means it did not."
+    },
+    "wasm_trap": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Wasm trap kind reported by the runtime, for example unreachable. Absent when the runtime reported no trap."
     }
   }
 }
