@@ -189,12 +189,23 @@ def require_rewardable_provenance(receipt: object) -> RewardableSignalReceipt:
     return receipt
 
 
-def dataset_reward_row(receipt: object, **fields: object) -> dict[str, object]:
-    """Build one dataset row. The reward comes only from ``receipt``."""
+def dataset_reward_row(
+    receipt: object, *, task: object = None, **fields: object
+) -> dict[str, object]:
+    """Build one dataset row. The reward comes only from ``receipt``.
+
+    ``task`` is a TaskSpec. ``require_task_rewardable`` refuses a
+    missing effect, a misspelling, and ``nonlinear`` or
+    ``time_variant`` even when the receipt passed.
+    """
     graded = require_rewardable_provenance(receipt)
-    if "reward" in fields or "provenance" in fields:
+    from faustcoder.signal_suite import require_task_rewardable
+
+    require_task_rewardable(task if isinstance(task, Mapping) else {})
+    if "reward" in fields or "provenance" in fields or "task" in fields:
         raise RewardProvenanceError("reward and provenance are derived from the receipt")
     row = dict(fields)
+    row["task"] = task
     row["reward"] = 1.0 if graded.passed else 0.0
     row["provenance"] = graded
     return row
@@ -207,6 +218,10 @@ def rl_batch(rows: list[Mapping[str, object]] | tuple[Mapping[str, object], ...]
         if not isinstance(row, Mapping) or "reward" not in row:
             raise RewardProvenanceError("RL batch row is missing a reward")
         graded = require_rewardable_provenance(row.get("provenance"))
+        from faustcoder.signal_suite import require_task_rewardable
+
+        task = row.get("task")
+        require_task_rewardable(task if isinstance(task, Mapping) else {})
         reward = _finite_reward(row.get("reward"))
         # Pending Danny's binary-versus-lowest-rung ruling. Until that
         # lands, a passed receipt is exactly 1.0 and a failed receipt is exactly 0.0.

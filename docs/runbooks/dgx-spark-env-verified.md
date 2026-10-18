@@ -156,3 +156,23 @@ python -m pytest tests/test_training_machine.py tests/test_spark_probe.py
 Those tests mock the Spark fingerprint and skip the CUDA probes. A green run
 does not mean G10 passed, and it does not replace the fingerprint on the
 Spark.
+
+## Signal suite cross-arch digest (pending)
+
+The nonlinear suite asks for the same sample hashes on x86 and on this
+ARM machine. CI is x86 only, so that compare stays pending until this
+machine renders it. Install the signal harness the same way as the
+compiler runbook (Node 22, the faustwasm worker, pinned faustlibraries,
+`fc-unshare`). Then:
+
+```bash
+python3 scripts/signal_cross_arch.py --out /tmp/signal-arch-arm.json
+python3 scripts/signal_cross_arch.py --compare /tmp/signal-arch-arm.json tests/fixtures/signal/nonlinear-x86-goldens.json
+```
+
+The script runs from a checkout without installing the package. Copy
+the rendered file off the machine if you compare somewhere else. Exit
+2 is `infra_fault`. Leave the sample tolerance where it is. The x86
+goldens are the DSP bank, not a wire. The signal harness runbook has
+the field list. Node, faustwasm and V8 versions are recorded and are
+not the compare. This step is not part of the amended R-001 fingerprint.

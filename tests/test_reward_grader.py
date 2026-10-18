@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import subprocess
 from pathlib import Path
 
@@ -48,6 +49,16 @@ def _rerun(envelope: dict, *, failed: bool = True, digest: str | None = None) ->
     )
 
 
+def _linear_task() -> dict:
+    task = json.loads(
+        (Path(__file__).resolve().parents[1] / "tests/fixtures/valid/task-spec.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    assert task["effect"] == "linear"
+    return task
+
+
 def test_reward_profiles_are_the_frozen_allowlist() -> None:
     assert reward_profiles() == REWARD_PROFILES
     assert set(REWARD_PROFILES.values()) == {"impulse-44100-v1", "impulse-48000-v1"}
@@ -55,6 +66,11 @@ def test_reward_profiles_are_the_frozen_allowlist() -> None:
         "sha256:e38d50f7345453e14c739fbfeccc7f561ec92c6cec71d181a888b250bcd2ddd0"
         in REWARD_PROFILES
     )
+    assert (
+        "sha256:4b24efe4c30562344e56713da4ec05b3e4e59dfe9b8ddebbcfdeef9f64ac88ee"
+        in REWARD_PROFILES
+    )
+    assert len(REWARD_PROFILES) == 2
 
 
 def test_valid_reward_receipt_is_accepted_and_apply_signal_rejects_a_bool() -> None:
@@ -159,7 +175,7 @@ def test_diagnostic_and_reward_schemas_reject_each_other() -> None:
 
 def test_dataset_and_rl_builders_require_rewardable_provenance() -> None:
     graded = grade_receipt(allowlisted_reward_envelope(passed=True))
-    row = dataset_reward_row(graded, example_id="e1")
+    row = dataset_reward_row(graded, task=_linear_task(), example_id="e1")
     assert row["reward"] == 1.0
     assert rl_batch([row])[0]["provenance"] is graded
     non_rg = grade_receipt(
@@ -180,6 +196,23 @@ def test_dataset_and_rl_builders_require_rewardable_provenance() -> None:
         pass
     else:
         raise AssertionError("forged provenance was accepted")
+    from faustcoder.signal import SignalHarnessError
+
+    nonlinear = _linear_task()
+    nonlinear["effect"] = "nonlinear"
+    try:
+        dataset_reward_row(graded, task=nonlinear)
+    except SignalHarnessError as exc:
+        assert "unrewardable" in str(exc)
+    else:
+        raise AssertionError("nonlinear task was accepted")
+    row["task"] = nonlinear
+    try:
+        rl_batch([row])
+    except SignalHarnessError as exc:
+        assert "unrewardable" in str(exc)
+    else:
+        raise AssertionError("nonlinear task was accepted by rl_batch")
 
 
 def test_unattributed_exits_stay_queued_until_auto_attribution() -> None:
@@ -476,7 +509,7 @@ def test_missing_renders_is_comparison_not_full() -> None:
 
 def test_rl_batch_rejects_a_positive_reward_on_a_failed_receipt() -> None:
     failed = grade_receipt(allowlisted_reward_envelope(passed=False))
-    row = dataset_reward_row(failed, example_id="e1")
+    row = dataset_reward_row(failed, task=_linear_task(), example_id="e1")
     assert row["reward"] == 0.0
     for bad in (True, False, 1, "1.0", float("nan"), float("inf"), float("-inf"), -1.0, 0.5):
         row["reward"] = bad
@@ -489,7 +522,7 @@ def test_rl_batch_rejects_a_positive_reward_on_a_failed_receipt() -> None:
     row["reward"] = 0.0
     assert rl_batch([row])[0]["reward"] == 0.0
     passed = grade_receipt(allowlisted_reward_envelope(passed=True))
-    ok = dataset_reward_row(passed, example_id="e2")
+    ok = dataset_reward_row(passed, task=_linear_task(), example_id="e2")
     assert ok["reward"] == 1.0
     assert rl_batch([ok])[0]["reward"] == 1.0
     for bad in (2.0, -5.0, 0.0, 0.5):
@@ -728,6 +761,12 @@ def test_rendered_reward_impulse_grades_as_rewardable() -> None:
     assert graded.passed is True
     assert graded.profile_name == "impulse-48000-v1"
     assert graded.test_suite_digest == run.receipt["test_suite_digest"]
+    assert graded.test_suite_digest == (
+        "sha256:e38d50f7345453e14c739fbfeccc7f561ec92c6cec71d181a888b250bcd2ddd0"
+    )
+    assert run.receipt["profile"]["version"] == 2
+    assert run.receipt["metrics"]["compile_flags"] == ["-ftz", "0"]
+    assert run.receipt["metrics"]["comparison"] == "reward-graded-signed-full"
 
 
 def test_resolve_without_attribution_leaves_a_stale_timeout_quarantined(tmp_path) -> None:

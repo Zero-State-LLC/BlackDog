@@ -15,7 +15,19 @@ import { terminationFields } from "./termination.mjs";
 const FAUSTWASM_VERSION = "0.19.0";
 const MAX_STDIN = 2 * 1024 * 1024;
 const SAFE_OPTION = /^(-[a-z][a-z0-9]*|[0-9]+)$/;
-const STIMULI = new Set(["impulse", "sine", "noise"]);
+// Keep in step with faustcoder.signal.KNOWN_STIMULI.
+const STIMULI = new Set([
+  "impulse",
+  "sine",
+  "noise",
+  "ess",
+  "sine_997_m1",
+  "sine_997_m20",
+  "smpte",
+  "noise_m12",
+  "noise_m30",
+  "dc_step",
+]);
 
 function failClosed(message) {
   process.stderr.write(`${message}\n`);
@@ -192,11 +204,13 @@ async function main() {
     return;
   }
   const written = [];
+  const stimulusMs = {};
   let inputCount = 0;
   let outputCount = 0;
   let buttonAddresses = [];
   try {
     for (const name of stimuli) {
+      const started = performance.now();
       const processor = await generator.createOfflineProcessor(sampleRate, blockSize);
       inputCount = processor.getNumInputs();
       outputCount = processor.getNumOutputs();
@@ -206,6 +220,7 @@ async function main() {
       const fileName = `out-${name}.f32`;
       writeFileSync(join(workdir, fileName), planarBytes(channels));
       written.push(name);
+      stimulusMs[name] = Math.max(0, Math.round(performance.now() - started));
       processor.destroy();
     }
   } catch (error) {
@@ -227,6 +242,17 @@ async function main() {
   writeResult(workdir, {
     faustwasm_version: FAUSTWASM_VERSION,
     libfaust_version: libfaustVersion,
+    toolchain: {
+      faustwasm: FAUSTWASM_VERSION,
+      node: process.version,
+      node_flags: process.execArgv.filter(
+        (flag) =>
+          flag === "--disallow-code-generation-from-strings" ||
+          flag === "--permission" ||
+          flag.startsWith("--stack-size="),
+      ),
+      v8: process.versions.v8,
+    },
     compile_ok: true,
     diagnostics: "",
     inputs: inputCount,
@@ -236,6 +262,7 @@ async function main() {
     frames,
     stimuli: written,
     buttons: buttonAddresses,
+    stimulus_ms: stimulusMs,
   });
 }
 
