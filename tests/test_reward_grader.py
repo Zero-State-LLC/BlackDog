@@ -36,10 +36,9 @@ from faustcoder.reward import (
     require_explicit_example_id,
     reward_profiles,
     reward_value,
-    rl_batch,
     shadow_observe,
 )
-from faustcoder.reward.grader import _compile_stack_line
+from faustcoder.reward.grader import _compile_stack_line, _rl_batch
 from faustcoder.schemas import SchemaValidationError, validate
 from faustcoder.signal import SignalHarnessError
 from tests.support import allowlisted_reward_envelope, compiler_failure_envelope, make_envelope
@@ -195,7 +194,7 @@ def test_dataset_and_rl_builders_require_rewardable_provenance() -> None:
     graded = grade_receipt(allowlisted_reward_envelope(passed=True), task=task)
     row = dataset_reward_row(graded, task=task, example_id="e1")
     assert row["reward"] == 1.0
-    assert rl_batch([row])[0]["provenance"] is graded
+    assert _rl_batch([row])[0]["provenance"] is graded
     non_rg = grade_receipt(
         allowlisted_reward_envelope(
             mutate=lambda payload: payload.__setitem__("purpose", "diagnostic")
@@ -209,7 +208,7 @@ def test_dataset_and_rl_builders_require_rewardable_provenance() -> None:
         raise AssertionError("non-RG row was accepted")
     forged = {"reward": 1.0, "provenance": {"passed": True}}
     try:
-        rl_batch([forged])
+        _rl_batch([forged])
     except RewardProvenanceError:
         pass
     else:
@@ -226,7 +225,7 @@ def test_dataset_and_rl_builders_require_rewardable_provenance() -> None:
         raise AssertionError("nonlinear task was accepted")
     row["task"] = nonlinear
     try:
-        rl_batch([row])
+        _rl_batch([row])
     except SignalHarnessError as exc:
         assert "unrewardable" in str(exc)
     else:
@@ -256,7 +255,7 @@ def test_reward_value_refuses_an_unrewardable_task() -> None:
         else:
             raise AssertionError(f"dataset_reward_row scored {effect}")
         try:
-            rl_batch([{"reward": 1.0, "provenance": graded, "task": task}])
+            _rl_batch([{"reward": 1.0, "provenance": graded, "task": task}])
         except SignalHarnessError as exc:
             assert "unrewardable" in str(exc)
         else:
@@ -288,7 +287,7 @@ def test_reward_value_refuses_an_unrewardable_task() -> None:
     row = dataset_reward_row(passed, task=linear, example_id="e")
     row["task"] = closed
     try:
-        rl_batch([row])
+        _rl_batch([row])
     except SignalHarnessError as exc:
         assert "unrewardable" in str(exc)
     else:
@@ -325,7 +324,7 @@ def test_lookalike_and_rebound_receipts_score_nothing() -> None:
     else:
         raise AssertionError("dataset_reward_row scored a lookalike")
     try:
-        rl_batch([{"reward": 1.0, "provenance": lookalike, "task": task}])
+        _rl_batch([{"reward": 1.0, "provenance": lookalike, "task": task}])
     except RewardProvenanceError as exc:
         assert "RewardableSignalReceipt" in str(exc)
     else:
@@ -346,7 +345,7 @@ def test_lookalike_and_rebound_receipts_score_nothing() -> None:
     else:
         raise AssertionError("reward_value scored a rebound receipt")
     try:
-        rl_batch([{"reward": 1.0, "provenance": passed, "task": other}])
+        _rl_batch([{"reward": 1.0, "provenance": passed, "task": other}])
     except RewardProvenanceError as exc:
         assert "RewardableSignalReceipt" in str(exc)
     else:
@@ -384,7 +383,7 @@ def test_linear_row_refuses_a_receipt_minted_for_another_task() -> None:
     assert built["reward"] == 1.0
     built["task"] = row_task
     try:
-        rl_batch([built])
+        _rl_batch([built])
     except RewardProvenanceError as exc:
         assert "does not match" in str(exc)
     else:
@@ -413,7 +412,7 @@ def test_rl_batch_refuses_a_duplicate_row() -> None:
     row = dataset_reward_row(graded, task=task, example_id="e1")
     copied = dict(row)
     try:
-        rl_batch([row, copied])
+        _rl_batch([row, copied])
     except RewardProvenanceError as exc:
         assert "duplicate" in str(exc)
     else:
@@ -422,7 +421,7 @@ def test_rl_batch_refuses_a_duplicate_row() -> None:
     other["task_id"] = "task-other-linear"
     second = grade_receipt(allowlisted_reward_envelope(passed=False), task=other)
     other_row = dataset_reward_row(second, task=other, example_id="e2")
-    assert len(rl_batch([row, other_row])) == 2
+    assert len(_rl_batch([row, other_row])) == 2
 
 
 def test_rl_batch_refuses_an_identity_less_duplicate() -> None:
@@ -430,7 +429,7 @@ def test_rl_batch_refuses_an_identity_less_duplicate() -> None:
     graded = grade_receipt(allowlisted_reward_envelope(passed=True), task=task)
     row = dataset_reward_row(graded, task=task)
     try:
-        rl_batch([row, dict(row)])
+        _rl_batch([row, dict(row)])
     except RewardProvenanceError as exc:
         assert "duplicate" in str(exc)
     else:
@@ -443,7 +442,7 @@ def test_rl_batch_refuses_one_receipt_under_two_example_ids() -> None:
     first = dataset_reward_row(graded, task=task, example_id="e1")
     second = dataset_reward_row(graded, task=task, example_id="e2")
     try:
-        rl_batch([first, second])
+        _rl_batch([first, second])
     except RewardProvenanceError as exc:
         assert "duplicate" in str(exc)
     else:
@@ -455,7 +454,7 @@ def test_rl_batch_refuses_a_non_string_example_id() -> None:
     graded = grade_receipt(allowlisted_reward_envelope(passed=True), task=task)
     row = dataset_reward_row(graded, task=task, example_id=7)
     try:
-        rl_batch([row])
+        _rl_batch([row])
     except RewardProvenanceError as exc:
         assert "example_id" in str(exc)
     else:
@@ -467,7 +466,7 @@ def test_rl_batch_keeps_two_grades_of_the_same_program() -> None:
     envelope = allowlisted_reward_envelope(passed=True)
     first = dataset_reward_row(grade_receipt(envelope, task=task), task=task, example_id="e1")
     second = dataset_reward_row(grade_receipt(envelope, task=task), task=task, example_id="e2")
-    assert len(rl_batch([first, second])) == 2
+    assert len(_rl_batch([first, second])) == 2
 
 
 def test_rl_batch_refuses_a_mapping_that_splits_get_and_items() -> None:
@@ -504,7 +503,7 @@ def test_rl_batch_refuses_a_mapping_that_splits_get_and_items() -> None:
     assert row["provenance"] is failing
     assert row["reward"] == 1.0
     try:
-        rl_batch([row])
+        _rl_batch([row])
     except RewardProvenanceError:
         return
     raise AssertionError("rl_batch emitted a row from a split mapping")
@@ -535,7 +534,7 @@ def test_rl_batch_refuses_a_mapping_whose_reads_disagree() -> None:
             return 3
 
     try:
-        rl_batch([_Flip()])
+        _rl_batch([_Flip()])
     except RewardProvenanceError:
         return
     raise AssertionError("rl_batch accepted a mapping that changes between reads")
@@ -562,7 +561,7 @@ def test_rl_batch_refuses_a_dict_subclass() -> None:
     assert isinstance(row, dict)
     assert type(row) is not dict
     try:
-        rl_batch([row])
+        _rl_batch([row])
     except RewardProvenanceError:
         return
     raise AssertionError("rl_batch accepted a dict subclass")
@@ -592,7 +591,7 @@ def test_rl_batch_keeps_two_grades_of_the_same_program_without_ids() -> None:
     second = dataset_reward_row(grade_receipt(envelope, task=task), task=task)
     assert "example_id" not in first
     assert "example_id" not in second
-    assert len(rl_batch([first, second])) == 2
+    assert len(_rl_batch([first, second])) == 2
 
 
 def test_unattributed_exits_stay_queued_until_triage() -> None:
@@ -953,21 +952,21 @@ def test_rl_batch_rejects_a_positive_reward_on_a_failed_receipt() -> None:
     for bad in (True, False, 1, "1.0", float("nan"), float("inf"), float("-inf"), -1.0, 0.5):
         row["reward"] = bad
         try:
-            rl_batch([row])
+            _rl_batch([row])
         except RewardProvenanceError as exc:
             assert "reward" in str(exc)
         else:
             raise AssertionError(f"reward {bad!r} was accepted")
     row["reward"] = 0.0
-    assert rl_batch([row])[0]["reward"] == 0.0
+    assert _rl_batch([row])[0]["reward"] == 0.0
     passed = grade_receipt(allowlisted_reward_envelope(passed=True), task=task)
     ok = dataset_reward_row(passed, task=task, example_id="e2")
     assert ok["reward"] == 1.0
-    assert rl_batch([ok])[0]["reward"] == 1.0
+    assert _rl_batch([ok])[0]["reward"] == 1.0
     for bad in (2.0, -5.0, 0.0, 0.5):
         ok["reward"] = bad
         try:
-            rl_batch([ok])
+            _rl_batch([ok])
         except RewardProvenanceError as exc:
             assert "1.0" in str(exc)
         else:
@@ -1806,7 +1805,7 @@ def test_shadow_observe_reruns_and_never_grades() -> None:
     else:
         raise AssertionError("a shadow log became a reward row")
     try:
-        rl_batch([{"task": _linear_task(), "reward": 0.0, "provenance": log}])
+        _rl_batch([{"task": _linear_task(), "reward": 0.0, "provenance": log}])
     except RewardProvenanceError:
         pass
     else:
@@ -2281,3 +2280,28 @@ def test_provably_dead_grader_helpers_are_gone() -> None:
 
     assert not hasattr(grader, "reward_profile_allowlist")
     assert "stage" not in inspect.signature(grader._source_tag).parameters
+
+
+def test_rl_batch_from_records_is_the_only_public_batch_builder() -> None:
+    import faustcoder
+    import faustcoder.reward as reward
+    import faustcoder.reward.grader as grader
+
+    assert "rl_batch_from_records" in reward.__all__
+    assert "rl_batch" not in reward.__all__
+    assert not hasattr(reward, "rl_batch")
+    assert callable(reward.rl_batch_from_records)
+    assert not hasattr(grader, "rl_batch")
+    assert callable(grader._rl_batch)
+    assert "rl_batch" not in getattr(faustcoder, "__all__", ())
+
+    package = Path(__file__).resolve().parents[1] / "faustcoder"
+    grader_path = Path(grader.__file__).resolve()
+    for path in package.rglob("*.py"):
+        for line in path.read_text(encoding="utf-8").splitlines():
+            code = line.split("#", 1)[0]
+            code = code.replace("rl_batch_from_records", "")
+            if "_rl_batch(" in code and path.resolve() != grader_path:
+                raise AssertionError(f"{path} calls the private batch builder")
+            if "rl_batch" in code.replace("_rl_batch", ""):
+                raise AssertionError(f"{path} names rl_batch")

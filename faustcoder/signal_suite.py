@@ -560,7 +560,7 @@ def task_is_unrewardable(task: Mapping[str, Any]) -> bool:
 def require_task_rewardable(task: Mapping[str, Any]) -> None:
     """Refuse a reward-bearing row for ``task``.
 
-    ``dataset_reward_row`` and ``rl_batch`` call this. A diagnostic
+    ``dataset_reward_row`` and ``_rl_batch`` call this. A diagnostic
     render does not.
     """
     if task_is_unrewardable(task):

@@ -43,7 +43,7 @@ THD+N, IMD and Farina inverse-filter peaks are stored on the receipt
 and are not pass gates, and they are left out of the reproducible
 digest. The suite digest is not in ``REWARD_PROFILES``. TaskSpec
 ``effect`` is a closed enum. Only ``linear`` and ``time_invariant``
-are rewardable. ``dataset_reward_row`` and ``rl_batch`` call
+are rewardable. ``dataset_reward_row`` and ``_rl_batch`` call
 ``require_task_rewardable``. ``nonlinear-suite-fallback-v1`` is the
 four-stimulus subset.
 ``reject_dc`` does not fire when the reference carries the same DC.
