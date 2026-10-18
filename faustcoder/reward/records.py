@@ -1284,7 +1284,9 @@ class ConsumedLog:
     """Append-only ``group_id`` decisions. A group already present is refused.
 
     ``claim`` requires the run key. When an audit anchor is present, the
-    claim refreshes that anchor over the new bytes.
+    claim checks that anchor against the current log bytes before
+    appending, then refreshes it over the new bytes. A bad anchor or a
+    wrong key raises before any write.
     """
 
     def __init__(self, path: Path | str) -> None:
@@ -1322,17 +1324,21 @@ class ConsumedLog:
             os.fchmod(fd, _LOG_MODE)
             fcntl.flock(fd, fcntl.LOCK_EX)
             try:
-                self._seen.clear()
                 os.lseek(fd, 0, os.SEEK_SET)
-                self._ingest(_read_text(fd))
+                prior = _read_text(fd)
+                from faustcoder.reward.audit import _verified_anchor, refresh_anchor_bind
+
+                # The anchor MAC is over these bytes. A deleted halt marker
+                # or a wrong key fails here, before the append or its fsync.
+                _verified_anchor(prior.encode("utf-8"), run_key, self.path)
+                self._seen.clear()
+                self._ingest(prior)
                 if group_id in self._seen:
                     raise RewardGroupConsumed(group_id, self._seen[group_id])
                 _write_all(fd, encoded)
                 os.fsync(fd)
                 if created:
                     _fsync_dir(self.path.parent)
-                from faustcoder.reward.audit import refresh_anchor_bind
-
                 refresh_anchor_bind(self.path, run_key, locked=True)
                 self._seen[group_id] = disposition
             finally:

@@ -1279,6 +1279,77 @@ def test_deleting_the_report_and_anchor_does_not_clear_a_halt_whose_groups_were_
     assert ConsumedLog(consumed.path).disposition("group-used-halt") == "used"
 
 
+def test_a_claim_does_not_rebind_an_anchor_after_the_halt_marker_is_deleted(
+    tmp_path: Path,
+) -> None:
+    """Deleting the halt marker must not be signed by the next claim."""
+    secret = _write_key(tmp_path / "reward-root.key")
+    ring = RewardKeyring(secret, run_id=RUN)
+    run_key = derive_run_key(secret, RUN)
+    late = _stored_pass(tmp_path, secret, "group-marker")
+    nxt = _stored_pass(tmp_path, secret, "group-next")
+    consumed = ConsumedLog(tmp_path / "marker-consumed.jsonl")
+    reports = AuditReportLog(tmp_path / "marker-reports.jsonl", consumed)
+    consumed.claim(
+        "group-marker",
+        "used",
+        task_digest_full=late.rows[0].task_digest_full,
+        policy_checkpoint=CHECKPOINT,
+        run_key=run_key,
+    )
+    audit = audit_sampled_reruns(
+        late.rows,
+        ring,
+        rerun=lambda _record: "fail",
+        consumed=consumed,
+        reports=reports,
+    )
+    assert audit.halted is True
+    assert audit.late_groups == ("group-marker",)
+    kept = [
+        line
+        for line in consumed.path.read_text(encoding="utf-8").splitlines()
+        if not line.startswith("audit-halt v1 ")
+    ]
+    assert any(line.startswith("audit-anchor v1 ") for line in kept)
+    assert not any(line.startswith("audit-halt v1 ") for line in kept)
+    consumed.path.write_text("\n".join(kept) + "\n", encoding="utf-8")
+    before = consumed.path.read_bytes()
+    with pytest.raises(RewardRecordError, match="anchor"):
+        consumed.claim(
+            "group-next",
+            "used",
+            task_digest_full=nxt.rows[0].task_digest_full,
+            policy_checkpoint=CHECKPOINT,
+            run_key=run_key,
+        )
+    assert consumed.path.read_bytes() == before
+    assert ConsumedLog(consumed.path).disposition("group-next") is None
+
+
+def test_a_wrong_run_key_does_not_write_over_an_anchor(tmp_path: Path) -> None:
+    secret = _write_key(tmp_path / "reward-root.key")
+    ring = RewardKeyring(secret, run_id=RUN)
+    run_key = derive_run_key(secret, RUN)
+    loaded = _stored_pass(tmp_path, secret, "group-keyed")
+    consumed = ConsumedLog(tmp_path / "keyed-consumed.jsonl")
+    reports = AuditReportLog(tmp_path / "keyed-reports.jsonl", consumed)
+    audit_sampled_reruns(loaded.rows, ring, rerun=_echo, consumed=consumed, reports=reports)
+    before = consumed.path.read_bytes()
+    wrong = b"\xff" * 32
+    assert wrong != run_key
+    with pytest.raises(RewardRecordError, match="anchor"):
+        consumed.claim(
+            "group-other",
+            "used",
+            task_digest_full=loaded.rows[0].task_digest_full,
+            policy_checkpoint=CHECKPOINT,
+            run_key=wrong,
+        )
+    assert consumed.path.read_bytes() == before
+    assert ConsumedLog(consumed.path).disposition("group-other") is None
+
+
 def test_deleting_the_report_and_anchor_does_not_allow_a_new_audit(tmp_path: Path) -> None:
     secret = _write_key(tmp_path / "reward-root.key")
     ring = RewardKeyring(secret, run_id=RUN)
