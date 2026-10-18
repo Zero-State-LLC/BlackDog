@@ -1540,6 +1540,38 @@ def test_claim_without_an_anchor_refuses_when_a_report_exists(tmp_path: Path) ->
     assert consumed.disposition("group-after-report") is None
 
 
+def test_claim_refuses_when_the_report_directory_cannot_be_listed(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    secret = _write_key(tmp_path / "reward-root.key")
+    run_key = derive_run_key(secret, RUN)
+    loaded = _stored_pass(tmp_path, secret, "group-unlist")
+    consumed = ConsumedLog(tmp_path / "unlist-consumed.jsonl")
+    consumed.claim(
+        "group-unlist",
+        "used",
+        task_digest_full=loaded.rows[0].task_digest_full,
+        policy_checkpoint=CHECKPOINT,
+        run_key=run_key,
+    )
+    before = consumed.path.read_bytes()
+
+    def _unlist(_path: str) -> list[str]:
+        raise PermissionError("enumeration refused")
+
+    monkeypatch.setattr("faustcoder.reward.audit.os.listdir", _unlist)
+    with pytest.raises(RewardRecordError, match="anchor"):
+        consumed.claim(
+            "group-unlist-next",
+            "used",
+            task_digest_full=loaded.rows[0].task_digest_full,
+            policy_checkpoint=CHECKPOINT,
+            run_key=run_key,
+        )
+    assert consumed.path.read_bytes() == before
+    assert consumed.disposition("group-unlist-next") is None
+
+
 def test_refresh_refuses_when_the_anchor_disappears_after_the_prior_read(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:

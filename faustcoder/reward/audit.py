@@ -926,8 +926,10 @@ def _run_report_exists(consumed_path: Path, run_key: bytes) -> bool:
         return False
     try:
         names = os.listdir(parent)
-    except OSError:
-        return False
+    except OSError as exc:
+        # Not knowing whether a report exists is not the same as there
+        # being no report. A missing anchor must not be extended.
+        raise RewardRecordError("audit anchor is not usable") from exc
     expected_id = _consumed_id(run_key, consumed_path)
     expected_real = os.path.realpath(consumed_path)
     for name in names:
