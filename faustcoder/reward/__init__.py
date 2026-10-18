@@ -1,8 +1,9 @@
-"""Reward grading (spec §23, ADR-0006).
+"""Reward grading (spec §23, ADR-0006, D3 option H).
 
 ADR-0006 is in force here. ``grade_receipt`` is the only way to mint
 a ``RewardableSignalReceipt``. Ungraded samples are dropped from
-reward and A2 rows stay in the quarantine queue.
+reward and A2 rows stay in the quarantine queue. Persisted rows are
+MAC'd records and are re-checked on every load.
 """
 
 from faustcoder.reward.grader import (
@@ -25,6 +26,20 @@ from faustcoder.reward.grader import (
 )
 from faustcoder.reward.ledger import RewardLedger, ledger_for_store
 from faustcoder.reward.profiles import REWARD_PROFILES, reward_profiles
+from faustcoder.reward.records import (
+    ConsumedLog,
+    GroupHeader,
+    RewardKeyError,
+    RewardKeyring,
+    RewardRecordError,
+    RewardRecordStore,
+    RewardRowRecord,
+    grader_digest,
+    load_records,
+    load_root_key,
+    regrade_record,
+    rl_batch_from_records,
+)
 from faustcoder.reward.types import (
     UNGRADED_BASELINE_MULTIPLE,
     UNGRADED_RATE_LIMIT,
@@ -48,14 +63,21 @@ __all__ = [
     "UNGRADED_RATE_LIMIT",
     "UNGRADED_WINDOW",
     "AutoAttributionRefused",
+    "ConsumedLog",
     "FixtureOutcome",
+    "GroupHeader",
     "NativeStackMatch",
     "QuarantineQueue",
     "QuarantineRecord",
     "RerunOutcome",
+    "RewardKeyError",
+    "RewardKeyring",
     "RewardLedger",
     "RewardOutcomeHeld",
     "RewardProvenanceError",
+    "RewardRecordError",
+    "RewardRecordStore",
+    "RewardRowRecord",
     "RewardUseRefused",
     "RewardableSignalReceipt",
     "ShadowLog",
@@ -68,13 +90,18 @@ __all__ = [
     "dataset_reward_row",
     "grade_compiler_exclusion",
     "grade_receipt",
+    "grader_digest",
     "is_minted",
     "is_native_minted",
     "ledger_for_store",
+    "load_records",
+    "load_root_key",
     "mint_native_stack_match",
+    "regrade_record",
     "require_rewardable_provenance",
     "reward_profiles",
     "reward_value",
     "rl_batch",
+    "rl_batch_from_records",
     "shadow_observe",
 ]

@@ -605,12 +605,19 @@ def _reported_directory(line: str, flag: str) -> Path | None:
     stripped = line.strip()
     if not stripped.startswith("/"):
         return None
-    path = Path(stripped)
+    try:
+        path = Path(stripped)
+    except ValueError as exc:
+        raise SandboxError(
+            f"faust directory query failed: {flag} printed a path that cannot be checked"
+        ) from exc
     try:
         path.lstat()
     except FileNotFoundError:
         return path
-    except OSError as exc:
+    except (OSError, ValueError) as exc:
+        # ``ValueError`` is an embedded NUL. ``Path.lstat`` raises it
+        # before ``OSError``, and it must not escape the directory query.
         raise SandboxError(
             f"faust directory query failed: {flag} printed a path that cannot be checked"
         ) from exc

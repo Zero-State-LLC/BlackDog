@@ -45,8 +45,11 @@ not read harness text or a later render crash. A JS
 ungraded. ``shadow_observe`` may rerun and log. Its ``ShadowLog`` is
 not a grade and never reaches ``reward_value`` or a receipt.
 
-Receipt signing is deferred (D3). This module recomputes digests. It
-does not require a signature.
+A receipt that leaves this process is a MAC'd reward-row record
+(ADR-0006 D3, option H). This module still recomputes digests. A
+MAC is not accepted in place of that re-check. ``passed`` is true
+only when ``metrics.failures`` is empty. The seal binds the whole
+task. Ed25519 and the sampled re-execution audit are later changes.
 
 Reward-graded ``run_signal`` and ``commit_signal_check`` are the
 production path. They pass a persistent quarantine queue and the A7
@@ -276,6 +279,31 @@ def dataset_reward_row(
     return row
 
 
+def _row_identities(row: Mapping[str, object], graded: object) -> tuple[tuple[object, ...], ...]:
+    """Seal identity, plus any explicit row or group id.
+
+    The seal is the minted provenance object. A copied row reuses that
+    object, so it is a duplicate. Two ``grade_receipt`` calls are two
+    seals, so two grades of the same program both stay. Receipt content
+    is not an identity.
+    """
+    found: list[tuple[object, ...]] = [("seal", id(graded))]
+    if "example_id" in row:
+        example_id = row.get("example_id")
+        if type(example_id) is not str:
+            raise RewardProvenanceError("RL batch example_id must be a string")
+        if example_id:
+            found.append(("example", example_id))
+    record_id = row.get("record_id")
+    if type(record_id) is str and record_id:
+        found.append(("record", record_id))
+    group_id = row.get("group_id")
+    member = row.get("member_index")
+    if type(group_id) is str and group_id and type(member) is int and not isinstance(member, bool):
+        found.append(("member", group_id, member))
+    return tuple(found)
+
+
 def rl_batch(rows: list[Mapping[str, object]] | tuple[Mapping[str, object], ...]) -> tuple[dict[str, object], ...]:
     """Copy ``rows`` after every reward row proves its provenance.
 
@@ -286,6 +314,7 @@ def rl_batch(rows: list[Mapping[str, object]] | tuple[Mapping[str, object], ...]
     instead of masking it into the batch.
     """
     built: list[dict[str, object]] = []
+    seen: set[tuple[object, ...]] = set()
     for row in rows:
         if not isinstance(row, Mapping) or "reward" not in row:
             raise RewardProvenanceError("RL batch row is missing a reward")
@@ -306,6 +335,10 @@ def rl_batch(rows: list[Mapping[str, object]] | tuple[Mapping[str, object], ...]
                 raise RewardProvenanceError("reward must be 1.0 when the receipt passed")
         elif reward != 0.0:
             raise RewardProvenanceError("reward must be zero when the receipt failed")
+        for marker in _row_identities(row, graded):
+            if marker in seen:
+                raise RewardProvenanceError("RL batch row is a duplicate")
+            seen.add(marker)
         built.append(dict(row))
     return tuple(built)
 
@@ -317,12 +350,11 @@ def _finite_reward(reward: object) -> float:
     return reward
 
 
-def _task_binding_digest(task: Mapping[str, Any]) -> str:
+def task_binding_digest(task: Mapping[str, Any]) -> str:
     """Return the canonical digest of a task id and its effect.
 
-    The binding is those two fields. A different prompt with the same
-    id and effect is the same task for this check. A string subclass
-    is refused.
+    This is the compatibility binding. The seal also carries
+    ``task_digest_full``, the whole task. A string subclass is refused.
     """
     task_id = task.get("task_id")
     effect = task.get("effect")
@@ -333,21 +365,51 @@ def _task_binding_digest(task: Mapping[str, Any]) -> str:
     return content_digest_for({"effect": effect, "task_id": task_id})
 
 
-def _task_digest_for_mint(task: object) -> str | None:
-    """Digest ``task`` when grading binds one. ``None`` stays unbound."""
-    if task is None:
-        return None
+def _json_task(value: object) -> object:
+    """Copy ``value`` into JSON types. A tuple is a list."""
+    if isinstance(value, tuple):
+        return [_json_task(item) for item in value]
+    if isinstance(value, list):
+        return [_json_task(item) for item in value]
+    if isinstance(value, Mapping):
+        return {str(key): _json_task(item) for key, item in value.items()}
+    return value
+
+
+def task_digest_full(task: Mapping[str, Any]) -> str:
+    """Return the canonical digest of the whole task.
+
+    A different prompt, id or effect is a different digest. A tuple in
+    the task is hashed as a JSON list. The caller passes the task at
+    grade time. The persisted row's MAC is what stops that envelope
+    from being sealed for a second task later.
+    """
     if not isinstance(task, Mapping):
         raise RewardProvenanceError("task binding requires a task")
-    return _task_binding_digest(task)
+    frozen = _json_task(task)
+    if not isinstance(frozen, dict):
+        raise RewardProvenanceError("task binding requires a task")
+    return content_digest_for(frozen)
+
+
+def _task_digests_for_mint(task: object) -> tuple[str | None, str | None]:
+    """Digest ``task`` when grading binds one. ``None`` stays unbound."""
+    if task is None:
+        return None, None
+    if not isinstance(task, Mapping):
+        raise RewardProvenanceError("task binding requires a task")
+    return task_binding_digest(task), task_digest_full(task)
 
 
 def _require_receipt_task(receipt: RewardableSignalReceipt, task: object) -> None:
     """Fail closed unless ``task`` is the task ``receipt`` was minted for."""
     if not isinstance(task, Mapping):
         raise RewardProvenanceError("reward row task does not match the receipt")
-    digest = _task_binding_digest(task)
+    digest = task_binding_digest(task)
     if type(receipt.task_digest) is not str or digest != receipt.task_digest:
+        raise RewardProvenanceError("reward row task does not match the receipt")
+    full = task_digest_full(task)
+    if type(receipt.task_digest_full) is not str or full != receipt.task_digest_full:
         raise RewardProvenanceError("reward row task does not match the receipt")
 
 
@@ -364,6 +426,8 @@ def grade_receipt(
     task: object = None,
     native: Mapping[str, Any] | None = None,
     native_diagnostics: str | None = None,
+    row_record_id: str = "",
+    group_id: str = "",
 ) -> Grade:
     """Grade one stored envelope.
 
@@ -388,7 +452,14 @@ def grade_receipt(
         native=native,
         native_diagnostics=native_diagnostics,
     )
-    _account(result, policy=policy, queue=queue, rates=rates)
+    _account(
+        result,
+        policy=policy,
+        queue=queue,
+        rates=rates,
+        row_record_id=row_record_id,
+        group_id=group_id,
+    )
     return result
 
 
@@ -457,6 +528,8 @@ def _bind_grade_receipt(grade: Callable[..., Grade]) -> tuple[
         task: object = None,
         native: Mapping[str, Any] | None = None,
         native_diagnostics: str | None = None,
+        row_record_id: str = "",
+        group_id: str = "",
     ) -> Grade:
         result = grade(
             envelope,
@@ -470,6 +543,8 @@ def _bind_grade_receipt(grade: Callable[..., Grade]) -> tuple[
             task=task,
             native=native,
             native_diagnostics=native_diagnostics,
+            row_record_id=row_record_id,
+            group_id=group_id,
         )
         if isinstance(result, RewardableSignalReceipt):
             registry.remember(result, (id(result), token, result._snapshot()))
@@ -733,15 +808,29 @@ def _grade_signal(
             "profile digest is not in REWARD_PROFILES",
         )
     passed = payload.get("passed")
-    if not isinstance(passed, bool):
+    if type(passed) is not bool:
         return Ungraded(UngradedReason.SCHEMA_INVALID, "passed is not a boolean")
+    failures = metrics.get("failures")
+    if not isinstance(failures, list) or any(type(item) is not str for item in failures):
+        return Ungraded(
+            UngradedReason.DIGEST_MISMATCH,
+            "passed does not match failures",
+        )
+    # ``passed`` is the graded bit. It is true only when nothing failed.
+    if passed is not (failures == []):
+        return Ungraded(
+            UngradedReason.DIGEST_MISMATCH,
+            "passed does not match failures",
+        )
+    binding, full = _task_digests_for_mint(task)
     return _mint_receipt(
         passed=passed,
         profile_name=name,
         test_suite_digest=recomputed_suite,
         reproducible_digest=reproducible,
         schema_version=str(version),
-        task_digest=_task_digest_for_mint(task),
+        task_digest=binding,
+        task_digest_full=full,
         unrewardable=_task_marks_unrewardable(task),
     )
 
@@ -754,6 +843,7 @@ def _mint_receipt(
     reproducible_digest: str,
     schema_version: str,
     task_digest: str | None,
+    task_digest_full: str | None,
     unrewardable: bool,
 ) -> RewardableSignalReceipt:
     """Register one receipt. The class ``_mint`` method always refuses."""
@@ -764,6 +854,7 @@ def _mint_receipt(
     object.__setattr__(receipt, "reproducible_digest", reproducible_digest)
     object.__setattr__(receipt, "schema_version", schema_version)
     object.__setattr__(receipt, "task_digest", task_digest)
+    object.__setattr__(receipt, "task_digest_full", task_digest_full)
     object.__setattr__(receipt, "unrewardable", unrewardable)
     return receipt
 
@@ -1127,6 +1218,8 @@ def _account(
     policy: str,
     queue: QuarantineQueue | None,
     rates: UngradedRateTracker | None,
+    row_record_id: str = "",
+    group_id: str = "",
 ) -> None:
     quarantined = isinstance(result, Ungraded) and result.reason in QUARANTINE_REASONS
     counted = isinstance(result, Ungraded) and result.reason in _RATE_REASONS
@@ -1141,5 +1234,7 @@ def _account(
             reason=result.reason,
             reproducible_digest=result.reproducible_digest,
             detail=result.detail,
+            row_record_id=row_record_id,
+            group_id=group_id,
         )
     )

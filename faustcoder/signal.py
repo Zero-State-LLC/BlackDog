@@ -1548,6 +1548,17 @@ def _measure_stimulus(
     return summary, failures, peak_error
 
 
+def harness_digest() -> str:
+    """Return the digest of the toolchain pins a receipt would store.
+
+    This is the object ``_harness_preimage`` names: Faust, faustlibraries,
+    faustwasm, Node, the libfaust-wasm bytes, the render worker, the
+    netns canary and the ``unshare`` binary. A reward record compares a
+    stored ``harness_digest`` with this value. A mismatch is a stale pin.
+    """
+    return content_digest_for(_harness_preimage())
+
+
 def _harness_preimage() -> dict[str, Any]:
     """Return the object hashed into ``harness_digest``.
 

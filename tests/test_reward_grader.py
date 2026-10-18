@@ -266,12 +266,19 @@ def test_reward_value_refuses_an_unrewardable_task() -> None:
     closed["test_profile"] = profile
     try:
         reward_value(passed, closed)
+    except RewardProvenanceError as exc:
+        assert "does not match" in str(exc)
+    else:
+        raise AssertionError("reward_value scored a task the receipt was not minted for")
+    closed_receipt = grade_receipt(allowlisted_reward_envelope(passed=True), task=closed)
+    try:
+        reward_value(closed_receipt, closed)
     except SignalHarnessError as exc:
         assert "unrewardable" in str(exc)
     else:
         raise AssertionError("reward_value scored rewardable false")
     try:
-        dataset_reward_row(passed, task=closed)
+        dataset_reward_row(closed_receipt, task=closed)
     except SignalHarnessError as exc:
         assert "unrewardable" in str(exc)
     else:
@@ -297,6 +304,7 @@ def test_lookalike_and_rebound_receipts_score_nothing() -> None:
         "reproducible_digest",
         "schema_version",
         "task_digest",
+        "task_digest_full",
         "unrewardable",
     ):
         object.__setattr__(lookalike, name, getattr(failed, name))
@@ -381,7 +389,12 @@ def test_linear_row_refuses_a_receipt_minted_for_another_task() -> None:
         raise AssertionError("rl_batch accepted a swapped linear task")
     same = dict(minted_for)
     same["prompt"] = "a different prompt with the same id and effect"
-    assert dataset_reward_row(graded, task=same, example_id="e3")["reward"] == 1.0
+    try:
+        dataset_reward_row(graded, task=same, example_id="e3")
+    except RewardProvenanceError as exc:
+        assert "does not match" in str(exc)
+    else:
+        raise AssertionError("a prompt change was accepted")
     shifted = dict(minted_for)
     shifted["effect"] = "time_invariant"
     try:
@@ -390,6 +403,79 @@ def test_linear_row_refuses_a_receipt_minted_for_another_task() -> None:
         assert "does not match" in str(exc)
     else:
         raise AssertionError("a rewardable effect change was accepted")
+
+
+def test_rl_batch_refuses_a_duplicate_row() -> None:
+    task = _linear_task()
+    graded = grade_receipt(allowlisted_reward_envelope(passed=True), task=task)
+    row = dataset_reward_row(graded, task=task, example_id="e1")
+    copied = dict(row)
+    try:
+        rl_batch([row, copied])
+    except RewardProvenanceError as exc:
+        assert "duplicate" in str(exc)
+    else:
+        raise AssertionError("rl_batch accepted a duplicate row")
+    other = _linear_task()
+    other["task_id"] = "task-other-linear"
+    second = grade_receipt(allowlisted_reward_envelope(passed=False), task=other)
+    other_row = dataset_reward_row(second, task=other, example_id="e2")
+    assert len(rl_batch([row, other_row])) == 2
+
+
+def test_rl_batch_refuses_an_identity_less_duplicate() -> None:
+    task = _linear_task()
+    graded = grade_receipt(allowlisted_reward_envelope(passed=True), task=task)
+    row = dataset_reward_row(graded, task=task)
+    try:
+        rl_batch([row, dict(row)])
+    except RewardProvenanceError as exc:
+        assert "duplicate" in str(exc)
+    else:
+        raise AssertionError("rl_batch accepted an identity-less duplicate")
+
+
+def test_rl_batch_refuses_one_receipt_under_two_example_ids() -> None:
+    task = _linear_task()
+    graded = grade_receipt(allowlisted_reward_envelope(passed=True), task=task)
+    first = dataset_reward_row(graded, task=task, example_id="e1")
+    second = dataset_reward_row(graded, task=task, example_id="e2")
+    try:
+        rl_batch([first, second])
+    except RewardProvenanceError as exc:
+        assert "duplicate" in str(exc)
+    else:
+        raise AssertionError("rl_batch accepted one receipt under two example ids")
+
+
+def test_rl_batch_refuses_a_non_string_example_id() -> None:
+    task = _linear_task()
+    graded = grade_receipt(allowlisted_reward_envelope(passed=True), task=task)
+    row = dataset_reward_row(graded, task=task, example_id=7)
+    try:
+        rl_batch([row])
+    except RewardProvenanceError as exc:
+        assert "example_id" in str(exc)
+    else:
+        raise AssertionError("rl_batch accepted a non-string example_id")
+
+
+def test_rl_batch_keeps_two_grades_of_the_same_program() -> None:
+    task = _linear_task()
+    envelope = allowlisted_reward_envelope(passed=True)
+    first = dataset_reward_row(grade_receipt(envelope, task=task), task=task, example_id="e1")
+    second = dataset_reward_row(grade_receipt(envelope, task=task), task=task, example_id="e2")
+    assert len(rl_batch([first, second])) == 2
+
+
+def test_rl_batch_keeps_two_grades_of_the_same_program_without_ids() -> None:
+    task = _linear_task()
+    envelope = allowlisted_reward_envelope(passed=True)
+    first = dataset_reward_row(grade_receipt(envelope, task=task), task=task)
+    second = dataset_reward_row(grade_receipt(envelope, task=task), task=task)
+    assert "example_id" not in first
+    assert "example_id" not in second
+    assert len(rl_batch([first, second])) == 2
 
 
 def test_unattributed_exits_stay_queued_until_triage() -> None:
@@ -1119,6 +1205,7 @@ def test_lookalike_receipt_is_not_minted() -> None:
         "reproducible_digest",
         "schema_version",
         "task_digest",
+        "task_digest_full",
         "unrewardable",
     ):
         object.__setattr__(lookalike, name, getattr(graded, name))
