@@ -20,19 +20,20 @@ magnitude are ``comparison_not_full`` and are not rewarded.
 
 ADR-0006 A2, with the 2026-10-17 4:28 PM PT ruling: an unattributed
 exit 124, 125 or 126, or a worker or harness crash, is
-``Ungraded(unattributed)`` until it is attributed. Exit 126 is
-``internal``. Auto-attribution reruns the same reproducible digest
-on a quiet worker and runs a known-good fixture alongside. If the
-fixture passes and the candidate fails again, the failure is graded
-at the A1 ``parse_error`` rung. A remote import, a source over the
-size limit, a JS ``runtime_stack_overflow`` flag, a ``wasm_trap``
-kind, or a line-start Faust ``ERROR : stack overflow`` in the
-compile diagnostics of that same stage is already source
-attribution and does not wait. Marker matching is case-sensitive
-and does not read harness text or a later render crash. An
-untagged exit 126 stays unattributed when the known-good fixture
-fails or the failure does not reproduce. The rerun and the fixture
-are caller hooks: this module does not spawn a worker.
+``Ungraded(unattributed)`` until triage attributes it. It is never
+scored before then. Exit 126 is ``internal``. The rerun-plus-fixture
+path is not sanctioned and must not be supplied. ``grade_receipt``
+raises ``AutoAttributionRefused`` when ``rerun`` or ``known_good``
+is passed, and it does not call either hook.
+
+A remote import, a source over 1 MiB, and a line-start Faust
+``ERROR`` on the compile stage that failed are source-class rules
+and do not wait. Marker matching is case-sensitive and does not
+read harness text or a later render crash. A JS
+``runtime_stack_overflow`` flag and a ``wasm_trap`` kind are
+harness-limit signatures. They stay ungraded and quarantined until
+triage. No native Faust 2.88.0 cross-check is wired here, so those
+flags are not a source score.
 
 Receipt signing is deferred (D3). This module recomputes digests. It
 does not require a signature.
@@ -53,7 +54,7 @@ from typing import Any
 from weakref import WeakKeyDictionary
 
 from faustcoder.canonical import content_digest_for
-from faustcoder.compiler import WASM_TRAP_KINDS, reproducible_receipt_digest
+from faustcoder.compiler import reproducible_receipt_digest
 from faustcoder.errors import SchemaValidationError
 from faustcoder.reward.profiles import reward_profiles
 from faustcoder.reward.types import (
@@ -145,17 +146,28 @@ class RewardOutcomeHeld(Exception):
         super().__init__("reward outcome is held and is not a score")
 
 
-def reward_value(result: Grade) -> float | None:
+class AutoAttributionRefused(Exception):
+    """``rerun`` or ``known_good`` was supplied to grading.
+
+    That path is not sanctioned. The row is not scored and the hooks
+    are not called.
+    """
+
+
+def reward_value(result: Grade, task: object = None) -> float | None:
     """Return 1, 0, or ``None`` when the sample is dropped.
 
     ``Ungraded`` is ``None``. It is not scored 0. A graded signal
-    failure and an A1 source failure are 0.
+    failure and an A1 source failure are 0. A
+    ``RewardableSignalReceipt`` is training-facing: ``task`` is
+    required and must be the task the receipt was minted for.
     """
     if isinstance(result, Ungraded):
         return None
     if isinstance(result, SourceAttributedFailure):
         return 0.0
     if isinstance(result, RewardableSignalReceipt):
+        _require_receipt_task(result, task)
         return 1.0 if result.passed else 0.0
     raise TypeError("reward_value requires a grade result")
 
@@ -202,6 +214,7 @@ def dataset_reward_row(
     from faustcoder.signal_suite import require_task_rewardable
 
     require_task_rewardable(task if isinstance(task, Mapping) else {})
+    _require_receipt_task(graded, task)
     if "reward" in fields or "provenance" in fields or "task" in fields:
         raise RewardProvenanceError("reward and provenance are derived from the receipt")
     row = dict(fields)
@@ -212,7 +225,14 @@ def dataset_reward_row(
 
 
 def rl_batch(rows: list[Mapping[str, object]] | tuple[Mapping[str, object], ...]) -> tuple[dict[str, object], ...]:
-    """Copy ``rows`` after every reward row proves its provenance."""
+    """Copy ``rows`` after every reward row proves its provenance.
+
+    Jev Q1: the reward is binary, 1.0 on a full pass and 0.0 on every
+    graded failure. A group with any quarantined member is dropped
+    whole and is never re-entered. A quarantined row is not a
+    ``RewardableSignalReceipt``, so the provenance check refuses it
+    instead of masking it into the batch.
+    """
     built: list[dict[str, object]] = []
     for row in rows:
         if not isinstance(row, Mapping) or "reward" not in row:
@@ -222,9 +242,13 @@ def rl_batch(rows: list[Mapping[str, object]] | tuple[Mapping[str, object], ...]
 
         task = row.get("task")
         require_task_rewardable(task if isinstance(task, Mapping) else {})
+        _require_receipt_task(graded, task)
         reward = _finite_reward(row.get("reward"))
-        # Pending Danny's binary-versus-lowest-rung ruling. Until that
-        # lands, a passed receipt is exactly 1.0 and a failed receipt is exactly 0.0.
+        # Jev Q1 (2026-10-17): binary reward. A full pass is 1.0 and
+        # every graded failure is 0.0. A group with any quarantined
+        # member is dropped whole and never re-entered. The provenance
+        # check above already refuses that member, so it is not masked
+        # into the rows returned here.
         if graded.passed:
             if reward != 1.0:
                 raise RewardProvenanceError("reward must be 1.0 when the receipt passed")
@@ -241,6 +265,40 @@ def _finite_reward(reward: object) -> float:
     return reward
 
 
+def _task_binding_digest(task: Mapping[str, Any]) -> str:
+    """Return the canonical digest of a task id and its effect.
+
+    The binding is those two fields. A different prompt with the same
+    id and effect is the same task for this check. A string subclass
+    is refused.
+    """
+    task_id = task.get("task_id")
+    effect = task.get("effect")
+    if type(task_id) is not str or task_id == "":
+        raise RewardProvenanceError("task binding requires a task_id")
+    if type(effect) is not str or effect == "":
+        raise RewardProvenanceError("task binding requires an effect")
+    return content_digest_for({"effect": effect, "task_id": task_id})
+
+
+def _task_digest_for_mint(task: object) -> str | None:
+    """Digest ``task`` when grading binds one. ``None`` stays unbound."""
+    if task is None:
+        return None
+    if not isinstance(task, Mapping):
+        raise RewardProvenanceError("task binding requires a task")
+    return _task_binding_digest(task)
+
+
+def _require_receipt_task(receipt: RewardableSignalReceipt, task: object) -> None:
+    """Fail closed unless ``task`` is the task ``receipt`` was minted for."""
+    if not isinstance(task, Mapping):
+        raise RewardProvenanceError("reward row task does not match the receipt")
+    digest = _task_binding_digest(task)
+    if type(receipt.task_digest) is not str or digest != receipt.task_digest:
+        raise RewardProvenanceError("reward row task does not match the receipt")
+
+
 def grade_receipt(
     envelope: Mapping[str, Any],
     *,
@@ -251,23 +309,26 @@ def grade_receipt(
     policy: str = "default",
     queue: QuarantineQueue | None = None,
     rates: UngradedRateTracker | None = None,
+    task: object = None,
 ) -> Grade:
     """Grade one stored envelope.
 
     A DSP receipt becomes ``RewardableSignalReceipt`` or ``Ungraded``.
-    A compiler receipt at exit 124, 125 or 126, or a worker or harness
-    crash, is auto-attributed when ``rerun`` and ``known_good`` are
-    supplied. ``rerun`` must use the same reproducible digest on a
-    quiet worker. ``known_good`` is the fixture that runs alongside.
-    Without those hooks the row stays ``unattributed`` and, when
-    ``queue`` is set, pending.
+    When ``task`` is set, a minted receipt carries the digest of that
+    task's id and effect. An unattributed exit 124, 125 or 126, or a
+    worker or harness crash, stays ``unattributed`` and, when
+    ``queue`` is set, pending, until ``triage`` attributes it.
+    ``rerun`` and ``known_good`` are not a grading path.
     """
+    if rerun is not None or known_good is not None:
+        raise AutoAttributionRefused(
+            "rerun and known_good are not sanctioned and must not be supplied to grading"
+        )
     result = _grade(
         envelope,
         diagnostics=diagnostics,
-        rerun=rerun,
-        known_good=known_good,
         triage=triage,
+        task=task,
     )
     _account(result, policy=policy, queue=queue, rates=rates)
     return result
@@ -280,7 +341,7 @@ def _bind_grade_receipt(grade: Callable[..., Grade]) -> tuple[
     """Seal receipts inside ``grade`` so the registry is not a module global.
 
     The seal closes over a nonce and the object's identity. A lookalike
-    built with the same five fields is a different object and is rejected.
+    built with the same fields is a different object and is rejected.
     """
     registry: WeakKeyDictionary[RewardableSignalReceipt, tuple[object, ...]] = (
         WeakKeyDictionary()
@@ -306,6 +367,7 @@ def _bind_grade_receipt(grade: Callable[..., Grade]) -> tuple[
         policy: str = "default",
         queue: QuarantineQueue | None = None,
         rates: UngradedRateTracker | None = None,
+        task: object = None,
     ) -> Grade:
         result = grade(
             envelope,
@@ -316,6 +378,7 @@ def _bind_grade_receipt(grade: Callable[..., Grade]) -> tuple[
             policy=policy,
             queue=queue,
             rates=rates,
+            task=task,
         )
         if isinstance(result, RewardableSignalReceipt):
             registry[result] = (id(result), token, result._snapshot())
@@ -328,9 +391,8 @@ def _grade(
     envelope: Mapping[str, Any],
     *,
     diagnostics: str | None,
-    rerun: Rerun | None,
-    known_good: KnownGood | None,
     triage: str | None,
+    task: object,
 ) -> Grade:
     if not isinstance(envelope, Mapping):
         return Ungraded(UngradedReason.SCHEMA_INVALID, "envelope is not an object")
@@ -348,8 +410,6 @@ def _grade(
             envelope,
             payload,
             diagnostics=diagnostics,
-            rerun=rerun,
-            known_good=known_good,
             triage=triage,
         )
     if "exit_code" in payload and "passed" not in payload:
@@ -357,14 +417,14 @@ def _grade(
             envelope,
             payload,
             diagnostics=diagnostics,
-            rerun=rerun,
-            known_good=known_good,
             triage=triage,
         )
-    return _grade_signal(envelope, payload)
+    return _grade_signal(envelope, payload, task=task)
 
 
-def _grade_signal(envelope: Mapping[str, Any], payload: dict[str, Any]) -> Grade:
+def _grade_signal(
+    envelope: Mapping[str, Any], payload: dict[str, Any], *, task: object
+) -> Grade:
     version = envelope.get("schema_version")
     if version not in ACCEPTED_SIGNAL_SCHEMA_VERSIONS:
         return Ungraded(
@@ -433,6 +493,7 @@ def _grade_signal(envelope: Mapping[str, Any], payload: dict[str, Any]) -> Grade
         test_suite_digest=recomputed_suite,
         reproducible_digest=reproducible,
         schema_version=str(version),
+        task_digest=_task_digest_for_mint(task),
     )
 
 
@@ -443,6 +504,7 @@ def _mint_receipt(
     test_suite_digest: str,
     reproducible_digest: str,
     schema_version: str,
+    task_digest: str | None,
 ) -> RewardableSignalReceipt:
     """Register one receipt. The class ``_mint`` method always refuses."""
     receipt = object.__new__(RewardableSignalReceipt)
@@ -451,6 +513,7 @@ def _mint_receipt(
     object.__setattr__(receipt, "test_suite_digest", test_suite_digest)
     object.__setattr__(receipt, "reproducible_digest", reproducible_digest)
     object.__setattr__(receipt, "schema_version", schema_version)
+    object.__setattr__(receipt, "task_digest", task_digest)
     return receipt
 
 
@@ -509,8 +572,6 @@ def _grade_compiler(
     payload: dict[str, Any],
     *,
     diagnostics: str | None,
-    rerun: Rerun | None,
-    known_good: KnownGood | None,
     triage: str | None,
 ) -> Grade:
     version = envelope.get("schema_version")
@@ -553,9 +614,9 @@ def _grade_compiler(
     exit_code = payload.get("exit_code")
     diagnostic_class = payload.get("diagnostic_class")
     # A compiler receipt killed at 137, 139, or -9 is a crash. It is
-    # queued, not schema_invalid.
+    # queued, not schema_invalid, and not scored.
     if exit_code in _SIGNAL_KILL_EXITS:
-        return _auto_attribute(digest, rerun=rerun, known_good=known_good)
+        return _unattributed(digest)
     if exit_code not in _EXIT_CLASS:
         if diagnostic_class == "parse_error" or exit_code == 1:
             return SourceAttributedFailure(detail="compiler rejection")
@@ -568,17 +629,8 @@ def _grade_compiler(
             UngradedReason.SCHEMA_INVALID,
             "exit_code does not match diagnostic_class",
         )
-    # An untagged 126 is a worker failure. The fixture failing, or the
-    # candidate not failing the same way again, stays unattributed.
-    # Exit 124 and 125 keep the infra_fault fixture result.
-    if exit_code == 126:
-        return _auto_attribute(
-            digest,
-            rerun=rerun,
-            known_good=known_good,
-            fixture_failure="unattributed",
-        )
-    return _auto_attribute(digest, rerun=rerun, known_good=known_good)
+    # Exit 124, 125 and an untagged 126 stay ungraded until triage.
+    return _unattributed(digest)
 
 
 def _grade_crash(
@@ -586,8 +638,6 @@ def _grade_crash(
     payload: dict[str, Any],
     *,
     diagnostics: str | None,
-    rerun: Rerun | None,
-    known_good: KnownGood | None,
     triage: str | None,
 ) -> Grade:
     version = envelope.get("schema_version")
@@ -630,71 +680,18 @@ def _grade_crash(
     if triage not in (None,):
         return Ungraded(UngradedReason.SCHEMA_INVALID, "triage is not source, harness or infra")
     # Render exception text is not a marker source. A stack overflow or
-    # wasm trap on this stage is the structured field, not a compile
-    # warning from an earlier stage and not harness prose.
+    # wasm trap on this stage stays unattributed: those structured
+    # fields are harness-limit signatures, not a compile warning and
+    # not harness prose.
     del diagnostics
-    tagged = _structured_source(payload)
-    if tagged is not None:
-        return SourceAttributedFailure(detail=tagged)
-    return _auto_attribute(
-        digest,
-        rerun=rerun,
-        known_good=known_good,
-        fixture_failure="unattributed",
-    )
+    return _unattributed(digest)
 
 
-def _auto_attribute(
-    digest: str,
-    *,
-    rerun: Rerun | None,
-    known_good: KnownGood | None,
-    fixture_failure: str = "infra",
-) -> Grade:
-    """Rerun on a quiet worker. Source only if the fixture stays healthy."""
-    if rerun is None or known_good is None:
-        return Ungraded(
-            UngradedReason.UNATTRIBUTED,
-            "quarantined until triage",
-            digest,
-        )
-    outcome = rerun({"reproducible_digest": digest})
-    fixture = known_good()
-    if not isinstance(outcome, RerunOutcome) or not isinstance(fixture, FixtureOutcome):
-        return Ungraded(UngradedReason.SCHEMA_INVALID, "rerun or fixture returned an unexpected type")
-    if outcome.reproducible_digest != digest:
-        return Ungraded(
-            UngradedReason.UNATTRIBUTED,
-            "rerun digest does not match the original receipt",
-            digest,
-        )
-    rerun_env = _present_digest(outcome.environment_digest)
-    fixture_env = _present_digest(fixture.environment_digest)
-    if rerun_env is None or fixture_env is None or rerun_env != fixture_env:
-        return Ungraded(
-            UngradedReason.UNATTRIBUTED,
-            "rerun and known-good fixture do not share an environment digest",
-            digest,
-        )
-    if fixture.passed and outcome.failed:
-        return SourceAttributedFailure(
-            detail="auto-attributed: known-good fixture passed and the candidate failed again"
-        )
-    if not fixture.passed:
-        if fixture_failure == "unattributed":
-            return Ungraded(
-                UngradedReason.UNATTRIBUTED,
-                "known-good fixture failed; quarantined until triage",
-                digest,
-            )
-        return Ungraded(
-            UngradedReason.INFRA_FAULT,
-            "known-good fixture failed under the same harness",
-            digest,
-        )
+def _unattributed(digest: str) -> Ungraded:
+    """Hold a row until triage. This is not a score."""
     return Ungraded(
         UngradedReason.UNATTRIBUTED,
-        "candidate did not fail again; quarantined until triage",
+        "quarantined until triage",
         digest,
     )
 
@@ -708,20 +705,18 @@ def _source_tag(
     """Return a source tag, ``mismatch``, or ``None``.
 
     Remote import and ``resource limit: source size`` are exact harness
-    diagnostics and are already the source. A JS stack overflow or a
-    wasm trap is a structured field. Faust's own ``ERROR : stack
-    overflow`` is a line-start, case-sensitive match on the compile
-    diagnostics of this stage only. Harness prose is not scanned.
-    Render exceptions are not scanned here.
+    diagnostics and are already the source. Faust's own ``ERROR`` is a
+    line-start, case-sensitive match on the compile diagnostics of
+    this stage only. Harness prose is not scanned. Render exceptions
+    are not scanned here. ``runtime_stack_overflow`` and ``wasm_trap``
+    are not source tags: a worker limit can produce both, and nothing
+    here has a matching native Faust 2.88.0 failure.
     """
     stderr = payload.get("stderr_digest")
     if stderr == _sha256_text(_REMOTE_DIAGNOSTIC):
         return "remote import"
     if stderr == _sha256_text(_SOURCE_SIZE_DIAGNOSTIC):
         return "source size"
-    structured = _structured_source(payload)
-    if structured is not None:
-        return structured
     if stage != "compile" or diagnostics is None:
         return None
     if _sha256_text(diagnostics) != stderr:
@@ -730,16 +725,6 @@ def _source_tag(
         return None
     if _compile_stack_line(diagnostics):
         return "stack overflow"
-    return None
-
-
-def _structured_source(payload: Mapping[str, Any]) -> str | None:
-    """Source tag from the worker's structured fields, or None."""
-    if payload.get("runtime_stack_overflow") is True:
-        return "stack overflow"
-    trap = payload.get("wasm_trap")
-    if isinstance(trap, str) and trap in WASM_TRAP_KINDS:
-        return "wasm trap"
     return None
 
 
@@ -753,13 +738,6 @@ def _compile_stack_line(text: str) -> bool:
         if any(line.startswith(prefix) for prefix in _COMPILE_STACK_LINES):
             return True
     return False
-
-
-def _present_digest(value: object) -> str | None:
-    """Return a non-empty digest, or None when it is missing or blank."""
-    if isinstance(value, str) and value.strip():
-        return value
-    return None
 
 
 def _is_crash(payload: Mapping[str, Any]) -> bool:

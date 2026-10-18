@@ -62,6 +62,15 @@ jobs:
       - name: Check the compiler network namespace
         run: unshare --net --map-current-user -- true
       # Faust 2.88.0 compiler only (no LLVM). The planted-prefix import test needs it.
+      # GitHub-hosted Ubuntu leaves /usr/local/bin mode 0777. The installer
+      # refuses to create <prefix>/bin/architecture under a world-writable
+      # parent that is not root-owned and sticky. Tighten the directory
+      # before the script runs. The script still refuses if this is skipped.
+      - name: Tighten the Faust prefix bin directory
+        run: |
+          if [ -d /usr/local/bin ]; then
+            sudo chmod 755 /usr/local/bin
+          fi
       - name: Install Faust 2.88.0
         run: ./scripts/install-faust-2.88.0.sh
       - name: Test

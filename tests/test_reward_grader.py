@@ -17,6 +17,7 @@ from faustcoder.reward import (
     QuarantineQueue,
     QuarantineRecord,
     RerunOutcome,
+    AutoAttributionRefused,
     RewardProvenanceError,
     RewardableSignalReceipt,
     SourceAttributedFailure,
@@ -74,16 +75,24 @@ def test_reward_profiles_are_the_frozen_allowlist() -> None:
 
 
 def test_valid_reward_receipt_is_accepted_and_apply_signal_rejects_a_bool() -> None:
-    graded = grade_receipt(allowlisted_reward_envelope(passed=True))
+    task = _linear_task()
+    graded = grade_receipt(allowlisted_reward_envelope(passed=True), task=task)
     assert isinstance(graded, RewardableSignalReceipt)
     assert graded.passed is True
     assert graded.profile_name == "impulse-48000-v1"
-    assert reward_value(graded) == 1.0
+    assert graded.task_digest
+    assert reward_value(graded, task) == 1.0
     assert apply_signal(CandidateState.COMPILE_CHECKED, graded) is CandidateState.SIGNAL_CHECKED
-    failed = grade_receipt(allowlisted_reward_envelope(passed=False))
+    failed = grade_receipt(allowlisted_reward_envelope(passed=False), task=task)
     assert isinstance(failed, RewardableSignalReceipt)
-    assert reward_value(failed) == 0.0
+    assert reward_value(failed, task) == 0.0
     assert apply_signal(CandidateState.COMPILE_CHECKED, failed) is CandidateState.REJECTED
+    try:
+        reward_value(graded)
+    except RewardProvenanceError as exc:
+        assert "does not match" in str(exc)
+    else:
+        raise AssertionError("reward_value scored a receipt without its task")
     try:
         RewardableSignalReceipt()
     except TypeError as exc:
@@ -174,8 +183,9 @@ def test_diagnostic_and_reward_schemas_reject_each_other() -> None:
 
 
 def test_dataset_and_rl_builders_require_rewardable_provenance() -> None:
-    graded = grade_receipt(allowlisted_reward_envelope(passed=True))
-    row = dataset_reward_row(graded, task=_linear_task(), example_id="e1")
+    task = _linear_task()
+    graded = grade_receipt(allowlisted_reward_envelope(passed=True), task=task)
+    row = dataset_reward_row(graded, task=task, example_id="e1")
     assert row["reward"] == 1.0
     assert rl_batch([row])[0]["provenance"] is graded
     non_rg = grade_receipt(
@@ -215,7 +225,56 @@ def test_dataset_and_rl_builders_require_rewardable_provenance() -> None:
         raise AssertionError("nonlinear task was accepted by rl_batch")
 
 
-def test_unattributed_exits_stay_queued_until_auto_attribution() -> None:
+def test_linear_row_refuses_a_receipt_minted_for_another_task() -> None:
+    minted_for = _linear_task()
+    minted_for["task_id"] = "task-other-linear"
+    assert minted_for["effect"] == "linear"
+    graded = grade_receipt(allowlisted_reward_envelope(passed=True), task=minted_for)
+    row_task = _linear_task()
+    assert row_task["effect"] == "linear"
+    assert row_task["task_id"] != minted_for["task_id"]
+    try:
+        dataset_reward_row(graded, task=row_task, example_id="e1")
+    except RewardProvenanceError as exc:
+        assert "does not match" in str(exc)
+    else:
+        raise AssertionError("a receipt minted for another task was accepted")
+    try:
+        reward_value(graded, row_task)
+    except RewardProvenanceError as exc:
+        assert "does not match" in str(exc)
+    else:
+        raise AssertionError("reward_value scored a receipt against another task")
+    unbound = grade_receipt(allowlisted_reward_envelope(passed=True))
+    try:
+        dataset_reward_row(unbound, task=row_task, example_id="e2")
+    except RewardProvenanceError as exc:
+        assert "does not match" in str(exc)
+    else:
+        raise AssertionError("an unbound receipt was accepted")
+    built = dataset_reward_row(graded, task=minted_for, example_id="e1")
+    assert built["reward"] == 1.0
+    built["task"] = row_task
+    try:
+        rl_batch([built])
+    except RewardProvenanceError as exc:
+        assert "does not match" in str(exc)
+    else:
+        raise AssertionError("rl_batch accepted a swapped linear task")
+    same = dict(minted_for)
+    same["prompt"] = "a different prompt with the same id and effect"
+    assert dataset_reward_row(graded, task=same, example_id="e3")["reward"] == 1.0
+    shifted = dict(minted_for)
+    shifted["effect"] = "time_invariant"
+    try:
+        dataset_reward_row(graded, task=shifted, example_id="e4")
+    except RewardProvenanceError as exc:
+        assert "does not match" in str(exc)
+    else:
+        raise AssertionError("a rewardable effect change was accepted")
+
+
+def test_unattributed_exits_stay_queued_until_triage() -> None:
     cases = (
         (124, "timeout", "timeout: wall clock limit exceeded\n"),
         (125, "resource_limit", "resource limit: memory\n"),
@@ -241,67 +300,89 @@ def test_unattributed_exits_stay_queued_until_auto_attribution() -> None:
             assert diagnostic_class == "internal"
 
 
-def test_timeout_and_allocate_forever_become_parse_error_after_auto_attribution() -> None:
+def test_rerun_and_fixture_are_refused_and_do_not_score() -> None:
     cases = (
-        (124, "timeout", "timeout: wall clock limit exceeded\n", "timeout-forever"),
-        (125, "resource_limit", "resource limit: memory\n", "allocate-forever"),
+        (124, "timeout", "timeout: wall clock limit exceeded\n"),
+        (125, "resource_limit", "resource limit: memory\n"),
+        (126, "internal", "internal: worker failed\n"),
     )
-    for exit_code, diagnostic_class, diagnostics, policy in cases:
+    for exit_code, diagnostic_class, diagnostics in cases:
         envelope = compiler_failure_envelope(
             exit_code=exit_code,
             diagnostic_class=diagnostic_class,
             diagnostics=diagnostics,
         )
-        queue = QuarantineQueue()
-        held = grade_receipt(envelope, diagnostics=diagnostics, policy=policy, queue=queue)
-        assert isinstance(held, Ungraded)
-        assert held.reason is UngradedReason.UNATTRIBUTED
-        digest = reproducible_receipt_digest(envelope["payload"])
+        called = {"rerun": 0, "fixture": 0}
 
-        def rerun(payload: dict, envelope: dict = envelope) -> RerunOutcome:
-            assert payload["reproducible_digest"] == reproducible_receipt_digest(envelope["payload"])
-            return _rerun(envelope, failed=True)
+        def rerun(_payload: dict, called: dict[str, int] = called) -> RerunOutcome:
+            called["rerun"] += 1
+            return _rerun(envelope)
 
-        result = grade_receipt(
-            envelope,
-            diagnostics=diagnostics,
-            rerun=rerun,
-            known_good=lambda envelope=envelope: FixtureOutcome(
+        def known_good(called: dict[str, int] = called) -> FixtureOutcome:
+            called["fixture"] += 1
+            return FixtureOutcome(
                 passed=True,
                 environment_digest=envelope["payload"]["environment_digest"],
-            ),
-            policy=policy,
-            queue=queue,
-        )
-        assert isinstance(result, SourceAttributedFailure)
-        assert result.rung == "parse_error"
-        assert reward_value(result) == 0.0
-        # The earlier quarantine row is retained. The graded failure is not a new drop.
-        assert queue.count(policy) == 1
-        assert digest
+            )
+
+        queue = QuarantineQueue()
+        try:
+            grade_receipt(
+                envelope,
+                diagnostics=diagnostics,
+                rerun=rerun,
+                known_good=known_good,
+                policy="refused",
+                queue=queue,
+            )
+        except AutoAttributionRefused as exc:
+            assert "not sanctioned" in str(exc)
+        else:
+            raise AssertionError(f"exit {exit_code} accepted a rerun")
+        assert called == {"rerun": 0, "fixture": 0}
+        assert queue.count() == 0
+        # Either hook alone is enough. The other is not called.
+        try:
+            grade_receipt(envelope, diagnostics=diagnostics, rerun=rerun, queue=queue)
+        except AutoAttributionRefused:
+            pass
+        else:
+            raise AssertionError(f"exit {exit_code} accepted rerun alone")
+        assert called["rerun"] == 0
 
 
-def test_fixture_failure_is_infra_and_harness_triage_is_separate() -> None:
+def test_fixture_failure_is_not_scored_and_harness_triage_is_separate() -> None:
     envelope = compiler_failure_envelope(
         exit_code=124,
         diagnostic_class="timeout",
         diagnostics="timeout: wall clock limit exceeded\n",
     )
     queue = QuarantineQueue()
-    infra = grade_receipt(
+    try:
+        grade_receipt(
+            envelope,
+            diagnostics="timeout: wall clock limit exceeded\n",
+            known_good=lambda: FixtureOutcome(
+                passed=False,
+                environment_digest=envelope["payload"]["environment_digest"],
+            ),
+            policy="infra",
+            queue=queue,
+        )
+    except AutoAttributionRefused:
+        pass
+    else:
+        raise AssertionError("a failing fixture was supplied to grading")
+    assert queue.count("infra") == 0
+    held = grade_receipt(
         envelope,
         diagnostics="timeout: wall clock limit exceeded\n",
-        rerun=lambda _payload: _rerun(envelope, failed=True),
-        known_good=lambda: FixtureOutcome(
-            passed=False,
-            environment_digest=envelope["payload"]["environment_digest"],
-        ),
         policy="infra",
         queue=queue,
     )
-    assert isinstance(infra, Ungraded)
-    assert infra.reason is UngradedReason.INFRA_FAULT
-    assert reward_value(infra) is None
+    assert isinstance(held, Ungraded)
+    assert held.reason is UngradedReason.UNATTRIBUTED
+    assert reward_value(held) is None
     assert queue.count("infra") == 1
     harness = grade_receipt(
         envelope,
@@ -315,20 +396,31 @@ def test_fixture_failure_is_infra_and_harness_triage_is_separate() -> None:
     assert queue.count("harness") == 1
 
 
-def test_remote_import_and_stack_overflow_are_already_source_attributed() -> None:
+def test_remote_import_is_source_and_stack_overflow_stays_unattributed() -> None:
     remote = "internal: remote import rejected\n"
     envelope = compiler_failure_envelope(
         exit_code=126, diagnostic_class="internal", diagnostics=remote
     )
+    graded = grade_receipt(envelope, diagnostics=remote)
+    assert isinstance(graded, SourceAttributedFailure)
+    assert graded.detail == "remote import"
     called = {"rerun": 0}
 
     def rerun(_payload: dict) -> RerunOutcome:
         called["rerun"] += 1
         return _rerun(envelope)
 
-    graded = grade_receipt(envelope, diagnostics=remote, rerun=rerun, known_good=lambda: FixtureOutcome(passed=False))
-    assert isinstance(graded, SourceAttributedFailure)
-    assert graded.detail == "remote import"
+    try:
+        grade_receipt(
+            envelope,
+            diagnostics=remote,
+            rerun=rerun,
+            known_good=lambda: FixtureOutcome(passed=False),
+        )
+    except AutoAttributionRefused:
+        pass
+    else:
+        raise AssertionError("a remote import accepted a rerun")
     assert called["rerun"] == 0
     stack_envelope = compiler_failure_envelope(
         exit_code=126,
@@ -340,10 +432,17 @@ def test_remote_import_and_stack_overflow_are_already_source_attributed() -> Non
     stack_envelope = make_envelope(
         payload, schema_version="0.3.2", producer="faustcoder.compiler"
     )
-    stacked = grade_receipt(stack_envelope, diagnostics="internal: worker failed\n")
-    assert isinstance(stacked, SourceAttributedFailure)
-    assert stacked.detail == "stack overflow"
-    assert reward_value(stacked) == 0.0
+    queue = QuarantineQueue()
+    stacked = grade_receipt(
+        stack_envelope,
+        diagnostics="internal: worker failed\n",
+        policy="stack",
+        queue=queue,
+    )
+    assert isinstance(stacked, Ungraded)
+    assert stacked.reason is UngradedReason.UNATTRIBUTED
+    assert reward_value(stacked) is None
+    assert queue.count("stack") == 1
     prose = compiler_failure_envelope(
         exit_code=126,
         diagnostic_class="internal",
@@ -356,7 +455,7 @@ def test_remote_import_and_stack_overflow_are_already_source_attributed() -> Non
     assert untagged.reason is UngradedReason.UNATTRIBUTED
 
 
-def test_worker_crash_is_unattributed_until_the_fixture_stays_healthy() -> None:
+def test_worker_crash_stays_unattributed_when_a_fixture_would_pass() -> None:
     payload = {
         "kind": "worker_crash",
         "exit_code": 126,
@@ -370,21 +469,26 @@ def test_worker_crash_is_unattributed_until_the_fixture_stays_healthy() -> None:
     assert pending.reason is UngradedReason.UNATTRIBUTED
     assert queue.count("crash") == 1
     environment = "sha256:" + "11" * 32
-    attributed = grade_receipt(
-        envelope,
-        rerun=lambda _payload: RerunOutcome(
-            failed=True,
-            exit_code=126,
-            diagnostic_class="internal",
-            reproducible_digest=payload["reproducible_digest"],
-            environment_digest=environment,
-        ),
-        known_good=lambda: FixtureOutcome(passed=True, environment_digest=environment),
-        policy="crash",
-        queue=queue,
-    )
-    assert isinstance(attributed, SourceAttributedFailure)
-    assert attributed.rung == "parse_error"
+    try:
+        grade_receipt(
+            envelope,
+            rerun=lambda _payload: RerunOutcome(
+                failed=True,
+                exit_code=126,
+                diagnostic_class="internal",
+                reproducible_digest=payload["reproducible_digest"],
+                environment_digest=environment,
+            ),
+            known_good=lambda: FixtureOutcome(passed=True, environment_digest=environment),
+            policy="crash",
+            queue=queue,
+        )
+    except AutoAttributionRefused:
+        pass
+    else:
+        raise AssertionError("a healthy fixture scored a worker crash")
+    assert queue.count("crash") == 1
+    assert reward_value(pending) is None
 
 
 def test_compiler_exclusion_is_parse_error() -> None:
@@ -435,7 +539,7 @@ def test_stale_suite_digest_is_a_mismatch_even_when_the_envelope_hash_matches() 
     assert graded.reason is UngradedReason.DIGEST_MISMATCH
 
 
-def test_missing_environment_digest_stays_unattributed() -> None:
+def test_missing_environment_digest_is_not_a_grading_input() -> None:
     envelope = compiler_failure_envelope(
         exit_code=124,
         diagnostic_class="timeout",
@@ -443,26 +547,38 @@ def test_missing_environment_digest_stays_unattributed() -> None:
     )
     queue = QuarantineQueue()
     for rerun_digest, fixture_digest in ((None, None), ("", ""), (None, "sha256:" + "11" * 32)):
-        result = grade_receipt(
-            envelope,
-            diagnostics="timeout: wall clock limit exceeded\n",
-            rerun=lambda _payload, digest=rerun_digest: RerunOutcome(
-                failed=True,
-                exit_code=124,
-                diagnostic_class="timeout",
-                reproducible_digest=reproducible_receipt_digest(envelope["payload"]),
-                environment_digest=digest,
-            ),
-            known_good=lambda digest=fixture_digest: FixtureOutcome(
-                passed=True, environment_digest=digest
-            ),
-            policy="env",
-            queue=queue,
-        )
-        assert isinstance(result, Ungraded)
-        assert result.reason is UngradedReason.UNATTRIBUTED
-        assert reward_value(result) is None
-    assert queue.count("env") == 3
+        try:
+            grade_receipt(
+                envelope,
+                diagnostics="timeout: wall clock limit exceeded\n",
+                rerun=lambda _payload, digest=rerun_digest: RerunOutcome(
+                    failed=True,
+                    exit_code=124,
+                    diagnostic_class="timeout",
+                    reproducible_digest=reproducible_receipt_digest(envelope["payload"]),
+                    environment_digest=digest,
+                ),
+                known_good=lambda digest=fixture_digest: FixtureOutcome(
+                    passed=True, environment_digest=digest
+                ),
+                policy="env",
+                queue=queue,
+            )
+        except AutoAttributionRefused:
+            pass
+        else:
+            raise AssertionError("a rerun with a blank environment digest was graded")
+    assert queue.count("env") == 0
+    held = grade_receipt(
+        envelope,
+        diagnostics="timeout: wall clock limit exceeded\n",
+        policy="env",
+        queue=queue,
+    )
+    assert isinstance(held, Ungraded)
+    assert held.reason is UngradedReason.UNATTRIBUTED
+    assert reward_value(held) is None
+    assert queue.count("env") == 1
 
 
 def test_closed_failures_count_toward_the_ungraded_rate_and_exit_137_is_a_crash() -> None:
@@ -508,8 +624,9 @@ def test_missing_renders_is_comparison_not_full() -> None:
 
 
 def test_rl_batch_rejects_a_positive_reward_on_a_failed_receipt() -> None:
-    failed = grade_receipt(allowlisted_reward_envelope(passed=False))
-    row = dataset_reward_row(failed, task=_linear_task(), example_id="e1")
+    task = _linear_task()
+    failed = grade_receipt(allowlisted_reward_envelope(passed=False), task=task)
+    row = dataset_reward_row(failed, task=task, example_id="e1")
     assert row["reward"] == 0.0
     for bad in (True, False, 1, "1.0", float("nan"), float("inf"), float("-inf"), -1.0, 0.5):
         row["reward"] = bad
@@ -521,8 +638,8 @@ def test_rl_batch_rejects_a_positive_reward_on_a_failed_receipt() -> None:
             raise AssertionError(f"reward {bad!r} was accepted")
     row["reward"] = 0.0
     assert rl_batch([row])[0]["reward"] == 0.0
-    passed = grade_receipt(allowlisted_reward_envelope(passed=True))
-    ok = dataset_reward_row(passed, task=_linear_task(), example_id="e2")
+    passed = grade_receipt(allowlisted_reward_envelope(passed=True), task=task)
+    ok = dataset_reward_row(passed, task=task, example_id="e2")
     assert ok["reward"] == 1.0
     assert rl_batch([ok])[0]["reward"] == 1.0
     for bad in (2.0, -5.0, 0.0, 0.5):
@@ -876,7 +993,14 @@ def test_lookalike_receipt_is_not_minted() -> None:
     graded = grade_receipt(allowlisted_reward_envelope(passed=False))
     assert is_minted(graded)
     lookalike = object.__new__(RewardableSignalReceipt)
-    for name in ("passed", "profile_name", "test_suite_digest", "reproducible_digest", "schema_version"):
+    for name in (
+        "passed",
+        "profile_name",
+        "test_suite_digest",
+        "reproducible_digest",
+        "schema_version",
+        "task_digest",
+    ):
         object.__setattr__(lookalike, name, getattr(graded, name))
     assert lookalike._snapshot() == graded._snapshot()
     assert not is_minted(lookalike)
@@ -1170,7 +1294,7 @@ def test_compile_stack_lines_are_source_and_harness_prose_is_not() -> None:
         producer="faustcoder.signal",
     )
     # A compile warning, even a line-start stack error, does not attribute
-    # a later render crash. The render stage has its own structured fields.
+    # a later render crash. A wasm trap on the crash stays unattributed.
     later = grade_receipt(crash, diagnostics=exact)
     assert isinstance(later, Ungraded)
     assert later.reason is UngradedReason.UNATTRIBUTED
@@ -1183,9 +1307,17 @@ def test_compile_stack_lines_are_source_and_harness_prose_is_not() -> None:
     )
     trap_payload["wasm_trap"] = "unreachable"
     trap = make_envelope(trap_payload, schema_version="0.3.2", producer="faustcoder.compiler")
-    trapped = grade_receipt(trap, diagnostics="internal: worker failed\n")
-    assert isinstance(trapped, SourceAttributedFailure)
-    assert trapped.detail == "wasm trap"
+    queue = QuarantineQueue()
+    trapped = grade_receipt(
+        trap,
+        diagnostics="internal: worker failed\n",
+        policy="trap",
+        queue=queue,
+    )
+    assert isinstance(trapped, Ungraded)
+    assert trapped.reason is UngradedReason.UNATTRIBUTED
+    assert reward_value(trapped) is None
+    assert queue.count("trap") == 1
 
 
 def test_compile_stack_line_breaks_on_newline_only() -> None:
@@ -1240,7 +1372,7 @@ if (failures.length) {
     assert completed.returncode == 0, completed.stderr
 
 
-def test_injected_infra_crash_stays_unattributed_when_the_fixture_fails() -> None:
+def test_injected_infra_crash_stays_unattributed_without_a_rerun() -> None:
     diagnostics = "internal: worker failed\n"
     envelope = compiler_failure_envelope(
         exit_code=126, diagnostic_class="internal", diagnostics=diagnostics
@@ -1250,18 +1382,28 @@ def test_injected_infra_crash_stays_unattributed_when_the_fixture_fails() -> Non
     envelope = make_envelope(payload, schema_version="0.3.2", producer="faustcoder.compiler")
     queue = QuarantineQueue()
     environment = envelope["payload"]["environment_digest"]
-    digest = reproducible_receipt_digest(envelope["payload"])
+    try:
+        grade_receipt(
+            envelope,
+            diagnostics=diagnostics,
+            rerun=lambda _payload: RerunOutcome(
+                failed=False,
+                exit_code=0,
+                diagnostic_class="ok",
+                reproducible_digest=reproducible_receipt_digest(envelope["payload"]),
+                environment_digest=environment,
+            ),
+            known_good=lambda: FixtureOutcome(passed=True, environment_digest=environment),
+            policy="infra-crash",
+            queue=queue,
+        )
+    except AutoAttributionRefused:
+        pass
+    else:
+        raise AssertionError("a quiet rerun scored an injected crash")
     failed = grade_receipt(
         envelope,
         diagnostics=diagnostics,
-        rerun=lambda _payload: RerunOutcome(
-            failed=True,
-            exit_code=126,
-            diagnostic_class="internal",
-            reproducible_digest=digest,
-            environment_digest=environment,
-        ),
-        known_good=lambda: FixtureOutcome(passed=False, environment_digest=environment),
         policy="infra-crash",
         queue=queue,
     )
@@ -1269,22 +1411,6 @@ def test_injected_infra_crash_stays_unattributed_when_the_fixture_fails() -> Non
     assert failed.reason is UngradedReason.UNATTRIBUTED
     assert reward_value(failed) is None
     assert queue.count("infra-crash") == 1
-    quiet = grade_receipt(
-        envelope,
-        diagnostics=diagnostics,
-        rerun=lambda _payload: RerunOutcome(
-            failed=False,
-            exit_code=0,
-            diagnostic_class="ok",
-            reproducible_digest=digest,
-            environment_digest=environment,
-        ),
-        known_good=lambda: FixtureOutcome(passed=True, environment_digest=environment),
-        policy="infra-crash",
-        queue=queue,
-    )
-    assert isinstance(quiet, Ungraded)
-    assert quiet.reason is UngradedReason.UNATTRIBUTED
 
 
 def test_source_over_one_mib_is_parse_error() -> None:
@@ -1298,23 +1424,21 @@ def test_source_over_one_mib_is_parse_error() -> None:
     envelope = make_envelope(
         compiled.receipt, schema_version="0.3.2", producer="faustcoder.compiler"
     )
-    called = {"rerun": 0}
-
-    def rerun(_payload: dict) -> RerunOutcome:
-        called["rerun"] += 1
-        return _rerun(envelope)
-
-    graded = grade_receipt(
-        envelope,
-        diagnostics=compiled.diagnostics,
-        rerun=rerun,
-        known_good=lambda: FixtureOutcome(passed=False),
-    )
+    graded = grade_receipt(envelope, diagnostics=compiled.diagnostics)
     assert isinstance(graded, SourceAttributedFailure)
     assert graded.rung == "parse_error"
     assert graded.detail == "source size"
     assert reward_value(graded) == 0.0
-    assert called["rerun"] == 0
+    try:
+        grade_receipt(
+            envelope,
+            diagnostics=compiled.diagnostics,
+            known_good=lambda: FixtureOutcome(passed=False),
+        )
+    except AutoAttributionRefused:
+        pass
+    else:
+        raise AssertionError("source size accepted a fixture")
 
 
 def test_triage_refuses_a_timestamp_earlier_than_the_hold(tmp_path) -> None:

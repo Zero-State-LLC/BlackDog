@@ -64,6 +64,8 @@ See [docs/VERSIONING.md](docs/VERSIONING.md).
 
 ### Changed
 
+- Reward grading no longer auto-attributes an unattributed exit 124, 125 or 126, or a worker or harness crash, from a rerun and a known-good fixture. Those rows stay ungraded and quarantined until triage. `grade_receipt` refuses `rerun` and `known_good` and does not call them. `runtime_stack_overflow` and `wasm_trap` stay ungraded without triage. A remote import, a source over 1 MiB, and a line-start Faust `ERROR` remain source failures. `RewardableSignalReceipt` carries a task digest of `task_id` and `effect`. `dataset_reward_row`, `rl_batch` and `reward_value` refuse a row whose task does not match that digest. The installer refuses a pre-seeded symlink or a non-directory at the Faust directories it creates, uses `chown -h`, checks that the result is a real root-owned directory mode `0755`, and refuses a world-writable parent that is not root-owned and sticky. An absent Faust mask walks every component of `realpath` of the parent up to `/`. `rl_batch` follows Jev Q1: the reward is binary, and a group with any quarantined member is dropped whole and is never re-entered.
+
 - Renamed the project and repository from FaustCoder to BlackDog (2026-10-17 PT); the GitHub repo is now `Zero-State-LLC/BlackDog`. The Python package `faustcoder`, CLI commands and spec paths are unchanged.
 - Spec 001 to 0.3.4 (ADR-0006, Danny 2026-10-17 4:11 PM PT, A2 extended 4:28 PM PT): the R-005 reward ladder incorporates A1–A7 by reference to the ADR. A7's 1%, 500-sample and 2× numbers are provisional. ADR-0006 is in force in reward code. See spec §23.
 

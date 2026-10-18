@@ -437,11 +437,11 @@ def test_deep_recursion_is_internal(store, tmp_path: Path) -> None:
     # --stack-size=8192 lets this unroll until the worker SIGSEGVs. The
     # catchable "Maximum call stack size exceeded" path is what a smaller
     # stack produced. Either way the raw receipt stays exit 126 internal.
-    # Commit reruns it beside a known-good fixture and the outcome is parse_error.
+    # Commit does not rerun it. The row stays ungraded until triage.
     import signal
 
     from faustcoder.candidate_machine import CandidateState
-    from faustcoder.reward import RewardLedger, SourceAttributedFailure
+    from faustcoder.reward import RewardLedger, Ungraded, UngradedReason
     from faustcoder.signal import SignalRun, SignalSuite, commit_signal_check
 
     source = _source("recurse.dsp")
@@ -474,12 +474,12 @@ def test_deep_recursion_is_internal(store, tmp_path: Path) -> None:
         state=CandidateState.COMPILE_CHECKED,
         created_at="2026-10-18T00:00:00Z",
     )
-    assert committed.state is CandidateState.REJECTED
+    assert committed.state is CandidateState.COMPILE_CHECKED
     assert len(committed.outcomes) == 1
     outcome = committed.outcomes[0]
-    assert isinstance(outcome, SourceAttributedFailure)
-    assert outcome.rung == "parse_error"
-    assert ledger.queue.count() == 0
+    assert isinstance(outcome, Ungraded)
+    assert outcome.reason is UngradedReason.UNATTRIBUTED
+    assert ledger.queue.count() == 1
 
 
 def test_stack_overflow_in_eval_stays_internal() -> None:
@@ -1197,6 +1197,62 @@ def test_absent_mask_refuses_a_non_root_parent(
         _mount_with_absent_candidate(tmp_path, monkeypatch, missing, kind=kind)
 
 
+def test_absent_mask_refuses_a_user_writable_grandparent(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from faustcoder.sandbox import _component_is_root_only
+
+    grand = tmp_path / "gp"
+    grand.mkdir()
+    grand.chmod(0o777)
+    parent = grand / "par"
+    subprocess.run(["sudo", "-n", "mkdir", "-p", "--", str(parent)], check=True)
+    subprocess.run(["sudo", "-n", "chown", "root:root", "--", str(parent)], check=True)
+    subprocess.run(["sudo", "-n", "chmod", "755", "--", str(parent)], check=True)
+    info = parent.lstat()
+    assert info.st_uid == 0
+    assert stat.S_ISDIR(info.st_mode)
+    assert not stat.S_ISLNK(info.st_mode)
+    assert info.st_mode & 0o777 == 0o755
+    assert grand.stat().st_uid != 0
+    assert grand.stat().st_mode & 0o777 == 0o777
+    # The immediate parent would pass the single-directory check.
+    assert _component_is_root_only(parent, allow_sticky=False)
+    missing = parent / "faust"
+    assert not missing.exists()
+    with pytest.raises(SandboxError, match="not root-only"):
+        _mount_with_absent_candidate(tmp_path, monkeypatch, missing, kind="reported")
+
+
+def test_root_only_walk_allows_a_root_sticky_ancestor_only(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from faustcoder.sandbox import _is_root_only_directory
+
+    def stat_of(mode: int, uid: int) -> os.stat_result:
+        return os.stat_result((stat.S_IFDIR | mode, 0, 0, 1, uid, 0, 0, 0, 0, 0))
+
+    modes = {
+        "/": (0o755, 0),
+        "/var": (0o1777, 0),
+        "/var/par": (0o755, 0),
+    }
+
+    def fake(path: Path) -> os.stat_result:
+        mode, uid = modes[str(path)]
+        return stat_of(mode, uid)
+
+    monkeypatch.setattr("faustcoder.sandbox._lstat_or_none", fake)
+    assert _is_root_only_directory(Path("/var/par"))
+    assert not _is_root_only_directory(Path("/var"))
+    modes["/var"] = (0o777, 1000)
+    assert not _is_root_only_directory(Path("/var/par"))
+    modes["/var"] = (0o775, 0)
+    assert not _is_root_only_directory(Path("/var/par"))
+    modes["/var"] = (0o1777, 1000)
+    assert not _is_root_only_directory(Path("/var/par"))
+
+
 @pytest.mark.parametrize("kind", ["fallback", "reported"])
 def test_absent_mask_accepts_a_symlink_to_a_root_only_parent(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, kind: str
@@ -1309,7 +1365,9 @@ def test_install_script_pins_the_faust_tarball(tmp_path: Path) -> None:
     assert "/usr/share/faust" in script
     assert "/usr/local/share/faust" in script
     assert script.index("chmod 755") < script.index("already on PATH")
-    assert "chown root:root" in script
+    assert "chown -h root:root" in script
+    assert "refusing pre-seeded symlink" in script
+    assert "world-writable parent" in script
     tarball = tmp_path / "faust-2.88.0.tar.gz"
     tarball.write_bytes(b"not-the-release\n")
     check = subprocess.run(
@@ -1320,6 +1378,84 @@ def test_install_script_pins_the_faust_tarball(tmp_path: Path) -> None:
         check=False,
     )
     assert check.returncode != 0
+
+
+def _ensure_root_dir(path: Path) -> subprocess.CompletedProcess[str]:
+    script = Path("scripts/install-faust-2.88.0.sh").resolve()
+    return subprocess.run(
+        ["bash", "-c", 'source "$1"; ensure_root_dir "$2"', "bash", str(script), str(path)],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+
+def test_install_refuses_a_symlink_a_file_and_a_world_writable_bin(tmp_path: Path) -> None:
+    parent = tmp_path / "bin"
+    parent.mkdir()
+    parent.chmod(0o755)
+    attacker = tmp_path / "attacker"
+    attacker.mkdir()
+    (attacker / "stdfaust.lib").write_text("PWNED\n", encoding="ascii")
+    link = parent / "architecture"
+    link.symlink_to(attacker, target_is_directory=True)
+    before = attacker.stat()
+    refused = _ensure_root_dir(link)
+    assert refused.returncode != 0
+    assert "pre-seeded symlink" in refused.stderr
+    assert link.is_symlink()
+    after = attacker.stat()
+    assert after.st_uid == before.st_uid
+    assert after.st_mode == before.st_mode
+    assert (attacker / "stdfaust.lib").read_text(encoding="ascii") == "PWNED\n"
+
+    planted = parent / "not-a-dir"
+    planted.write_text("nope\n", encoding="ascii")
+    refused_file = _ensure_root_dir(planted)
+    assert refused_file.returncode != 0
+    assert "non-directory" in refused_file.stderr
+    assert planted.is_file()
+
+    open_bin = tmp_path / "open-bin"
+    open_bin.mkdir()
+    open_bin.chmod(0o777)
+    refused_open = _ensure_root_dir(open_bin / "architecture")
+    assert refused_open.returncode != 0
+    assert "world-writable" in refused_open.stderr
+    assert not (open_bin / "architecture").exists()
+
+    sticky_user = tmp_path / "sticky-user"
+    sticky_user.mkdir()
+    sticky_user.chmod(0o1777)
+    refused_sticky = _ensure_root_dir(sticky_user / "architecture")
+    assert refused_sticky.returncode != 0
+    assert "world-writable" in refused_sticky.stderr
+    assert not (sticky_user / "architecture").exists()
+
+
+def test_install_creates_a_real_root_owned_directory(tmp_path: Path) -> None:
+    parent = tmp_path / "safe-bin"
+    parent.mkdir()
+    parent.chmod(0o755)
+    created = _ensure_root_dir(parent / "architecture")
+    assert created.returncode == 0, created.stderr
+    info = (parent / "architecture").lstat()
+    assert stat.S_ISDIR(info.st_mode)
+    assert not stat.S_ISLNK(info.st_mode)
+    assert info.st_uid == 0
+    assert info.st_mode & 0o777 == 0o755
+
+    sticky = tmp_path / "sticky-root"
+    sticky.mkdir()
+    subprocess.run(["sudo", "-n", "chown", "root:root", str(sticky)], check=True)
+    subprocess.run(["sudo", "-n", "chmod", "1777", str(sticky)], check=True)
+    allowed = _ensure_root_dir(sticky / "architecture")
+    assert allowed.returncode == 0, allowed.stderr
+    child = (sticky / "architecture").lstat()
+    assert stat.S_ISDIR(child.st_mode)
+    assert not stat.S_ISLNK(child.st_mode)
+    assert child.st_uid == 0
+    assert child.st_mode & 0o777 == 0o755
 
 
 def test_native_compile_rejects_a_library_planted_beside_the_binary(

@@ -160,8 +160,10 @@ Exit codes 124 and above are not rungs on the stored ADR-0005 table.
 A harness failure must not score as ``other`` or as a compiler
 rejection. ``unbound_symbol`` is a compiler class (exit 1). Reward
 use of those exits goes through ``grade_receipt`` on a reward ledger
-(spec §23): unattributed 124, 125 and 126 are quarantined, and a
-remote import or stack overflow is ``parse_error``. ``compile_source``
+(spec §23): unattributed 124, 125 and 126 are quarantined until
+triage. A remote import, a source over 1 MiB, and a line-start Faust
+``ERROR`` are ``parse_error``. A ``runtime_stack_overflow`` flag or a
+``wasm_trap`` is not. ``compile_source``
 itself does not score them. See ``docs/runbooks/compiler-harness.md``
 and ADR-0005. A receipt whose exit is 124 or above is not evidence
 that another operator reproduced a successful compile of that source;
