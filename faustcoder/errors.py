@@ -83,6 +83,10 @@ class RightsError(ArtifactStoreError):
     """Base class for dataset rights-transition failures."""
 
 
+class DatasetError(Exception):
+    """Base class for dataset pipeline refusals. Nothing partial is a success."""
+
+
 class IllegalTransitionError(RightsError):
     """The dataset table has no edge for this state and event."""
 
@@ -113,3 +117,27 @@ class NeedsHumanDecision(RightsError):
 
 class SourceContentError(RightsError):
     """A rights artifact included program text or an unknown field."""
+
+
+class GuardError(DatasetError):
+    """The event's guard rejected the transition. No artifact was written."""
+
+
+class InventoryError(DatasetError):
+    """The inventory document does not match the T06 unit contract."""
+
+
+class PolicyError(DatasetError):
+    """A unit's rights flags are looser than the approved defaults."""
+
+
+class AcquireError(DatasetError):
+    """A pinned blob could not be fetched or did not match its blob sha."""
+
+
+class NormalizeError(DatasetError):
+    """Deterministic normalization refused one unit. The reason is a token."""
+
+    def __init__(self, reason: str) -> None:
+        self.reason = reason
+        super().__init__(reason)

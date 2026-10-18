@@ -13,6 +13,7 @@ import os
 from functools import lru_cache
 from pathlib import Path
 
+import rfc3339_validator  # noqa: F401  -- date-time checks fail closed without it
 from jsonschema import Draft202012Validator, FormatChecker
 from jsonschema.exceptions import SchemaError as JsonSchemaError
 

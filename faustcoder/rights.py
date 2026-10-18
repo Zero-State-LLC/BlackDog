@@ -340,6 +340,64 @@ def apply_transition(
     return TransitionResult(edge.to_state, receipt_envelope, rights_id)
 
 
+def guard_cleared_unit(
+    inventory: Mapping[str, Any],
+    notice: Mapping[str, Any],
+    *,
+    repo: str,
+    commit: str,
+    path: str,
+    function: str,
+    blob_sha: str,
+    license_name: str,
+    eligible_for: list[str],
+    attribution: str,
+    evidence_label: str,
+    evidence_uri: str,
+    reason: str,
+    reviewer: str,
+    inventory_id: str,
+) -> dict[str, Any]:
+    """Run the ``rights_cleared`` guard for one unit. Writes nothing.
+
+    The reviewer is the inventory value passed in. This function does
+    not substitute an actor.
+    """
+    fragment = f"#{function}" if function else ""
+    source = {
+        "record_type": "SourceRecord",
+        "uri": f"https://github.com/{repo}/blob/{commit}/{path}{fragment}",
+        "retrieved_at": "2026-10-17T00:00:00Z",
+        "license_claim": license_name,
+        "blob_sha": blob_sha,
+    }
+    evidence = {
+        "record_type": "LicenseEvidence",
+        "license": license_name,
+        "evidence_label": evidence_label,
+        "evidence_uri": evidence_uri,
+        "attribution": attribution,
+        "eligible_for": list(eligible_for),
+        "reason": reason,
+        "inventory_id": inventory_id,
+    }
+    if reviewer:
+        evidence["reviewer"] = reviewer
+    checked = _check_evidence(evidence)
+    classification = classify_license(checked["license"])
+    entry = _guard(
+        "rights_cleared",
+        checked,
+        classification,
+        source,
+        inventory,
+        notice,
+    )
+    if entry is None:
+        raise LicenseEvidenceError("rights_cleared guard returned no row")
+    return entry
+
+
 def load_inventory(path: Path | str) -> dict[str, Any]:
     """Load the rights inventory and reject a row the policy would not sign."""
     raw = json.loads(Path(path).read_text(encoding="utf-8"))
@@ -427,6 +485,16 @@ def _guard(
         )
     if list(evidence["eligible_for"]) != list(entry.get("eligible_for") or []):
         raise LicenseEvidenceError("eligible_for does not match the inventory row")
+    unit = _matching_unit(entry, parsed.path, parsed.function)
+    # The unit has to be on the row before the impulse rule. Entry id and
+    # path are both consulted, and this runs before the license-class cap
+    # so an impulse entry is refused as impulse rather than as a looser set.
+    if is_impulse_path(parsed.path, str(entry.get("id") or "")) and any(
+        split in evidence["eligible_for"] for split in ("eval", "holdout")
+    ):
+        raise LicenseEvidenceError(
+            "impulse-test files cannot enter the eval split or the sealed holdout"
+        )
     allowed = set(
         overlay_eligible(
             classification,
@@ -442,7 +510,6 @@ def _guard(
         raise LicenseEvidenceError(
             "incomplete attribution needs a named reviewer"
         )
-    unit = _matching_unit(entry, parsed.path, parsed.function)
     blob = source_payload.get("blob_sha")
     if not isinstance(blob, str) or _GIT_COMMIT.fullmatch(blob) is None:
         raise LicenseEvidenceError("source blob_sha is not a git blob id")
@@ -461,7 +528,9 @@ def _guard(
     _require_notice(entry, notice)
     for split in evidence["eligible_for"]:
         if split in {"eval", "holdout"}:
-            assert_eval_split_allowed(parsed.path, "", split)
+            assert_eval_split_allowed(
+                parsed.path, str(entry.get("id") or ""), split
+            )
     return entry
 
 
