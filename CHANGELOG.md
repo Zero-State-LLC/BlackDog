@@ -10,6 +10,8 @@ See [docs/VERSIONING.md](docs/VERSIONING.md).
 
 ### Added
 
+- A Faust stack-overflow line breaks on `\n` only, so NEL and U+2028 cannot open a match. `runtime_stack_overflow` is set only for a RangeError whose message is exactly `Maximum call stack size exceeded`.
+
 - T03b follow-up: the native sandbox also masks `<binary>/../share/faust`, `<binary>/../lib/faust`, and every directory `faust --libdir`, `--dspdir`, `--includedir`, `--archdir` and `--pathslist` print, except the hashed private copy. A library planted beside a copied `faust` binary cannot be imported. CI installs Faust 2.88.0 so that check runs.
 
 - T03b follow-up: creating the share lock directory happens while the in-process lock's release is armed, so a failed `mkdir` cannot stick the lock. The native sandbox masks `/usr/share/faust` and `/usr/local/share/faust` when they exist. Faust cannot fall back to them after `-I`.
