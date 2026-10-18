@@ -1011,8 +1011,12 @@ def _advance_anchor(
             data = b"".join(chunks)
             # The report-chain check ran before this lock. Re-verify the
             # anchor against the bytes held here, before any marker or bind
-            # write, so a marker deleted in between is not signed.
-            _verified_anchor(data, run_key, consumed.path)
+            # write. A later report must already have an anchor: a missing
+            # one is not a first write, and signing the truncated log would
+            # drop a halt marker deleted in the gap.
+            verified = _verified_anchor(data, run_key, consumed.path)
+            if seq > 1 and verified is None:
+                raise RewardRecordError("audit anchor is not usable")
             offset = _anchor_offset(data)
             if record_ids is not None:
                 os.lseek(fd, 0, os.SEEK_END)

@@ -1434,6 +1434,42 @@ def test_advance_anchor_rechecks_before_signing_a_deleted_halt_marker(tmp_path: 
     assert consumed.path.read_bytes() == before
 
 
+def test_advance_anchor_does_not_mint_a_new_anchor_after_the_first_report(tmp_path: Path) -> None:
+    """A later report must not sign a log whose anchor and marker were removed."""
+    secret = _write_key(tmp_path / "reward-root.key")
+    ring = RewardKeyring(secret, run_id=RUN)
+    run_key = derive_run_key(secret, RUN)
+    late = _stored_pass(tmp_path, secret, "group-missing-anchor")
+    consumed = ConsumedLog(tmp_path / "missing-anchor-consumed.jsonl")
+    reports = AuditReportLog(tmp_path / "missing-anchor-reports.jsonl", consumed)
+    consumed.claim(
+        "group-missing-anchor",
+        "used",
+        task_digest_full=late.rows[0].task_digest_full,
+        policy_checkpoint=CHECKPOINT,
+        run_key=run_key,
+    )
+    audit = audit_sampled_reruns(
+        late.rows,
+        ring,
+        rerun=lambda _record: "fail",
+        consumed=consumed,
+        reports=reports,
+    )
+    assert audit.halted is True
+    kept = [
+        line
+        for line in consumed.path.read_text(encoding="utf-8").splitlines()
+        if not line.startswith("audit-halt v1 ") and not line.startswith("audit-anchor v1 ")
+    ]
+    assert kept
+    consumed.path.write_text("\n".join(kept) + "\n", encoding="utf-8")
+    before = consumed.path.read_bytes()
+    with pytest.raises(RewardRecordError, match="anchor"):
+        _advance_anchor(consumed, run_key, 2, "ab" * 32, record_ids=("d" * 64,))
+    assert consumed.path.read_bytes() == before
+
+
 def test_deleting_the_report_and_anchor_does_not_allow_a_new_audit(tmp_path: Path) -> None:
     secret = _write_key(tmp_path / "reward-root.key")
     ring = RewardKeyring(secret, run_id=RUN)
