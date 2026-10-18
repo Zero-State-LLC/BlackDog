@@ -3,7 +3,7 @@
 Formerly FaustCoder; renamed 2026-10-17 PT.
 
 - Status: DRAFT / refinement-ready
-- Version: 0.3.8 (FLOOR lower-floor detections, Danny 2026-10-18 2:27 AM PT, "continue as recommended"; see §25). 0.3.6 (FLOOR bounds ratified, Danny 2026-10-18 12:34 AM PT; see §25). 0.3.5 (Jev Q1–Q4, 2026-10-17 7:40 PM PT; Danny "use jev to make decisions" 7:37 PM PT; see §24). 0.3.4 (ADR-0006 reward ladder, Danny 2026-10-17 4:11 PM PT, A2 extended 4:28 PM PT; see §23). 0.3.3: D-013 rights defaults, Danny yes 2026-10-17 1:04 PM PT; see §22. 0.3.2: CompilerReceipt diagnostic classes, ADR-0005, Danny yes 2026-10-17 1:13 PM PT; see §21. 0.3.1: R-001 v0.2 evidence, Danny yes 2026-10-17 12:54 PM PT; see §20. 0.3.0: Faust-tooling assimilation and target lanes, ADR-0004; see §19. 0.2.0 training path: ADR-0002, §17
+- Version: 0.3.8 (FLOOR lower-floor detections, Danny 2026-10-18 2:27 AM PT, "continue as recommended"; see §25). 0.3.7 (D3 option H, Danny 2026-10-18; see §26). 0.3.6 (FLOOR bounds ratified, Danny 2026-10-18 12:34 AM PT; see §25). 0.3.5 (Jev Q1–Q4, 2026-10-17 7:40 PM PT; Danny "use jev to make decisions" 7:37 PM PT; see §24). 0.3.4 (ADR-0006 reward ladder, Danny 2026-10-17 4:11 PM PT, A2 extended 4:28 PM PT; see §23). 0.3.3: D-013 rights defaults, Danny yes 2026-10-17 1:04 PM PT; see §22. 0.3.2: CompilerReceipt diagnostic classes, ADR-0005, Danny yes 2026-10-17 1:13 PM PT; see §21. 0.3.1: R-001 v0.2 evidence, Danny yes 2026-10-17 12:54 PM PT; see §20. 0.3.0: Faust-tooling assimilation and target lanes, ADR-0004; see §19. 0.2.0 training path: ADR-0002, §17
 - Target: NVIDIA DGX Spark (128 GB unified memory)
 
 ## 1. Constitution
@@ -713,3 +713,17 @@ This replaces the open question. Record: [FLOOR-ruling-b-recommendation-2026-10-
 > 6. Every natural miss is inspected and recorded with its mechanism. Per-floor natural recall (detected / adjudicated COPY) is reported and not gated, and the report states that the pool comes from the detectors themselves.
 
 Recommendation from the record, not Danny's ruling and not a clause of the ruling above. "The mitigation is to adjudicate before scoring, and to require a second reviewer for any item whose label decides the floor." "Record which floor flagged each item separately, and require a second reviewer for any floor-deciding item." For SClarinet: "Use two reviewers and record both."
+
+## 26. Amendments 0.3.7 (D3 option H, ACCEPTED)
+
+Approval: Danny, 2026-10-18, option H of the receipts-versus-regrade review. This supersedes any earlier D3 note. Ed25519 and DSSE are not this amendment. ADR-0006 A2 is unchanged.
+
+A rollout persists a group header and then one reward-row record per member, including ungraded members. The tag is HMAC-SHA256 under a per-run key. The run key is HKDF-SHA256 of a per-Spark root key and the run id. The root key file is mode `0400`, owned by the dedicated `fc-grader` uid, and is not generated, printed or logged by the library. Tests use a temporary key file.
+
+Every load re-checks the MAC, the pins (grader digest, harness digest, profile allowlist, schema versions, node flags, and the native Faust version when a native envelope is present), the source hash, the full task digest, and the reference and profile. It then calls `grade_receipt` with no `rerun`, `known_good` or `triage`. `passed` is true only when `metrics.failures` is empty. Rewards are not read off the stored row.
+
+A pin mismatch is `stale_pin`. That group is dropped and is not regraded into training. A group with a missing, duplicate, ungraded or quarantined member is dropped whole and claimed in the consumed log, so it does not re-enter. Quarantine entries carry the row id and the group id. A later file that presents that group id as a clean G-1 is still dropped. A1 source failures stay graded `0.0` members. Unattributed exits 124, 125 and 126, crashes and internal errors stay ungraded. A `ShadowLog` is never a reward row.
+
+The process-local seal binds the whole task, not only the task id and effect. `rl_batch` refuses a duplicate row. `rates.json` is rewritten under a file lock. A NUL byte in `faust --pathslist` is a `SandboxError`.
+
+The sampled rerun-from-source audit (D3-H2) is a later change, before P3. It is not this section. The P3 exit gate adds: audit disagreements = 0 unresolved, and the consumed log intact. D3-H1 blocks T10. Frozen impulse digests are unchanged.

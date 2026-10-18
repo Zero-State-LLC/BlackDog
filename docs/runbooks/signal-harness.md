@@ -150,8 +150,9 @@ row and it is never scored. Replay refuses a second resolve for the
 same row, and refuses an `outcome` that does not match the attribution
 (`parse_error` for source, `drop` for harness or infrastructure). A row
 nobody has resolved stays pending and is not a score. A pending row older than 24 hours raises the age alarm.
-Those 24 hours are provisional. `rates.json` beside the log is
-single-process.
+Those 24 hours are provisional. `rates.json` beside the log is rewritten
+under a file lock, so two writers on one store cannot drop each other's
+windows.
 
 `commit_signal_check` and a reward-graded `run_signal` pass that queue
 and the A7 tracker into `grade_receipt`. A compiler exit 124, 125 or
@@ -176,8 +177,10 @@ in that rate. A reward-graded `run_signal_suite` takes the same ledger.
 Compiler exits 124, 125 and 126, and render crashes, are graded when
 that suite is committed.
 
-Receipt signing is deferred (D3). `grade_receipt` recomputes digests.
-It does not require a signature. `REWARD_PROFILES` in
+Reward rows are MAC'd records (D3 option H). `grade_receipt` recomputes
+digests and does not take `rerun`, `known_good` or `triage`. A load
+also checks the MAC and the current pins. The sampled
+rerun-from-source audit and Ed25519 are later. `REWARD_PROFILES` in
 `faustcoder/reward/profiles.py` is the only allowlist literal.
 `profile_digest` is the only profile digest computation.
 

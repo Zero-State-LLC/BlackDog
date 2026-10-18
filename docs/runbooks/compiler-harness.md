@@ -59,15 +59,15 @@ or the failure not reproducing, stays `unattributed`. A7 alerts
 when the per-policy ungraded rate goes above 1% over a 500-sample window,
 or above 2× the known-good baseline, whichever comes first. Five ungraded samples in 500 do not
 alarm. Six do. Those numbers are provisional. The alarm re-arms after
-the rate recovers. `rates.json` is single-process. The grader does not
+the rate recovers. `rates.json` is rewritten under a file lock. The grader does not
 spawn the worker.
 The caller supplies the rerun and the fixture. Both environment digests
 must be non-empty and equal; a missing or blank digest stays
 `unattributed`. A reward-graded `run_signal` grades exit 124, 125 and
 126, and a worker or harness crash, onto the ledger next to the artifact
 store. With no ledger that path raises `RewardUseRefused`.
-`compile_source` by itself is not a reward consumer. Receipt signing
-is deferred (D3).
+`compile_source` by itself is not a reward consumer. Reward rows are
+MAC'd records (D3 option H); the signal runbook has the load checks.
 
 A receipt with exit 124 or above records the same compiler pin as a
 successful compile (`faust_version`, `environment_digest`). It is not

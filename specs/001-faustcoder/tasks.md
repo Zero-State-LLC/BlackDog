@@ -77,10 +77,11 @@ Implements the dataset machine (spec §7.1) and training machine (spec §7.3).
   - Acceptance: for v0.2, cited external DGX Spark benchmarks plus a per-machine environment fingerprint receipt (R-001, amended 0.3.1); implements `env_verified`. On-hardware throughput is deferred to T10 on the dedicated, cleared Spark.
   - Workflows: production-systems.
 - [ ] T10 [J-04] Training path P1 to P3 (ADR-0002).
-  - Depends on: T08, T09, GD-1, A2-PATH, EVAL-SO. Milestone: v0.2 (P1, P2) and v0.3 (P3).
+  - Depends on: T08, T09, GD-1, A2-PATH, EVAL-SO, D3-H1. Milestone: v0.2 (P1, P2) and v0.3 (P3).
   - Acceptance: one pinned, reproducible `TrainingRun` per phase with its exit-gate result (R-008, R-009, R-015); P1 may be a recorded skip; implements `run_started` to `COMPLETED`.
   - Sub-steps: P1 continued pretraining or skip; P2 SFT on validated pairs; P3 compiler-feedback RL (R-016).
   - Amended 0.3.5 (Q4): ADR-0002 is accepted in full (Jev's default; Danny may still choose P3 PROPOSED). P3 reward is the ADR-0006 grader with the Q1 binary ruling, whole-group drop, and A2-T as the only auto-attribution path. The P3 exit gate requires the graded/ungraded split, the A7 quarantine rate and the group-drop rate within pre-registered limits, and no frozen auto-attribution signature at exit. Only the ~5M-token CPT-skip threshold is ratified. The 2-point loss and compile@10 noise are paired-CI tests. GD-1 is a prerequisite, not a follow-on.
+  - Amended 0.3.7 (D3 option H): D3-H1 blocks T10. P3 also waits on D3-H2. The P3 exit gate adds audit disagreements = 0 unresolved and the consumed log intact. D3-H2 does not block P1 or P2.
   - Workflows: anti-slop-code, production-systems.
 - [ ] T11 [J-04] Independent DSP evaluation.
   - Depends on: T10, T04. Milestone: v0.3.
@@ -176,6 +177,14 @@ These tasks are the implementation. This record does not change code.
   - Depends on: L1, L2, L3, A7-S, CANARY. Milestone: v0.3.
   - Acceptance: shadow computes and logs attributions; humans triage. Shadow mode runs on a separate path that never grades: it may rerun and log attributions, but its output never reaches `reward_value` or a receipt. That path is not a training caller, so needing reruns in shadow does not conflict with A2-PATH. Leaves shadow only when L1–L3 have landed, agreement is on a sample fixed before shadow starts, the gold canary (dev-suite references, cleared-corpus sample, SFT targets) is clean and any crash there freezes its signature, A7-S thresholds are reviewed, and the go-live is recorded. Crash rows below ~0.1% of samples keep auto-attribution off entirely. That rate is a reason to stay off, never a reason to go live.
   - Workflows: production-systems, ADVERSARY review.
+- [x] D3-H1 [J-04] MAC'd reward-row records (D3 option H).
+  - Depends on: T04. Milestone: v0.3. Prerequisite of T10.
+  - Acceptance: a persisted row carries an HMAC tag under a per-run key derived from a mode `0400` root key owned by `fc-grader`. Every load re-checks the MAC, the pins, the source, the full task, the reference and the profile, then `grade_receipt` with no `rerun`, `known_good` or `triage`. `passed` is true only when `metrics.failures` is empty. A group with a missing, duplicate, ungraded or quarantined member is dropped and claimed so it does not re-enter. A stale pin is not regraded into training. A1 stays `0.0`. Unattributed 124/125/126, crashes, internal errors and a `ShadowLog` stay ungraded. Done in the D3-H1 change.
+  - Workflows: production-systems, ADVERSARY review.
+- [ ] D3-H2 [J-04] Sampled rerun-from-source audit.
+  - Depends on: D3-H1. Milestone: v0.3. Before P3. Does not block P1 or P2.
+  - Acceptance: a pass-weighted sample of training rows is re-executed from source. A disagreement halts. P3 does not exit while an audit disagreement is unresolved or the consumed log is not intact. Ed25519 is out of scope.
+  - Workflows: production-systems, ADVERSARY review.
 - [ ] A2-PATH [J-04] Training callers must not supply the replaced path.
   - Status: done in code in #51 (`cef8a14`), not fully done. The grader enforces this, but `run_signal` and `commit_signal_check` do not yet pass the task or a native receipt to `grade_receipt`. The box is checked when that live wiring lands.
   - Depends on: T03. Milestone: v0.3. Prerequisite of T10.
@@ -235,6 +244,8 @@ graph LR
     T08 --> T10
     T09 --> T10 --> T11
     T04 --> GD1["GD-1"] --> T10
+    T04 --> D3H1["D3-H1"] --> T10
+    D3H1 --> D3H2["D3-H2"]
     T03 --> A2PATH["A2-PATH"] --> T10
     T03 --> EVALSO["EVAL-SO"] --> T10
     T03 --> L3 --> A2T["A2-T"]
@@ -252,4 +263,4 @@ graph LR
     T04 --> T22
 ```
 
-Parallel starts after T01: T02, T05 and T09. Lanes T17 to T19, T21 and T22 run in parallel with T10. From 0.3.5: GD-1 precedes T10, and A7-S precedes A2-T.
+Parallel starts after T01: T02, T05 and T09. Lanes T17 to T19, T21 and T22 run in parallel with T10. From 0.3.5: GD-1 precedes T10, and A7-S precedes A2-T. From 0.3.7: D3-H1 blocks T10. D3-H2 precedes P3 and does not block P1 or P2.

@@ -60,6 +60,7 @@ def allowlisted_reward_envelope(
         "seed": body["seed"],
         "metrics": {
             "comparison": "reward-graded-signed-full",
+            "failures": [] if passed else ["impulse:reference"],
             "signed_frames": body["frames"],
             "frame_count": body["frames"],
             "head_frames": body["head_frames"],

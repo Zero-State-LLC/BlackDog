@@ -7,6 +7,7 @@ grades are ``Ungraded`` (no reward sample) or ``SourceAttributedFailure``
 
 from __future__ import annotations
 
+import fcntl
 import json
 import os
 import uuid
@@ -71,9 +72,12 @@ class RewardableSignalReceipt:
     a lookalike with the same fields is not a reward.
 
     ``task_digest`` is the canonical digest of the task id and effect
-    this receipt was minted for. It is ``None`` when grading did not
-    bind a task. Training builders refuse an unbound receipt and a
-    receipt whose digest does not match the row's task.
+    this receipt was minted for. ``task_digest_full`` is the canonical
+    digest of the whole task. Both are ``None`` when grading did not
+    bind a task. Training builders refuse an unbound receipt, a receipt
+    whose id and effect do not match the row's task, and a receipt whose
+    full task digest does not match. A different prompt is a different
+    task.
 
     ``unrewardable`` is true when that task is not a reward target.
     ``apply_signal`` refuses the receipt. A linear mint leaves it false.
@@ -86,6 +90,7 @@ class RewardableSignalReceipt:
         "reproducible_digest",
         "schema_version",
         "task_digest",
+        "task_digest_full",
         "unrewardable",
         "__weakref__",
     )
@@ -131,6 +136,7 @@ class RewardableSignalReceipt:
                 "reproducible_digest",
                 "schema_version",
                 "task_digest",
+                "task_digest_full",
                 "unrewardable",
             )
         )
@@ -184,6 +190,8 @@ class QuarantineRecord:
     reward: None = None
     record_id: str = ""
     held_at: str = ""
+    row_record_id: str = ""
+    group_id: str = ""
 
 
 class TriageAttribution(StrEnum):
@@ -257,6 +265,13 @@ class QuarantineQueue:
                 record_id=record.record_id or uuid.uuid4().hex,
                 held_at=record.held_at or _utc_now(),
             )
+        if record.row_record_id:
+            prior = next(
+                (item for item in self._rows if item.row_record_id == record.row_record_id),
+                None,
+            )
+            if prior is not None:
+                return prior
         self._rows.append(record)
         self._append(
             {
@@ -267,6 +282,8 @@ class QuarantineQueue:
                 "reproducible_digest": record.reproducible_digest,
                 "detail": record.detail,
                 "held_at": record.held_at,
+                "row_record_id": record.row_record_id,
+                "group_id": record.group_id,
             }
         )
         return record
@@ -373,8 +390,12 @@ class QuarantineQueue:
         line = json.dumps(row, separators=(",", ":"), sort_keys=True) + "\n"
         fd = os.open(self.path, os.O_CREAT | os.O_APPEND | os.O_WRONLY, 0o644)
         try:
-            os.write(fd, line.encode("utf-8"))
-            os.fsync(fd)
+            fcntl.flock(fd, fcntl.LOCK_EX)
+            try:
+                os.write(fd, line.encode("utf-8"))
+                os.fsync(fd)
+            finally:
+                fcntl.flock(fd, fcntl.LOCK_UN)
         finally:
             os.close(fd)
 
@@ -394,6 +415,11 @@ class QuarantineQueue:
             op = body.get("op")
             if op == "hold":
                 reason = UngradedReason(str(body["reason"]))
+                row_record_id = str(body.get("row_record_id", ""))
+                if row_record_id and any(
+                    item.row_record_id == row_record_id for item in self._rows
+                ):
+                    continue
                 self._rows.append(
                     QuarantineRecord(
                         policy=str(body["policy"]),
@@ -402,6 +428,8 @@ class QuarantineQueue:
                         detail=str(body.get("detail", "")),
                         record_id=str(body["record_id"]),
                         held_at=str(body["held_at"]),
+                        row_record_id=row_record_id,
+                        group_id=str(body.get("group_id", "")),
                     )
                 )
             elif op == "resolve":

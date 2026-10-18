@@ -1370,6 +1370,33 @@ def test_reported_faust_directories_refuse_a_non_utf8_pathslist(tmp_path: Path) 
         raise AssertionError("a non-decodable pathslist was accepted")
 
 
+def test_reported_faust_directories_refuse_a_nul_in_pathslist(tmp_path: Path) -> None:
+    """A NUL in --pathslist is a SandboxError, not an uncaught ValueError."""
+    binary = tmp_path / "faust"
+    binary.write_bytes(
+        b"#!/bin/sh\n"
+        b'case "$1" in\n'
+        b"  --pathslist)\n"
+        b"    printf '%s\\n' 'FAUST dsp library paths:'\n"
+        b"    printf '%s' '/tmp/faust-nul-'\n"
+        b"    printf '\\000'\n"
+        b"    printf '%s\\n' 'extra'\n"
+        b"    ;;\n"
+        b"esac\n"
+        b"exit 0\n"
+    )
+    binary.chmod(0o755)
+    try:
+        _reported_faust_directories(binary)
+    except SandboxError as exc:
+        assert "cannot be checked" in str(exc)
+        assert isinstance(exc.__cause__, ValueError)
+    except ValueError as exc:
+        raise AssertionError("a NUL in pathslist escaped the sandbox") from exc
+    else:
+        raise AssertionError("a NUL in pathslist was accepted")
+
+
 def test_reported_faust_directories_keep_absolute_paths(tmp_path: Path) -> None:
     binary = tmp_path / "faust"
     binary.write_text(
