@@ -3,7 +3,7 @@
 Formerly FaustCoder; renamed 2026-10-17 PT.
 
 - Status: DRAFT / refinement-ready
-- Version: 0.3.6 (FLOOR bounds ratified, Danny 2026-10-18 12:34 AM PT; see §25). 0.3.5 (Jev Q1–Q4, 2026-10-17 7:40 PM PT; Danny "use jev to make decisions" 7:37 PM PT; see §24). 0.3.4 (ADR-0006 reward ladder, Danny 2026-10-17 4:11 PM PT, A2 extended 4:28 PM PT; see §23). 0.3.3: D-013 rights defaults, Danny yes 2026-10-17 1:04 PM PT; see §22. 0.3.2: CompilerReceipt diagnostic classes, ADR-0005, Danny yes 2026-10-17 1:13 PM PT; see §21. 0.3.1: R-001 v0.2 evidence, Danny yes 2026-10-17 12:54 PM PT; see §20. 0.3.0: Faust-tooling assimilation and target lanes, ADR-0004; see §19. 0.2.0 training path: ADR-0002, §17
+- Version: 0.3.8 (FLOOR lower-floor detections, Danny 2026-10-18 2:27 AM PT, "continue as recommended"; see §25). 0.3.6 (FLOOR bounds ratified, Danny 2026-10-18 12:34 AM PT; see §25). 0.3.5 (Jev Q1–Q4, 2026-10-17 7:40 PM PT; Danny "use jev to make decisions" 7:37 PM PT; see §24). 0.3.4 (ADR-0006 reward ladder, Danny 2026-10-17 4:11 PM PT, A2 extended 4:28 PM PT; see §23). 0.3.3: D-013 rights defaults, Danny yes 2026-10-17 1:04 PM PT; see §22. 0.3.2: CompilerReceipt diagnostic classes, ADR-0005, Danny yes 2026-10-17 1:13 PM PT; see §21. 0.3.1: R-001 v0.2 evidence, Danny yes 2026-10-17 12:54 PM PT; see §20. 0.3.0: Faust-tooling assimilation and target lanes, ADR-0004; see §19. 0.2.0 training path: ADR-0002, §17
 - Target: NVIDIA DGX Spark (128 GB unified memory)
 
 ## 1. Constitution
@@ -460,7 +460,7 @@ never from scratch, in weeks rather than months. Evidence is in
 | D-013 | STK-4.3 permissive with notice; bare BSD not redistributed; notice manifest required; vendored copies deduped and not cleared; per-function library slicing; strictest license wins; CC-TODO stripped; copyleft training-only plus a proposed near-duplicate output gate; header-less definition; inferred clearance needs a reviewer; impulse tests stay out of eval | ACCEPTED; refines D-004 and D-007 | Danny yes 2026-10-17 1:04 PM PT | ADR-0003, §22 |
 | Q1 | Binary P3 reward, whole-group drop, R-005 ladder diagnostic only, binary-vs-ladder ablation. CONDITIONS in §24, including C1, per-checkpoint halt, and ladder-arm failure on a quarantine rise | ACCEPTED | Jev 2026-10-17 7:40 PM PT; Danny "use jev to make decisions" 7:37 PM PT | ADR-0006, §24 verbatim |
 | Q2 | Auto-attribution only as A2-T after shadow. §23 rerun-plus-fixture path is not sanctioned. Below ~0.1% keeps auto-attribution off. Gold canary must be clean. L3 is rerun hooks for 124 and 125. A7-S 20% share, 2× rise, 500-sample window, provisional | ACCEPTED | Jev 2026-10-17 7:40 PM PT; Danny "use jev to make decisions" 7:37 PM PT | ADR-0006, §24 verbatim |
-| Q3 | TOKEN_FLOOR stays 40 and provisional. Protocol after H2 (brief: canonical ID/NUM stream) and H3 (brief: NFKC and drop Cf/Cc). `lib.fn`, the 1/2 rule and the `STR` collapse are an ADVERSARY r6 addition; not ruled by Jev. Wilson CIs, Danny sets the numbers before the run, exact hash on the ID/NUM stream under 15 tokens with idioms allowlisted. T07 freeze needs a leakage caveat and a scheduled re-check | ACCEPTED; bounds ratified 2026-10-18 (§25); floor value still provisional | Jev 2026-10-17 7:40 PM PT; Danny "use jev to make decisions" 7:37 PM PT | ADR-0002, §24 verbatim |
+| Q3 | TOKEN_FLOOR stays 40 and provisional. Protocol after H2 (brief: canonical ID/NUM stream) and H3 (brief: NFKC and drop Cf/Cc). `lib.fn`, the 1/2 rule and the `STR` collapse are an ADVERSARY r6 addition; not ruled by Jev. Wilson CIs, Danny sets the numbers before the run, exact hash on the ID/NUM stream under 15 tokens with idioms allowlisted. T07 freeze needs a leakage caveat and a scheduled re-check | ACCEPTED; bounds ratified 2026-10-18 (§25); lower-floor detections ruled 2026-10-18 2:27 AM PT (§25); floor value still provisional | Jev 2026-10-17 7:40 PM PT; Danny "use jev to make decisions" 7:37 PM PT | ADR-0002, §24 verbatim |
 | Q4 | ADR-0002 accepted in full (Jev's default; Danny may still choose P3 PROPOSED, the partial P0–P2 acceptance). P3 exit gates in §24. Only the ~5M-token CPT-skip threshold is ratified as written | ACCEPTED | Jev 2026-10-17 7:40 PM PT; Danny "use jev to make decisions" 7:37 PM PT | ADR-0002, §24 verbatim |
 
 ## 19. Amendments 0.3.0 (ADR-0004, ACCEPTED)
@@ -699,4 +699,17 @@ The figure of at most 4 misses at n = 100 depends on a two-sided Wilson interval
 
 Separate recorded rights ruling, not part of D6 and not Danny's ratified text: needs_human sources count as reject-class until a human clears them (fail closed). Boof (orchestrator), rights call under Danny's 2026-10-17 BlackDog rights/licensing delegation ([rights-inventory.md](../../docs/rights-inventory.md) lines 21-22), 2026-10-18 ~12:57 AM PT.
 
-Open question for Danny, not a rule: whether a hit that shows up only when the floor is lowered is scored as a miss in a higher floor's recall cell. The ratified D6 cells govern until he decides.
+### Lower-floor detections (0.3.8)
+
+This replaces the open question. Record: [FLOOR-ruling-b-recommendation-2026-10-18.md](../../docs/decisions/FLOOR-ruling-b-recommendation-2026-10-18.md).
+
+> Ruling on lower-floor detections (Danny, 2026-10-18 2:27 AM PT, "continue as recommended"; record: FLOOR-ruling-b-recommendation-2026-10-18.md). This interprets the ratified D6 bounds and does not change their text or numbers.
+>
+> 1. Ground truth for the FLOOR run is fixed before scoring and does not depend on TOKEN_FLOOR. The same gold set is used for 40, 30 and 20.
+> 2. Planted items: every planted item is a positive at every candidate floor. A planted item that a floor misses is a miss in that floor's cell, whatever its length. No item leaves a cell's denominator because it is shorter than the floor. Cells stay at n = 100 planted items.
+> 3. Natural copies: the candidate pool is the union of everything flagged at floors 40, 30 and 20, by the sub-15 exact-hash check, and by the H1 union-coverage check, on the shipping path. Each candidate is adjudicated once, on content, as COPY or NOT_COPY of reject-class text (rights_rejected, or needs_human until cleared), with a 15-token minimum and without regard to which floor flagged it. The adjudicated set is frozen before any floor is scored. Natural copies do not enter the Wilson cells.
+> 4. Item 4's first count ("detected reject-class matches left unquarantined in cleared") counts, at floor F, every adjudicated COPY and every unadjudicated candidate that F's own shipping pipeline leaves in cleared. A copy that only a lower floor detects therefore fails item 4 at every higher floor that leaves it in cleared.
+> 5. Only quarantines produced by F's shipping pipeline count for F. Manual quarantine pins may be applied for corpus hygiene but do not make F pass.
+> 6. Every natural miss is inspected and recorded with its mechanism. Per-floor natural recall (detected / adjudicated COPY) is reported and not gated, and the report states that the pool comes from the detectors themselves.
+
+Same ruling: the natural-copy pool is de-duplicated, and two reviewers judge each candidate.
