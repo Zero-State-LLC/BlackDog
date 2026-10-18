@@ -10,13 +10,74 @@ else
   SUDO=
 fi
 
+# Refuse a directory that is not a real root-owned directory, or that
+# is group- or world-writable unless it is root-owned and sticky.
+# stat without -L does not follow a symlink. A symlink is refused.
+refuse_unless_root_only() {
+  local path=$1
+  local mode uid other group sticky
+  if [[ -L $path ]]; then
+    echo "refusing symlink in directory chain: $path" >&2
+    exit 1
+  fi
+  if [[ ! -d $path ]]; then
+    echo "refusing non-directory in directory chain: $path" >&2
+    exit 1
+  fi
+  mode=$(stat -c '%a' -- "$path")
+  uid=$(stat -c '%u' -- "$path")
+  other=$((10#$mode % 10))
+  group=$((10#$mode / 10 % 10))
+  sticky=$((10#$mode / 1000))
+  if (( (other & 2) != 0 && ((sticky & 1) == 0 || uid != 0) )); then
+    echo "refusing world-writable parent without a root-owned sticky bit: $path" >&2
+    exit 1
+  fi
+  if [[ $uid != "0" ]]; then
+    echo "refusing non-root directory: $path" >&2
+    exit 1
+  fi
+  if (( (group & 2) != 0 && (sticky & 1) == 0 )); then
+    echo "refusing group-writable directory: $path" >&2
+    exit 1
+  fi
+}
+
+# Every component from path up to / must be root-only. A root-owned
+# sticky directory is allowed. A user-owned grandparent is not.
+walk_root_only_chain() {
+  local current=$1
+  while true; do
+    refuse_unless_root_only "$current"
+    if [[ $current == "/" ]]; then
+      break
+    fi
+    current=$(dirname -- "$current")
+  done
+}
+
+# chmod through a directory fd opened with O_NOFOLLOW. A symlink swapped
+# in before chmod is refused, and the link target is not mode-changed.
+chmod_directory_nofollow() {
+  local path=$1
+  $SUDO python3 -c 'import os, sys
+path = sys.argv[1]
+fd = os.open(path, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+try:
+    os.fchmod(fd, 0o755)
+finally:
+    os.close(fd)
+' "$path"
+}
+
 # Create one real root-owned directory, mode 0755, without following a
-# pre-seeded symlink. The parent must already exist. A world-writable
-# parent is refused unless it is root-owned and sticky: otherwise
-# another user can replace the directory after chown.
+# pre-seeded symlink. The parent chain up to / must already exist and
+# be root-only. A pre-existing path is refused unless it is already a
+# real root-owned directory mode 0755: an attacker-owned directory is
+# not chowned, so its planted contents are not adopted.
 ensure_root_dir() {
   local path=$1
-  local parent mode uid other sticky owner kind
+  local parent owner kind mode
   if [[ -z $path || $path == "/" ]]; then
     echo "refusing to create $path" >&2
     exit 1
@@ -30,16 +91,7 @@ ensure_root_dir() {
     echo "refusing missing parent: $parent" >&2
     exit 1
   fi
-  mode=$(stat -c '%a' -- "$parent")
-  uid=$(stat -c '%u' -- "$parent")
-  other=$((10#$mode % 10))
-  if (( (other & 2) != 0 )); then
-    sticky=$((10#$mode / 1000))
-    if (( (sticky & 1) == 0 || uid != 0 )); then
-      echo "refusing world-writable parent without a root-owned sticky bit: $parent" >&2
-      exit 1
-    fi
-  fi
+  walk_root_only_chain "$parent"
   if [[ -L $path ]]; then
     echo "refusing pre-seeded symlink: $path" >&2
     exit 1
@@ -48,9 +100,17 @@ ensure_root_dir() {
     echo "refusing non-directory: $path" >&2
     exit 1
   fi
-  if [[ ! -e $path ]]; then
-    $SUDO mkdir -- "$path"
+  if [[ -d $path ]]; then
+    owner=$(stat -c '%u' -- "$path")
+    kind=$(stat -c '%F' -- "$path")
+    mode=$(stat -c '%a' -- "$path")
+    if [[ $owner != "0" || $kind != "directory" || $mode != "755" ]]; then
+      echo "refusing pre-existing path: $path" >&2
+      exit 1
+    fi
+    return 0
   fi
+  $SUDO mkdir -- "$path"
   if [[ -L $path || ! -d $path ]]; then
     echo "refusing: $path is not a real directory" >&2
     exit 1
@@ -60,7 +120,10 @@ ensure_root_dir() {
     echo "refusing: $path is not a real directory after chown" >&2
     exit 1
   fi
-  $SUDO chmod 755 -- "$path"
+  if ! chmod_directory_nofollow "$path"; then
+    echo "refusing: $path is not a real directory after chmod" >&2
+    exit 1
+  fi
   if [[ -L $path ]]; then
     echo "refusing: $path is not a real directory after chmod" >&2
     exit 1

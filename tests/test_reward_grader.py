@@ -29,6 +29,8 @@ from faustcoder.reward import (
     dataset_reward_row,
     grade_compiler_exclusion,
     grade_receipt,
+    is_minted,
+    mint_native_stack_match,
     reward_profiles,
     reward_value,
     rl_batch,
@@ -36,6 +38,7 @@ from faustcoder.reward import (
 )
 from faustcoder.reward.grader import _compile_stack_line
 from faustcoder.schemas import SchemaValidationError, validate
+from faustcoder.signal import SignalHarnessError
 from tests.support import allowlisted_reward_envelope, compiler_failure_envelope, make_envelope
 
 _REPO = Path(__file__).resolve().parents[1]
@@ -225,6 +228,117 @@ def test_dataset_and_rl_builders_require_rewardable_provenance() -> None:
         assert "unrewardable" in str(exc)
     else:
         raise AssertionError("nonlinear task was accepted by rl_batch")
+
+
+def test_reward_value_refuses_an_unrewardable_task() -> None:
+    linear = _linear_task()
+    passed = grade_receipt(allowlisted_reward_envelope(passed=True), task=linear)
+    assert reward_value(passed, linear) == 1.0
+    for effect in ("nonlinear", "time_variant"):
+        task = _linear_task()
+        task["effect"] = effect
+        graded = grade_receipt(allowlisted_reward_envelope(passed=True), task=task)
+        failed = grade_receipt(allowlisted_reward_envelope(passed=False), task=task)
+        for receipt in (graded, failed):
+            try:
+                reward_value(receipt, task)
+            except SignalHarnessError as exc:
+                assert "unrewardable" in str(exc)
+            else:
+                raise AssertionError(f"reward_value scored {effect}")
+        try:
+            dataset_reward_row(graded, task=task)
+        except SignalHarnessError as exc:
+            assert "unrewardable" in str(exc)
+        else:
+            raise AssertionError(f"dataset_reward_row scored {effect}")
+        try:
+            rl_batch([{"reward": 1.0, "provenance": graded, "task": task}])
+        except SignalHarnessError as exc:
+            assert "unrewardable" in str(exc)
+        else:
+            raise AssertionError(f"rl_batch scored {effect}")
+    closed = _linear_task()
+    profile = dict(closed["test_profile"])
+    profile["rewardable"] = False
+    profile["unrewardable_reason"] = "nonlinear"
+    closed["test_profile"] = profile
+    try:
+        reward_value(passed, closed)
+    except SignalHarnessError as exc:
+        assert "unrewardable" in str(exc)
+    else:
+        raise AssertionError("reward_value scored rewardable false")
+    try:
+        dataset_reward_row(passed, task=closed)
+    except SignalHarnessError as exc:
+        assert "unrewardable" in str(exc)
+    else:
+        raise AssertionError("dataset_reward_row scored rewardable false")
+    row = dataset_reward_row(passed, task=linear, example_id="e")
+    row["task"] = closed
+    try:
+        rl_batch([row])
+    except SignalHarnessError as exc:
+        assert "unrewardable" in str(exc)
+    else:
+        raise AssertionError("rl_batch scored rewardable false")
+
+
+def test_lookalike_and_rebound_receipts_score_nothing() -> None:
+    task = _linear_task()
+    failed = grade_receipt(allowlisted_reward_envelope(passed=False), task=task)
+    lookalike = object.__new__(RewardableSignalReceipt)
+    for name in (
+        "passed",
+        "profile_name",
+        "test_suite_digest",
+        "reproducible_digest",
+        "schema_version",
+        "task_digest",
+    ):
+        object.__setattr__(lookalike, name, getattr(failed, name))
+    object.__setattr__(lookalike, "passed", True)
+    assert not is_minted(lookalike)
+    try:
+        reward_value(lookalike, task)
+    except RewardProvenanceError as exc:
+        assert "not minted" in str(exc)
+    else:
+        raise AssertionError("reward_value scored a lookalike")
+    try:
+        dataset_reward_row(lookalike, task=task)
+    except RewardProvenanceError as exc:
+        assert "RewardableSignalReceipt" in str(exc)
+    else:
+        raise AssertionError("dataset_reward_row scored a lookalike")
+    try:
+        rl_batch([{"reward": 1.0, "provenance": lookalike, "task": task}])
+    except RewardProvenanceError as exc:
+        assert "RewardableSignalReceipt" in str(exc)
+    else:
+        raise AssertionError("rl_batch scored a lookalike")
+    passed = grade_receipt(allowlisted_reward_envelope(passed=True), task=task)
+    other = _linear_task()
+    other["task_id"] = "task-other-linear"
+    object.__setattr__(
+        passed,
+        "task_digest",
+        content_digest_for({"effect": other["effect"], "task_id": other["task_id"]}),
+    )
+    assert not is_minted(passed)
+    try:
+        reward_value(passed, other)
+    except RewardProvenanceError as exc:
+        assert "not minted" in str(exc)
+    else:
+        raise AssertionError("reward_value scored a rebound receipt")
+    try:
+        rl_batch([{"reward": 1.0, "provenance": passed, "task": other}])
+    except RewardProvenanceError as exc:
+        assert "RewardableSignalReceipt" in str(exc)
+    else:
+        raise AssertionError("rl_batch scored a rebound receipt")
 
 
 def test_linear_row_refuses_a_receipt_minted_for_another_task() -> None:
@@ -1272,19 +1386,21 @@ def _native_stack_receipt(
     compiler: str = "faust-cli",
     source: str = "ab" * 32,
     exit_code: int = 1,
+    lang: str = "cpp",
+    command: list[str] | None = None,
 ) -> dict:
     """A native CLI receipt. The stderr digest is ``diagnostics``."""
     return {
         "source_sha256": source,
         "faust_version": version,
-        "command": ["faust"],
+        "command": ["faust"] if command is None else command,
         "exit_code": exit_code,
         "stdout_digest": "sha256:" + "00" * 32,
         "stderr_digest": "sha256:" + hashlib.sha256(diagnostics.encode("utf-8")).hexdigest(),
         "duration_ms": 1,
         "environment_digest": "sha256:" + "22" * 32,
         "compiler": compiler,
-        "lang": "cpp",
+        "lang": lang,
         "options": [],
         "diagnostic_class": "parse_error" if exit_code == 1 else "internal",
     }
@@ -1299,61 +1415,85 @@ def test_compile_stack_lines_need_a_native_match() -> None:
     assert isinstance(held, Ungraded)
     assert held.reason is UngradedReason.UNATTRIBUTED
     assert reward_value(held) is None
-    graded = grade_receipt(
+    sealed = mint_native_stack_match(_native_stack_receipt(exact), exact)
+    graded = grade_receipt(envelope, diagnostics=exact, native=sealed)
+    assert isinstance(graded, SourceAttributedFailure)
+    assert graded.detail == "stack overflow"
+    raw = grade_receipt(
         envelope,
         diagnostics=exact,
         native=_native_stack_receipt(exact),
         native_diagnostics=exact,
     )
-    assert isinstance(graded, SourceAttributedFailure)
-    assert graded.detail == "stack overflow"
+    assert isinstance(raw, Ungraded)
+    assert raw.reason is UngradedReason.UNATTRIBUTED
     plain = "ERROR : stack overflow\n"
     plain_envelope = compiler_failure_envelope(
         exit_code=126, diagnostic_class="internal", diagnostics=plain
     )
-    plain_graded = grade_receipt(
-        plain_envelope,
-        diagnostics=plain,
-        native=_native_stack_receipt(plain),
-        native_diagnostics=plain,
-    )
+    plain_sealed = mint_native_stack_match(_native_stack_receipt(plain), plain)
+    plain_graded = grade_receipt(plain_envelope, diagnostics=plain, native=plain_sealed)
     assert isinstance(plain_graded, SourceAttributedFailure)
     assert plain_graded.detail == "stack overflow"
+    cpp_command = mint_native_stack_match(
+        _native_stack_receipt(exact, command=["faust", "--faust=2.88.0", "-lang", "cpp"]),
+        exact,
+    )
+    cpp_graded = grade_receipt(envelope, diagnostics=exact, native=cpp_command)
+    assert isinstance(cpp_graded, SourceAttributedFailure)
+    assert cpp_graded.detail == "stack overflow"
+    crossed = grade_receipt(envelope, diagnostics=exact, native=plain_sealed)
+    assert isinstance(crossed, Ungraded)
+    assert crossed.reason is UngradedReason.UNATTRIBUTED
     other = "ERROR : undefined symbol\n"
     other_envelope = compiler_failure_envelope(
         exit_code=126, diagnostic_class="internal", diagnostics=other
     )
-    # A line-start ERROR that is not one of the two stack lines stays
-    # ungraded. A native stack match does not attach to it.
-    untouched = grade_receipt(
-        other_envelope,
-        diagnostics=other,
-        native=_native_stack_receipt(exact),
-        native_diagnostics=exact,
-    )
+    untouched = grade_receipt(other_envelope, diagnostics=other, native=sealed)
     assert isinstance(untouched, Ungraded)
     assert untouched.reason is UngradedReason.UNATTRIBUTED
-    elsewhere = "ERROR : elsewhere\n"
+    timed = compiler_failure_envelope(
+        exit_code=124, diagnostic_class="timeout", diagnostics=exact
+    )
+    timeout_row = grade_receipt(timed, diagnostics=exact, native=sealed)
+    assert isinstance(timeout_row, Ungraded)
+    assert timeout_row.reason is UngradedReason.UNATTRIBUTED
+    overflow = "ERROR : stack overflowing everything\n"
     refused = [
         (_native_stack_receipt(exact, version="2.90.0"), exact),
         (_native_stack_receipt(exact, compiler="libfaust-wasm"), exact),
-        (_native_stack_receipt(exact, source="cd" * 32), exact),
         (_native_stack_receipt(exact, exit_code=0), exact),
-        (_native_stack_receipt(elsewhere), elsewhere),
-        (_native_stack_receipt(exact), "not the hashed text\n"),
+        (_native_stack_receipt(exact, exit_code=124), exact),
+        (_native_stack_receipt(exact, exit_code=125), exact),
+        (_native_stack_receipt(exact, exit_code=126), exact),
+        (_native_stack_receipt(exact, exit_code=137), exact),
+        (_native_stack_receipt(exact, exit_code=139), exact),
+        (_native_stack_receipt(exact, exit_code=-9), exact),
+        (_native_stack_receipt(overflow), overflow),
+        (_native_stack_receipt(exact, lang="wasm", command=["libfaust-wasm"]), exact),
+        (_native_stack_receipt(exact, command=["faust", "-lang", "wasm"]), exact),
+        (_native_stack_receipt(exact, command=["faust", "--faustwasm=1"]), exact),
     ]
-    forged = _native_stack_receipt(exact)
-    forged["extra"] = True
-    refused.append((forged, exact))
-    for native, native_text in refused:
-        pending = grade_receipt(
-            envelope,
-            diagnostics=exact,
-            native=native,
-            native_diagnostics=native_text,
-        )
-        assert isinstance(pending, Ungraded), native
+    signaled = _native_stack_receipt(exact)
+    signaled["termination_signal"] = 11
+    refused.append((signaled, exact))
+    extra = _native_stack_receipt(exact)
+    extra["extra"] = True
+    refused.append((extra, exact))
+    for native, diagnostics in refused:
+        try:
+            mint_native_stack_match(native, diagnostics)
+        except RewardProvenanceError:
+            pass
+        else:
+            raise AssertionError(f"native receipt was minted: {native}")
+        pending = grade_receipt(envelope, diagnostics=exact, native=native)
+        assert isinstance(pending, Ungraded)
         assert pending.reason is UngradedReason.UNATTRIBUTED
+    other_source = mint_native_stack_match(_native_stack_receipt(exact, source="cd" * 32), exact)
+    reused = grade_receipt(envelope, diagnostics=exact, native=other_source)
+    assert isinstance(reused, Ungraded)
+    assert reused.reason is UngradedReason.UNATTRIBUTED
     for prose in (
         "error : stack overflow in eval\n",
         "note ERROR : stack overflow in eval\n",
@@ -1424,17 +1564,26 @@ def test_shadow_observe_reruns_and_never_grades() -> None:
         called["fixture"] += 1
         return FixtureOutcome(passed=True)
 
+    sealed = mint_native_stack_match(_native_stack_receipt(exact), exact)
     log = shadow_observe(
         envelope,
         diagnostics=exact,
         rerun=rerun,
         known_good=fixture,
-        native=_native_stack_receipt(exact),
+        native=sealed,
         native_diagnostics=exact,
     )
     assert called == {"rerun": 1, "fixture": 1}
     assert log.signature == "stack_line"
     assert "native Faust 2.88.0 stack match" in log.detail
+    raw = shadow_observe(
+        envelope,
+        diagnostics=exact,
+        native=_native_stack_receipt(exact),
+        native_diagnostics=exact,
+    )
+    assert raw.signature == "stack_line"
+    assert "native match absent" in raw.detail
     assert "rerun failed=True" in log.detail
     try:
         reward_value(log)

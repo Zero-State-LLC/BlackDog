@@ -53,8 +53,8 @@ import hashlib
 import math
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
+import weakref
 from typing import Any
-from weakref import WeakKeyDictionary
 
 from faustcoder.canonical import content_digest_for
 from faustcoder.compiler import NATIVE_FAUST_VERSION, reproducible_receipt_digest
@@ -157,6 +157,29 @@ class AutoAttributionRefused(Exception):
     """
 
 
+class NativeStackMatch:
+    """A sealed native Faust 2.88.0 stack failure.
+
+    Only ``mint_native_stack_match`` constructs this. A raw dict is not
+    a match. ``grade_receipt`` attributes a compile stack line only when
+    this seal is intact and the stack-line text is the same.
+    """
+
+    __slots__ = ("source_sha256", "stack_line", "__weakref__")
+
+    def __init__(self, *args: object, **kwargs: object) -> None:
+        raise TypeError("NativeStackMatch can only be constructed by mint_native_stack_match")
+
+    def __setattr__(self, name: str, value: object) -> None:
+        raise AttributeError("NativeStackMatch is immutable")
+
+    def _snapshot(self) -> tuple[object, ...]:
+        return (
+            getattr(self, "source_sha256", None),
+            getattr(self, "stack_line", None),
+        )
+
+
 @dataclass(frozen=True)
 class ShadowLog:
     """A2-T shadow record. Not a grade and not a receipt.
@@ -182,8 +205,15 @@ def reward_value(result: Grade, task: object = None) -> float | None:
     if isinstance(result, SourceAttributedFailure):
         return 0.0
     if isinstance(result, RewardableSignalReceipt):
+        if not is_minted(result):
+            raise RewardProvenanceError("reward receipt was not minted by grade_receipt")
         _require_receipt_task(result, task)
-        return 1.0 if result.passed else 0.0
+        from faustcoder.signal_suite import require_task_rewardable
+
+        require_task_rewardable(task)
+        if result.passed:
+            return 1.0
+        return 0.0
     if isinstance(result, ShadowLog):
         raise TypeError("a shadow log is not a grade and has no reward")
     raise TypeError("reward_value requires a grade result")
@@ -211,7 +241,7 @@ def require_rewardable_provenance(receipt: object) -> RewardableSignalReceipt:
     row. A diagnostic receipt, an ``Ungraded`` value, or a bare dict
     is not provenance.
     """
-    if type(receipt) is not RewardableSignalReceipt:
+    if type(receipt) is not RewardableSignalReceipt or not is_minted(receipt):
         raise RewardProvenanceError(
             "reward-bearing row lacks RewardableSignalReceipt provenance"
         )
@@ -357,6 +387,36 @@ def grade_receipt(
     return result
 
 
+class _IdentitySeal:
+    """Mint table keyed by ``id``, not by the object's hash.
+
+    ``object.__setattr__`` can change ``task_digest`` after mint. A
+    hash-keyed table would miss that object. This table still finds it,
+    and the stored snapshot then fails the comparison.
+    """
+
+    def __init__(self) -> None:
+        self._refs: dict[int, weakref.ReferenceType[object]] = {}
+        self._rows: dict[int, tuple[object, ...]] = {}
+
+    def remember(self, obj: object, row: tuple[object, ...]) -> None:
+        ident = id(obj)
+
+        def _drop(_ref: object, ident: int = ident) -> None:
+            self._refs.pop(ident, None)
+            self._rows.pop(ident, None)
+
+        self._refs[ident] = weakref.ref(obj, _drop)
+        self._rows[ident] = row
+
+    def row(self, obj: object) -> tuple[object, ...] | None:
+        ident = id(obj)
+        ref = self._refs.get(ident)
+        if ref is None or ref() is not obj:
+            return None
+        return self._rows.get(ident)
+
+
 def _bind_grade_receipt(grade: Callable[..., Grade]) -> tuple[
     Callable[..., Grade],
     Callable[[object], bool],
@@ -365,16 +425,15 @@ def _bind_grade_receipt(grade: Callable[..., Grade]) -> tuple[
 
     The seal closes over a nonce and the object's identity. A lookalike
     built with the same fields is a different object and is rejected.
+    A later ``object.__setattr__`` on ``task_digest`` breaks the seal.
     """
-    registry: WeakKeyDictionary[RewardableSignalReceipt, tuple[object, ...]] = (
-        WeakKeyDictionary()
-    )
+    registry = _IdentitySeal()
     token = object()
 
     def is_minted(receipt: object) -> bool:
         if type(receipt) is not RewardableSignalReceipt:
             return False
-        row = registry.get(receipt)
+        row = registry.row(receipt)
         if row is None:
             return False
         identity, stamp, snapshot = row
@@ -408,10 +467,86 @@ def _bind_grade_receipt(grade: Callable[..., Grade]) -> tuple[
             native_diagnostics=native_diagnostics,
         )
         if isinstance(result, RewardableSignalReceipt):
-            registry[result] = (id(result), token, result._snapshot())
+            registry.remember(result, (id(result), token, result._snapshot()))
         return result
 
     return grade_receipt, is_minted
+
+
+def _bind_native_mint() -> tuple[
+    Callable[[Mapping[str, Any], str], NativeStackMatch],
+    Callable[[object], bool],
+]:
+    """Seal native stack matches. A raw receipt dict is not a seal."""
+    registry = _IdentitySeal()
+    token = object()
+
+    def is_native_minted(match: object) -> bool:
+        if type(match) is not NativeStackMatch:
+            return False
+        row = registry.row(match)
+        if row is None:
+            return False
+        identity, stamp, snapshot = row
+        return identity == id(match) and stamp is token and snapshot == match._snapshot()
+
+    def mint_native_stack_match(
+        receipt: Mapping[str, Any], diagnostics: str
+    ) -> NativeStackMatch:
+        """Seal one native Faust 2.88.0 compile failure.
+
+        The exit must be 1. Harness exits 124, 125, 126, 137, 139 and
+        -9, and any ``termination_signal``, are refused. ``lang`` must
+        be ``cpp`` and ``command`` must be the native ``faust`` CLI.
+        The diagnostics must contain exactly one of the two stack lines.
+        """
+        if not isinstance(receipt, Mapping) or type(diagnostics) is not str:
+            raise RewardProvenanceError("native match requires a receipt and its diagnostics")
+        body = dict(receipt)
+        try:
+            validate(body, "compiler-receipt.schema.json")
+        except SchemaValidationError as exc:
+            raise RewardProvenanceError("native receipt is not a compiler receipt") from exc
+        if body.get("compiler") != "faust-cli" or body.get("faust_version") != NATIVE_FAUST_VERSION:
+            raise RewardProvenanceError("native match requires Faust 2.88.0 faust-cli")
+        if body.get("lang") != "cpp" or not _native_command(body.get("command")):
+            raise RewardProvenanceError("native match requires the faust CLI cpp command")
+        if body.get("exit_code") != 1 or "termination_signal" in body:
+            raise RewardProvenanceError("native match requires a normal compile failure, exit 1")
+        source = body.get("source_sha256")
+        if type(source) is not str or source == "":
+            raise RewardProvenanceError("native match requires a source hash")
+        if _sha256_text(diagnostics) != body.get("stderr_digest"):
+            raise RewardProvenanceError("native diagnostics do not match stderr_digest")
+        line = _exact_stack_line(diagnostics)
+        if line is None:
+            raise RewardProvenanceError("native diagnostics have no single stack line")
+        sealed = object.__new__(NativeStackMatch)
+        object.__setattr__(sealed, "source_sha256", source)
+        object.__setattr__(sealed, "stack_line", line)
+        registry.remember(sealed, (id(sealed), token, sealed._snapshot()))
+        return sealed
+
+    return mint_native_stack_match, is_native_minted
+
+
+mint_native_stack_match, is_native_minted = _bind_native_mint()
+
+
+def _native_command(command: object) -> bool:
+    """True when ``command`` is the native ``faust`` CLI, not libfaust-wasm."""
+    if not isinstance(command, list) or not command or type(command[0]) is not str:
+        return False
+    if command[0] != "faust":
+        return False
+    if any(type(item) is not str for item in command):
+        return False
+    if any(item == "libfaust-wasm" or item.startswith("--faustwasm=") for item in command):
+        return False
+    for index, item in enumerate(command):
+        if item == "-lang":
+            return index + 1 < len(command) and command[index + 1] == "cpp"
+    return True
 
 
 def shadow_observe(
@@ -440,10 +575,11 @@ def shadow_observe(
     if known_good is not None:
         fixture = known_good()
         notes.append(f"fixture passed={getattr(fixture, 'passed', None)}")
-    matched = _native_stack_match(
+    wasm_line = _exact_stack_line(diagnostics) if isinstance(diagnostics, str) else None
+    matched = wasm_line is not None and _native_stack_match(
         payload if isinstance(payload, Mapping) else {},
         native,
-        native_diagnostics,
+        wasm_line,
     )
     if native is not None or native_diagnostics is not None:
         notes.append("native Faust 2.88.0 stack match" if matched else "native match absent")
@@ -818,43 +954,51 @@ def _source_tag(
         return "mismatch"
     if diagnostics.startswith(_HARNESS_PREFIXES):
         return None
-    if _compile_stack_line(diagnostics) and _native_stack_match(
-        payload, native, native_diagnostics
-    ):
+    # Exit 126 internal is the stored form of a wasm stack line. A
+    # timeout or a kill stays unattributed even when a native exit 1
+    # names the same line.
+    if payload.get("exit_code") != 126 or payload.get("diagnostic_class") != "internal":
+        return None
+    wasm_line = _exact_stack_line(diagnostics)
+    if wasm_line is not None and _native_stack_match(payload, native, wasm_line):
         return "stack overflow"
     return None
 
 
 def _native_stack_match(
     payload: Mapping[str, Any],
-    native: Mapping[str, Any] | None,
-    native_diagnostics: str | None,
+    native: object,
+    wasm_line: str,
 ) -> bool:
-    """True when ``native`` is a failed Faust 2.88.0 CLI compile of the same source.
+    """True when a sealed native exit 1 names the same stack line and source.
 
-    The native diagnostics must hash to the receipt and must contain a
-    line-start stack line. A wasm receipt, another version, a different
-    source, or a digest mismatch is not a match.
+    A raw dict is not a match. The stack-line text must be equal:
+    ``ERROR : stack overflow in eval`` does not match
+    ``ERROR : stack overflow``.
     """
-    if not isinstance(native, Mapping) or not isinstance(native_diagnostics, str):
-        return False
-    receipt = dict(native)
-    try:
-        validate(receipt, "compiler-receipt.schema.json")
-    except SchemaValidationError:
-        return False
-    if receipt.get("compiler") != "faust-cli":
-        return False
-    if receipt.get("faust_version") != NATIVE_FAUST_VERSION:
-        return False
-    if receipt.get("exit_code") == 0:
+    if type(native) is not NativeStackMatch or not is_native_minted(native):
         return False
     source = payload.get("source_sha256")
-    if type(source) is not str or source == "" or receipt.get("source_sha256") != source:
+    if type(source) is not str or source == "" or source != native.source_sha256:
         return False
-    if _sha256_text(native_diagnostics) != receipt.get("stderr_digest"):
-        return False
-    return _compile_stack_line(native_diagnostics)
+    return native.stack_line == wasm_line
+
+
+def _exact_stack_line(text: str) -> str | None:
+    """The one stack line in ``text``, or None.
+
+    The line must equal ``ERROR : stack overflow`` or
+    ``ERROR : stack overflow in eval``. A longer prefix is not that
+    line. Two different stack lines are not one line.
+    """
+    found: str | None = None
+    for line in text.split("\n"):
+        if line not in _COMPILE_STACK_LINES:
+            continue
+        if found is not None and found != line:
+            return None
+        found = line
+    return found
 
 
 def _compile_stack_line(text: str) -> bool:

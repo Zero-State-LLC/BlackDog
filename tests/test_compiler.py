@@ -12,6 +12,7 @@ import stat
 import subprocess
 import sys
 import time
+import uuid
 from pathlib import Path
 
 import pytest
@@ -1364,7 +1365,8 @@ def test_install_script_pins_the_faust_tarball(tmp_path: Path) -> None:
     assert script.index("sha256sum -c") < script.index("tar -xzf")
     assert "/usr/share/faust" in script
     assert "/usr/local/share/faust" in script
-    assert script.index("chmod 755") < script.index("already on PATH")
+    assert script.index("O_NOFOLLOW") < script.index("already on PATH")
+    assert "0o755" in script
     assert "chown -h root:root" in script
     assert "refusing pre-seeded symlink" in script
     assert "world-writable parent" in script
@@ -1390,31 +1392,62 @@ def _ensure_root_dir(path: Path) -> subprocess.CompletedProcess[str]:
     )
 
 
-def test_install_refuses_a_symlink_a_file_and_a_world_writable_bin(tmp_path: Path) -> None:
-    parent = tmp_path / "bin"
-    parent.mkdir()
-    parent.chmod(0o755)
-    attacker = tmp_path / "attacker"
-    attacker.mkdir()
-    (attacker / "stdfaust.lib").write_text("PWNED\n", encoding="ascii")
-    link = parent / "architecture"
-    link.symlink_to(attacker, target_is_directory=True)
-    before = attacker.stat()
-    refused = _ensure_root_dir(link)
-    assert refused.returncode != 0
-    assert "pre-seeded symlink" in refused.stderr
-    assert link.is_symlink()
-    after = attacker.stat()
-    assert after.st_uid == before.st_uid
-    assert after.st_mode == before.st_mode
-    assert (attacker / "stdfaust.lib").read_text(encoding="ascii") == "PWNED\n"
+def _scratch(mode: str) -> Path:
+    """A root-owned directory directly under ``/tmp``, removed by the caller."""
+    path = Path("/tmp") / f"faustcoder-install-{os.getpid()}-{uuid.uuid4().hex}"
+    subprocess.run(["sudo", "-n", "mkdir", "--", str(path)], check=True)
+    subprocess.run(["sudo", "-n", "chown", "root:root", "--", str(path)], check=True)
+    subprocess.run(["sudo", "-n", "chmod", mode, "--", str(path)], check=True)
+    return path
 
-    planted = parent / "not-a-dir"
-    planted.write_text("nope\n", encoding="ascii")
-    refused_file = _ensure_root_dir(planted)
-    assert refused_file.returncode != 0
-    assert "non-directory" in refused_file.stderr
-    assert planted.is_file()
+
+def _sudo_rm(path: Path) -> None:
+    subprocess.run(["sudo", "-n", "rm", "-rf", "--", str(path)], check=False)
+
+
+def _chmod_nofollow(path: Path) -> subprocess.CompletedProcess[str]:
+    script = Path("scripts/install-faust-2.88.0.sh").resolve()
+    return subprocess.run(
+        [
+            "bash",
+            "-c",
+            'source "$1"; chmod_directory_nofollow "$2"',
+            "bash",
+            str(script),
+            str(path),
+        ],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+
+def test_install_refuses_a_symlink_a_file_and_a_world_writable_bin(tmp_path: Path) -> None:
+    parent = _scratch("1777")
+    try:
+        attacker = tmp_path / "attacker"
+        attacker.mkdir()
+        (attacker / "stdfaust.lib").write_text("PWNED\n", encoding="ascii")
+        link = parent / "architecture"
+        link.symlink_to(attacker, target_is_directory=True)
+        before = attacker.stat()
+        refused = _ensure_root_dir(link)
+        assert refused.returncode != 0
+        assert "pre-seeded symlink" in refused.stderr
+        assert link.is_symlink()
+        after = attacker.stat()
+        assert after.st_uid == before.st_uid
+        assert after.st_mode == before.st_mode
+        assert (attacker / "stdfaust.lib").read_text(encoding="ascii") == "PWNED\n"
+
+        planted = parent / "not-a-dir"
+        planted.write_text("nope\n", encoding="ascii")
+        refused_file = _ensure_root_dir(planted)
+        assert refused_file.returncode != 0
+        assert "non-directory" in refused_file.stderr
+        assert planted.is_file()
+    finally:
+        _sudo_rm(parent)
 
     open_bin = tmp_path / "open-bin"
     open_bin.mkdir()
@@ -1433,29 +1466,119 @@ def test_install_refuses_a_symlink_a_file_and_a_world_writable_bin(tmp_path: Pat
     assert not (sticky_user / "architecture").exists()
 
 
-def test_install_creates_a_real_root_owned_directory(tmp_path: Path) -> None:
-    parent = tmp_path / "safe-bin"
-    parent.mkdir()
-    parent.chmod(0o755)
-    created = _ensure_root_dir(parent / "architecture")
-    assert created.returncode == 0, created.stderr
-    info = (parent / "architecture").lstat()
-    assert stat.S_ISDIR(info.st_mode)
-    assert not stat.S_ISLNK(info.st_mode)
-    assert info.st_uid == 0
-    assert info.st_mode & 0o777 == 0o755
+def test_install_refuses_group_writable_non_root_and_a_user_grandparent(
+    tmp_path: Path,
+) -> None:
+    groupy = _scratch("775")
+    try:
+        refused_group = _ensure_root_dir(groupy / "architecture")
+        assert refused_group.returncode != 0
+        assert "group-writable" in refused_group.stderr
+        assert not (groupy / "architecture").exists()
+    finally:
+        _sudo_rm(groupy)
 
-    sticky = tmp_path / "sticky-root"
-    sticky.mkdir()
-    subprocess.run(["sudo", "-n", "chown", "root:root", str(sticky)], check=True)
-    subprocess.run(["sudo", "-n", "chmod", "1777", str(sticky)], check=True)
-    allowed = _ensure_root_dir(sticky / "architecture")
-    assert allowed.returncode == 0, allowed.stderr
-    child = (sticky / "architecture").lstat()
-    assert stat.S_ISDIR(child.st_mode)
-    assert not stat.S_ISLNK(child.st_mode)
-    assert child.st_uid == 0
-    assert child.st_mode & 0o777 == 0o755
+    user_owned = tmp_path / "user-bin"
+    user_owned.mkdir()
+    user_owned.chmod(0o755)
+    refused_user = _ensure_root_dir(user_owned / "architecture")
+    assert refused_user.returncode != 0
+    assert "non-root" in refused_user.stderr
+    assert not (user_owned / "architecture").exists()
+
+    grand = tmp_path / "grand"
+    grand.mkdir()
+    grand.chmod(0o777)
+    parent = grand / "parent"
+    try:
+        subprocess.run(["sudo", "-n", "mkdir", "--", str(parent)], check=True)
+        subprocess.run(["sudo", "-n", "chown", "root:root", "--", str(parent)], check=True)
+        subprocess.run(["sudo", "-n", "chmod", "755", "--", str(parent)], check=True)
+        refused_chain = _ensure_root_dir(parent / "architecture")
+        assert refused_chain.returncode != 0
+        assert "world-writable" in refused_chain.stderr
+        assert str(grand) in refused_chain.stderr
+        assert not (parent / "architecture").exists()
+    finally:
+        _sudo_rm(parent)
+
+
+def test_install_refuses_a_preexisting_directory_with_planted_contents(tmp_path: Path) -> None:
+    parent = _scratch("1777")
+    try:
+        planted = parent / "architecture"
+        planted.mkdir()
+        (planted / "stdfaust.lib").write_text("PWNED\n", encoding="ascii")
+        before = planted.stat()
+        file_before = (planted / "stdfaust.lib").stat()
+        refused = _ensure_root_dir(planted)
+        assert refused.returncode != 0
+        assert "pre-existing" in refused.stderr
+        after = planted.stat()
+        assert after.st_uid == before.st_uid
+        assert after.st_uid != 0
+        assert after.st_mode == before.st_mode
+        assert (planted / "stdfaust.lib").read_text(encoding="ascii") == "PWNED\n"
+        assert (planted / "stdfaust.lib").stat().st_uid == file_before.st_uid
+
+        group_owned = parent / "groupy"
+        subprocess.run(["sudo", "-n", "mkdir", "--", str(group_owned)], check=True)
+        subprocess.run(["sudo", "-n", "chown", "root:root", "--", str(group_owned)], check=True)
+        subprocess.run(["sudo", "-n", "chmod", "775", "--", str(group_owned)], check=True)
+        refused_mode = _ensure_root_dir(group_owned)
+        assert refused_mode.returncode != 0
+        assert "pre-existing" in refused_mode.stderr
+        assert group_owned.stat().st_mode & 0o777 == 0o775
+        assert group_owned.stat().st_uid == 0
+    finally:
+        _sudo_rm(parent)
+
+
+def test_install_creates_a_real_root_owned_directory() -> None:
+    parent = _scratch("755")
+    try:
+        created = _ensure_root_dir(parent / "architecture")
+        assert created.returncode == 0, created.stderr
+        info = (parent / "architecture").lstat()
+        assert stat.S_ISDIR(info.st_mode)
+        assert not stat.S_ISLNK(info.st_mode)
+        assert info.st_uid == 0
+        assert info.st_mode & 0o777 == 0o755
+        again = _ensure_root_dir(parent / "architecture")
+        assert again.returncode == 0, again.stderr
+        assert (parent / "architecture").lstat().st_uid == 0
+    finally:
+        _sudo_rm(parent)
+
+    sticky = _scratch("1777")
+    try:
+        allowed = _ensure_root_dir(sticky / "architecture")
+        assert allowed.returncode == 0, allowed.stderr
+        child = (sticky / "architecture").lstat()
+        assert stat.S_ISDIR(child.st_mode)
+        assert not stat.S_ISLNK(child.st_mode)
+        assert child.st_uid == 0
+        assert child.st_mode & 0o777 == 0o755
+    finally:
+        _sudo_rm(sticky)
+
+
+def test_chmod_directory_nofollow_does_not_follow_a_symlink(tmp_path: Path) -> None:
+    target = tmp_path / "victim"
+    target.mkdir()
+    target.chmod(0o700)
+    link = tmp_path / "architecture"
+    link.symlink_to(target, target_is_directory=True)
+    refused = _chmod_nofollow(link)
+    assert refused.returncode != 0
+    assert target.stat().st_mode & 0o777 == 0o700
+
+    directory = tmp_path / "real"
+    directory.mkdir()
+    directory.chmod(0o700)
+    changed = _chmod_nofollow(directory)
+    assert changed.returncode == 0, changed.stderr
+    assert directory.stat().st_mode & 0o777 == 0o755
 
 
 def test_native_compile_rejects_a_library_planted_beside_the_binary(
