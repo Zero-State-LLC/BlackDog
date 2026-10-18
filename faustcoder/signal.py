@@ -22,12 +22,14 @@ the render is a coarse check: per-block RMS and spectral band
 energies, with the same tolerance. That coarse check is
 magnitude-only, and the 2e-6 floor is per sample, so one 1e-5 spike
 inside a 64-sample block can hide in the block RMS. A
-``reward_graded`` run sets ``head_frames`` to the trimmed reference
-length and signs every sample of that reference. Coarse checks then
-cover only the samples past the reference. An impulse reference whose
-``max_frames`` is below the 144000 block-aligned cap raises
-``ValueError``; the cap is not raised. ``thresholds.reward_graded``
-is stored on every receipt and is part of the reproducible digest.
+``reward_graded`` run signs every sample of the render up to the
+pinned ``max_frames``, including sign and timing past ``head_frames``
+(spec §23 A4, ADR-0006). Coarse magnitude checks are not a reward
+pass. An impulse reference whose ``max_frames`` is below the 144000
+block-aligned cap raises ``ValueError``; the cap is not raised.
+``thresholds.reward_graded`` is stored on every receipt and is part
+of the reproducible digest. ``purpose`` is ``reward`` or
+``diagnostic``. Diagnostic receipts are not rewards.
 ``reject_dc`` does not fire when the reference carries the same DC.
 An impulse reference is built at
 ``max_frames`` (144000, three seconds at 48 kHz) and trimmed to the
@@ -76,10 +78,15 @@ import tempfile
 import time
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, replace
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from faustcoder.candidate_machine import CandidateState, apply_signal
+from faustcoder.candidate_machine import (
+    CandidateState,
+    apply_diagnostic_signal,
+    apply_signal,
+)
 from faustcoder.canonical import build_envelope, content_digest_for, digest_hex
 from faustcoder.compiler import (
     FAUSTWASM_VERSION,
@@ -112,7 +119,7 @@ DEFAULT_TAIL_MARGIN = 64
 MAX_FRAMES = 144_000
 STIMULI = ("impulse", "sine", "noise")
 METRIC_VERSION = 2
-SIGNAL_SCHEMA_VERSION = "0.3.2"
+SIGNAL_SCHEMA_VERSION = "0.3.4"
 _SCHEMA = "dsp-test-receipt.schema.json"
 _FLOAT32_MIN_NORMAL = 1.1754943508222875e-38
 _PI = 3.141592653589793
@@ -125,7 +132,25 @@ _STIMULUS_FILE = re.compile(r"^(impulse|sine|noise)$")
 
 
 class SignalHarnessError(Exception):
-    """The harness failed before it could judge the signal."""
+    """The harness failed before it could judge the signal.
+
+    ``termination`` is the structured worker report for this stage:
+    signal number, JS stack overflow, and wasm trap kind. The message
+    is the render exception text and is not a reward marker.
+    """
+
+    def __init__(
+        self, message: str, *, termination: Mapping[str, Any] | None = None
+    ) -> None:
+        super().__init__(message)
+        reported = termination or {}
+        signal = reported.get("termination_signal")
+        trap = reported.get("wasm_trap")
+        self.termination = {
+            "termination_signal": signal if isinstance(signal, int) else None,
+            "runtime_stack_overflow": reported.get("runtime_stack_overflow") is True,
+            "wasm_trap": trap if isinstance(trap, str) and trap else None,
+        }
 
 
 class SignalLibrariesUnavailable(SignalHarnessError):
@@ -271,24 +296,44 @@ class SignalReference:
 
 @dataclass(frozen=True)
 class SignalRun:
-    """One rate's compile, render and DSPTestReceipt."""
+    """One rate's compile, render and DSPTestReceipt.
+
+    ``receipt`` is ``None`` when a reward-graded compile exit 124, 125
+    or 126, or a render crash, is deferred to ``commit_signal_check``.
+    ``reward_failure`` names that deferral (``compiler``,
+    ``worker_crash`` or ``harness_crash``).
+    """
 
     compilation: Compilation
-    receipt: dict[str, Any]
+    receipt: dict[str, Any] | None
     reproducible_digest: str
     failures: tuple[str, ...]
     reference_payload: dict[str, Any] | None
+    reward_failure: str | None = None
+    source: str | None = None
+    options: tuple[str, ...] = ()
+    limits: ResourceLimits | None = None
+    termination_signal: int | None = None
+    runtime_stack_overflow: bool = False
+    wasm_trap: str | None = None
 
 
 @dataclass(frozen=True)
 class SignalSuite:
-    """Both sample rates, or the rates the caller asked for."""
+    """Both sample rates, or the rates the caller asked for.
+
+    ``ledger`` is the reward ledger a reward-graded suite was given.
+    ``commit_signal_check`` uses it when the caller does not pass one.
+    """
 
     runs: tuple[SignalRun, ...]
+    ledger: object | None = None
 
     @property
     def passed(self) -> bool:
-        return all(run.receipt["passed"] for run in self.runs)
+        return all(
+            run.receipt is not None and run.receipt["passed"] for run in self.runs
+        )
 
 
 @dataclass(frozen=True)
@@ -298,6 +343,7 @@ class SignalCommit:
     state: CandidateState
     artifact_ids: tuple[str, ...]
     suite: SignalSuite
+    outcomes: tuple[object, ...] = ()
 
 
 def f32(value: float) -> float:
@@ -388,6 +434,16 @@ def stimuli_for(profile: SignalProfile) -> dict[str, list[float]]:
 def source_needs_libraries(source: str) -> bool:
     """Return whether ``source`` imports a Faust library or component."""
     return _LIBRARY_IMPORT.search(source) is not None
+
+
+def profile_digest(profile: SignalProfile) -> str:
+    """Return the ``test_suite_digest`` of ``profile``.
+
+    This is the only profile digest computation. Receipts and
+    ``REWARD_PROFILES`` both call it. A payload version change belongs
+    in ``profile_payload``; the digest follows from there.
+    """
+    return content_digest_for(profile_payload(profile))
 
 
 def profile_payload(profile: SignalProfile) -> dict[str, Any]:
@@ -532,6 +588,104 @@ def impulse_reference(
     )
 
 
+def _reward_created_at() -> str:
+    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+def _require_reward_ledger(ledger: object) -> Any:
+    if ledger is None or not hasattr(ledger, "queue") or not hasattr(ledger, "rates"):
+        from faustcoder.reward.grader import RewardUseRefused
+
+        raise RewardUseRefused(
+            "reward-graded compiler and crash outcomes require a reward ledger; "
+            "refusing to score or drop them"
+        )
+    return ledger
+
+
+def _hold_compiler_for_reward(compiled: Compilation, ledger: object) -> None:
+    """Grade a failed compile onto the ledger. Always raises."""
+    bound = _require_reward_ledger(ledger)
+    from faustcoder.compiler import COMPILER_SCHEMA_VERSION
+    from faustcoder.reward.grader import RewardOutcomeHeld, grade_receipt
+
+    envelope = build_envelope(
+        schema_version=COMPILER_SCHEMA_VERSION,
+        created_at=_reward_created_at(),
+        producer="faustcoder.compiler",
+        parents=[],
+        payload=compiled.receipt,
+    )
+    grade = grade_receipt(
+        envelope,
+        diagnostics=compiled.diagnostics,
+        policy="signal",
+        queue=bound.queue,
+        rates=bound.rates,
+    )
+    raise RewardOutcomeHeld(grade)
+
+
+def _deferred_reward_run(
+    compiled: Compilation,
+    kind: str,
+    *,
+    source: str,
+    options: tuple[str, ...] = (),
+    limits: ResourceLimits | None = None,
+    termination_signal: int | None = None,
+    runtime_stack_overflow: bool = False,
+    wasm_trap: str | None = None,
+) -> SignalRun:
+    """Return a suite run whose grade happens in ``commit_signal_check``."""
+    return SignalRun(
+        compilation=compiled,
+        receipt=None,
+        reproducible_digest=compiled.reproducible_digest,
+        failures=(kind,),
+        reference_payload=None,
+        reward_failure=kind,
+        source=source,
+        options=options,
+        limits=limits,
+        termination_signal=termination_signal,
+        runtime_stack_overflow=runtime_stack_overflow,
+        wasm_trap=wasm_trap,
+    )
+
+
+def _hold_crash_for_reward(
+    reproducible_digest: str,
+    ledger: object,
+    *,
+    kind: str,
+    exit_code: int = 126,
+) -> None:
+    """Grade a worker or harness crash onto the ledger. Always raises."""
+    bound = _require_reward_ledger(ledger)
+    from faustcoder.reward.grader import RewardOutcomeHeld, grade_receipt
+
+    envelope = build_envelope(
+        schema_version=SIGNAL_SCHEMA_VERSION,
+        created_at=_reward_created_at(),
+        producer="faustcoder.signal",
+        parents=[],
+        payload={
+            "kind": kind,
+            "exit_code": exit_code,
+            "diagnostic_class": "internal",
+            "reproducible_digest": reproducible_digest,
+        },
+    )
+    grade = grade_receipt(
+        envelope,
+        policy="signal",
+        queue=bound.queue,
+        rates=bound.rates,
+    )
+    raise RewardOutcomeHeld(grade)
+
+
 def run_signal(
     source: str,
     profile: SignalProfile,
@@ -541,6 +695,8 @@ def run_signal(
     limits: ResourceLimits | None = None,
     promotion_candidate: bool = False,
     reward_graded: bool = False,
+    ledger: object | None = None,
+    defer_reward_failure: bool = False,
 ) -> SignalRun:
     """Compile and render ``source``. Return a schema-valid receipt.
 
@@ -554,10 +710,17 @@ def run_signal(
     ``require_reference`` on. With an impulse reference it raises
     ``ValueError`` when ``max_frames`` is below the 144000
     block-aligned cap, and it does not raise that cap. The exact
-    signed comparison then covers the trimmed reference
-    (``head_frames`` equals ``reference.frames``). Coarse checks
-    cover only the samples past that reference. The head stays the
-    only exact window when the run is not reward-graded.
+    signed comparison covers the whole render up to that cap,
+    including samples past ``head_frames`` (spec §23 A4). Coarse
+    magnitude checks are recorded and are not the reward pass. The
+    head stays the only exact window when the run is not
+    reward-graded. A reward-graded compiler failure or worker crash
+    is graded onto ``ledger`` (spec §23). With no ledger the call
+    raises ``RewardUseRefused`` and does not score the outcome.
+    ``defer_reward_failure`` returns a run with no signal receipt for
+    a compiler exit 124, 125 or 126 and for a render crash, so
+    ``commit_signal_check`` can grade it. A sandbox failure while
+    compiling still requires ``ledger`` and is held immediately.
     """
     if not isinstance(source, str):
         raise TypeError("source must be a string")
@@ -576,16 +739,60 @@ def run_signal(
         )
     bounds = limits or ResourceLimits()
     started = time.monotonic()
-    compiled = compile_source(source, lang="wasm", options=checked, limits=bounds)
+    try:
+        compiled = compile_source(source, lang="wasm", options=checked, limits=bounds)
+    except SandboxError:
+        if reward_graded:
+            _hold_crash_for_reward(
+                "sha256:" + hashlib.sha256(source.encode("utf-8")).hexdigest(),
+                ledger,
+                kind="harness_crash",
+            )
+        raise
     if compiled.receipt["exit_code"] != 0 or compiled.receipt["diagnostic_class"] not in {
         "ok",
         "warning",
     }:
+        if reward_graded and defer_reward_failure:
+            return _deferred_reward_run(
+                compiled, "compiler", source=source, options=checked, limits=bounds
+            )
+        if reward_graded:
+            _hold_compiler_for_reward(compiled, ledger)
         raise SignalHarnessError(
             "signal tests require a successful wasm compile "
             f"({compiled.receipt['diagnostic_class']})"
         )
-    rendered = _render(source, profile, options=checked, limits=bounds)
+    try:
+        rendered = _render(source, profile, options=checked, limits=bounds)
+    except SandboxError:
+        if reward_graded and defer_reward_failure:
+            return _deferred_reward_run(
+                compiled, "harness_crash", source=source, options=checked, limits=bounds
+            )
+        if reward_graded:
+            _hold_crash_for_reward(
+                compiled.reproducible_digest, ledger, kind="harness_crash"
+            )
+        raise
+    except SignalHarnessError as exc:
+        if reward_graded and defer_reward_failure:
+            reported = exc.termination
+            return _deferred_reward_run(
+                compiled,
+                "worker_crash",
+                source=source,
+                options=checked,
+                limits=bounds,
+                termination_signal=reported["termination_signal"],
+                runtime_stack_overflow=reported["runtime_stack_overflow"],
+                wasm_trap=reported["wasm_trap"],
+            )
+        if reward_graded:
+            _hold_crash_for_reward(
+                compiled.reproducible_digest, ledger, kind="worker_crash"
+            )
+        raise
     if rendered["libfaust_version"] != compiled.receipt["faust_version"]:
         raise SignalHarnessError("renderer libfaust version disagrees with the compiler receipt")
     wall_ms = int((time.monotonic() - started) * 1000)
@@ -613,16 +820,30 @@ def run_signal_suite(
     limits: ResourceLimits | None = None,
     promotion_candidate: bool = False,
     reward_graded: bool = False,
+    ledger: object | None = None,
     **profile_kwargs: Any,
 ) -> SignalSuite:
     """Run ``source`` at each sample rate. Default rates are 44.1 and 48 kHz.
 
     A default frame count that includes impulse is raised to the cap
     before ``reference_for`` runs, so the reference is built for the
-    window that will actually be rendered.
+    window that will actually be rendered. A reward-graded suite
+    requires ``ledger``. Compiler exits 124, 125 and 126, and render
+    crashes, stay on the returned runs so ``commit_signal_check``
+    grades them onto that ledger. A sandbox failure during compile is
+    held immediately.
     """
     if not sample_rates:
         raise ValueError("sample_rates must not be empty")
+    if reward_graded and (
+        ledger is None or not hasattr(ledger, "queue") or not hasattr(ledger, "rates")
+    ):
+        from faustcoder.reward.grader import RewardUseRefused
+
+        raise RewardUseRefused(
+            "reward-graded signal suites require a reward ledger; "
+            "refusing to score or drop compile failures and crashes"
+        )
     runs: list[SignalRun] = []
     for rate in sample_rates:
         profile = _default_impulse_frames(
@@ -643,9 +864,59 @@ def run_signal_suite(
                 limits=limits,
                 promotion_candidate=promotion_candidate,
                 reward_graded=reward_graded,
+                ledger=ledger,
+                defer_reward_failure=reward_graded,
             )
         )
-    return SignalSuite(runs=tuple(runs))
+    return SignalSuite(runs=tuple(runs), ledger=ledger)
+
+
+def _untagged_worker_hooks(run: SignalRun) -> dict[str, Any]:
+    """Rerun an untagged exit 126 on this worker, plus ``process = _;``.
+
+    Structured stack and trap fields are already source tags, so they
+    do not start another compile. A render crash is a different stage
+    and is not explained by recompiling.
+    """
+    if not isinstance(run.source, str) or not run.source:
+        return {}
+    receipt = run.compilation.receipt
+    if receipt.get("exit_code") != 126 or receipt.get("diagnostic_class") != "internal":
+        return {}
+    if receipt.get("runtime_stack_overflow") is True or isinstance(receipt.get("wasm_trap"), str):
+        return {}
+    if run.compilation.diagnostics == "internal: remote import rejected\n":
+        return {}
+    from faustcoder.reward.types import FixtureOutcome, RerunOutcome
+
+    source = run.source
+    options = run.options
+    limits = run.limits or ResourceLimits()
+
+    def rerun(_payload: dict[str, Any]) -> RerunOutcome:
+        again = compile_source(source, lang="wasm", options=options, limits=limits)
+        return RerunOutcome(
+            failed=again.receipt["exit_code"] != 0,
+            exit_code=int(again.receipt["exit_code"]),
+            diagnostic_class=str(again.receipt["diagnostic_class"]),
+            reproducible_digest=again.reproducible_digest,
+            environment_digest=str(again.receipt["environment_digest"]),
+        )
+
+    def known_good() -> FixtureOutcome:
+        fixture = compile_source(
+            "process = _;\n", lang="wasm", options=options, limits=limits
+        )
+        passed = fixture.receipt["exit_code"] == 0 and fixture.receipt["diagnostic_class"] in {
+            "ok",
+            "warning",
+        }
+        return FixtureOutcome(
+            passed=passed,
+            environment_digest=str(fixture.receipt["environment_digest"]),
+        )
+
+    return {"rerun": rerun, "known_good": known_good}
 
 
 def commit_signal_check(
@@ -655,13 +926,23 @@ def commit_signal_check(
     state: CandidateState,
     created_at: str,
     producer: str = "faustcoder.signal",
+    ledger: object | None = None,
+    policy: str = "signal",
 ) -> SignalCommit:
     """Store each DSPTestReceipt and take the signal edge.
 
     The compiler receipt is stored first and is a parent. A reference
     document, when the run has one, is the other parent. A harness
     exception never reaches this function, so a failed sandbox does
-    not move the candidate.
+    not move the candidate. A reward run with no signal receipt is a
+    compiler failure or a render crash. Those are graded here onto
+    ``ledger`` or the suite ledger. Exit 124, 125 and 126, and a
+    deferred compiler failure, use the compiler envelope. An untagged
+    exit 126 whose run still has its source is rerun on this worker
+    beside ``process = _;``. The known-good fixture passing and the
+    same failure reproducing is ``parse_error``. A render crash uses
+    a crash envelope. Its exception text is not a marker. Structured
+    ``runtime_stack_overflow`` and ``wasm_trap`` on that crash are.
     """
     if state is not CandidateState.COMPILE_CHECKED:
         raise SignalHarnessError("signal check starts from COMPILE_CHECKED")
@@ -681,24 +962,126 @@ def commit_signal_check(
                 producer="faustcoder.signal.reference",
             )
             parents.append(f"sha256:{reference_id}")
+        receipt = run.receipt
+        if receipt is None:
+            if run.reward_failure is None:
+                raise SignalHarnessError("signal run has no receipt")
+            artifact_ids.append(compiler_id)
+            continue
         artifact_ids.append(
             store_signal_receipt(
                 store,
-                run.receipt,
+                receipt,
                 created_at=created_at,
                 producer=producer,
                 parents=parents,
             )
         )
+    purposes = [
+        "reward" if run.receipt is None else run.receipt.get("purpose") for run in suite.runs
+    ]
+    if any(purpose == "reward" for purpose in purposes):
+        if any(purpose != "reward" for purpose in purposes):
+            raise SignalHarnessError("a reward-graded suite cannot mix diagnostic receipts")
+        from faustcoder.candidate_machine import CandidateEvent, next_state
+        from faustcoder.reward.grader import (
+            SourceAttributedFailure,
+            Ungraded,
+            grade_receipt,
+        )
+        from faustcoder.reward.ledger import ledger_for_store
+
+        bound = ledger if ledger is not None else suite.ledger
+        if bound is None or not hasattr(bound, "queue") or not hasattr(bound, "rates"):
+            bound = ledger_for_store(store)
+        outcomes_list: list[object] = []
+        for run, artifact_id in zip(suite.runs, artifact_ids, strict=True):
+            exit_code = run.compilation.receipt.get("exit_code")
+            if exit_code in {124, 125, 126} or run.reward_failure == "compiler":
+                compiler_id = store_compiler_receipt(
+                    store,
+                    run.compilation.receipt,
+                    created_at=created_at,
+                    producer="faustcoder.compiler",
+                )
+                hooks = _untagged_worker_hooks(run)
+                outcomes_list.append(
+                    grade_receipt(
+                        store.get(compiler_id),
+                        diagnostics=run.compilation.diagnostics,
+                        policy=policy,
+                        queue=bound.queue,
+                        rates=bound.rates,
+                        **hooks,
+                    )
+                )
+                if run.receipt is None:
+                    continue
+            if run.receipt is None and run.reward_failure in {"worker_crash", "harness_crash"}:
+                crash_payload: dict[str, Any] = {
+                    "kind": run.reward_failure,
+                    "exit_code": 126,
+                    "diagnostic_class": "internal",
+                    "reproducible_digest": run.compilation.reproducible_digest,
+                }
+                if run.termination_signal is not None:
+                    crash_payload["termination_signal"] = run.termination_signal
+                if run.runtime_stack_overflow:
+                    crash_payload["runtime_stack_overflow"] = True
+                if run.wasm_trap:
+                    crash_payload["wasm_trap"] = run.wasm_trap
+                outcomes_list.append(
+                    grade_receipt(
+                        build_envelope(
+                            schema_version=SIGNAL_SCHEMA_VERSION,
+                            created_at=created_at,
+                            producer=producer,
+                            parents=[f"sha256:{artifact_id}"],
+                            payload=crash_payload,
+                        ),
+                        policy=policy,
+                        queue=bound.queue,
+                        rates=bound.rates,
+                    )
+                )
+                continue
+            outcomes_list.append(
+                grade_receipt(
+                    store.get(artifact_id),
+                    policy=policy,
+                    queue=bound.queue,
+                    rates=bound.rates,
+                )
+            )
+        outcomes = tuple(outcomes_list)
+        if any(isinstance(item, Ungraded) for item in outcomes):
+            # Dropped from reward. Do not take signal_failed: that would
+            # score an ungraded receipt as a model failure (spec §23 A2).
+            return SignalCommit(
+                state=state,
+                artifact_ids=tuple(artifact_ids),
+                suite=suite,
+                outcomes=outcomes,
+            )
+        if any(isinstance(item, SourceAttributedFailure) for item in outcomes):
+            return SignalCommit(
+                state=next_state(state, CandidateEvent.SIGNAL_FAILED, guard_passed=True),
+                artifact_ids=tuple(artifact_ids),
+                suite=suite,
+                outcomes=outcomes,
+            )
+        rewardable = [item for item in outcomes if hasattr(item, "passed")]
+        if not rewardable:
+            raise SignalHarnessError("reward commit produced no signal receipt")
+        chosen = next((item for item in rewardable if not item.passed), rewardable[0])
+        return SignalCommit(
+            state=apply_signal(state, chosen),
+            artifact_ids=tuple(artifact_ids),
+            suite=suite,
+            outcomes=outcomes,
+        )
     return SignalCommit(
-        state=apply_signal(
-            state,
-            passed=suite.passed,
-            reward_graded=all(
-                bool(run.receipt.get("thresholds", {}).get("reward_graded"))
-                for run in suite.runs
-            ),
-        ),
+        state=apply_diagnostic_signal(state, passed=suite.passed),
         artifact_ids=tuple(artifact_ids),
         suite=suite,
     )
@@ -841,7 +1224,7 @@ def _judge(
             summary["max_abs_error_nano"] = to_nano(peak_error)
     failures = sorted(set(failures))
     metrics: dict[str, Any] = {
-        "comparison": "reward-graded-signed" if reward_graded else "head-exact+coarse",
+        "comparison": "reward-graded-signed-full" if reward_graded else "head-exact+coarse",
         "failures": failures,
         "frame_count": profile.frames,
         "head_frames": profile.head_frames,
@@ -852,6 +1235,8 @@ def _judge(
         "renders": renders,
         "stimuli": sorted(profile.stimuli),
     }
+    if reward_graded:
+        metrics["signed_frames"] = profile.frames
     if promotion_candidate and cpu_duration_ms is not None:
         metrics["cpu_duration_ms"] = cpu_duration_ms
     harness = _harness_preimage()
@@ -883,7 +1268,7 @@ def _judge(
     thresholds["reward_graded"] = bool(reward_graded)
     receipt: dict[str, Any] = {
         "source_sha256": hashlib.sha256(source.encode("utf-8")).hexdigest(),
-        "test_suite_digest": content_digest_for(profile_payload(profile)),
+        "test_suite_digest": profile_digest(profile),
         "sample_rate": profile.sample_rate,
         "block_size": profile.block_size,
         "seed": profile.seed,
@@ -892,6 +1277,8 @@ def _judge(
         "passed": not failures,
         "harness_digest": content_digest_for(harness),
         "renderer": "faustwasm",
+        "purpose": "reward" if reward_graded else "diagnostic",
+        "profile": profile_payload(profile),
     }
     if ref_payload is not None:
         receipt["reference_digest"] = content_digest_for(ref_payload)
@@ -1010,11 +1397,10 @@ def _measure_stimulus(
     head = profile.head_frames
     if not isinstance(head, int):
         raise SignalHarnessError("head_frames was not resolved")
-    # Reward grading has already set the head to the trimmed reference.
-    # Sign that window. Coarse checks, which ignore sign, cover only
-    # the samples past it. Other runs keep the exact check on the head
-    # and the coarse check on the whole render.
-    compared = head
+    # Reward grading signs the whole render, past head_frames included
+    # (spec §23 A4). Other runs keep the exact check on the head and
+    # the coarse check on the whole render.
+    compared = profile.frames if reward_graded else head
     summary["compared_frames"] = compared
     peak_error, token = compare_channels(
         [channel[:compared] for channel in quantized_candidate],
@@ -1030,12 +1416,11 @@ def _measure_stimulus(
         failures.append(f"{name}:nonfinite")
     elif token == "channels":
         failures.append(f"{name}:channels")
-    if reward_graded:
-        coarse_candidate = [channel[compared:] for channel in quantized_candidate]
-        coarse_reference = [channel[compared:] for channel in quantized_reference]
-    else:
-        coarse_candidate = quantized_candidate
-        coarse_reference = quantized_reference
+    # Non-reward runs keep the magnitude check on the whole render.
+    # Reward runs record it and do not fail on it: a 1e-5 spike can
+    # hide in a block RMS, and A4 requires the signed compare instead.
+    coarse_candidate = quantized_candidate
+    coarse_reference = quantized_reference
     rms_gap, band_gap, rms_fail, band_fail = _coarse_gaps(
         coarse_candidate, coarse_reference, profile
     )
@@ -1043,9 +1428,9 @@ def _measure_stimulus(
         "band_max_abs_error_nano": to_nano(band_gap),
         "block_rms_max_abs_error_nano": to_nano(rms_gap),
     }
-    if rms_fail:
+    if not reward_graded and rms_fail:
         failures.append(f"{name}:envelope")
-    if band_fail:
+    if not reward_graded and band_fail:
         failures.append(f"{name}:bands")
     _note_impulse_tail(name, reference, profile, failures)
     return summary, failures, peak_error
@@ -1129,9 +1514,9 @@ def _prepare_render(
     A reward-graded run always rejects non-finite samples and requires
     a reference. With an impulse reference, ``max_frames`` below the
     144000 block-aligned cap raises ``ValueError`` before render. The
-    cap is not raised. ``head_frames`` becomes the trimmed reference
-    length, and a shorter impulse reference is silence-padded out to
-    the render so the coarse tail has samples to judge.
+    cap is not raised. ``head_frames`` stays the pinned profile value.
+    The signed compare covers the whole render. A shorter impulse
+    reference is silence-padded out to that render.
     """
     if (
         reward_graded
@@ -1149,12 +1534,9 @@ def _prepare_render(
     profile = _default_impulse_frames(profile)
     if reference is None:
         return profile, None
-    trimmed = reference.frames
     if profile.frames < reference.frames:
         profile = replace(profile, frames=reference.frames)
     _require_same_identity(profile, reference)
-    if reward_graded:
-        profile = replace(profile, head_frames=trimmed)
     if profile.frames > reference.frames:
         if profile.stimuli != ("impulse",):
             _require_same_setup(profile, reference)
@@ -1315,6 +1697,25 @@ def _spectral(channel: Sequence[float], sample_rate: int) -> dict[str, Any]:
     }
 
 
+def _render_termination(run: object, body: Mapping[str, Any] | None) -> dict[str, Any]:
+    """Structured fields for the render stage. The exception text stays separate."""
+    from faustcoder.compiler import WASM_TRAP_KINDS
+
+    reported: dict[str, Any] = {}
+    returncode = getattr(run, "returncode", 0)
+    if isinstance(returncode, int) and returncode < 0:
+        number = -returncode
+        if 1 <= number <= 64:
+            reported["termination_signal"] = number
+    if isinstance(body, Mapping):
+        if body.get("runtime_stack_overflow") is True:
+            reported["runtime_stack_overflow"] = True
+        trap = body.get("wasm_trap")
+        if isinstance(trap, str) and trap in WASM_TRAP_KINDS:
+            reported["wasm_trap"] = trap
+    return reported
+
+
 def _render(
     source: str,
     profile: SignalProfile,
@@ -1357,11 +1758,17 @@ def _render(
         run = run_in_sandbox(command, stdin=request, workdir=workdir, limits=limits)
         _raise_if_canary_failed(run)
         if run.stop_reason:
-            raise SignalHarnessError(f"renderer stopped: {run.stop_reason}")
+            raise SignalHarnessError(
+                f"renderer stopped: {run.stop_reason}",
+                termination=_render_termination(run, None),
+            )
         result_path = workdir / "result.json"
         if run.returncode != 0 or not result_path.is_file():
             detail = run.stderr.decode("utf-8", errors="replace").strip()
-            raise SignalHarnessError(detail or "renderer failed")
+            raise SignalHarnessError(
+                detail or "renderer failed",
+                termination=_render_termination(run, None),
+            )
         try:
             body = json.loads(result_path.read_text(encoding="utf-8"))
         except (OSError, UnicodeError, json.JSONDecodeError) as exc:
@@ -1371,7 +1778,10 @@ def _render(
         if body.get("compile_ok") is not True:
             diagnostic = body.get("diagnostics")
             text = diagnostic if isinstance(diagnostic, str) else "render compile failed"
-            raise SignalHarnessError(text.strip() or "render compile failed")
+            raise SignalHarnessError(
+                text.strip() or "render compile failed",
+                termination=_render_termination(run, body),
+            )
         samples = _read_outputs(workdir, body, profile)
         body["samples"] = samples
         return body

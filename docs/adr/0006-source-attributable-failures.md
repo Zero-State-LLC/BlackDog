@@ -2,9 +2,9 @@
 
 Status: ACCEPTED (2026-10-17, Danny)
 
-Accepted 2026-10-17 by Danny. It takes effect in reward code only when the
-grader changes that implement A1–A7 land. Until then the reward consumers
-keep the ADR-0005 table.
+Accepted 2026-10-17 by Danny. ADR-0006 is in force in reward code.
+`grade_receipt` implements A1–A7 (spec §23). Stored compiler classes
+stay the ADR-0005 enum.
 
 - Date: 2026-10-17
 - Related: [ADR-0005](0005-compiler-diagnostic-classes.md), [compiler runbook](../runbooks/compiler-harness.md)
@@ -46,24 +46,24 @@ one DSP program.
 
 ## Consequences
 
-- Once the A1–A7 grader changes land, a policy cannot dodge a parse
-  error by importing a URL, recursing, or allocating until the harness
-  kills the compile.
+- A policy cannot dodge a parse error by importing a URL, recursing,
+  or allocating until the harness kills the compile. Auto-attribution
+  is what turns an unattributed timeout or resource kill into that rung.
 - Infrastructure faults stay out of the ladder, and a rising ungraded
   rate is visible instead of being dropped quietly.
-- Reward consumers keep the ADR-0005 table in the compiler runbook until
-  the grader changes that implement A1–A7 land.
+- Reward consumers use `grade_receipt` (spec §23). The compiler
+  runbook's stored class table is still the ADR-0005 enum.
 - A2 quarantine entries are tracked as harness or environment bugs to
   fix.
 - A4/A5 specify the fix for ADVERSARY PR41 T04 r3 B1/B2/N4, and
-  enforcement lands with the grader PR. A3 closes r2 N1, and A1
+  `grade_receipt` enforces them. A3 closes r2 N1, and A1
   (CompilerExclusion) matches the PR40 T03b note.
 
 ## Alternatives considered
 
 - Keep every exit at or above 124 ungraded. Rejected as the proposal:
-  source-caused timeouts and remote imports are then a refuge. This
-  alternative remains the behavior in force.
+  source-caused timeouts and remote imports are then a refuge. That
+  table was the stored-class behavior until this grader landed.
 - Grade every `internal` and `resource_limit` as a model error. Rejected:
   a broken worker on a known-good fixture would punish the policy for the
   harness.

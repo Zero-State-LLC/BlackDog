@@ -1,0 +1,75 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Zero-State-LLC/FaustCoder/specs/001-faustcoder/contracts/DSPDiagnosticReceipt.schema.json",
+  "title": "DSPDiagnosticReceipt",
+  "description": "Spec §23 diagnostic receipt. purpose is diagnostic. A reward receipt does not validate against this schema.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "source_sha256",
+    "test_suite_digest",
+    "sample_rate",
+    "block_size",
+    "seed",
+    "metrics",
+    "thresholds",
+    "passed",
+    "harness_digest",
+    "purpose"
+  ],
+  "properties": {
+    "source_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "test_suite_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "sample_rate": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "block_size": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "seed": {
+      "type": "integer"
+    },
+    "metrics": {
+      "type": "object"
+    },
+    "thresholds": {
+      "type": "object",
+      "required": ["reward_graded"],
+      "properties": {
+        "reward_graded": {
+          "const": false
+        }
+      },
+      "additionalProperties": true
+    },
+    "passed": {
+      "type": "boolean"
+    },
+    "harness_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "renderer": {
+      "type": "string",
+      "enum": ["faustwasm", "native"]
+    },
+    "reference_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "purpose": {
+      "const": "diagnostic"
+    },
+    "profile": {
+      "type": "object"
+    }
+  }
+}

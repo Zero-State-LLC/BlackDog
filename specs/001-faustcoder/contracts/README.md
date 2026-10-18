@@ -12,6 +12,8 @@ tests (task T02) and copied to `schemas/`.
 | [task-spec.schema.json](task-spec.schema.json) | §8 TaskSpec |
 | [compiler-receipt.schema.json](compiler-receipt.schema.json) | §8 CompilerReceipt |
 | [dsp-test-receipt.schema.json](dsp-test-receipt.schema.json) | §8 DSPTestReceipt |
+| [dsp-reward-receipt.schema.json](dsp-reward-receipt.schema.json) | §23 reward receipt |
+| [dsp-diagnostic-receipt.schema.json](dsp-diagnostic-receipt.schema.json) | §23 diagnostic receipt |
 | [training-run.schema.json](training-run.schema.json) | §8 TrainingRun |
 | [decision-record.schema.json](decision-record.schema.json) | §8 DecisionRecord |
 | [target-receipt.schema.json](target-receipt.schema.json) | §8 TargetReceipt (0.3.0) |

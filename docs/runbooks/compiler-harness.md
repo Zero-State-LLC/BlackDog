@@ -6,23 +6,52 @@ starts that process in a network namespace. The receipt schema is spec
 
 ## Reward consumers
 
-Key on the pair `(exit_code, diagnostic_class)`.
+Stored receipts still key on the pair `(exit_code, diagnostic_class)`.
+That pair is the ADR-0005 class. Reward grading is spec §23.
+[ADR-0006](../adr/0006-source-attributable-failures.md) is in force in
+reward code. `grade_receipt` is the consumer.
 
-| Exit | Class | Graded |
+| Exit | Class | Reward |
 |---|---|---|
-| 0 | `ok` or `warning` | yes, top of the R-005 ladder |
-| 1 | `parse_error`, `type_error`, `arity_error`, `unbound_symbol`, `other` | yes |
-| 124 | `timeout` | no |
-| 125 | `resource_limit` | no |
-| 126 | `internal` | no |
+| 0 | `ok` or `warning` | not this row; a signal receipt is graded separately |
+| 1 | `parse_error`, `type_error`, `arity_error`, `unbound_symbol`, `other` | graded; `parse_error` is the A1 rung |
+| 124 | `timeout` | `unattributed` until triage or auto-attribution |
+| 125 | `resource_limit` | same as exit 124, except `resource limit: source size`, which is already `parse_error` |
+| 126 | `internal` | `unattributed`, unless already a remote import, `runtime_stack_overflow`, a `wasm_trap` kind, or a line-start `ERROR : stack overflow` on that compile |
+| 137, 139, -9 | any stored class | queued crash (`unattributed`), not `schema_invalid` |
 
-Exit codes 124 and above are ungraded. They are not rungs on the ladder.
-Do not score `internal` or `resource_limit` as `other`. `unbound_symbol`
-is a compiler result (exit 1), the class for libfaust `undefined symbol`.
+Do not score a stored `internal` or `resource_limit` class as `other`.
+`unbound_symbol` is a compiler result (exit 1), the class for libfaust
+`undefined symbol`. Exit 126 is `internal`, not a timeout or a resource
+kill.
 
-[ADR-0006](../adr/0006-source-attributable-failures.md) is Accepted
-(2026-10-17, Danny), but ADR-0005 behaviour stays in force until the
-A1–A7 grader changes land. This table is unchanged.
+An unattributed exit 124, 125 or 126, or a worker or harness crash,
+comes back `Ungraded` with reason `unattributed`. The reward is absent,
+not 0. The row stays in the quarantine queue. Auto-attribution reruns
+the same digest on a quiet worker with a known-good fixture. If the
+fixture passes and the candidate fails again, the rung is `parse_error`.
+If the fixture fails, the reason is `infra_fault`. Triage can mark
+`harness_defect`. A remote import, a source over 1 MiB, a JS
+`runtime_stack_overflow` flag, or a `wasm_trap` kind is already
+`parse_error` and does not wait. Faust's `ERROR : stack overflow`
+counts only as a case-sensitive line-start on the compile diagnostics
+of the stage that failed. Harness text such as `internal: worker failed`
+is not a marker. An untagged exit 126 on the ledger commit path is
+rerun on the same worker beside `process = _;`. The fixture passing
+and the same failure reproducing is `parse_error`. The fixture failing,
+or the failure not reproducing, stays `unattributed`. A7 alerts
+when the per-policy ungraded rate goes above 1% over a 500-sample window,
+or above 2× the known-good baseline, whichever comes first. Five ungraded samples in 500 do not
+alarm. Six do. Those numbers are provisional. The alarm re-arms after
+the rate recovers. `rates.json` is single-process. The grader does not
+spawn the worker.
+The caller supplies the rerun and the fixture. Both environment digests
+must be non-empty and equal; a missing or blank digest stays
+`unattributed`. A reward-graded `run_signal` grades exit 124, 125 and
+126, and a worker or harness crash, onto the ledger next to the artifact
+store. With no ledger that path raises `RewardUseRefused`.
+`compile_source` by itself is not a reward consumer. Receipt signing
+is deferred (D3).
 
 A receipt with exit 124 or above records the same compiler pin as a
 successful compile (`faust_version`, `environment_digest`). It is not
@@ -133,11 +162,11 @@ sha256 and raises `CompilerExclusion` before the worker starts. That is
 not diagnostic class `other`. The example sources are fetched by
 `scripts/fetch-faust-examples.sh` and are not committed.
 
-`CompilerExclusion` on a model output is a failure when rewards land. It
-is not a pass, and it is not an ungraded refuge. Reproducing one of these
-eight sources must not escape a penalty. Reward behavior is unchanged
-until that ladder is built. `CompilerExclusion.reward_disposition` is
-`failure`.
+`CompilerExclusion` on a model output is a graded failure.
+`grade_compiler_exclusion` returns the A1 `parse_error` rung
+(spec §23). It is not a pass, and it is not an ungraded refuge.
+Reproducing one of these eight sources must not escape a penalty.
+`CompilerExclusion.reward_disposition` is `failure`.
 
 Each entry records the raw sha256 and the sha256 after T06 normalization.
 T06 forces LF newlines and strips trailing spaces and tabs. Six of the

@@ -10,6 +10,7 @@ import { readFileSync, writeFileSync, renameSync } from "node:fs";
 import { join } from "node:path";
 import { pathToFileURL, fileURLToPath } from "node:url";
 import { assertNetworkIsolated } from "./netns-canary.mjs";
+import { terminationFields } from "./termination.mjs";
 
 const FAUSTWASM_VERSION = "0.19.0";
 const MAX_STDIN = 2 * 1024 * 1024;
@@ -163,6 +164,7 @@ async function main() {
     compiled = await generator.compile(compiler, "input", request.source, options.join(" "));
   } catch (error) {
     const message = error instanceof Error ? error.message : "compiler failed";
+    const termination = terminationFields(error);
     writeResult(workdir, {
       faustwasm_version: FAUSTWASM_VERSION,
       libfaust_version: libfaustVersion,
@@ -171,6 +173,8 @@ async function main() {
       inputs: 0,
       outputs: 0,
       stimuli: [],
+      runtime_stack_overflow: termination.runtime_stack_overflow,
+      wasm_trap: termination.wasm_trap,
     });
     return;
   }
@@ -206,6 +210,7 @@ async function main() {
     }
   } catch (error) {
     const message = error instanceof Error ? error.message : "render failed";
+    const termination = terminationFields(error);
     writeResult(workdir, {
       faustwasm_version: FAUSTWASM_VERSION,
       libfaust_version: libfaustVersion,
@@ -214,6 +219,8 @@ async function main() {
       inputs: inputCount,
       outputs: outputCount,
       stimuli: written,
+      runtime_stack_overflow: termination.runtime_stack_overflow,
+      wasm_trap: termination.wasm_trap,
     });
     return;
   }
