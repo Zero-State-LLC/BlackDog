@@ -295,21 +295,32 @@ def next_state(
     return row.target
 
 
-def apply_signal(
-    state: CandidateState, *, passed: bool, reward_graded: bool = False
-) -> CandidateState:
-    """Move ``COMPILE_CHECKED`` to ``SIGNAL_CHECKED`` or ``REJECTED``.
+def apply_signal(state: CandidateState, receipt: object) -> CandidateState:
+    """Move ``COMPILE_CHECKED`` on a graded reward receipt.
 
-    The caller has already evaluated R-006. This does not write the
-    receipt; ``faustcoder.signal.commit_signal_check`` does.
-    ``reward_graded`` is the receipt's ``thresholds.reward_graded``
-    bit. A future grader and this function must take the receipt and
-    require that bit true plus the canonical profile digest
-    (``test_suite_digest``). This function records the bit and does
-    not yet enforce that check.
+    Spec §23 A5. ``receipt`` is a ``RewardableSignalReceipt`` from
+    ``grade_receipt``. A bool or a diagnostic receipt is a
+    ``TypeError``. This does not write the receipt;
+    ``faustcoder.signal.commit_signal_check`` does. ``passed`` on the
+    receipt selects ``signal_passed`` or ``signal_failed``.
     """
-    if not isinstance(reward_graded, bool):
-        raise TypeError("reward_graded must be a bool")
+    from faustcoder.reward.grader import is_minted
+    from faustcoder.reward.types import RewardableSignalReceipt
+
+    if type(receipt) is not RewardableSignalReceipt or not is_minted(receipt):
+        raise TypeError("apply_signal requires a RewardableSignalReceipt from grade_receipt")
+    event = CandidateEvent.SIGNAL_PASSED if receipt.passed else CandidateEvent.SIGNAL_FAILED
+    return next_state(state, event, guard_passed=True)
+
+
+def apply_diagnostic_signal(state: CandidateState, *, passed: bool) -> CandidateState:
+    """Move a diagnostic signal check. This is not a reward.
+
+    Non-reward receipts may filter SFT data. They never satisfy
+    ``apply_signal``.
+    """
+    if not isinstance(passed, bool):
+        raise TypeError("passed must be a bool")
     event = CandidateEvent.SIGNAL_PASSED if passed else CandidateEvent.SIGNAL_FAILED
     return next_state(state, event, guard_passed=True)
 
@@ -350,10 +361,11 @@ def render_candidate_machine_markdown() -> str:
         "T04 persists the `signal_passed` and `signal_failed` effects",
         "(a DSPTestReceipt). The other effects stay in the table so illegal",
         "edges are rejected; later tasks write their artifacts.",
-        "A future grader and `apply_signal` must take the receipt and",
-        "require `thresholds.reward_graded` true plus the canonical",
-        "profile digest (`test_suite_digest`). This function receives",
-        "the bit and does not yet enforce that check.",
+        "`apply_signal` takes a `RewardableSignalReceipt` from",
+        "`grade_receipt` (spec §23 A5). The receipt must carry",
+        "`thresholds.reward_graded` and a profile digest in",
+        "`REWARD_PROFILES`. Diagnostic checks use",
+        "`apply_diagnostic_signal` and are not rewards.",
         "",
         f"Initial state: `{INITIAL_STATE.value}`.",
         "",

@@ -38,11 +38,10 @@ _MANIFEST = (
 class CompilerExclusion(Exception):
     """A known source was not compiled and was not graded as ``other``.
 
-    When rewards land, an exclusion of model output is a failure. It is
-    not a pass, and it is not an ungraded refuge: reproducing one of these
-    sources must not escape a penalty. Reward behavior is unchanged until
-    that ladder is built. ``reward_disposition`` is the disposition that
-    ladder must use.
+    An exclusion of model output is a failure. It is not a pass and not
+    an ungraded refuge. ``grade_compiler_exclusion`` grades it at the
+    ``parse_error`` rung (spec §23 A1). ``reward_disposition`` is
+    ``failure``.
     """
 
     reward_disposition = "failure"

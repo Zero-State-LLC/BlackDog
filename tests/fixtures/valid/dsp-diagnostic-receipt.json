@@ -1,0 +1,16 @@
+{
+  "source_sha256": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+  "test_suite_digest": "sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+  "sample_rate": 48000,
+  "block_size": 64,
+  "seed": 1,
+  "metrics": {
+    "comparison": "head-exact+coarse"
+  },
+  "thresholds": {
+    "reward_graded": false
+  },
+  "passed": true,
+  "harness_digest": "sha256:fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210",
+  "purpose": "diagnostic"
+}

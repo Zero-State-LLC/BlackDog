@@ -9,6 +9,7 @@ import { writeFileSync, renameSync, readdirSync, readFileSync, statSync } from "
 import { join, relative } from "node:path";
 import { pathToFileURL, fileURLToPath } from "node:url";
 import { assertNetworkIsolated } from "./netns-canary.mjs";
+import { terminationFields } from "./termination.mjs";
 
 const FAUSTWASM_VERSION = "0.19.0";
 const MAX_STDIN = 2 * 1024 * 1024;
@@ -300,10 +301,13 @@ async function main() {
         : compileCpp(compiler, moduleName, request.source, options);
   } catch (error) {
     const message = error instanceof Error ? error.message : "compiler failed";
+    const termination = terminationFields(error);
     compiled = {
       compile_ok: false,
       diagnostics: message.endsWith("\n") ? message : `${message}\n`,
       files: [],
+      runtime_stack_overflow: termination.runtime_stack_overflow,
+      wasm_trap: termination.wasm_trap,
     };
   }
   const outputFiles = [];
@@ -321,6 +325,8 @@ async function main() {
     compile_ok: compiled.compile_ok,
     diagnostics: compiled.diagnostics,
     output_files: outputFiles,
+    runtime_stack_overflow: compiled.runtime_stack_overflow === true,
+    wasm_trap: typeof compiled.wasm_trap === "string" ? compiled.wasm_trap : null,
   });
 }
 

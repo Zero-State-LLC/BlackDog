@@ -13,5 +13,6 @@
   "passed": true,
   "harness_digest": "sha256:fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210",
   "renderer": "faustwasm",
-  "reference_digest": "sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+  "reference_digest": "sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+  "purpose": "diagnostic"
 }
