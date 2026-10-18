@@ -35,7 +35,13 @@ from typing import Any
 
 from faustcoder.canonical import canonical_bytes, content_digest_for, loads_strict
 from faustcoder.compiler import NATIVE_FAUST_VERSION
-from faustcoder.reward.grader import grade_receipt, task_binding_digest, task_digest_full
+from faustcoder.reward.grader import (
+    RewardProvenanceError,
+    grade_receipt,
+    mint_native_stack_match,
+    task_binding_digest,
+    task_digest_full,
+)
 from faustcoder.reward.profiles import REWARD_PROFILES
 from faustcoder.reward.types import (
     QUARANTINE_REASONS,
@@ -91,6 +97,7 @@ _HEADER_STATEMENT = (
 )
 _ROW_IDENTITY = (
     "compiler_schema_version",
+    "diagnostics",
     "envelope",
     "grader_commit",
     "grader_digest",
@@ -99,6 +106,7 @@ _ROW_IDENTITY = (
     "harness_digest",
     "kind",
     "member_index",
+    "native_diagnostics",
     "native_envelope",
     "native_faust_version",
     "node_flags",
@@ -440,6 +448,8 @@ class RewardRowRecord:
     kind: str
     envelope: dict[str, Any]
     native_envelope: dict[str, Any] | None
+    diagnostics: str
+    native_diagnostics: str
     outcome: str
     graded_at: str
     key_id: str
@@ -608,6 +618,8 @@ def sign_reward_row(
     kind: str,
     graded_at: str,
     native_envelope: Mapping[str, Any] | None = None,
+    diagnostics: str = "",
+    native_diagnostics: str = "",
     grader_commit: str = "",
 ) -> RewardRowRecord:
     """Sign one member. This does not grade. The loader grades again.
@@ -616,6 +628,8 @@ def sign_reward_row(
     match ``metrics.failures`` is refused here. A signal envelope cannot
     be signed as another kind. Compiler and crash envelopes that carry a
     harness, profile, reference or stimulus are checked the same way.
+    ``diagnostics`` and ``native_diagnostics`` are the texts a later
+    regrade uses to remint a native stack match.
     """
     if isinstance(outcome, str) and outcome.startswith("shadow"):
         raise RewardRecordError("a shadow log is not a reward row")
@@ -655,18 +669,32 @@ def sign_reward_row(
         profile_digest, reference_digest, stimulus_digest = _signal_pin_values(payload)
         if payload.get("harness_digest") != current_harness_digest():
             raise RewardRecordError("reward record harness is not usable")
+    diagnostics = _exact_str(diagnostics, "diagnostics")
+    native_diagnostics = _exact_str(native_diagnostics, "diagnostics")
     native_frozen: dict[str, Any] | None
     if native_envelope is None:
         native_frozen = None
         native_version = ""
+        if native_diagnostics:
+            raise RewardRecordError("reward record native evidence did not reconstruct")
     else:
         frozen_native = _freeze(dict(native_envelope))
         if not isinstance(frozen_native, dict):
             raise RewardRecordError("reward record native envelope is not an object")
         native_frozen = frozen_native
         native_version = NATIVE_FAUST_VERSION
+        if not _stderr_matches(native_frozen, native_diagnostics):
+            raise RewardRecordError("reward record native evidence did not reconstruct")
+        try:
+            mint_native_stack_match(native_frozen, native_diagnostics)
+        except RewardProvenanceError as exc:
+            raise RewardRecordError("reward record native evidence did not reconstruct") from exc
+    if diagnostics:
+        if not _stderr_matches(payload, diagnostics):
+            raise RewardRecordError("reward record diagnostics do not match the envelope")
     identity = {
         "compiler_schema_version": _COMPILER_SCHEMA,
+        "diagnostics": diagnostics,
         "envelope": frozen_envelope,
         "grader_commit": grader_commit,
         "grader_digest": grader_digest(),
@@ -675,6 +703,7 @@ def sign_reward_row(
         "harness_digest": current_harness_digest(),
         "kind": kind,
         "member_index": index,
+        "native_diagnostics": native_diagnostics,
         "native_envelope": native_frozen,
         "native_faust_version": native_version,
         "node_flags": list(NODE_SANDBOX_FLAGS),
@@ -719,6 +748,8 @@ def sign_reward_row(
         kind=kind,
         envelope=frozen_envelope,
         native_envelope=native_frozen,
+        diagnostics=diagnostics,
+        native_diagnostics=native_diagnostics,
         outcome=outcome,
         graded_at=graded_at,
         key_id=key_id,
@@ -751,6 +782,8 @@ def sign_reward_row(
         kind=record.kind,
         envelope=record.envelope,
         native_envelope=record.native_envelope,
+        diagnostics=record.diagnostics,
+        native_diagnostics=record.native_diagnostics,
         outcome=record.outcome,
         graded_at=record.graded_at,
         key_id=record.key_id,
@@ -783,6 +816,50 @@ class RowCheck:
     grade: object = None
 
 
+def _stderr_matches(body: Mapping[str, Any], text: str) -> bool:
+    digest = body.get("stderr_digest")
+    expected = "sha256:" + hashlib.sha256(text.encode("utf-8")).hexdigest()
+    return type(digest) is str and digest == expected
+
+
+def _reconstruct_native(
+    record: RewardRowRecord,
+) -> tuple[str | None, object | None] | None:
+    """Remint the sealed native match, or None when the row has no native receipt.
+
+    A native receipt that does not mint again is a failure. The caller
+    leaves that row ungraded instead of grading the envelope alone.
+    """
+    diagnostics = record.diagnostics or None
+    if record.native_envelope is None:
+        if diagnostics is not None:
+            payload = record.envelope.get("payload")
+            if isinstance(payload, dict) and not _stderr_matches(payload, record.diagnostics):
+                return None
+        return diagnostics, None
+    payload = record.envelope.get("payload")
+    if (
+        not isinstance(payload, dict)
+        or not _stderr_matches(payload, record.diagnostics)
+        or not _stderr_matches(record.native_envelope, record.native_diagnostics)
+    ):
+        return None
+    try:
+        sealed = mint_native_stack_match(record.native_envelope, record.native_diagnostics)
+    except RewardProvenanceError:
+        return None
+    return diagnostics, sealed
+
+
+def _left_ungraded(detail: str) -> RowCheck:
+    """The row stays ungraded. This is not a pass and not a fail."""
+    return RowCheck("outcome", Ungraded(UngradedReason.UNATTRIBUTED, detail))
+
+
+def _unreconstructed() -> RowCheck:
+    return _left_ungraded("reward regrade could not reconstruct native evidence")
+
+
 def regrade_record(
     record: RewardRowRecord,
     keyring: RewardKeyring,
@@ -792,16 +869,25 @@ def regrade_record(
     """Re-check one row. Pins and binding failures do not call ``grade_receipt``.
 
     A reload does not observe A7 rates. The rollout already counted the sample.
+    A native stack row is graded again from its stored diagnostics and a
+    reminted match. If that evidence does not reconstruct, the row stays
+    ungraded. A stored pass or fail is not replaced by the other.
     """
     verify(record, keyring)
     if _pins_stale(record):
         return RowCheck("stale_pin")
     if _binding_failed(record):
         return RowCheck("binding")
+    reconstructed = _reconstruct_native(record)
+    if reconstructed is None:
+        return _unreconstructed()
+    diagnostics, native = reconstructed
     grade = grade_receipt(
         record.envelope,
+        diagnostics=diagnostics,
         task=record.task,
         queue=queue,
+        native=native,
         row_record_id=record.record_id,
         group_id=record.group_id,
     )
@@ -810,6 +896,8 @@ def regrade_record(
     except RewardRecordError:
         return RowCheck("shadow")
     if fresh != record.outcome:
+        if isinstance(grade, RewardableSignalReceipt):
+            return _left_ungraded("reward regrade refused a flipped pass or fail")
         return RowCheck("outcome", grade)
     return RowCheck("", grade)
 
@@ -1131,6 +1219,8 @@ def _row_from_body(body: Mapping[str, Any], log_index: int) -> RewardRowRecord:
         kind=_exact_str(body["kind"], "kind"),
         envelope=envelope,
         native_envelope=native,
+        diagnostics=_exact_str(body["diagnostics"], "diagnostics"),
+        native_diagnostics=_exact_str(body["native_diagnostics"], "diagnostics"),
         outcome=_exact_str(body["outcome"], "outcome"),
         graded_at=_exact_str(body["graded_at"], "graded_at"),
         key_id=_exact_str(body["key_id"], "key id"),
@@ -1181,6 +1271,7 @@ class ConsumedLog:
         }
         encoded = canonical_bytes(line) + b"\n"
         self.path.parent.mkdir(parents=True, exist_ok=True)
+        created = not self.path.exists()
         fd = os.open(
             self.path,
             os.O_CREAT | os.O_RDWR | os.O_APPEND | os.O_CLOEXEC,
@@ -1197,6 +1288,8 @@ class ConsumedLog:
                     raise RewardRecordError("reward group was already consumed")
                 _write_all(fd, encoded)
                 os.fsync(fd)
+                if created:
+                    _fsync_dir(self.path.parent)
                 self._seen[group_id] = disposition
             finally:
                 fcntl.flock(fd, fcntl.LOCK_UN)

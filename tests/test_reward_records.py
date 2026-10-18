@@ -573,6 +573,189 @@ def test_a1_member_is_kept_at_zero(tmp_path: Path) -> None:
     assert batch.drops == ()
 
 
+def _native_stack_receipt(source_sha256: str, diagnostics: str) -> dict:
+    return {
+        "source_sha256": source_sha256,
+        "faust_version": "2.88.0",
+        "command": ["faust", "-lang", "cpp"],
+        "exit_code": 1,
+        "stdout_digest": "sha256:" + "00" * 32,
+        "stderr_digest": "sha256:" + hashlib.sha256(diagnostics.encode("utf-8")).hexdigest(),
+        "duration_ms": 1,
+        "environment_digest": "sha256:" + "22" * 32,
+        "compiler": "faust-cli",
+        "lang": "cpp",
+        "options": [],
+        "diagnostic_class": "parse_error",
+    }
+
+
+def _signed_row(
+    secret: bytes,
+    *,
+    group_id: str,
+    source: bytes,
+    envelope: dict,
+    outcome: str,
+    kind: str,
+    native_envelope: dict | None = None,
+    diagnostics: str = "",
+    native_diagnostics: str = "",
+):
+    run_key = derive_run_key(secret, RUN)
+    header = sign_group_header(
+        group_id=group_id,
+        task_digest_full=task_digest_full(_task()),
+        group_size=1,
+        run_id=RUN,
+        run_key=run_key,
+    )
+    row = sign_reward_row(
+        run_key=run_key,
+        run_id=RUN,
+        rollout_id=ROLLOUT,
+        policy_checkpoint=CHECKPOINT,
+        group_id=group_id,
+        group_size=1,
+        member_index=0,
+        source=source,
+        task=_task(),
+        envelope=envelope,
+        outcome=outcome,
+        kind=kind,
+        graded_at=STAMP,
+        native_envelope=native_envelope,
+        diagnostics=diagnostics,
+        native_diagnostics=native_diagnostics,
+    )
+    return header, row
+
+
+def test_regrade_keeps_a_native_stack_source_failure(tmp_path: Path) -> None:
+    secret = _write_key(tmp_path / "reward-root.key")
+    source = b"process = +;"
+    diagnostics = "ERROR : stack overflow in eval\n"
+    envelope = _compiler(
+        source,
+        exit_code=126,
+        diagnostic_class="internal",
+        diagnostics=diagnostics,
+    )
+    native = _native_stack_receipt(envelope["payload"]["source_sha256"], diagnostics)
+    header, row = _signed_row(
+        secret,
+        group_id="group-stack",
+        source=source,
+        envelope=envelope,
+        outcome="source_attributed",
+        kind="compiler",
+        native_envelope=native,
+        diagnostics=diagnostics,
+        native_diagnostics=diagnostics,
+    )
+    log = tmp_path / "stack.jsonl"
+    _store(log, header, [row])
+    loaded = load_records(log, RewardKeyring(secret, run_id=RUN))
+    assert loaded.checks[0].reason == ""
+    assert isinstance(loaded.checks[0].grade, SourceAttributedFailure)
+    assert loaded.checks[0].grade.detail == "stack overflow"
+    batch = _batch(
+        log,
+        secret,
+        QuarantineQueue(tmp_path / "q.jsonl"),
+        ConsumedLog(tmp_path / "consumed.jsonl"),
+        UngradedRateTracker(),
+    )
+    assert batch.drops == ()
+    assert [item["reward"] for item in batch.rows] == [0.0]
+    assert isinstance(batch.rows[0]["provenance"], SourceAttributedFailure)
+    assert not isinstance(batch.rows[0]["provenance"], RewardableSignalReceipt)
+
+
+def test_regrade_leaves_a_stack_row_ungraded_without_native_evidence(tmp_path: Path) -> None:
+    secret = _write_key(tmp_path / "reward-root.key")
+    source = b"process = +;"
+    diagnostics = "ERROR : stack overflow in eval\n"
+    envelope = _compiler(
+        source,
+        exit_code=126,
+        diagnostic_class="internal",
+        diagnostics=diagnostics,
+    )
+    header, row = _signed_row(
+        secret,
+        group_id="group-bare-stack",
+        source=source,
+        envelope=envelope,
+        outcome="source_attributed",
+        kind="compiler",
+    )
+    log = tmp_path / "bare.jsonl"
+    _store(log, header, [row])
+    loaded = load_records(log, RewardKeyring(secret, run_id=RUN))
+    assert loaded.checks[0].reason == "outcome"
+    assert isinstance(loaded.checks[0].grade, Ungraded)
+    assert not isinstance(loaded.checks[0].grade, RewardableSignalReceipt)
+    batch = _batch(
+        log,
+        secret,
+        QuarantineQueue(tmp_path / "q.jsonl"),
+        ConsumedLog(tmp_path / "consumed.jsonl"),
+        UngradedRateTracker(),
+    )
+    assert batch.rows == ()
+    assert batch.drops == (("group-bare-stack", "outcome"),)
+
+
+def test_regrade_does_not_flip_a_stored_pass_or_fail(tmp_path: Path) -> None:
+    secret = _write_key(tmp_path / "reward-root.key")
+    good = b"process = _;"
+    bad = b"process = +;"
+    header, rows = _members(
+        secret,
+        run_id=RUN,
+        group_id="group-bits",
+        members=[
+            ("signal", "pass", _signal(good, passed=True), good),
+            ("signal", "fail", _signal(bad, passed=False), bad),
+        ],
+    )
+    honest = tmp_path / "bits.jsonl"
+    _store(honest, header, rows)
+    batch = _batch(
+        honest,
+        secret,
+        QuarantineQueue(tmp_path / "q.jsonl"),
+        ConsumedLog(tmp_path / "consumed.jsonl"),
+        UngradedRateTracker(),
+    )
+    assert [item["reward"] for item in batch.rows] == [1.0, 0.0]
+    assert batch.rows[0]["provenance"].passed is True
+    assert batch.rows[1]["provenance"].passed is False
+    lying_header, lying_row = _signed_row(
+        secret,
+        group_id="group-flipped",
+        source=good,
+        envelope=_signal(good, passed=True),
+        outcome="fail",
+        kind="signal",
+    )
+    lying = tmp_path / "flipped.jsonl"
+    _store(lying, lying_header, [lying_row])
+    loaded = load_records(lying, RewardKeyring(secret, run_id=RUN))
+    assert loaded.checks[0].reason == "outcome"
+    assert isinstance(loaded.checks[0].grade, Ungraded)
+    flipped = _batch(
+        lying,
+        secret,
+        QuarantineQueue(tmp_path / "q2.jsonl"),
+        ConsumedLog(tmp_path / "consumed-2.jsonl"),
+        UngradedRateTracker(),
+    )
+    assert flipped.rows == ()
+    assert flipped.drops == (("group-flipped", "outcome"),)
+
+
 def test_shadow_log_is_not_a_reward_row() -> None:
     from faustcoder.reward.grader import shadow_observe
 
@@ -811,6 +994,32 @@ def test_consumed_log_past_16_mib_keeps_dropped_groups(tmp_path: Path) -> None:
     assert path.stat().st_size > before
     assert ConsumedLog(path).disposition("g-dropped") == "dropped:quarantined"
     assert stat.S_IMODE(path.stat().st_mode) == 0o640
+
+
+def test_consumed_log_fsyncs_the_parent_directory_when_created(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    parent_inode = tmp_path.stat().st_ino
+    directory_syncs = 0
+    real_fsync = os.fsync
+
+    def spy(fd: int) -> None:
+        nonlocal directory_syncs
+        info = os.fstat(fd)
+        if stat.S_ISDIR(info.st_mode) and info.st_ino == parent_inode:
+            directory_syncs += 1
+        real_fsync(fd)
+
+    monkeypatch.setattr(os, "fsync", spy)
+    path = tmp_path / "consumed.jsonl"
+    log = ConsumedLog(path)
+    log.claim("g-new", "used", task_digest_full="", policy_checkpoint="")
+    assert directory_syncs == 1
+    log.claim("g-next", "used", task_digest_full="", policy_checkpoint="")
+    assert directory_syncs == 1
+    reopened = ConsumedLog(path)
+    reopened.claim("g-later", "used", task_digest_full="", policy_checkpoint="")
+    assert directory_syncs == 1
 
 
 def test_resolved_hold_still_drops_a_g1_rewrite(tmp_path: Path) -> None:

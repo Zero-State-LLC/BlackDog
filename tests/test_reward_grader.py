@@ -468,6 +468,16 @@ def test_rl_batch_keeps_two_grades_of_the_same_program() -> None:
     assert len(rl_batch([first, second])) == 2
 
 
+def test_rl_batch_keeps_two_grades_of_the_same_program_without_ids() -> None:
+    task = _linear_task()
+    envelope = allowlisted_reward_envelope(passed=True)
+    first = dataset_reward_row(grade_receipt(envelope, task=task), task=task)
+    second = dataset_reward_row(grade_receipt(envelope, task=task), task=task)
+    assert "example_id" not in first
+    assert "example_id" not in second
+    assert len(rl_batch([first, second])) == 2
+
+
 def test_unattributed_exits_stay_queued_until_triage() -> None:
     cases = (
         (124, "timeout", "timeout: wall clock limit exceeded\n"),
