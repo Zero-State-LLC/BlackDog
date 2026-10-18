@@ -62,6 +62,24 @@ jobs:
       - name: Check the compiler network namespace
         run: unshare --net --map-current-user -- true
       # Faust 2.88.0 compiler only (no LLVM). The planted-prefix import test needs it.
+      # GitHub-hosted Ubuntu leaves some root-owned directories mode 0777,
+      # including /usr/share and /usr/local/bin. The installer refuses to
+      # create a Faust directory under a world-writable parent that is not
+      # root-owned and sticky. Tighten those parents before the script runs.
+      # The script still refuses if this is skipped.
+      - name: Tighten Faust install parents
+        run: |
+          for dir in /usr/share /usr/local /usr/local/bin /usr/local/share /usr/local/lib; do
+            if [ -d "$dir" ] && [ ! -L "$dir" ]; then
+              mode=$(stat -c '%a' -- "$dir")
+              uid=$(stat -c '%u' -- "$dir")
+              other=$((10#$mode % 10))
+              sticky=$((10#$mode / 1000))
+              if [ "$uid" = 0 ] && [ $((other & 2)) -ne 0 ] && [ $((sticky & 1)) -eq 0 ]; then
+                sudo chmod 755 -- "$dir"
+              fi
+            fi
+          done
       - name: Install Faust 2.88.0
         run: ./scripts/install-faust-2.88.0.sh
       - name: Test

@@ -22,8 +22,9 @@ class UngradedReason(StrEnum):
     ``infra_fault``, ``harness_defect`` and ``unattributed`` are the
     ADR-0006 A2 quarantine reasons. ``unattributed`` covers an exit
     124 timeout, an exit 125 resource kill, an exit 126 ``internal``
-    receipt, and a worker or harness crash, until auto-attribution or
-    triage says otherwise. Exit 126 is ``internal``, not a timeout.
+    receipt, and a worker or harness crash, until triage attributes
+    it. Exit 126 is ``internal``, not a timeout. A rerun plus a
+    known-good fixture is not attribution.
     """
 
     NOT_REWARD_GRADED = "not_reward_graded"
@@ -68,6 +69,11 @@ class RewardableSignalReceipt:
     private to that function. ``apply_signal`` accepts the instance
     only while the seal matches this object's identity and fields, so
     a lookalike with the same fields is not a reward.
+
+    ``task_digest`` is the canonical digest of the task id and effect
+    this receipt was minted for. It is ``None`` when grading did not
+    bind a task. Training builders refuse an unbound receipt and a
+    receipt whose digest does not match the row's task.
     """
 
     __slots__ = (
@@ -76,6 +82,7 @@ class RewardableSignalReceipt:
         "test_suite_digest",
         "reproducible_digest",
         "schema_version",
+        "task_digest",
         "__weakref__",
     )
 
@@ -109,12 +116,18 @@ class RewardableSignalReceipt:
         return hash(self._snapshot())
 
     def _snapshot(self) -> tuple[object, ...]:
-        return (
-            self.passed,
-            self.profile_name,
-            self.test_suite_digest,
-            self.reproducible_digest,
-            self.schema_version,
+        # A lookalike from ``object.__new__`` may leave a slot unset.
+        # Hashing that object must not raise; the mint seal still rejects it.
+        return tuple(
+            getattr(self, name, None)
+            for name in (
+                "passed",
+                "profile_name",
+                "test_suite_digest",
+                "reproducible_digest",
+                "schema_version",
+                "task_digest",
+            )
         )
 
 
@@ -122,8 +135,10 @@ class RewardableSignalReceipt:
 class SourceAttributedFailure:
     """A failure ADR-0006 A1 grades at the ``parse_error`` rung.
 
-    This is a reward of 0, not an ungraded sample. Auto-attribution
-    and source tags (remote import, stack overflow) produce it.
+    This is a reward of 0, not an ungraded sample. Triage that
+    attributes a quarantined row to the source produces it, and so
+    do the source-class rules that do not wait: a remote import, a
+    source over 1 MiB, and a line-start Faust ``ERROR``.
     """
 
     rung: str = "parse_error"

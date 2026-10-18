@@ -999,54 +999,6 @@ def run_signal_suite(
     return SignalSuite(runs=tuple(runs), ledger=ledger)
 
 
-def _untagged_worker_hooks(run: SignalRun) -> dict[str, Any]:
-    """Rerun an untagged exit 126 on this worker, plus ``process = _;``.
-
-    Structured stack and trap fields are already source tags, so they
-    do not start another compile. A render crash is a different stage
-    and is not explained by recompiling.
-    """
-    if not isinstance(run.source, str) or not run.source:
-        return {}
-    receipt = run.compilation.receipt
-    if receipt.get("exit_code") != 126 or receipt.get("diagnostic_class") != "internal":
-        return {}
-    if receipt.get("runtime_stack_overflow") is True or isinstance(receipt.get("wasm_trap"), str):
-        return {}
-    if run.compilation.diagnostics == "internal: remote import rejected\n":
-        return {}
-    from faustcoder.reward.types import FixtureOutcome, RerunOutcome
-
-    source = run.source
-    options = run.options
-    limits = run.limits or ResourceLimits()
-
-    def rerun(_payload: dict[str, Any]) -> RerunOutcome:
-        again = compile_source(source, lang="wasm", options=options, limits=limits)
-        return RerunOutcome(
-            failed=again.receipt["exit_code"] != 0,
-            exit_code=int(again.receipt["exit_code"]),
-            diagnostic_class=str(again.receipt["diagnostic_class"]),
-            reproducible_digest=again.reproducible_digest,
-            environment_digest=str(again.receipt["environment_digest"]),
-        )
-
-    def known_good() -> FixtureOutcome:
-        fixture = compile_source(
-            "process = _;\n", lang="wasm", options=options, limits=limits
-        )
-        passed = fixture.receipt["exit_code"] == 0 and fixture.receipt["diagnostic_class"] in {
-            "ok",
-            "warning",
-        }
-        return FixtureOutcome(
-            passed=passed,
-            environment_digest=str(fixture.receipt["environment_digest"]),
-        )
-
-    return {"rerun": rerun, "known_good": known_good}
-
-
 def commit_signal_check(
     store: ArtifactStore,
     suite: SignalSuite,
@@ -1065,12 +1017,12 @@ def commit_signal_check(
     not move the candidate. A reward run with no signal receipt is a
     compiler failure or a render crash. Those are graded here onto
     ``ledger`` or the suite ledger. Exit 124, 125 and 126, and a
-    deferred compiler failure, use the compiler envelope. An untagged
-    exit 126 whose run still has its source is rerun on this worker
-    beside ``process = _;``. The known-good fixture passing and the
-    same failure reproducing is ``parse_error``. A render crash uses
-    a crash envelope. Its exception text is not a marker. Structured
-    ``runtime_stack_overflow`` and ``wasm_trap`` on that crash are.
+    deferred compiler failure, use the compiler envelope. They stay
+    ungraded until triage. This function does not supply a rerun or a
+    known-good fixture. A render crash uses a crash envelope. Its
+    exception text is not a marker. Structured
+    ``runtime_stack_overflow`` and ``wasm_trap`` on that crash stay
+    ungraded too.
     """
     if state is not CandidateState.COMPILE_CHECKED:
         raise SignalHarnessError("signal check starts from COMPILE_CHECKED")
@@ -1132,7 +1084,6 @@ def commit_signal_check(
                     created_at=created_at,
                     producer="faustcoder.compiler",
                 )
-                hooks = _untagged_worker_hooks(run)
                 outcomes_list.append(
                     grade_receipt(
                         store.get(compiler_id),
@@ -1140,7 +1091,6 @@ def commit_signal_check(
                         policy=policy,
                         queue=bound.queue,
                         rates=bound.rates,
-                        **hooks,
                     )
                 )
                 if run.receipt is None:

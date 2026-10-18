@@ -17,11 +17,14 @@ Enforcement, in order:
    with an empty tmpfs, including candidates that are not there yet. If
    one of those appears during the mount and stays unmasked, the compile
    fails. An absent prefix ``share/faust`` or ``lib/faust`` whose
-   nearest existing parent is not root-only is refused. An absent
-   fallback or reported directory is refused unless ``realpath`` of its
-   parent is root-owned and not group- or world-writable, so the caller
-   cannot create it before exec. A symlink such as ``/usr/share`` is
-   judged at that resolved directory. Faust's own directory
+   resolved parent is not root-only is refused. An absent fallback or
+   reported directory is refused unless every component of
+   ``realpath`` of its parent, up to ``/``, is a real root-owned
+   directory with no group or other write. A root-owned sticky
+   directory is allowed above that parent, not as the parent itself:
+   another user can still create a missing path in a sticky directory.
+   A symlink such as ``/usr/share`` is judged at that resolved
+   directory. Faust's own directory
    query fails closed. Faust then runs as the calling uid with ``CapEff``
    0. The hashed private copy passed as ``-I`` is not masked. Wasm compiles
    do not take that path. Node 22's
@@ -434,10 +437,13 @@ def faust_library_mounts(
     directory they print. A candidate that is not there yet is still
     returned. The mount step covers it if it has appeared, and fails if it
     exists afterward and was not covered. An absent prefix, fallback, or
-    reported directory is refused unless the ``realpath`` of its parent
-    is root-owned and not group- or world-writable. The caller cannot
-    create that directory in the window before exec. A symlink such as
-    ``/usr/share`` is judged at the resolved directory. A reported loader
+    reported directory is refused unless every component of ``realpath``
+    of its parent, up to ``/``, is a real root-owned directory with no
+    group or other write. A root-owned sticky directory is allowed only
+    above that parent. The caller cannot create that directory, or
+    rename the parent out of a writable ancestor, in the window before
+    exec. A symlink such as ``/usr/share`` is judged at the resolved
+    directory. A reported loader
     directory such
     as ``/usr/lib`` is left in place so the compiler can start;
     ``lib/faust`` under it is still masked. ``private`` is the hashed
@@ -632,10 +638,13 @@ def _pass_absent_mask(
     """Pass an absent candidate through, or refuse a parent the caller can write.
 
     An absent prefix, fallback, or reported directory is refused unless
-    ``realpath`` of its parent is a root-owned directory that group and
-    others cannot write. The mount does not cover a path that is missing,
-    so a caller who can create it can plant a library before exec.
-    ``/usr/share`` may be a symlink; the check follows it.
+    every component of ``realpath`` of its parent, up to ``/``, is a
+    real root-owned directory that group and others cannot write. A
+    root-owned sticky directory is allowed only above that parent.
+    The mount does not cover a path that is missing, so a caller who
+    can create it, or who can rename a parent out of a writable
+    ancestor, can plant a library before exec. ``/usr/share`` may be a
+    symlink; the check follows it and then walks the resolved chain.
     """
     absolute = Path(os.path.abspath(path))
     if absolute in mounts:
@@ -649,10 +658,11 @@ def _pass_absent_mask(
         return
     if _absent_mask_must_be_root_only(path, absolute, prefix, reported):
         parent = _resolved_parent(absolute)
-        if not _is_root_only_directory(parent):
+        unsafe = _first_unsafe_ancestor(parent)
+        if unsafe is not None:
             _refuse_unsafe_parent(
                 absolute,
-                parent,
+                unsafe,
                 "Faust mask parent is not root-only, so an absent directory "
                 "cannot be masked safely",
             )
@@ -706,13 +716,46 @@ def _nearest_existing_ancestor(path: Path) -> Path:
 
 
 def _is_root_only_directory(path: Path) -> bool:
-    """True when ``path`` is a real directory only root can write."""
+    """True when ``path`` and every ancestor up to ``/`` is root-only.
+
+    ``path`` itself must be a real directory, owned by root, with no
+    group or other write. Each ancestor must be the same, or a
+    root-owned sticky directory. The sticky exception does not apply
+    to ``path``: another user can create an entry in a sticky
+    directory even when they cannot remove one.
+    """
+    return _first_unsafe_ancestor(path) is None
+
+
+def _first_unsafe_ancestor(path: Path) -> Path | None:
+    """Return the first unsafe component from ``path`` up to ``/``."""
+    current = Path(os.path.abspath(path))
+    allow_sticky = False
+    while True:
+        if not _component_is_root_only(current, allow_sticky=allow_sticky):
+            return current
+        parent = current.parent
+        if parent == current:
+            return None
+        current = parent
+        allow_sticky = True
+
+
+def _component_is_root_only(path: Path, *, allow_sticky: bool) -> bool:
+    """True when ``path`` is a real root-owned directory safe to trust.
+
+    A symlink is not a directory here. ``lstat`` does not follow one.
+    Group or other write is refused unless ``allow_sticky`` and the
+    directory is root-owned and sticky.
+    """
     info = _lstat_or_none(path)
-    if info is None or not stat.S_ISDIR(info.st_mode):
+    if info is None or stat.S_ISLNK(info.st_mode) or not stat.S_ISDIR(info.st_mode):
         return False
-    if info.st_uid != 0 or info.st_mode & 0o022:
+    if info.st_uid != 0:
         return False
-    return True
+    if info.st_mode & 0o022 == 0:
+        return True
+    return bool(allow_sticky and info.st_mode & stat.S_ISVTX)
 
 
 def _leaves_the_compiler_running(
