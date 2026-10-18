@@ -300,16 +300,20 @@ def apply_signal(state: CandidateState, receipt: object) -> CandidateState:
 
     Spec §23 A5. ``receipt`` is a ``RewardableSignalReceipt`` from
     ``grade_receipt``. A bool or a diagnostic receipt is a
-    ``TypeError``. This does not write the receipt;
-    ``faustcoder.signal.commit_signal_check`` does. ``passed`` on the
-    receipt selects ``signal_passed`` or ``signal_failed``.
-    ``nonlinear-suite-v1`` is not in ``REWARD_PROFILES`` (D5).
+    ``TypeError``. A receipt minted for an unrewardable task is a
+    ``TypeError`` and does not move the candidate. This does not write
+    the receipt; ``faustcoder.signal.commit_signal_check`` does.
+    ``passed`` on the receipt selects ``signal_passed`` or
+    ``signal_failed``. ``nonlinear-suite-v1`` is not in
+    ``REWARD_PROFILES`` (D5).
     """
     from faustcoder.reward.grader import is_minted
     from faustcoder.reward.types import RewardableSignalReceipt
 
     if type(receipt) is not RewardableSignalReceipt or not is_minted(receipt):
         raise TypeError("apply_signal requires a RewardableSignalReceipt from grade_receipt")
+    if getattr(receipt, "unrewardable", None) is True:
+        raise TypeError("apply_signal refuses an unrewardable receipt")
     event = CandidateEvent.SIGNAL_PASSED if receipt.passed else CandidateEvent.SIGNAL_FAILED
     return next_state(state, event, guard_passed=True)
 

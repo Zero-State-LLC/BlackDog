@@ -527,7 +527,9 @@ def _task_effect(task: Mapping[str, Any]) -> str:
         if inner in UNREWARDABLE_REASONS:
             return inner
     classes = profile.get("classes")
-    if isinstance(classes, list):
+    # A tuple is the same closed list. Leaving it out let ``("nonlinear",)``
+    # skip the unrewardable check and look linear.
+    if isinstance(classes, (list, tuple)):
         for item in classes:
             if item in UNREWARDABLE_REASONS:
                 return str(item)
