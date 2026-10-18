@@ -1,4 +1,6 @@
-# FaustCoder
+# BlackDog
+
+Formerly FaustCoder. Renamed 2026-10-17 PT.
 
 Compiler-verified Faust DSP coding model, developed on NVIDIA DGX Spark.
 
