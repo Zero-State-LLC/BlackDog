@@ -67,3 +67,71 @@ one DSP program.
 - Grade every `internal` and `resource_limit` as a model error. Rejected:
   a broken worker on a known-good fixture would punish the policy for the
   harness.
+
+## Amendment 2026-10-17 7:40 PM PT (Q1, Q2)
+
+Jev output sha256 `d9a4632ed29786182ee61e67b7c3a6b1df92c8468f011b8e1331b54e794264df`, run 2026-10-17 7:40 PM PT, authorized by Danny's instruction "use jev to make decisions" (2026-10-17 7:37 PM PT). Record: [jev-output-2026-10-17.txt](../decisions/jev-output-2026-10-17.txt). The fenced blocks are the ruling, copied verbatim from that file. A paraphrase of them is non-normative. The application sentences restate gates from those blocks and do not loosen them. If an application sentence and a fenced block ever diverge, the fenced block wins. This record does not change code.
+
+Q3 and Q4, including acceptance of ADR-0002, are the amendment to
+[ADR-0002](0002-training-path.md). The Decision section above is unchanged.
+The header of this file is unchanged apart from this amendment being appended.
+
+### Q1 Jev ruling (verbatim)
+
+```text
+DECISION: MODIFIED: "P3 reward is binary: 1.0 on full pass, 0.0 on every graded failure including A1's lowest rung. Ungraded samples get no value. Any GRPO group containing a quarantined member is dropped whole from the gradient update, not masked. Its rows are held only for triage and receipts and never re-enter training later. Group-drop rate is tracked per prompt and overall with a halt threshold. The R-005 ladder is a logged diagnostic only, and R-005's wording is amended to say so. A graded reward may enter only via the pre-registered binary-vs-ladder ablation."
+```
+
+```text
+CONDITIONS:
+- C1 is preserved: no ungraded or quarantined row ever contributes a reward value or an advantage, including through group normalization.
+- Log group-drop rate per checkpoint and per prompt. If the overall rate exceeds an agreed limit, pause P3 for triage instead of resampling indefinitely. Any prompt dropped repeatedly goes to human triage.
+- Log the zero-variance (all-0 or all-1) group rate after SFT. The ε two-level variant is tested only through the ablation, and only if that rate approaches the brief's ~70% trigger.
+- Pre-register the ablation's margin, seeds and dev metric before P3 starts. Treat any rise in quarantine or ungraded rate under the ladder arm as a failure of that arm.
+- Amend R-005 in the same change set that records this ruling. This also clears ADR-0002 B1, together with Q4.
+```
+
+### Q1 application
+
+Q1 CONDITIONS in the fenced block are binding. That includes C1 through group normalization; group-drop logged per checkpoint and per prompt; a halt that pauses P3 for triage instead of resampling indefinitely; human triage for a prompt dropped repeatedly; rows of a dropped group held only for triage and receipts; the zero-variance (all-0 or all-1) group rate logged after SFT; the ε two-level variant only through the ablation, and only if that rate approaches the brief's ~70% trigger; the ablation's margin, seeds and dev metric pre-registered before P3 starts; and any rise in quarantine or ungraded rate under the ladder arm as a failure of that arm.
+
+OBSERVED: `reward_value` in `faustcoder/reward/grader.py` already returns 1.0 for a graded pass, 0.0 for a graded failure including an A1 source failure, and no value for an ungraded sample. This record does not change that function.
+
+### Q2 Jev ruling (verbatim)
+
+```text
+DECISION: MODIFIED: "Auto-attribution under A2 is allowed only as A2-T, and only after a shadow period. A2-T requires all of the following:
+- ≥2 reruns on a quiet worker reproducing the same crash signature;
+- both the trivial and a path-matched known-good fixture passing;
+- for stack, wasm_trap, timeout and other harness-limit signatures, a matching native Faust 2.88.0 failure (source-class list alone suffices only for inherently source-side signatures: line-start Faust ERROR, >1 MiB source, remote import);
+- the signature not frozen by A7-S.
+
+Every auto-attribution is stored with resolved_by=auto and its evidence. Anything else stays ungraded and quarantined."
+```
+
+```text
+CONDITIONS:
+- Shadow mode first: A2-T computes and logs attributions, but humans triage until A2-T agrees with them on an agreed sample and the gold canary is clean.
+- If shadow data shows crash rows below ~0.1% of samples, keep auto-attribution off entirely, following the brief's own fallback.
+- If native cross-check is unavailable in the loop, harness-limit signatures stay ungraded. The source-class-only fallback is narrowed to the inherently source-side signatures.
+- Exit 124 is attributed only with a native or independent-runner timeout at the same limit, not on fixture evidence alone.
+- Gold canary (dev-suite references, cleared-corpus sample, SFT targets) runs on a schedule. Any crash there freezes its signature.
+- Land the r5 L1 fix (RangeError restricted to stack overflow), the L2 fix (line-start matching on the failing stage) and the L3 fix (rerun hooks for 124 and 125) before A2-T leaves shadow.
+- A7-S thresholds (20% share, 2× rise, 500-sample window) are provisional. They are reviewed against shadow data before going live.
+```
+
+### Q2 application
+
+Until A2-T leaves shadow mode, no receipt is auto-attributed to the source. The §23 rerun-plus-trivial-fixture path is not sanctioned by Q2 and must not be supplied (`rerun`/`known_good`) by any training caller. A `runtime_stack_overflow` flag or `wasm_trap` kind attributes to the source only with a matching native Faust 2.88.0 failure. Until then those rows are ungraded and quarantined. The source-class list alone suffices only for a line-start Faust `ERROR` other than `ERROR : stack overflow` (plain or `in eval`; see EVAL-SO), a source over 1 MiB, and a remote import. Shadow mode runs on a separate path that never grades: it may rerun and log attributions, but its output never reaches `reward_value` or a receipt. That path is not a training caller, so needing reruns in shadow does not conflict with A2-PATH. Code follow-up: A2-PATH.
+
+A2-T requires all of: (1) at least 2 reruns on a quiet worker with matching environment digests reproducing the same crash signature; (2) both the trivial known-good fixture and a path-matched known-good fixture (same stage and limit) passing in that environment; (3) for stack, wasm_trap, timeout and every other harness-limit signature, a matching native Faust 2.88.0 failure. If that cross-check is unavailable, the row stays ungraded. (4) The signature is not frozen by A7-S. Exit 124 is attributed only with a native or independent-runner timeout at the same limit, never on fixture evidence alone. Anything else stays ungraded and quarantined.
+
+A2-T leaves shadow only when all hold: L1–L3 have landed; A2-T agrees with human triage on a sample size and agreement level fixed before shadow starts; the scheduled gold canary (dev-suite references, cleared-corpus sample, SFT targets) is clean, and any crash there freezes its signature; the A7-S thresholds have been reviewed against shadow data; and Danny (or the delegated decision process) records the go-live. If shadow data shows crash rows below about 0.1% of samples, auto-attribution stays off entirely. That rate is a reason to stay off, never a reason to go live.
+
+L3. Rerun hooks for exits 124 and 125 on the compile and render stages (r5 L3), feeding A2-T in shadow only.
+
+L1 and L2 have landed in #49 (`f0fcdf9`), on main that also includes #46 (`42ee1e4`). L1 is the r5 fix Jev cited: a RangeError counts as stack overflow only when its message is exactly `Maximum call stack size exceeded`. L2 is the r5 fix Jev cited as line-start matching on the failing stage: `_compile_stack_line` splits on `\n` only. L3 has not landed.
+
+A7-S thresholds (20% share, 2× rise, 500-sample window) are provisional. They are reviewed against shadow data before going live. These numbers are not A7's 1%, 500-sample and 2× ungraded-rate alarm.
+
+After #46, the compiler stores a line that is exactly `ERROR : stack overflow in eval` as exit 126 `internal`. The grader's `_COMPILE_STACK_LINES` still tags that line as source, with no native check. EVAL-SO's acceptance is the A2-PATH requirement: the grader no longer tags either line as source without the Faust 2.88.0 native match. That covers `ERROR : stack overflow in eval` and the plain line-start `ERROR : stack overflow`.

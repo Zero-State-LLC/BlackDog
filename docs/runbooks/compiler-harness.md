@@ -11,23 +11,38 @@ That pair is the ADR-0005 class. Reward grading is spec §23.
 [ADR-0006](../adr/0006-source-attributable-failures.md) is in force in
 reward code. `grade_receipt` is the consumer.
 
+Amendment 2026-10-17 7:40 PM PT (Jev, Q2; spec §24). Until A2-T leaves
+shadow mode, no receipt is auto-attributed to the source. The §23
+rerun-plus-trivial-fixture path is not sanctioned by Q2 and must not be
+supplied (`rerun`/`known_good`) by any training caller. A
+`runtime_stack_overflow` flag or `wasm_trap` kind attributes to the
+source only with a matching native Faust 2.88.0 failure. Until then
+those rows are ungraded and quarantined. The source-class list alone
+suffices only for a line-start Faust `ERROR` other than
+`ERROR : stack overflow` (plain or `in eval`; see EVAL-SO), a source
+over 1 MiB, and a remote import. Shadow mode runs on a separate path
+that never grades: it may rerun and log attributions, but its output
+never reaches `reward_value` or a receipt. Code follow-up: A2-PATH. The table and the paragraphs
+below describe code Q2 replaces. They are not the accepted rule.
+
 | Exit | Class | Reward |
 |---|---|---|
 | 0 | `ok` or `warning` | not this row; a signal receipt is graded separately |
 | 1 | `parse_error`, `type_error`, `arity_error`, `unbound_symbol`, `other` | graded; `parse_error` is the A1 rung |
-| 124 | `timeout` | `unattributed` until triage or auto-attribution |
+| 124 | `timeout` | replaced path only: `unattributed` until triage. The rerun is not sanctioned |
 | 125 | `resource_limit` | same as exit 124, except `resource limit: source size`, which is already `parse_error` |
-| 126 | `internal` | `unattributed`, unless already a remote import, `runtime_stack_overflow`, a `wasm_trap` kind, or a line-start `ERROR : stack overflow` on that compile |
-| 137, 139, -9 | any stored class | queued crash (`unattributed`), not `schema_invalid` |
+| 126 | `internal` | replaced path treats a remote import, `runtime_stack_overflow`, a `wasm_trap` kind, or a line-start `ERROR : stack overflow` as `parse_error`. Accepted rule: `runtime_stack_overflow` and `wasm_trap` stay ungraded without a native Faust 2.88.0 failure. A line-start Faust `ERROR` other than `ERROR : stack overflow` (plain or `in eval`, which need the native match until native evidence is collected; see EVAL-SO), a source over 1 MiB, and a remote import are the source-class carve-out |
+| 137, 139, -9 | any stored class | queued crash (`unattributed`). The replaced rerun is not sanctioned |
 
 Do not score a stored `internal` or `resource_limit` class as `other`.
 `unbound_symbol` is a compiler result (exit 1), the class for libfaust
 `undefined symbol`. Exit 126 is `internal`, not a timeout or a resource
 kill.
 
-An unattributed exit 124, 125 or 126, or a worker or harness crash,
-comes back `Ungraded` with reason `unattributed`. The reward is absent,
-not 0. The row stays in the quarantine queue. Auto-attribution reruns
+Replaced path, not sanctioned by Q2. An unattributed exit 124, 125 or
+126, or a worker or harness crash, comes back `Ungraded` with reason
+`unattributed`. The reward is absent, not 0. The row stays in the
+quarantine queue. The rerun below is the path Q2 replaces. Auto-attribution reruns
 the same digest on a quiet worker with a known-good fixture. If the
 fixture passes and the candidate fails again, the rung is `parse_error`.
 If the fixture fails, the reason is `infra_fault`. Triage can mark
