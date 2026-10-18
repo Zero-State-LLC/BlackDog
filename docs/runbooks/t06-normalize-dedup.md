@@ -372,9 +372,16 @@ artifact. It is not a field of the manifest.
 The `TOKEN_FLOOR` paragraph above is the 2026-10-17 4:11 PM PT note.
 It is not the acceptance ruling. The ruling is the verbatim Q3 block
 in [ADR-0002](../adr/0002-training-path.md). `TOKEN_FLOOR` stays 40
-and provisional. The protocol runs only after H2 and H3 land. A T07
+and provisional. The protocol runs only after H2 (brief: canonical
+ID/NUM shingle stream) and H3 (brief: NFKC and drop Cf/Cc) land.
+`lib.fn`, the 1/2 rule and the `STR` collapse are an ADVERSARY r6
+addition; not ruled by Jev. `STR` applies only on the H2 canonical
+stream, combined with the raw stream by OR, and never replaces the raw
+stream. The shipped dedup must use the same streams the FLOOR protocol
+measures. A T07
 freeze on the provisional floor records a leakage caveat and a
 scheduled re-check. Leaked items found later are removed and the
 removal is logged. SemDeDup-style similarity is advisory for T07 only
 and never a clearance criterion. Sub-15-token spans are exact-hash
-checked on the canonical stream.
+checked on the ID/NUM stream, and that check needs the brief's idioms
+allowlisted pairing, or short idioms will be over-flagged.

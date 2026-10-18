@@ -111,7 +111,9 @@ specs/001-faustcoder/
    the FPGA path.
 5. **Data pipeline** (T05 to T07): implements the dataset machine (spec §7.1).
    Amended 0.3.5 (Q3): `TOKEN_FLOOR=40` stays provisional. The protocol
-   in spec §24 runs only after H2 and H3. P0 exits only with the floor
+   in spec §24 runs only after H2 (brief: canonical ID/NUM stream) and
+   H3 (brief: NFKC and drop Cf/Cc). The shipped dedup must use the same
+   streams that protocol measures. P0 exits only with the floor
    accepted by that protocol or marked provisional with a leakage caveat.
 6. **Baseline and training** (T08 to T10): implements the training machine
    (spec §7.3). Throughput and memory study (T09) precedes pinning the stack.

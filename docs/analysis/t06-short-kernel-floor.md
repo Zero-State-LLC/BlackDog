@@ -290,6 +290,10 @@ H2 and H3 land. Before the run, Danny sets the recall lower bound,
 requires zero reject-class copies left in cleared, and sets the FP
 blob budget. Recall is per bucket with Wilson intervals, with
 hand-labelled FP cost. Sub-15-token spans are exact-hash checked on
-the canonical stream. The cutter in "How a span was cut" is a
+the ID/NUM stream, and that check needs the brief's idioms allowlisted
+pairing, or short idioms will be over-flagged. H3 is NFKC and drop
+Cf/Cc. The `STR` collapse is an ADVERSARY r6 addition; not ruled by
+Jev. It applies only on the H2 canonical stream, combined with the raw
+stream by OR, and never replaces the raw stream. The cutter in "How a span was cut" is a
 measurement aid. It is not the real slicer. ADVERSARY confirms
 containment and allowlist fixes against the shipping slicer path.

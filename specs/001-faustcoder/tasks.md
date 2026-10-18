@@ -174,25 +174,25 @@ These tasks are the implementation. This record does not change code.
   - Depends on: T03. Milestone: v0.3. Prerequisite of T10.
   - Acceptance: until A2-T is live, no training caller supplies `rerun` or `known_good`. `runtime_stack_overflow` and `wasm_trap` stay ungraded without a matching native Faust 2.88.0 failure. The source-class list alone suffices only for a line-start Faust `ERROR` other than `ERROR : stack overflow` (plain or `in eval`; see EVAL-SO), a source over 1 MiB, and a remote import. Shadow mode runs on a separate path that never grades: it may rerun and log attributions, but its output never reaches `reward_value` or a receipt. That path is not a training caller, so needing reruns in shadow does not conflict with A2-PATH.
   - Workflows: production-systems, ADVERSARY review.
-- [ ] EVAL-SO [Found] Grader and compiler disagree on `ERROR : stack overflow in eval`.
-  - Depends on: T03. Milestone: v0.3. Noted after #46. Not a code change in the 0.3.5 record. Prerequisite of T10.
-  - Acceptance: the disagreement is recorded. Suggested treatment: that line is a stack signature and needs the Faust 2.88.0 native match. The same treatment covers the plain line-start `ERROR : stack overflow` until native evidence is collected, so neither line is in the source-class carve-out.
+- [ ] EVAL-SO [Found] Grader must not tag either stack-overflow line as source without a native match.
+  - Depends on: T03. Milestone: v0.3. Noted after #46. Prerequisite of T10.
+  - Acceptance: the grader no longer tags either line as source without the Faust 2.88.0 native match. That is the A2-PATH requirement for the plain line-start `ERROR : stack overflow` and for `ERROR : stack overflow in eval`.
   - Workflows: production-systems.
 - [ ] GD-1 [J-04] GRPO whole-group drop (Q1).
   - Depends on: T04. Milestone: v0.3. Prerequisite of T10.
   - Acceptance: a group with a quarantined member is dropped whole, not masked. Rows are held only for triage and receipts and never re-enter. Rate logged per checkpoint and per prompt. The halt pauses P3 instead of resampling. A prompt dropped repeatedly goes to human triage.
   - Workflows: production-systems.
-- [ ] H2 [J-04] Canonical ID/NUM shingle stream on the sub-floor and containment path: a second shingle stream with identifiers → `ID` and numbers → `NUM`, keeping `lib.fn` qualified names, under the same 1/2 rule (Jev brief Q3; ADVERSARY PR39 r6 H2).
+- [ ] H2 [J-04] H2 (brief: canonical ID/NUM shingle stream; ADVERSARY PR39 r6 adds: keep `lib.fn` qualified names, same 1/2 rule). A second shingle stream with identifiers → `ID` and numbers → `NUM`. The `STR` collapse applies only on this canonical stream. That stream is an extra stream combined with the raw stream by OR and never replaces the raw stream. ADVERSARY r6 addition; not ruled by Jev: `lib.fn`, the 1/2 rule, and the `STR` collapse.
   - Depends on: T06. Milestone: v0.2. Prerequisite of FLOOR.
-  - Acceptance: the r6 H2 probe (one edit per 5–8 tokens) is quarantined, as a regression test. The Q3 protocol does not run until H2 and H3 have landed. Jev's output cites H2/H3 from the brief. The definitions above are the brief's.
+  - Acceptance: the r6 H2 probe at k = 5, 6, 8 (probe39r6.py 2b) is quarantined. k = 7 was never run. Jev's output cites H2 and H3 from the brief and does not rule the r6 additions.
   - Workflows: production-systems.
-- [ ] H3 [J-04] Unicode normalization before tokenizing: NFKC and drop category Cf/Cc; string literals collapse to one `STR` token (Jev brief Q3; ADVERSARY PR39 r6 H3).
+- [ ] H3 [J-04] H3 (brief: NFKC and drop Cf/Cc). Unicode normalization before tokenizing. The brief's H3 case is the U+200B evasion. ADVERSARY r6 addition; not ruled by Jev: the literal-insertion probe is not an H3 requirement, and the `STR` collapse is not H3.
   - Depends on: T06. Milestone: v0.2. Prerequisite of FLOOR.
-  - Acceptance: the r6 H3 probes (U+200B between tokens; a string literal every 6 tokens) are quarantined, as a regression test. Same gate as H2: the protocol does not run until both have landed. Jev's output cites H2/H3 from the brief. The definitions above are the brief's.
+  - Acceptance: the r6 U+200B probe is quarantined. The r6 literal-insertion probe (rev 0.367) is reported and is not an H3 gate, because collapsing to `STR` does not restore 5-gram overlap.
   - Workflows: production-systems.
 - [ ] FLOOR [J-04] TOKEN_FLOOR measurement protocol (Q3).
   - Depends on: T06, H2, H3. Milestone: v0.2.
-  - Acceptance: real slicer and real cleared hosts; H1-style split of one rejected file across 3 or more cleared files; per-bucket recall with Wilson intervals and hand-labelled FP cost. Danny sets the recall lower bound, zero reject-class copies left in cleared, and the FP blob budget before the run. Spans under 15 tokens stay on exact hash on the canonical stream, with the reject-class count reported. If only the 20–39 bucket fails at 40, a function-unit-only lower floor is allowed and whole files keep 40. ADVERSARY confirms containment and allowlist fixes on the shipping slicer path. SemDeDup-style similarity is advisory for T07 only and never a clearance criterion.
+  - Acceptance: real slicer and real cleared hosts; H1-style split of one rejected file across 3 or more cleared files; per-bucket recall with Wilson intervals and hand-labelled FP cost. Danny sets the recall lower bound, zero reject-class copies left in cleared, and the FP blob budget before the run. Spans under 15 tokens stay on exact hash on the ID/NUM stream, and that check needs the brief's idioms allowlisted pairing, or short idioms will be over-flagged. The shipped dedup must use the same streams this protocol measures: the raw stream, plus the H2 canonical stream combined with it by OR. The `STR` collapse is only on that canonical stream and never replaces the raw stream. If only the 20–39 bucket fails at 40, a function-unit-only lower floor is allowed and whole files keep 40. ADVERSARY confirms containment and allowlist fixes on the shipping slicer path. SemDeDup-style similarity is advisory for T07 only and never a clearance criterion.
   - Workflows: production-systems, ADVERSARY review.
 
 ## Dependency graph
