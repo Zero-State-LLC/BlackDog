@@ -62,6 +62,10 @@ See [docs/VERSIONING.md](docs/VERSIONING.md).
 - CI: markdownlint, link check, gitleaks secret scan, Spec Kit structure check, actionlint and Dependabot for GitHub Actions.
 - Training-path research and ADR-0002 (PROPOSED): adapt an open base code model through P0 corpus and harness, P1 continued pretraining, P2 SFT and P3 compiler-feedback RL.
 
+### Fixed
+
+- Grader: a bare exit-1 `ERROR : stack overflow` line stays ungraded and quarantined unless a sealed Faust 2.88.0 `faust-cli` cpp receipt exits exactly 1 with that same line. A `triage="source"` string, and any recorded triage decision, cannot turn an unattributed 124, 125, 126 or crash into 0.0 while A2-T is unimplemented. A harness or infrastructure `TriageDecision` drops a remote-import or source-size score. A compiler receipt with `termination_signal` set stays ungraded. Native mint accepts `exit_code` only when `type(exit_code) is int` and the value is 1, and it checks every `-lang` in the command. `apply_signal` refuses a receipt minted for an unrewardable task, including a tuple `classes` entry. `UngradedRateTracker.load_state` restores `baseline`. The unused `reward_profile_allowlist` helper and the dead `_source_tag` stage argument are gone.
+
 ### Changed
 
 - A native stack match is a sealed Faust 2.88.0 `faust-cli` receipt with `lang` `cpp`, a `faust` command, and exit 1. Exits 124, 125, 126, 137, 139 and -9, and any signal exit, are not a match. The wasm and native stack-line text must be equal. A raw dict is not a match. `reward_value` calls `require_task_rewardable` before it returns a receipt score, and the reward builders refuse a receipt that `is_minted` does not accept. The installer walks the parent chain to `/`, refuses a group-writable or non-root directory, refuses to adopt a pre-existing directory that is not already root-owned mode `0755`, and chmods through an `O_NOFOLLOW` directory fd.

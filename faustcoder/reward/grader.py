@@ -24,18 +24,26 @@ exit 124, 125 or 126, or a worker or harness crash, is
 scored before then. Exit 126 is ``internal``. The rerun-plus-fixture
 path is not sanctioned and must not be supplied. ``grade_receipt``
 raises ``AutoAttributionRefused`` when ``rerun`` or ``known_good``
-is passed, and it does not call either hook.
+is passed, and it does not call either hook. A bare ``triage`` string
+is not that attribution. A ``TriageDecision`` records who, why, and
+evidence. A2-T is not implemented, so the decision fails closed and
+the unattributed row stays ungraded. ``QuarantineQueue.resolve`` is
+the recorded human decision and is unchanged.
 
 A remote import and a source over 1 MiB are source-class rules and
-do not wait. A line-start ``ERROR : stack overflow`` or
-``ERROR : stack overflow in eval`` is a source failure only when a
-native Faust 2.88.0 receipt of the same source failed with that
-line. Without that match the row stays ungraded. Marker matching is
-case-sensitive and does not read harness text or a later render
-crash. A JS ``runtime_stack_overflow`` flag and a ``wasm_trap`` kind
-stay ungraded. ``shadow_observe`` may rerun and log. Its
-``ShadowLog`` is not a grade and never reaches ``reward_value`` or
-a receipt.
+do not wait. A harness or infrastructure ``TriageDecision`` drops
+that source score. The row is then ungraded. A line that is exactly
+``ERROR : stack overflow`` on exit 1, or ``ERROR : stack overflow in
+eval`` on exit 126, is a source failure only when a sealed native
+Faust 2.88.0 ``faust-cli`` receipt (``lang`` ``cpp``, exit exactly 1)
+failed with that same line. Without that match the row stays
+ungraded, including the plain exit-1 line. It is not a compiler
+rejection. A compiler receipt with ``termination_signal`` set is
+ungraded and quarantined. Marker matching is case-sensitive and does
+not read harness text or a later render crash. A JS
+``runtime_stack_overflow`` flag and a ``wasm_trap`` kind stay
+ungraded. ``shadow_observe`` may rerun and log. Its ``ShadowLog`` is
+not a grade and never reaches ``reward_value`` or a receipt.
 
 Receipt signing is deferred (D3). This module recomputes digests. It
 does not require a signature.
@@ -68,6 +76,8 @@ from faustcoder.reward.types import (
     RerunOutcome,
     RewardableSignalReceipt,
     SourceAttributedFailure,
+    TriageAttribution,
+    TriageDecision,
     Ungraded,
     UngradedRateTracker,
     UngradedReason,
@@ -126,11 +136,6 @@ _THRESHOLD_KEYS = (
 Grade = RewardableSignalReceipt | Ungraded | SourceAttributedFailure
 Rerun = Callable[[Mapping[str, Any]], RerunOutcome]
 KnownGood = Callable[[], FixtureOutcome]
-
-
-def reward_profile_allowlist() -> dict[str, str]:
-    """Return the frozen ``{digest: name}`` allowlist."""
-    return reward_profiles()
 
 
 class RewardProvenanceError(Exception):
@@ -352,7 +357,7 @@ def grade_receipt(
     diagnostics: str | None = None,
     rerun: Rerun | None = None,
     known_good: KnownGood | None = None,
-    triage: str | None = None,
+    triage: object = None,
     policy: str = "default",
     queue: QuarantineQueue | None = None,
     rates: UngradedRateTracker | None = None,
@@ -366,9 +371,9 @@ def grade_receipt(
     When ``task`` is set, a minted receipt carries the digest of that
     task's id and effect. An unattributed exit 124, 125 or 126, or a
     worker or harness crash, stays ``unattributed`` and, when
-    ``queue`` is set, pending, until ``triage`` attributes it.
+    ``queue`` is set, pending. ``triage`` does not score that row.
     ``rerun`` and ``known_good`` are not a grading path.
-    ``native`` is a Faust 2.88.0 CLI receipt. It can attribute a
+    ``native`` is a sealed Faust 2.88.0 CLI match. It can attribute a
     compile stack line and nothing else.
     """
     if rerun is not None or known_good is not None:
@@ -445,7 +450,7 @@ def _bind_grade_receipt(grade: Callable[..., Grade]) -> tuple[
         diagnostics: str | None = None,
         rerun: Rerun | None = None,
         known_good: KnownGood | None = None,
-        triage: str | None = None,
+        triage: object = None,
         policy: str = "default",
         queue: QuarantineQueue | None = None,
         rates: UngradedRateTracker | None = None,
@@ -495,13 +500,20 @@ def _bind_native_mint() -> tuple[
     ) -> NativeStackMatch:
         """Seal one native Faust 2.88.0 compile failure.
 
-        The exit must be 1. Harness exits 124, 125, 126, 137, 139 and
-        -9, and any ``termination_signal``, are refused. ``lang`` must
-        be ``cpp`` and ``command`` must be the native ``faust`` CLI.
-        The diagnostics must contain exactly one of the two stack lines.
+        ``exit_code`` must be exactly ``int`` and equal to 1. ``1.0``,
+        bools and ``int`` subclasses are refused, as are harness exits
+        124, 125, 126, 137, 139 and -9, and any ``termination_signal``.
+        ``lang`` must be ``cpp``. Every ``-lang`` in ``command`` is
+        checked. The diagnostics must contain exactly one of the two
+        stack lines.
         """
         if not isinstance(receipt, Mapping) or type(diagnostics) is not str:
             raise RewardProvenanceError("native match requires a receipt and its diagnostics")
+        exit_code = receipt.get("exit_code")
+        # ``1.0``, ``True`` and an ``int`` subclass compare equal to 1.
+        # Only a real ``int`` may mint.
+        if type(exit_code) is not int or exit_code != 1:
+            raise RewardProvenanceError("native match requires a normal compile failure, exit 1")
         body = dict(receipt)
         try:
             validate(body, "compiler-receipt.schema.json")
@@ -534,7 +546,12 @@ mint_native_stack_match, is_native_minted = _bind_native_mint()
 
 
 def _native_command(command: object) -> bool:
-    """True when ``command`` is the native ``faust`` CLI, not libfaust-wasm."""
+    """True when ``command`` is the native ``faust`` CLI, not libfaust-wasm.
+
+    Every ``-lang`` is checked. None means the cpp default. One ``-lang``
+    must be ``cpp``. A second ``-lang``, including another ``cpp``, is
+    refused.
+    """
     if not isinstance(command, list) or not command or type(command[0]) is not str:
         return False
     if command[0] != "faust":
@@ -543,9 +560,17 @@ def _native_command(command: object) -> bool:
         return False
     if any(item == "libfaust-wasm" or item.startswith("--faustwasm=") for item in command):
         return False
-    for index, item in enumerate(command):
-        if item == "-lang":
-            return index + 1 < len(command) and command[index + 1] == "cpp"
+    seen_lang = False
+    index = 0
+    while index < len(command):
+        item = command[index]
+        if item != "-lang":
+            index += 1
+            continue
+        if seen_lang or index + 1 >= len(command) or command[index + 1] != "cpp":
+            return False
+        seen_lang = True
+        index += 2
     return True
 
 
@@ -609,7 +634,7 @@ def _grade(
     envelope: Mapping[str, Any],
     *,
     diagnostics: str | None,
-    triage: str | None,
+    triage: object,
     task: object,
     native: Mapping[str, Any] | None,
     native_diagnostics: str | None,
@@ -716,6 +741,7 @@ def _grade_signal(
         reproducible_digest=reproducible,
         schema_version=str(version),
         task_digest=_task_digest_for_mint(task),
+        unrewardable=_task_marks_unrewardable(task),
     )
 
 
@@ -727,6 +753,7 @@ def _mint_receipt(
     reproducible_digest: str,
     schema_version: str,
     task_digest: str | None,
+    unrewardable: bool,
 ) -> RewardableSignalReceipt:
     """Register one receipt. The class ``_mint`` method always refuses."""
     receipt = object.__new__(RewardableSignalReceipt)
@@ -736,6 +763,7 @@ def _mint_receipt(
     object.__setattr__(receipt, "reproducible_digest", reproducible_digest)
     object.__setattr__(receipt, "schema_version", schema_version)
     object.__setattr__(receipt, "task_digest", task_digest)
+    object.__setattr__(receipt, "unrewardable", unrewardable)
     return receipt
 
 
@@ -789,12 +817,28 @@ def _identity_matches(
     return True
 
 
+def _task_marks_unrewardable(task: object) -> bool:
+    """True when ``task`` is not a reward target.
+
+    A task ``grade_receipt`` cannot read stays rewardable here.
+    ``apply_signal`` refuses a receipt this marks.
+    """
+    if not isinstance(task, Mapping):
+        return False
+    from faustcoder.signal_suite import task_is_unrewardable
+
+    try:
+        return task_is_unrewardable(task) is True
+    except (TypeError, ValueError):
+        return False
+
+
 def _grade_compiler(
     envelope: Mapping[str, Any],
     payload: dict[str, Any],
     *,
     diagnostics: str | None,
-    triage: str | None,
+    triage: object,
     native: Mapping[str, Any] | None,
     native_diagnostics: str | None,
 ) -> Grade:
@@ -810,37 +854,32 @@ def _grade_compiler(
         return Ungraded(UngradedReason.SCHEMA_INVALID, exc.detail)
     if _envelope_digest_mismatch(envelope, payload):
         return Ungraded(UngradedReason.DIGEST_MISMATCH, "envelope digest does not match the payload")
-    tagged = _source_tag(
-        payload,
-        diagnostics,
-        stage="compile",
-        native=native,
-        native_diagnostics=native_diagnostics,
-    )
+    # The sealed native match carries the stack line. Raw native text is not one.
+    del native_diagnostics
+    tagged = _source_tag(payload, diagnostics, native=native)
     if tagged == "mismatch":
         return Ungraded(
             UngradedReason.DIGEST_MISMATCH,
             "diagnostics do not match stderr_digest",
         )
+    digest = reproducible_receipt_digest(payload)
+    # A signal death is not exit 1 and not a source score.
+    if "termination_signal" in payload:
+        return _unattributed(digest)
+    decision = _recorded_triage(triage)
+    if tagged in {"remote import", "source size"}:
+        if decision is not None and decision.attribution in {
+            TriageAttribution.HARNESS,
+            TriageAttribution.INFRASTRUCTURE,
+        }:
+            return _drop_source_score(decision, digest)
+        return SourceAttributedFailure(detail=tagged)
+    if tagged == "unmatched stack":
+        return _unattributed(digest)
     if tagged is not None:
         return SourceAttributedFailure(detail=tagged)
-    if triage == "source":
-        return SourceAttributedFailure(detail="triage attributed the failure to the source")
-    digest = reproducible_receipt_digest(payload)
-    if triage == "harness":
-        return Ungraded(
-            UngradedReason.HARNESS_DEFECT,
-            "triage established a deterministic harness defect",
-            digest,
-        )
-    if triage == "infra":
-        return Ungraded(
-            UngradedReason.INFRA_FAULT,
-            "triage established a reproducible infrastructure failure",
-            digest,
-        )
-    if triage not in (None,):
-        return Ungraded(UngradedReason.SCHEMA_INVALID, "triage is not source, harness or infra")
+    # A string, or a recorded source decision, does not score. A2-T is
+    # not implemented, so the override fails closed.
     exit_code = payload.get("exit_code")
     diagnostic_class = payload.get("diagnostic_class")
     # A compiler receipt killed at 137, 139, or -9 is a crash. It is
@@ -868,7 +907,7 @@ def _grade_crash(
     payload: dict[str, Any],
     *,
     diagnostics: str | None,
-    triage: str | None,
+    triage: object,
 ) -> Grade:
     version = envelope.get("schema_version")
     if version not in ACCEPTED_COMPILER_SCHEMA_VERSIONS | ACCEPTED_SIGNAL_SCHEMA_VERSIONS:
@@ -893,22 +932,8 @@ def _grade_crash(
             UngradedReason.SCHEMA_INVALID,
             "a crash is diagnostic_class internal, not a timeout",
         )
-    if triage == "source":
-        return SourceAttributedFailure(detail="triage attributed the crash to the source")
-    if triage == "harness":
-        return Ungraded(
-            UngradedReason.HARNESS_DEFECT,
-            "triage established a deterministic harness defect",
-            digest,
-        )
-    if triage == "infra":
-        return Ungraded(
-            UngradedReason.INFRA_FAULT,
-            "triage established a reproducible infrastructure failure",
-            digest,
-        )
-    if triage not in (None,):
-        return Ungraded(UngradedReason.SCHEMA_INVALID, "triage is not source, harness or infra")
+    # A2-T is not implemented. A triage string or decision cannot score a crash.
+    del triage
     # Render exception text is not a marker source. A stack overflow or
     # wasm trap on this stage stays unattributed: those structured
     # fields are harness-limit signatures, not a compile warning and
@@ -930,39 +955,94 @@ def _source_tag(
     payload: Mapping[str, Any],
     diagnostics: str | None,
     *,
-    stage: str,
-    native: Mapping[str, Any] | None = None,
-    native_diagnostics: str | None = None,
+    native: object = None,
 ) -> str | None:
-    """Return a source tag, ``mismatch``, or ``None``.
+    """Return a source tag, ``mismatch``, ``unmatched stack``, or ``None``.
 
     Remote import and ``resource limit: source size`` are exact harness
     diagnostics and are already the source. The two Faust stack lines
-    are source only with a matching native Faust 2.88.0 failure of the
-    same source. Harness prose is not scanned. Render exceptions are
-    not scanned here. ``runtime_stack_overflow`` and ``wasm_trap`` are
-    not source tags.
+    are source only with a sealed native Faust 2.88.0 failure of the
+    same source and the same line. An exit-1 receipt that carries one
+    of those lines without that seal is ``unmatched stack``, not a
+    compiler rejection. Harness prose is not scanned. Render exceptions
+    are not scanned here. ``runtime_stack_overflow`` and ``wasm_trap``
+    are not source tags.
     """
     stderr = payload.get("stderr_digest")
     if stderr == _sha256_text(_REMOTE_DIAGNOSTIC):
         return "remote import"
     if stderr == _sha256_text(_SOURCE_SIZE_DIAGNOSTIC):
         return "source size"
-    if stage != "compile" or diagnostics is None:
+    if diagnostics is None:
         return None
     if _sha256_text(diagnostics) != stderr:
         return "mismatch"
     if diagnostics.startswith(_HARNESS_PREFIXES):
         return None
-    # Exit 126 internal is the stored form of a wasm stack line. A
-    # timeout or a kill stays unattributed even when a native exit 1
-    # names the same line.
-    if payload.get("exit_code") != 126 or payload.get("diagnostic_class") != "internal":
-        return None
+    exit_code = payload.get("exit_code")
+    diagnostic_class = payload.get("diagnostic_class")
     wasm_line = _exact_stack_line(diagnostics)
-    if wasm_line is not None and _native_stack_match(payload, native, wasm_line):
-        return "stack overflow"
+    # Exit 126 internal is the stored form of the wasm ``in eval`` line.
+    # A timeout or a kill stays unattributed even when a native exit 1
+    # names the same line.
+    if type(exit_code) is int and exit_code == 126 and diagnostic_class == "internal":
+        if wasm_line is not None and _native_stack_match(payload, native, wasm_line):
+            return "stack overflow"
+        return None
+    # The plain line is stored as exit 1. It is gradeable only with the
+    # sealed native match of an exact int exit. ``1.0`` and an int
+    # subclass must not fall through to a compiler rejection.
+    if (
+        type(exit_code) is not bool
+        and exit_code == 1
+        and _contains_exact_stack_line(diagnostics)
+    ):
+        if (
+            type(exit_code) is int
+            and wasm_line is not None
+            and _native_stack_match(payload, native, wasm_line)
+        ):
+            return "stack overflow"
+        return "unmatched stack"
     return None
+
+
+def _recorded_triage(triage: object) -> TriageDecision | None:
+    """Return a complete decision, or None when ``triage`` is not one.
+
+    A string is not a decision. Who, why, and evidence are all required.
+    """
+    if type(triage) is not TriageDecision:
+        return None
+    if type(triage.attribution) is not TriageAttribution:
+        return None
+    if type(triage.triaged_by) is not str or triage.triaged_by.strip() == "":
+        return None
+    if type(triage.evidence) is not str or triage.evidence.strip() == "":
+        return None
+    return triage
+
+
+def _drop_source_score(decision: TriageDecision, digest: str) -> Ungraded:
+    """Drop a remote-import or source-size score. This is not a reward."""
+    who = decision.triaged_by.strip()
+    evidence = decision.evidence.strip()
+    if decision.attribution is TriageAttribution.HARNESS:
+        return Ungraded(
+            UngradedReason.HARNESS_DEFECT,
+            f"harness triage by {who}: {evidence}",
+            digest,
+        )
+    return Ungraded(
+        UngradedReason.INFRA_FAULT,
+        f"infrastructure triage by {who}: {evidence}",
+        digest,
+    )
+
+
+def _contains_exact_stack_line(text: str) -> bool:
+    """True when one line is exactly a Faust stack-overflow line."""
+    return any(line in _COMPILE_STACK_LINES for line in text.split("\n"))
 
 
 def _native_stack_match(

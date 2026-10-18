@@ -23,6 +23,7 @@ from faustcoder.reward import (
     RewardableSignalReceipt,
     SourceAttributedFailure,
     TriageAttribution,
+    TriageDecision,
     Ungraded,
     UngradedRateTracker,
     UngradedReason,
@@ -296,6 +297,7 @@ def test_lookalike_and_rebound_receipts_score_nothing() -> None:
         "reproducible_digest",
         "schema_version",
         "task_digest",
+        "unrewardable",
     ):
         object.__setattr__(lookalike, name, getattr(failed, name))
     object.__setattr__(lookalike, "passed", True)
@@ -508,7 +510,8 @@ def test_fixture_failure_is_not_scored_and_harness_triage_is_separate() -> None:
         queue=queue,
     )
     assert isinstance(harness, Ungraded)
-    assert harness.reason is UngradedReason.HARNESS_DEFECT
+    assert harness.reason is UngradedReason.UNATTRIBUTED
+    assert reward_value(harness) is None
     assert queue.count("harness") == 1
 
 
@@ -1116,6 +1119,7 @@ def test_lookalike_receipt_is_not_minted() -> None:
         "reproducible_digest",
         "schema_version",
         "task_digest",
+        "unrewardable",
     ):
         object.__setattr__(lookalike, name, getattr(graded, name))
     assert lookalike._snapshot() == graded._snapshot()
@@ -1793,3 +1797,282 @@ def test_triage_refuses_a_timestamp_earlier_than_the_hold(tmp_path) -> None:
         assert "earlier than the quarantine hold" in str(exc)
     else:
         raise AssertionError("a replayed triage earlier than the hold was accepted")
+
+
+def test_plain_stack_overflow_at_exit_1_needs_a_sealed_native_match() -> None:
+    plain = "ERROR : stack overflow\n"
+    envelope = compiler_failure_envelope(
+        exit_code=1, diagnostic_class="other", diagnostics=plain
+    )
+    queue = QuarantineQueue()
+    held = grade_receipt(envelope, diagnostics=plain, policy="plain-stack", queue=queue)
+    assert isinstance(held, Ungraded)
+    assert held.reason is UngradedReason.UNATTRIBUTED
+    assert reward_value(held) is None
+    assert queue.count("plain-stack") == 1
+    assert queue.pending("plain-stack")[0].reward is None
+    raw = grade_receipt(
+        envelope,
+        diagnostics=plain,
+        native=_native_stack_receipt(plain),
+        native_diagnostics=plain,
+    )
+    assert isinstance(raw, Ungraded)
+    assert raw.reason is UngradedReason.UNATTRIBUTED
+    sealed = mint_native_stack_match(_native_stack_receipt(plain), plain)
+    graded = grade_receipt(envelope, diagnostics=plain, native=sealed)
+    assert isinstance(graded, SourceAttributedFailure)
+    assert graded.detail == "stack overflow"
+    assert reward_value(graded) == 0.0
+    ordinary = compiler_failure_envelope(
+        exit_code=1,
+        diagnostic_class="parse_error",
+        diagnostics="syntax error\n",
+    )
+    scored = grade_receipt(ordinary, diagnostics="syntax error\n")
+    assert isinstance(scored, SourceAttributedFailure)
+    assert scored.detail == "compiler rejection"
+    assert reward_value(scored) == 0.0
+
+
+def test_triage_string_cannot_score_an_unattributed_exit() -> None:
+    cases = (
+        (124, "timeout", "timeout: wall clock limit exceeded\n"),
+        (125, "resource_limit", "resource limit: memory\n"),
+        (126, "internal", "internal: worker failed\n"),
+    )
+    for exit_code, diagnostic_class, diagnostics in cases:
+        envelope = compiler_failure_envelope(
+            exit_code=exit_code,
+            diagnostic_class=diagnostic_class,
+            diagnostics=diagnostics,
+        )
+        queue = QuarantineQueue()
+        graded = grade_receipt(
+            envelope,
+            diagnostics=diagnostics,
+            triage="source",
+            policy="string-triage",
+            queue=queue,
+        )
+        assert isinstance(graded, Ungraded), exit_code
+        assert graded.reason is UngradedReason.UNATTRIBUTED
+        assert reward_value(graded) is None
+        assert queue.count("string-triage") == 1
+        decision = TriageDecision(
+            attribution=TriageAttribution.SOURCE,
+            triaged_by="ada",
+            evidence="rerun plus a known-good fixture",
+        )
+        recorded = grade_receipt(
+            envelope,
+            diagnostics=diagnostics,
+            triage=decision,
+            policy="recorded-triage",
+            queue=queue,
+        )
+        assert isinstance(recorded, Ungraded), exit_code
+        assert recorded.reason is UngradedReason.UNATTRIBUTED
+        assert reward_value(recorded) is None
+    crash = make_envelope(
+        {
+            "kind": "worker_crash",
+            "exit_code": 126,
+            "diagnostic_class": "internal",
+            "reproducible_digest": "sha256:" + "ab" * 32,
+        },
+        schema_version="0.3.2",
+        producer="faustcoder.signal",
+    )
+    crashed = grade_receipt(crash, triage="source", policy="string-crash", queue=QuarantineQueue())
+    assert isinstance(crashed, Ungraded)
+    assert crashed.reason is UngradedReason.UNATTRIBUTED
+    assert reward_value(crashed) is None
+
+
+def test_signal_killed_native_compile_stays_ungraded() -> None:
+    diagnostics = "compiler returned failure\n"
+    envelope = compiler_failure_envelope(
+        exit_code=1, diagnostic_class="other", diagnostics=diagnostics
+    )
+    payload = dict(envelope["payload"])
+    payload["compiler"] = "faust-cli"
+    payload["lang"] = "cpp"
+    payload["faust_version"] = "2.88.0"
+    payload["command"] = ["faust", "-lang", "cpp"]
+    quiet = make_envelope(payload, schema_version="0.3.2", producer="faustcoder.compiler")
+    scored = grade_receipt(quiet, diagnostics=diagnostics)
+    assert isinstance(scored, SourceAttributedFailure)
+    assert scored.detail == "compiler rejection"
+    assert reward_value(scored) == 0.0
+    payload["termination_signal"] = 11
+    killed = make_envelope(payload, schema_version="0.3.2", producer="faustcoder.compiler")
+    queue = QuarantineQueue()
+    held = grade_receipt(killed, diagnostics=diagnostics, policy="signal-kill", queue=queue)
+    assert isinstance(held, Ungraded)
+    assert held.reason is UngradedReason.UNATTRIBUTED
+    assert reward_value(held) is None
+    assert queue.count("signal-kill") == 1
+    plain = "ERROR : stack overflow\n"
+    stack_payload = dict(
+        compiler_failure_envelope(
+            exit_code=1, diagnostic_class="other", diagnostics=plain
+        )["payload"]
+    )
+    stack_payload["termination_signal"] = 11
+    stack_payload["compiler"] = "faust-cli"
+    stack_payload["lang"] = "cpp"
+    stack_payload["command"] = ["faust", "-lang", "cpp"]
+    stack_envelope = make_envelope(
+        stack_payload, schema_version="0.3.2", producer="faustcoder.compiler"
+    )
+    sealed = mint_native_stack_match(_native_stack_receipt(plain), plain)
+    still = grade_receipt(stack_envelope, diagnostics=plain, native=sealed, queue=queue)
+    assert isinstance(still, Ungraded)
+    assert still.reason is UngradedReason.UNATTRIBUTED
+    assert reward_value(still) is None
+
+
+def test_native_mint_rejects_exit_codes_that_are_not_exact_ints() -> None:
+    class ExitCode(int):
+        pass
+
+    exact = "ERROR : stack overflow\n"
+    base = _native_stack_receipt(exact)
+    for bad in (1.0, True, False, ExitCode(1)):
+        forged = dict(base)
+        forged["exit_code"] = bad
+        try:
+            mint_native_stack_match(forged, exact)
+        except RewardProvenanceError as exc:
+            assert "exit 1" in str(exc)
+        else:
+            raise AssertionError(f"native match minted exit_code {bad!r}")
+    minted = mint_native_stack_match(base, exact)
+    assert minted.stack_line == "ERROR : stack overflow"
+
+
+def test_native_command_checks_every_lang_flag() -> None:
+    exact = "ERROR : stack overflow in eval\n"
+    slipped = _native_stack_receipt(
+        exact, command=["faust", "-lang", "cpp", "-lang", "wasm"]
+    )
+    repeated = _native_stack_receipt(
+        exact, command=["faust", "-lang", "cpp", "-lang", "cpp"]
+    )
+    for native in (slipped, repeated):
+        try:
+            mint_native_stack_match(native, exact)
+        except RewardProvenanceError as exc:
+            assert "cpp" in str(exc)
+        else:
+            raise AssertionError(f"native match minted command {native['command']}")
+    mint_native_stack_match(_native_stack_receipt(exact), exact)
+    mint_native_stack_match(
+        _native_stack_receipt(exact, command=["faust", "-lang", "cpp"]), exact
+    )
+
+
+def test_apply_signal_refuses_an_unrewardable_mint() -> None:
+    linear = _linear_task()
+    allowed = grade_receipt(allowlisted_reward_envelope(passed=True), task=linear)
+    assert apply_signal(CandidateState.COMPILE_CHECKED, allowed) is CandidateState.SIGNAL_CHECKED
+    for effect in ("nonlinear", "time_variant"):
+        task = _linear_task()
+        task["effect"] = effect
+        minted = grade_receipt(allowlisted_reward_envelope(passed=True), task=task)
+        assert isinstance(minted, RewardableSignalReceipt)
+        assert is_minted(minted)
+        assert minted.unrewardable is True
+        try:
+            apply_signal(CandidateState.COMPILE_CHECKED, minted)
+        except TypeError as exc:
+            assert "unrewardable" in str(exc)
+        else:
+            raise AssertionError(f"apply_signal accepted {effect}")
+    via_tuple = _linear_task()
+    profile = dict(via_tuple["test_profile"])
+    profile["classes"] = ("nonlinear",)
+    via_tuple["test_profile"] = profile
+    minted = grade_receipt(allowlisted_reward_envelope(passed=False), task=via_tuple)
+    assert minted.unrewardable is True
+    try:
+        apply_signal(CandidateState.COMPILE_CHECKED, minted)
+    except TypeError as exc:
+        assert "unrewardable" in str(exc)
+    else:
+        raise AssertionError("apply_signal accepted a tuple class")
+
+
+def test_harness_triage_drops_a_remote_import_score() -> None:
+    remote = "internal: remote import rejected\n"
+    envelope = compiler_failure_envelope(
+        exit_code=126, diagnostic_class="internal", diagnostics=remote
+    )
+    kept = grade_receipt(envelope, diagnostics=remote)
+    assert isinstance(kept, SourceAttributedFailure)
+    assert kept.detail == "remote import"
+    assert reward_value(kept) == 0.0
+    bare = grade_receipt(envelope, diagnostics=remote, triage="harness")
+    assert isinstance(bare, SourceAttributedFailure)
+    assert reward_value(bare) == 0.0
+    decision = TriageDecision(
+        attribution=TriageAttribution.HARNESS,
+        triaged_by="ada",
+        evidence="pre-filter false positive on a local import",
+    )
+    queue = QuarantineQueue()
+    dropped = grade_receipt(
+        envelope,
+        diagnostics=remote,
+        triage=decision,
+        policy="remote-harness",
+        queue=queue,
+    )
+    assert isinstance(dropped, Ungraded)
+    assert dropped.reason is UngradedReason.HARNESS_DEFECT
+    assert reward_value(dropped) is None
+    assert "ada" in dropped.detail
+    assert "local import" in dropped.detail
+    assert queue.count("remote-harness") == 1
+    assert queue.pending("remote-harness")[0].reward is None
+    oversized = "resource limit: source size\n"
+    size_envelope = compiler_failure_envelope(
+        exit_code=125, diagnostic_class="resource_limit", diagnostics=oversized
+    )
+    size_decision = TriageDecision(
+        attribution=TriageAttribution.INFRASTRUCTURE,
+        triaged_by="mina",
+        evidence="counter measured the harness copy, not the source",
+    )
+    size_dropped = grade_receipt(size_envelope, diagnostics=oversized, triage=size_decision)
+    assert isinstance(size_dropped, Ungraded)
+    assert size_dropped.reason is UngradedReason.INFRA_FAULT
+    assert reward_value(size_dropped) is None
+    assert "mina" in size_dropped.detail
+
+
+def test_rate_tracker_reload_keeps_its_baseline() -> None:
+    source = UngradedRateTracker(baseline=0.01)
+    source.observe("policy", ungraded=True)
+    assert source.alarm("policy")
+    copy = UngradedRateTracker()
+    copy.load_state(source.export_state())
+    assert copy.baseline == 0.01
+    assert copy.alarm("policy") is True
+    assert copy.rate("policy") == source.rate("policy")
+    cleared = UngradedRateTracker(baseline=0.2)
+    payload = source.export_state()
+    payload["baseline"] = None
+    cleared.load_state(payload)
+    assert cleared.baseline is None
+    assert cleared.alarm("policy") is False
+
+
+def test_provably_dead_grader_helpers_are_gone() -> None:
+    import inspect
+
+    import faustcoder.reward.grader as grader
+
+    assert not hasattr(grader, "reward_profile_allowlist")
+    assert "stage" not in inspect.signature(grader._source_tag).parameters

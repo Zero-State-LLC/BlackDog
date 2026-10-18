@@ -74,6 +74,9 @@ class RewardableSignalReceipt:
     this receipt was minted for. It is ``None`` when grading did not
     bind a task. Training builders refuse an unbound receipt and a
     receipt whose digest does not match the row's task.
+
+    ``unrewardable`` is true when that task is not a reward target.
+    ``apply_signal`` refuses the receipt. A linear mint leaves it false.
     """
 
     __slots__ = (
@@ -83,6 +86,7 @@ class RewardableSignalReceipt:
         "reproducible_digest",
         "schema_version",
         "task_digest",
+        "unrewardable",
         "__weakref__",
     )
 
@@ -127,6 +131,7 @@ class RewardableSignalReceipt:
                 "reproducible_digest",
                 "schema_version",
                 "task_digest",
+                "unrewardable",
             )
         )
 
@@ -191,6 +196,22 @@ class TriageAttribution(StrEnum):
     SOURCE = "source"
     HARNESS = "harness"
     INFRASTRUCTURE = "infrastructure"
+
+
+@dataclass(frozen=True)
+class TriageDecision:
+    """A recorded triage decision: who, why, and evidence.
+
+    ``triaged_by`` is who. ``attribution`` is why. ``evidence`` is the
+    note. A bare string is not a decision. A2-T is not implemented, so
+    ``grade_receipt`` does not turn ``source`` into a score. ``harness``
+    or ``infrastructure`` can only drop a remote-import or source-size
+    score.
+    """
+
+    attribution: TriageAttribution
+    triaged_by: str
+    evidence: str
 
 
 @dataclass(frozen=True)
@@ -520,6 +541,17 @@ UNGRADED_BASELINE_MULTIPLE = 2.0
 QUARANTINE_MAX_AGE_SECONDS = 24 * 60 * 60
 
 
+def _restore_baseline(value: object) -> float | int | None:
+    """Return a baseline stored by ``export_state``, or raise."""
+    if value is None:
+        return None
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        raise ValueError("baseline must lie in [0, 1]")
+    if value < 0 or value > 1:
+        raise ValueError("baseline must lie in [0, 1]")
+    return value
+
+
 class UngradedRateTracker:
     """Per-policy ungraded rate and the A7 alarm hook.
 
@@ -600,8 +632,12 @@ class UngradedRateTracker:
         alarmed = payload.get("alarmed", [])
         if not isinstance(alarmed, list):
             raise ValueError("rates state alarmed is malformed")
+        baseline = self.baseline
+        if "baseline" in payload:
+            baseline = _restore_baseline(payload.get("baseline"))
         self._samples = restored
         self._alarmed = {str(item) for item in alarmed}
+        self.baseline = baseline
 
     @property
     def alarmed_policies(self) -> frozenset[str]:

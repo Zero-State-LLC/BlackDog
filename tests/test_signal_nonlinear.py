@@ -306,6 +306,11 @@ def test_nonlinear_task_can_be_tagged_unrewardable() -> None:
         via_class = json.loads(TASK.read_text(encoding="utf-8"))
         via_class["test_profile"] = {"classes": [reason]}
         assert task_is_unrewardable(via_class) is True
+        via_tuple = json.loads(TASK.read_text(encoding="utf-8"))
+        via_tuple["test_profile"] = {"classes": (reason,)}
+        assert task_is_unrewardable(via_tuple) is True
+        with pytest.raises(SignalHarnessError, match="unrewardable"):
+            require_task_rewardable(via_tuple)
         opted_in = json.loads(TASK.read_text(encoding="utf-8"))
         opted_in["test_profile"] = {"effect": reason, "rewardable": True}
         with pytest.raises(SignalHarnessError, match="unrewardable"):
