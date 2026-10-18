@@ -833,9 +833,12 @@ def commit_signal_check(
     document, when the run has one, is the other parent. A harness
     exception never reaches this function, so a failed sandbox does
     not move the candidate. A reward run with no signal receipt is a
-    compiler exit 124, 125 or 126, or a render crash. Those are graded
-    here onto ``ledger`` or the suite ledger. Exit 124, 125 and 126
-    use the compiler envelope. A render crash uses a crash envelope.
+    compiler failure or a render crash. Those are graded here onto
+    ``ledger`` or the suite ledger. Exit 124, 125 and 126, and a
+    deferred compiler failure, use the compiler envelope. A wasm
+    trap or ``stack overflow in eval`` in those diagnostics is source
+    attribution. A render crash uses a crash envelope; a deep-recursion
+    signature on its diagnostics is the same attribution.
     """
     if state is not CandidateState.COMPILE_CHECKED:
         raise SignalHarnessError("signal check starts from COMPILE_CHECKED")
@@ -890,7 +893,7 @@ def commit_signal_check(
         outcomes_list: list[object] = []
         for run, artifact_id in zip(suite.runs, artifact_ids, strict=True):
             exit_code = run.compilation.receipt.get("exit_code")
-            if exit_code in {124, 125, 126}:
+            if exit_code in {124, 125, 126} or run.reward_failure == "compiler":
                 compiler_id = store_compiler_receipt(
                     store,
                     run.compilation.receipt,
@@ -923,6 +926,7 @@ def commit_signal_check(
                                 "reproducible_digest": run.compilation.reproducible_digest,
                             },
                         ),
+                        diagnostics=run.compilation.diagnostics,
                         policy=policy,
                         queue=bound.queue,
                         rates=bound.rates,

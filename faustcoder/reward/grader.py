@@ -25,8 +25,11 @@ exit 124, 125 or 126, or a worker or harness crash, is
 on a quiet worker and runs a known-good fixture alongside. If the
 fixture passes and the candidate fails again, the failure is graded
 at the A1 ``parse_error`` rung. A remote-import or stack-overflow
-tag is already source attribution and does not wait. The rerun and
-the fixture are caller hooks: this module does not spawn a worker.
+tag is already source attribution and does not wait. A wasm trap,
+``ERROR : stack overflow in eval``, or a deep-recursion signature on
+an otherwise untagged worker crash is the same source rung. The
+rerun and the fixture are caller hooks: this module does not spawn
+a worker.
 
 Receipt signing is deferred (D3). This module recomputes digests. It
 does not require a signature.
@@ -74,7 +77,14 @@ ACCEPTED_SIGNAL_SCHEMA_VERSIONS = frozenset({SIGNAL_SCHEMA_VERSION})
 ACCEPTED_COMPILER_SCHEMA_VERSIONS = frozenset({"0.3.2"})
 FULL_COMPARISON = "reward-graded-signed-full"
 _REMOTE_DIAGNOSTIC = "internal: remote import rejected\n"
-_STACK_MARKERS = ("maximum call stack size exceeded", "stack overflow")
+_STACK_MARKERS = (
+    "maximum call stack size exceeded",
+    "stack overflow",
+    "stack overflow in eval",
+    "deep recursion",
+    "wasm trap",
+    "unreachable",
+)
 _EXIT_CLASS = {124: "timeout", 125: "resource_limit", 126: "internal"}
 _CRASH_KINDS = frozenset({"worker_crash", "harness_crash"})
 _CRASH_EXITS = frozenset({None, 126, 137, 139, -9})
@@ -319,6 +329,7 @@ def _grade(
         return _grade_crash(
             envelope,
             payload,
+            diagnostics=diagnostics,
             rerun=rerun,
             known_good=known_good,
             triage=triage,
@@ -546,6 +557,7 @@ def _grade_crash(
     envelope: Mapping[str, Any],
     payload: dict[str, Any],
     *,
+    diagnostics: str | None,
     rerun: Rerun | None,
     known_good: KnownGood | None,
     triage: str | None,
@@ -589,6 +601,11 @@ def _grade_crash(
         )
     if triage not in (None,):
         return Ungraded(UngradedReason.SCHEMA_INVALID, "triage is not source, harness or infra")
+    # A segfault carries no source tag. The commit path still passes the
+    # captured diagnostics. A stack-overflow or deep-recursion signature
+    # is the source, same as a wasm trap or `stack overflow in eval`.
+    if _recursion_signature(diagnostics) or _payload_recursion(payload):
+        return SourceAttributedFailure(detail="stack overflow")
     return _auto_attribute(digest, rerun=rerun, known_good=known_good)
 
 
@@ -644,9 +661,11 @@ def _source_tag(payload: Mapping[str, Any], diagnostics: str | None) -> str | No
     """Return a source tag, ``mismatch``, or ``None``.
 
     Remote import is tagged by the harness diagnostic
-    ``internal: remote import rejected``. Stack overflow is tagged
-    when the diagnostics that hash to ``stderr_digest`` contain that
-    marker. Both are already attributed to the source.
+    ``internal: remote import rejected``. A stack overflow, a wasm
+    trap, or a deep-recursion signature is tagged when the diagnostics
+    that hash to ``stderr_digest`` contain it. Both are already
+    attributed to the source. A crash record has no stderr digest;
+    its captured diagnostics are checked separately.
     """
     stderr = payload.get("stderr_digest")
     if stderr == _sha256_text(_REMOTE_DIAGNOSTIC):
@@ -658,9 +677,27 @@ def _source_tag(payload: Mapping[str, Any], diagnostics: str | None) -> str | No
     folded = diagnostics.casefold()
     if "remote import rejected" in folded:
         return "remote import"
-    if any(marker in folded for marker in _STACK_MARKERS):
+    if _recursion_signature(diagnostics):
         return "stack overflow"
     return None
+
+
+def _recursion_signature(text: str | None) -> bool:
+    """True when text names a stack overflow, wasm trap, or deep recursion."""
+    if not isinstance(text, str) or not text:
+        return False
+    folded = text.casefold()
+    return any(marker in folded for marker in _STACK_MARKERS)
+
+
+def _payload_recursion(payload: Mapping[str, Any]) -> bool:
+    """True when the receipt itself carries a recursion signature."""
+    for key, value in payload.items():
+        if not isinstance(value, str) or key.endswith("digest"):
+            continue
+        if key in {"source_tag", "diagnostics", "detail"} and _recursion_signature(value):
+            return True
+    return False
 
 
 def _present_digest(value: object) -> str | None:

@@ -155,9 +155,13 @@ single-process.
 
 `commit_signal_check` and a reward-graded `run_signal` pass that queue
 and the A7 tracker into `grade_receipt`. A compiler exit 124, 125 or
-126, or a worker or harness crash, is graded there. With no ledger
-the reward path raises `RewardUseRefused` and does not score the
-outcome. `compile_source` on its own is not a reward consumer.
+126, a deferred compiler failure, or a worker or harness crash, is
+graded there. A wasm trap, `ERROR : stack overflow in eval`, or a
+deep-recursion signature on those diagnostics is `parse_error` and
+is not queued. A segfault with none of those signatures stays
+`unattributed`. With no ledger the reward path raises
+`RewardUseRefused` and does not score the outcome. `compile_source`
+on its own is not a reward consumer.
 
 The ungraded-rate alarm uses the provisional A7 numbers and nothing
 else: above 1% over a full 500-sample window, or above 2× the

@@ -1076,3 +1076,96 @@ def test_compiler_kill_exits_are_queued_crashes() -> None:
         assert graded.reason is UngradedReason.UNATTRIBUTED
         assert reward_value(graded) is None
     assert queue.count("compiler-kill") == 3
+
+
+def test_recursive_program_is_parse_error_under_each_outcome(store, tmp_path) -> None:
+    import hashlib
+    from pathlib import Path
+
+    from faustcoder.compiler import Compilation
+    from faustcoder.reward import RewardLedger
+    from faustcoder.signal import SignalRun, SignalSuite, commit_signal_check
+
+    source = Path("tests/fixtures/dsp/recurse.dsp").read_text(encoding="utf-8")
+    assert "f(n) = f(n - 1)" in source
+    source_sha = hashlib.sha256(source.encode("utf-8")).hexdigest()
+    ledger = RewardLedger(tmp_path / "recursion")
+
+    def commit_compiler(exit_code: int, diagnostic_class: str, diagnostics: str) -> None:
+        envelope = compiler_failure_envelope(
+            exit_code=exit_code,
+            diagnostic_class=diagnostic_class,
+            diagnostics=diagnostics,
+        )
+        payload = dict(envelope["payload"])
+        payload["source_sha256"] = source_sha
+        payload = make_envelope(
+            payload,
+            schema_version="0.3.2",
+            producer="faustcoder.compiler",
+        )["payload"]
+        run = SignalRun(
+            compilation=Compilation(
+                receipt=payload,
+                diagnostics=diagnostics,
+                reproducible_digest=reproducible_receipt_digest(payload),
+            ),
+            receipt=None,
+            reproducible_digest=reproducible_receipt_digest(payload),
+            failures=("compiler",),
+            reference_payload=None,
+            reward_failure="compiler",
+        )
+        committed = commit_signal_check(
+            store,
+            SignalSuite(runs=(run,), ledger=ledger),
+            state=CandidateState.COMPILE_CHECKED,
+            created_at="2026-10-18T00:00:00Z",
+        )
+        assert committed.state is CandidateState.REJECTED
+        assert len(committed.outcomes) == 1
+        outcome = committed.outcomes[0]
+        assert isinstance(outcome, SourceAttributedFailure)
+        assert outcome.rung == "parse_error"
+        assert outcome.detail == "stack overflow"
+
+    commit_compiler(1, "other", "RuntimeError: unreachable\nwasm trap\n")
+    commit_compiler(126, "internal", "ERROR : stack overflow in eval\n")
+
+    crashed = compiler_failure_envelope(
+        exit_code=0,
+        diagnostic_class="ok",
+        diagnostics="",
+    )
+    payload = dict(crashed["payload"])
+    payload["source_sha256"] = source_sha
+    payload = make_envelope(
+        payload,
+        schema_version="0.3.2",
+        producer="faustcoder.compiler",
+    )["payload"]
+    digest = reproducible_receipt_digest(payload)
+    segfault = SignalRun(
+        compilation=Compilation(
+            receipt=payload,
+            diagnostics="worker segfault\ndeep recursion\n",
+            reproducible_digest=digest,
+        ),
+        receipt=None,
+        reproducible_digest=digest,
+        failures=("worker_crash",),
+        reference_payload=None,
+        reward_failure="worker_crash",
+    )
+    committed = commit_signal_check(
+        store,
+        SignalSuite(runs=(segfault,), ledger=ledger),
+        state=CandidateState.COMPILE_CHECKED,
+        created_at="2026-10-18T00:00:00Z",
+    )
+    assert committed.state is CandidateState.REJECTED
+    outcome = committed.outcomes[0]
+    assert isinstance(outcome, SourceAttributedFailure)
+    assert outcome.rung == "parse_error"
+    assert outcome.detail == "stack overflow"
+    assert ledger.queue.count() == 0

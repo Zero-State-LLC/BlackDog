@@ -17,7 +17,7 @@ reward code. `grade_receipt` is the consumer.
 | 1 | `parse_error`, `type_error`, `arity_error`, `unbound_symbol`, `other` | graded; `parse_error` is the A1 rung |
 | 124 | `timeout` | `unattributed` until triage or auto-attribution |
 | 125 | `resource_limit` | same as exit 124 |
-| 126 | `internal` | `unattributed`, unless already a remote import or a stack overflow |
+| 126 | `internal` | `unattributed`, unless already a remote import, a stack overflow, a wasm trap, or a deep-recursion signature |
 | 137, 139, -9 | any stored class | queued crash (`unattributed`), not `schema_invalid` |
 
 Do not score a stored `internal` or `resource_limit` class as `other`.
@@ -32,9 +32,13 @@ the same digest on a quiet worker with a known-good fixture. If the
 fixture passes and the candidate fails again, the rung is `parse_error`.
 If the fixture fails, the reason is `infra_fault`. Triage can mark
 `harness_defect`. A remote import or a stack overflow is already
-`parse_error` and does not wait. A7 alerts when the per-policy ungraded
-rate goes above 1% over a 500-sample window, or above 2× the known-good
-baseline, whichever comes first. Five ungraded samples in 500 do not
+`parse_error` and does not wait. A wasm trap (`unreachable`),
+`ERROR : stack overflow in eval`, or a deep-recursion signature on a
+worker crash is the same rung on the ledger commit path. The crash
+payload itself has no source tag; the captured diagnostics carry it.
+A segfault with none of those signatures stays `unattributed`. A7 alerts
+when the per-policy ungraded rate goes above 1% over a 500-sample window,
+or above 2× the known-good baseline, whichever comes first. Five ungraded samples in 500 do not
 alarm. Six do. Those numbers are provisional. The alarm re-arms after
 the rate recovers. `rates.json` is single-process. The grader does not
 spawn the worker.
