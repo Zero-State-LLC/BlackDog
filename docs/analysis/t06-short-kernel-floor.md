@@ -297,3 +297,20 @@ Jev. It applies only on the H2 canonical stream, combined with the raw
 stream by OR, and never replaces the raw stream. The cutter in "How a span was cut" is a
 measurement aid. It is not the real slicer. ADVERSARY confirms
 containment and allowlist fixes against the shipping slicer path.
+
+## Amendment 2026-10-18 (labels)
+
+The acceptance bounds are ratified (Danny 2026-10-18 12:34 AM PT; spec §25). The value stays 40 and provisional. Recall is still not measured.
+
+The 14 floor-30 and 26 floor-20 declare-stripped survivors are now labelled. "The 26 are unlabeled survivors, not confirmed FPs" was the correction: those 26 were not confirmed false positives, and the FP count has to come from labels. Reading A is COPY / FP / UNDECIDED.
+
+| Floor | COPY | FP | UNDECIDED |
+|---|---|---|---|
+| 30 | 0 | 14 | 0 |
+| 20 | 1 | 24 | 1 |
+
+The FP budget is not yet decided. There is no idioms allowlist. Floor 20 is at 24 FP + 1 undecided, with no slack. These counts do not show that floors 40, 30, or 20 pass.
+
+The labels file is not in this repository. It quotes `rights_rejected` and `needs_human` source, which ADR-0003 forbids redistributing. This note records the summary counts only.
+
+Separate recorded rights ruling, not part of D6 and not Danny's ratified text: needs_human sources count as reject-class until a human clears them (fail closed). Boof (orchestrator), rights call under Danny's 2026-10-17 BlackDog rights/licensing delegation ([rights-inventory.md](../rights-inventory.md) lines 21-22), 2026-10-18 ~12:57 AM PT.

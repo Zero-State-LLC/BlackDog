@@ -217,6 +217,26 @@ If only the 20–39 bucket fails at 40, a function-unit-only lower floor is allo
 No ADR text here accepts `TOKEN_FLOOR`. The value stays provisional
 until the Q3 protocol accepts or changes it.
 
+#### FLOOR bounds (D6, ratified 2026-10-18)
+
+Danny ratified these bounds on 2026-10-18 12:34 AM PT ("continue as recommended", 5% FP budget). Record: [danny-floor-bounds-2026-10-18.md](../decisions/danny-floor-bounds-2026-10-18.md). Constants: [`faustcoder/floor_protocol.py`](../../faustcoder/floor_protocol.py). This discharges the Q3 condition that the recall lower bound, the zero reject-class rule, and the FP blob budget are set before the run. The value stays 40 and provisional.
+
+> FLOOR acceptance bounds (ratified by Danny 2026-10-18 12:34 AM PT, "continue as recommended", 5% FP budget):
+>
+> 1. Recall: in each of 8 gated cells, which are 4 buckets (15-19, 20-29, 30-39 and 40+ tokens) times verbatim on the raw stream and consistent rename on the canonical stream, the 95% Wilson lower bound must be at least 0.90. Other operators are reported, not gated.
+> 2. n = 100 planted items per cell, from at least 50 distinct real reject-class span windows, each planted in 2 cleared hosts in different repos. That tolerates at most 4 misses per cell. Every planted miss is inspected, and a miss with a recurring mechanism blocks until fixed.
+> 3. FP budget B = ceil(0.05 × N_cleared), which is 25 at N_cleared = 491. It counts hand-confirmed non-copy blobs (idiom, boilerplate, header, import, numeric table) added beyond the floor-40 set, after declare-stripping and the idioms allowlist. Label every candidate if a floor adds 100 or fewer. Otherwise use a seeded sample of at least 50 and require Wilson-upper(FP share) × added ≤ B.
+> 4. At the chosen floor, three counts must be zero: detected reject-class matches left unquarantined in cleared, unresolved sub-15 exact-hash hits on the ID/NUM stream, and H1 split-file union-coverage hits at 1/2 or more.
+> 5. Choose the highest TOKEN_FLOOR in {40, 30, 20} that passes 1, 3 and 4. If only the 20-29 and 30-39 cells fail at 40, use a function-unit-only lower floor, and whole files keep 40.
+>
+> TOKEN_FLOOR stays 40 and provisional until the FLOOR run applies these bounds.
+
+The figure of at most 4 misses at n = 100 depends on a two-sided Wilson interval with z = 1.96 and no continuity correction.
+
+Separate recorded rights ruling, not part of D6 and not Danny's ratified text: needs_human sources count as reject-class until a human clears them (fail closed). Boof (orchestrator), rights call under Danny's 2026-10-17 BlackDog rights/licensing delegation ([rights-inventory.md](../rights-inventory.md) lines 21-22), 2026-10-18 ~12:57 AM PT.
+
+Open question for Danny, not a rule: whether a hit that shows up only when the floor is lowered is scored as a miss in a higher floor's recall cell. The ratified D6 cells govern until he decides.
+
 ### Q4 Jev ruling (verbatim)
 
 ```text

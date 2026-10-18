@@ -385,3 +385,7 @@ removal is logged. SemDeDup-style similarity is advisory for T07 only
 and never a clearance criterion. Sub-15-token spans are exact-hash
 checked on the ID/NUM stream, and that check needs the brief's idioms
 allowlisted pairing, or short idioms will be over-flagged.
+
+## Amendment 2026-10-18 12:34 AM PT (D6)
+
+Danny ratified the FLOOR acceptance bounds ("continue as recommended", 5% FP budget). The bounds are [spec §25](../../specs/001-faustcoder/spec.md) and [ADR-0002](../adr/0002-training-path.md). The value stays 40 and provisional. Constants live in `faustcoder/floor_protocol.py`. Separate recorded rights ruling, not part of D6 and not Danny's ratified text: needs_human sources count as reject-class until a human clears them (fail closed). Boof (orchestrator), rights call under Danny's 2026-10-17 BlackDog rights/licensing delegation ([rights-inventory.md](../rights-inventory.md) lines 21-22), 2026-10-18 ~12:57 AM PT.

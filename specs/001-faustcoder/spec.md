@@ -3,7 +3,7 @@
 Formerly FaustCoder; renamed 2026-10-17 PT.
 
 - Status: DRAFT / refinement-ready
-- Version: 0.3.5 (Jev Q1–Q4, 2026-10-17 7:40 PM PT; Danny "use jev to make decisions" 7:37 PM PT; see §24). 0.3.4 (ADR-0006 reward ladder, Danny 2026-10-17 4:11 PM PT, A2 extended 4:28 PM PT; see §23). 0.3.3: D-013 rights defaults, Danny yes 2026-10-17 1:04 PM PT; see §22. 0.3.2: CompilerReceipt diagnostic classes, ADR-0005, Danny yes 2026-10-17 1:13 PM PT; see §21. 0.3.1: R-001 v0.2 evidence, Danny yes 2026-10-17 12:54 PM PT; see §20. 0.3.0: Faust-tooling assimilation and target lanes, ADR-0004; see §19. 0.2.0 training path: ADR-0002, §17
+- Version: 0.3.6 (FLOOR bounds ratified, Danny 2026-10-18 12:34 AM PT; see §25). 0.3.5 (Jev Q1–Q4, 2026-10-17 7:40 PM PT; Danny "use jev to make decisions" 7:37 PM PT; see §24). 0.3.4 (ADR-0006 reward ladder, Danny 2026-10-17 4:11 PM PT, A2 extended 4:28 PM PT; see §23). 0.3.3: D-013 rights defaults, Danny yes 2026-10-17 1:04 PM PT; see §22. 0.3.2: CompilerReceipt diagnostic classes, ADR-0005, Danny yes 2026-10-17 1:13 PM PT; see §21. 0.3.1: R-001 v0.2 evidence, Danny yes 2026-10-17 12:54 PM PT; see §20. 0.3.0: Faust-tooling assimilation and target lanes, ADR-0004; see §19. 0.2.0 training path: ADR-0002, §17
 - Target: NVIDIA DGX Spark (128 GB unified memory)
 
 ## 1. Constitution
@@ -460,7 +460,7 @@ never from scratch, in weeks rather than months. Evidence is in
 | D-013 | STK-4.3 permissive with notice; bare BSD not redistributed; notice manifest required; vendored copies deduped and not cleared; per-function library slicing; strictest license wins; CC-TODO stripped; copyleft training-only plus a proposed near-duplicate output gate; header-less definition; inferred clearance needs a reviewer; impulse tests stay out of eval | ACCEPTED; refines D-004 and D-007 | Danny yes 2026-10-17 1:04 PM PT | ADR-0003, §22 |
 | Q1 | Binary P3 reward, whole-group drop, R-005 ladder diagnostic only, binary-vs-ladder ablation. CONDITIONS in §24, including C1, per-checkpoint halt, and ladder-arm failure on a quarantine rise | ACCEPTED | Jev 2026-10-17 7:40 PM PT; Danny "use jev to make decisions" 7:37 PM PT | ADR-0006, §24 verbatim |
 | Q2 | Auto-attribution only as A2-T after shadow. §23 rerun-plus-fixture path is not sanctioned. Below ~0.1% keeps auto-attribution off. Gold canary must be clean. L3 is rerun hooks for 124 and 125. A7-S 20% share, 2× rise, 500-sample window, provisional | ACCEPTED | Jev 2026-10-17 7:40 PM PT; Danny "use jev to make decisions" 7:37 PM PT | ADR-0006, §24 verbatim |
-| Q3 | TOKEN_FLOOR stays 40 and provisional. Protocol after H2 (brief: canonical ID/NUM stream) and H3 (brief: NFKC and drop Cf/Cc). `lib.fn`, the 1/2 rule and the `STR` collapse are an ADVERSARY r6 addition; not ruled by Jev. Wilson CIs, Danny sets the numbers before the run, exact hash on the ID/NUM stream under 15 tokens with idioms allowlisted. T07 freeze needs a leakage caveat and a scheduled re-check | ACCEPTED; floor value still provisional | Jev 2026-10-17 7:40 PM PT; Danny "use jev to make decisions" 7:37 PM PT | ADR-0002, §24 verbatim |
+| Q3 | TOKEN_FLOOR stays 40 and provisional. Protocol after H2 (brief: canonical ID/NUM stream) and H3 (brief: NFKC and drop Cf/Cc). `lib.fn`, the 1/2 rule and the `STR` collapse are an ADVERSARY r6 addition; not ruled by Jev. Wilson CIs, Danny sets the numbers before the run, exact hash on the ID/NUM stream under 15 tokens with idioms allowlisted. T07 freeze needs a leakage caveat and a scheduled re-check | ACCEPTED; bounds ratified 2026-10-18 (§25); floor value still provisional | Jev 2026-10-17 7:40 PM PT; Danny "use jev to make decisions" 7:37 PM PT | ADR-0002, §24 verbatim |
 | Q4 | ADR-0002 accepted in full (Jev's default; Danny may still choose P3 PROPOSED, the partial P0–P2 acceptance). P3 exit gates in §24. Only the ~5M-token CPT-skip threshold is ratified as written | ACCEPTED | Jev 2026-10-17 7:40 PM PT; Danny "use jev to make decisions" 7:37 PM PT | ADR-0002, §24 verbatim |
 
 ## 19. Amendments 0.3.0 (ADR-0004, ACCEPTED)
@@ -680,3 +680,23 @@ The P3 exit gate also requires: the graded/ungraded split reported; the A7 quara
 The ~5M-token threshold in the P1 skip rule is ratified as written. No other INFERRED number is ratified.
 
 compile@10 "does not drop beyond noise" and the 2-point general-code loss are paired-CI tests.
+
+## 25. Amendments 0.3.6 (FLOOR bounds, RATIFIED)
+
+Approval: Danny 2026-10-18 12:34 AM PT. Exact words: "continue as recommended". He chose the 5% FP budget. Record: [danny-floor-bounds-2026-10-18.md](../../docs/decisions/danny-floor-bounds-2026-10-18.md). Constants: [`faustcoder/floor_protocol.py`](../../faustcoder/floor_protocol.py). This ratifies the acceptance bounds. It does not ratify a value for the length constant. The value stays 40 and provisional until the FLOOR run applies these bounds. This discharges the Q3 condition that the recall lower bound, the zero reject-class rule, and the FP blob budget are set before the run. The fenced Jev blocks in §24 are unchanged.
+
+> FLOOR acceptance bounds (ratified by Danny 2026-10-18 12:34 AM PT, "continue as recommended", 5% FP budget):
+>
+> 1. Recall: in each of 8 gated cells, which are 4 buckets (15-19, 20-29, 30-39 and 40+ tokens) times verbatim on the raw stream and consistent rename on the canonical stream, the 95% Wilson lower bound must be at least 0.90. Other operators are reported, not gated.
+> 2. n = 100 planted items per cell, from at least 50 distinct real reject-class span windows, each planted in 2 cleared hosts in different repos. That tolerates at most 4 misses per cell. Every planted miss is inspected, and a miss with a recurring mechanism blocks until fixed.
+> 3. FP budget B = ceil(0.05 × N_cleared), which is 25 at N_cleared = 491. It counts hand-confirmed non-copy blobs (idiom, boilerplate, header, import, numeric table) added beyond the floor-40 set, after declare-stripping and the idioms allowlist. Label every candidate if a floor adds 100 or fewer. Otherwise use a seeded sample of at least 50 and require Wilson-upper(FP share) × added ≤ B.
+> 4. At the chosen floor, three counts must be zero: detected reject-class matches left unquarantined in cleared, unresolved sub-15 exact-hash hits on the ID/NUM stream, and H1 split-file union-coverage hits at 1/2 or more.
+> 5. Choose the highest TOKEN_FLOOR in {40, 30, 20} that passes 1, 3 and 4. If only the 20-29 and 30-39 cells fail at 40, use a function-unit-only lower floor, and whole files keep 40.
+>
+> TOKEN_FLOOR stays 40 and provisional until the FLOOR run applies these bounds.
+
+The figure of at most 4 misses at n = 100 depends on a two-sided Wilson interval with z = 1.96 and no continuity correction.
+
+Separate recorded rights ruling, not part of D6 and not Danny's ratified text: needs_human sources count as reject-class until a human clears them (fail closed). Boof (orchestrator), rights call under Danny's 2026-10-17 BlackDog rights/licensing delegation ([rights-inventory.md](../../docs/rights-inventory.md) lines 21-22), 2026-10-18 ~12:57 AM PT.
+
+Open question for Danny, not a rule: whether a hit that shows up only when the floor is lowered is scored as a miss in a higher floor's recall cell. The ratified D6 cells govern until he decides.
