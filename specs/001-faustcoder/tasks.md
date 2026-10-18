@@ -1,4 +1,4 @@
-# Tasks: FaustCoder (spec 001)
+# Tasks: BlackDog (spec 001)
 
 - Input: [spec.md](spec.md), [plan.md](plan.md), [data-model.md](data-model.md), [contracts/](contracts/)
 - Mirror: [KANBAN.md](../../KANBAN.md) and the GitHub Project "FaustCoder". Task IDs match KANBAN.
