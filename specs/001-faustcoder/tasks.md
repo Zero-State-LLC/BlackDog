@@ -187,7 +187,7 @@ These tasks are the implementation. This record does not change code.
   - Workflows: production-systems.
 - [ ] D3-H1-N10 [J-04] Consumed-log integrity and incremental re-read.
   - Depends on: D3-H1. Milestone: v0.3. Does not block T10. Follow-up from the D3-H1 adversary review (N10).
-  - Acceptance: the consumed log has an integrity check. A torn last line does not fail every later load. `rl_batch_from_records` can re-read an append-only row log without refusing a group that was already consumed in an earlier prefix, and a mid-batch failure does not leave a `used` claim without returning that group's rows.
+  - Acceptance: the consumed log and the rows log each have an integrity check. A torn last line of either log does not fail every later load, and a torn rows-log tail followed by a later append does not leave a permanently corrupt middle line. `rl_batch_from_records` can re-read an append-only row log without refusing a group that was already consumed in an earlier prefix, and a mid-batch failure does not leave a `used` claim without returning that group's rows.
   - Workflows: production-systems.
 - [ ] D3-H1-N11 [J-04] Bind a reward envelope to the task it was graded for.
   - Depends on: D3-H1. Milestone: v0.3. Does not block T10. Follow-up from the D3-H1 adversary review (N11).

@@ -421,8 +421,51 @@ def test_rl_batch_refuses_a_duplicate_row() -> None:
     second = grade_receipt(allowlisted_reward_envelope(passed=False), task=other)
     other_row = dataset_reward_row(second, task=other, example_id="e2")
     assert len(rl_batch([row, other_row])) == 2
-    same_program = dataset_reward_row(graded, task=task, example_id="e3")
-    assert len(rl_batch([row, same_program])) == 2
+
+
+def test_rl_batch_refuses_an_identity_less_duplicate() -> None:
+    task = _linear_task()
+    graded = grade_receipt(allowlisted_reward_envelope(passed=True), task=task)
+    row = dataset_reward_row(graded, task=task)
+    try:
+        rl_batch([row, dict(row)])
+    except RewardProvenanceError as exc:
+        assert "duplicate" in str(exc)
+    else:
+        raise AssertionError("rl_batch accepted an identity-less duplicate")
+
+
+def test_rl_batch_refuses_one_receipt_under_two_example_ids() -> None:
+    task = _linear_task()
+    graded = grade_receipt(allowlisted_reward_envelope(passed=True), task=task)
+    first = dataset_reward_row(graded, task=task, example_id="e1")
+    second = dataset_reward_row(graded, task=task, example_id="e2")
+    try:
+        rl_batch([first, second])
+    except RewardProvenanceError as exc:
+        assert "duplicate" in str(exc)
+    else:
+        raise AssertionError("rl_batch accepted one receipt under two example ids")
+
+
+def test_rl_batch_refuses_a_non_string_example_id() -> None:
+    task = _linear_task()
+    graded = grade_receipt(allowlisted_reward_envelope(passed=True), task=task)
+    row = dataset_reward_row(graded, task=task, example_id=7)
+    try:
+        rl_batch([row])
+    except RewardProvenanceError as exc:
+        assert "example_id" in str(exc)
+    else:
+        raise AssertionError("rl_batch accepted a non-string example_id")
+
+
+def test_rl_batch_keeps_two_grades_of_the_same_program() -> None:
+    task = _linear_task()
+    envelope = allowlisted_reward_envelope(passed=True)
+    first = dataset_reward_row(grade_receipt(envelope, task=task), task=task, example_id="e1")
+    second = dataset_reward_row(grade_receipt(envelope, task=task), task=task, example_id="e2")
+    assert len(rl_batch([first, second])) == 2
 
 
 def test_unattributed_exits_stay_queued_until_triage() -> None:

@@ -279,15 +279,24 @@ def dataset_reward_row(
     return row
 
 
-def _row_identities(row: Mapping[str, object]) -> tuple[tuple[object, ...], ...]:
-    """Row and group identity. Receipt content is not an identity."""
-    found: list[tuple[object, ...]] = []
+def _row_identities(row: Mapping[str, object], graded: object) -> tuple[tuple[object, ...], ...]:
+    """Seal identity, plus any explicit row or group id.
+
+    The seal is the minted provenance object. A copied row reuses that
+    object, so it is a duplicate. Two ``grade_receipt`` calls are two
+    seals, so two grades of the same program both stay. Receipt content
+    is not an identity.
+    """
+    found: list[tuple[object, ...]] = [("seal", id(graded))]
+    if "example_id" in row:
+        example_id = row.get("example_id")
+        if type(example_id) is not str:
+            raise RewardProvenanceError("RL batch example_id must be a string")
+        if example_id:
+            found.append(("example", example_id))
     record_id = row.get("record_id")
     if type(record_id) is str and record_id:
         found.append(("record", record_id))
-    example_id = row.get("example_id")
-    if type(example_id) is str and example_id:
-        found.append(("example", example_id))
     group_id = row.get("group_id")
     member = row.get("member_index")
     if type(group_id) is str and group_id and type(member) is int and not isinstance(member, bool):
@@ -326,7 +335,7 @@ def rl_batch(rows: list[Mapping[str, object]] | tuple[Mapping[str, object], ...]
                 raise RewardProvenanceError("reward must be 1.0 when the receipt passed")
         elif reward != 0.0:
             raise RewardProvenanceError("reward must be zero when the receipt failed")
-        for marker in _row_identities(row):
+        for marker in _row_identities(row, graded):
             if marker in seen:
                 raise RewardProvenanceError("RL batch row is a duplicate")
             seen.add(marker)

@@ -230,6 +230,35 @@ def test_root_key_file_is_refused_unless_it_is_private(tmp_path: Path) -> None:
     linked_parent.symlink_to(tmp_path, target_is_directory=True)
     with pytest.raises(RewardKeyError, match="directory"):
         load_root_key(linked_parent / key_path.name, grader_uid=uid)
+    grand = tmp_path / "grand"
+    grand.mkdir(mode=0o700)
+    nested = grand / "nested"
+    nested.mkdir(mode=0o700)
+    nested_key = nested / "reward-root.key"
+    _write_key(nested_key, secret)
+    grand_link = tmp_path / "grand-link"
+    grand_link.symlink_to(grand, target_is_directory=True)
+    with pytest.raises(RewardKeyError, match="directory"):
+        load_root_key(grand_link / "nested" / nested_key.name, grader_uid=uid)
+    assert load_root_key(nested_key, grader_uid=uid) == secret
+    for raised in (
+        lambda: RewardKeyring(secret, run_id="bad id"),
+        lambda: derive_run_key(secret, "bad id"),
+    ):
+        try:
+            raised()
+        except RewardKeyError as exc:
+            frame = exc.__traceback__
+            saw_library = False
+            while frame is not None:
+                filename = frame.tb_frame.f_code.co_filename
+                if filename.endswith("faustcoder/reward/records.py"):
+                    saw_library = True
+                    assert secret not in frame.tb_frame.f_locals.values()
+                frame = frame.tb_next
+            assert saw_library
+        else:
+            raise AssertionError("a bad run id was accepted")
     fifo = tmp_path / "key.fifo"
     os.mkfifo(fifo)
     with pytest.raises(RewardKeyError, match="regular"):
@@ -670,6 +699,7 @@ def test_rates_file_keeps_both_writers(tmp_path: Path) -> None:
     ledger = RewardLedger(directory)
     samples = ledger.rates.export_state()["samples"]["p"]
     assert samples == [True, True]
+    assert stat.S_IMODE((directory / "rates.json").stat().st_mode) == 0o640
 
 
 def test_cross_run_replay_and_checkpoint_mismatch_are_refused(tmp_path: Path) -> None:
@@ -859,8 +889,10 @@ def test_reload_does_not_observe_rates(tmp_path: Path) -> None:
     _store(log, header, rows)
     rates = UngradedRateTracker()
     ring = RewardKeyring(secret, run_id=RUN)
-    load_records(log, ring, rates=rates)
-    load_records(log, ring, rates=rates)
+    load_records(log, ring)
+    load_records(log, ring)
+    with pytest.raises(TypeError):
+        load_records(log, ring, rates=rates)
     assert rates.export_state()["samples"] == {}
 
 

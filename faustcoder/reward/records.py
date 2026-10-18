@@ -180,12 +180,35 @@ def _grader_uid() -> int:
     return user.pw_uid
 
 
+def _refuse_symlinked_ancestor(path: Path) -> None:
+    """Refuse a symlink in any path component, including a grandparent.
+
+    ``lstat`` of the parent follows intermediate links, so each component
+    is checked on its own.
+    """
+    if path.is_absolute():
+        current = Path(path.anchor)
+        parts = path.parts[1:]
+    else:
+        current = Path(".")
+        parts = path.parts
+    for part in parts:
+        current = current / part
+        try:
+            info = os.lstat(current)
+        except OSError as exc:
+            raise RewardKeyError("reward root key directory cannot be used") from exc
+        if stat.S_ISLNK(info.st_mode):
+            raise RewardKeyError("reward root key directory cannot be used")
+
+
 def _key_directory(parent: Path) -> os.stat_result:
     """Refuse a symlink or a group- or world-writable directory.
 
     The owner is checked after the file, so a wrong file uid still
     reports the file. Root may own the directory (``/etc/faustcoder``).
     """
+    _refuse_symlinked_ancestor(parent)
     try:
         info = os.lstat(parent)
     except OSError as exc:
@@ -254,12 +277,21 @@ def _hkdf_sha256(ikm: bytes, info: bytes, length: int = 32) -> bytes:
 
 
 def derive_run_key(root_key: bytes, run_id: str) -> bytes:
-    """HKDF of the root key. ``info`` is ``faustcoder.reward.v1`` plus ``run_id``."""
-    if type(root_key) is not bytes or len(root_key) != _ROOT_KEY_BYTES:
-        raise RewardKeyError("reward root key must be 32 bytes")
-    if type(run_id) is not str or _RUN_ID.fullmatch(run_id) is None:
-        raise RewardKeyError("reward run id is not usable")
-    return _hkdf_sha256(root_key, HKDF_INFO_PREFIX + run_id.encode("ascii"))
+    """HKDF of the root key. ``info`` is ``faustcoder.reward.v1`` plus ``run_id``.
+
+    The root key is dropped from this frame before an error propagates,
+    so a traceback does not keep it.
+    """
+    ikm = root_key
+    del root_key
+    try:
+        if type(ikm) is not bytes or len(ikm) != _ROOT_KEY_BYTES:
+            raise RewardKeyError("reward root key must be 32 bytes")
+        if type(run_id) is not str or _RUN_ID.fullmatch(run_id) is None:
+            raise RewardKeyError("reward run id is not usable")
+        return _hkdf_sha256(ikm, HKDF_INFO_PREFIX + run_id.encode("ascii"))
+    finally:
+        del ikm
 
 
 def key_id_for(run_key: bytes) -> str:
@@ -277,11 +309,16 @@ class RewardKeyring:
     """
 
     def __init__(self, root_key: bytes, *, run_id: str) -> None:
-        if type(root_key) is not bytes or len(root_key) != _ROOT_KEY_BYTES:
-            raise RewardKeyError("reward root key must be 32 bytes")
-        if type(run_id) is not str or _RUN_ID.fullmatch(run_id) is None:
-            raise RewardKeyError("reward run id is not usable")
-        run_key = derive_run_key(root_key, run_id)
+        ikm = root_key
+        del root_key
+        try:
+            if type(ikm) is not bytes or len(ikm) != _ROOT_KEY_BYTES:
+                raise RewardKeyError("reward root key must be 32 bytes")
+            if type(run_id) is not str or _RUN_ID.fullmatch(run_id) is None:
+                raise RewardKeyError("reward run id is not usable")
+            run_key = derive_run_key(ikm, run_id)
+        finally:
+            del ikm
         self._run_id = run_id
         self._run_key = run_key
         self._key_id = key_id_for(run_key)
@@ -751,14 +788,11 @@ def regrade_record(
     keyring: RewardKeyring,
     *,
     queue: QuarantineQueue | None = None,
-    rates: UngradedRateTracker | None = None,
 ) -> RowCheck:
     """Re-check one row. Pins and binding failures do not call ``grade_receipt``.
 
-    ``rates`` is ignored. The rollout already counted the sample, and a
-    reload must not observe it again.
+    A reload does not observe A7 rates. The rollout already counted the sample.
     """
-    del rates
     verify(record, keyring)
     if _pins_stale(record):
         return RowCheck("stale_pin")
@@ -945,21 +979,20 @@ def load_records(
     keyring: RewardKeyring,
     *,
     queue: QuarantineQueue | None = None,
-    rates: UngradedRateTracker | None = None,
 ) -> LoadedLog:
     """Load one log. Every complete row is verified and re-checked.
 
     A final line with no newline is a torn write and is ignored. Any
     earlier line that is not JSON fails the load. A bad MAC fails the
-    load. ``queue`` and ``rates`` are optional; the batch builder is
-    what records drops.
+    load. ``queue`` is optional. A reload does not observe A7 rates.
+    The batch builder is what records drops.
     """
     headers, rows = _parse_log(Path(path))
     for header in headers:
         verify(header, keyring)
     checks: list[RowCheck] = []
     for row in rows:
-        checks.append(regrade_record(row, keyring, queue=queue, rates=rates))
+        checks.append(regrade_record(row, keyring, queue=queue))
     return LoadedLog(headers=headers, rows=rows, checks=tuple(checks))
 
 
@@ -1274,7 +1307,7 @@ def rl_batch_from_records(
         checkpoint = group_rows[0].policy_checkpoint if group_rows else ""
         task_digest = header.task_digest_full if header is not None else ""
         if reason is None and header is not None:
-            reason, built = _grade_group(header, group_rows, keyring, queue, rates)
+            reason, built = _grade_group(header, group_rows, keyring, queue)
         else:
             built = []
         if reason is None:
@@ -1362,12 +1395,11 @@ def _grade_group(
     rows: list[RewardRowRecord],
     keyring: RewardKeyring,
     queue: QuarantineQueue,
-    rates: UngradedRateTracker,
 ) -> tuple[str | None, list[dict[str, object]]]:
     ordered = sorted(rows, key=lambda row: row.member_index)
     built: list[dict[str, object]] = []
     for record in ordered:
-        check = regrade_record(record, keyring, queue=queue, rates=rates)
+        check = regrade_record(record, keyring, queue=queue)
         if check.reason == "stale_pin":
             return "stale_pin", []
         if check.reason in {"binding", "outcome", "shadow", "mac"}:

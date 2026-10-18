@@ -78,8 +78,9 @@ class RewardLedger:
         """Write the tracker. The caller already holds ``_locked``."""
         body = json.dumps(self.rates.export_state(), separators=(",", ":"), sort_keys=True)
         temporary = self._rates_path.with_suffix(".json.tmp")
-        fd = os.open(temporary, os.O_CREAT | os.O_TRUNC | os.O_WRONLY, 0o644)
+        fd = os.open(temporary, os.O_CREAT | os.O_TRUNC | os.O_WRONLY | os.O_CLOEXEC, 0o640)
         try:
+            os.fchmod(fd, 0o640)
             os.write(fd, (body + "\n").encode("utf-8"))
             os.fsync(fd)
         finally:
