@@ -1,4 +1,6 @@
-# FaustCoder: DAG-Compliant DSP Coding Model
+# BlackDog: DAG-Compliant DSP Coding Model
+
+Formerly FaustCoder; renamed 2026-10-17 PT.
 
 - Status: DRAFT / refinement-ready
 - Version: 0.3.4 (ADR-0006 reward ladder, Danny 2026-10-17 4:11 PM PT, A2 extended 4:28 PM PT; see §23). 0.3.3: D-013 rights defaults, Danny yes 2026-10-17 1:04 PM PT; see §22. 0.3.2: CompilerReceipt diagnostic classes, ADR-0005, Danny yes 2026-10-17 1:13 PM PT; see §21. 0.3.1: R-001 v0.2 evidence, Danny yes 2026-10-17 12:54 PM PT; see §20. 0.3.0: Faust-tooling assimilation and target lanes, ADR-0004; see §19. 0.2.0 training path: ADR-0002, §17
@@ -6,7 +8,7 @@
 
 ## 1. Constitution
 
-FaustCoder is a locally deployable model specialized in generating, repairing, explaining and optimizing Faust DSP programs. Correctness is evidence-based, not inferred from model confidence. No candidate may be promoted without independent compiler and signal-behavior evaluation. Preserve dataset licensing, reproducibility and explicit human approval for release. Do not treat a successful compilation as proof of audio correctness.
+BlackDog is a locally deployable model specialized in generating, repairing, explaining and optimizing Faust DSP programs. Correctness is evidence-based, not inferred from model confidence. No candidate may be promoted without independent compiler and signal-behavior evaluation. Preserve dataset licensing, reproducibility and explicit human approval for release. Do not treat a successful compilation as proof of audio correctness.
 
 ## 2. Scope
 
@@ -44,7 +46,7 @@ Each node references immutable parents. The graph must be acyclic; a new revisio
 
 The Faust compiler is the only parser. Graph and interface views come from its
 own outputs: `-json` (UI, inputs, outputs, metadata), `-svg` block diagrams and
-the compiler's signal-level output. FaustCoder does not build its own Faust
+the compiler's signal-level output. BlackDog does not build its own Faust
 parser or typed signal-flow model. Feedback legality is whatever the compiler
 accepts; a program is never rejected because its raw signal graph has cycles.
 The superseded 0.2.0 text (custom typed signal-flow representation) is kept in

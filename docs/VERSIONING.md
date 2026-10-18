@@ -1,6 +1,6 @@
 # Versioning
 
-FaustCoder uses [Semantic Versioning 2.0.0](https://semver.org/spec/v2.0.0.html)
+BlackDog uses [Semantic Versioning 2.0.0](https://semver.org/spec/v2.0.0.html)
 and records changes in [CHANGELOG.md](../CHANGELOG.md) using
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 

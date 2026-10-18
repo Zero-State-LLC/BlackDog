@@ -1,4 +1,4 @@
-# FaustCoder constitution
+# BlackDog constitution
 
 Version: 1.0.0
 Ratified: 2026-10-16

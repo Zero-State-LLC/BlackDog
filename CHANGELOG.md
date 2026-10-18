@@ -8,6 +8,10 @@ See [docs/VERSIONING.md](docs/VERSIONING.md).
 
 ## [Unreleased]
 
+### Changed
+
+- Renamed the project and repository from FaustCoder to BlackDog (2026-10-17 PT); the GitHub repo is now `Zero-State-LLC/BlackDog`. The Python package `faustcoder`, CLI commands and spec paths are unchanged.
+
 ### Added
 
 - T03b follow-up: the native sandbox also masks `<binary>/../share/faust`, `<binary>/../lib/faust`, and every directory `faust --libdir`, `--dspdir`, `--includedir`, `--archdir` and `--pathslist` print, except the hashed private copy. A library planted beside a copied `faust` binary cannot be imported. CI installs Faust 2.88.0 so that check runs.
