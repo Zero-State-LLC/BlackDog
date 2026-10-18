@@ -1,0 +1,108 @@
+**Q1**
+
+DECISION: MODIFIED: "P3 reward is binary: 1.0 on full pass, 0.0 on every graded failure including A1's lowest rung. Ungraded samples get no value. Any GRPO group containing a quarantined member is dropped whole from the gradient update, not masked. Its rows are held only for triage and receipts and never re-enter training later. Group-drop rate is tracked per prompt and overall with a halt threshold. The R-005 ladder is a logged diagnostic only, and R-005's wording is amended to say so. A graded reward may enter only via the pre-registered binary-vs-ladder ablation."
+
+RATIONALE:
+- Binary is the dominant recipe for rule-rewarded RL on code and reasoning. None of the graded-reward precedents show a ladder beating binary under group-normalized GRPO after SFT warm start.
+- A binary reward gated on signal tests gives a "compiles but trivial" program the same 0 as a parse error. That closes the reward-hacking path the P3 audit already worries about.
+- The escape-value computation shows any reward scheme can make quarantine look better than a graded failure. Dropping the whole group removes that incentive, and binary minimizes it in any case.
+- I narrowed "held or dropped" to "dropped from training." A group held until triage and then re-entered would be stale, off-policy data.
+- Whole-group drop can quietly underweight prompts that tend to trigger harness defects, so the drop rate needs monitoring.
+
+CONDITIONS:
+- C1 is preserved: no ungraded or quarantined row ever contributes a reward value or an advantage, including through group normalization.
+- Log group-drop rate per checkpoint and per prompt. If the overall rate exceeds an agreed limit, pause P3 for triage instead of resampling indefinitely. Any prompt dropped repeatedly goes to human triage.
+- Log the zero-variance (all-0 or all-1) group rate after SFT. The ε two-level variant is tested only through the ablation, and only if that rate approaches the brief's ~70% trigger.
+- Pre-register the ablation's margin, seeds and dev metric before P3 starts. Treat any rise in quarantine or ungraded rate under the ladder arm as a failure of that arm.
+- Amend R-005 in the same change set that records this ruling. This also clears ADR-0002 B1, together with Q4.
+
+CONFIDENCE: high - Evidence that quarantine is independent of the would-be reward would make per-member masking acceptable. A pre-registered ablation win for the ladder would reopen the reward scheme.
+
+**Q2**
+
+DECISION: MODIFIED: "Auto-attribution under A2 is allowed only as A2-T, and only after a shadow period. A2-T requires all of the following:
+- ≥2 reruns on a quiet worker reproducing the same crash signature;
+- both the trivial and a path-matched known-good fixture passing;
+- for stack, wasm_trap, timeout and other harness-limit signatures, a matching native Faust 2.88.0 failure (source-class list alone suffices only for inherently source-side signatures: line-start Faust ERROR, >1 MiB source, remote import);
+- the signature not frozen by A7-S.
+
+Every auto-attribution is stored with resolved_by=auto and its evidence. Anything else stays ungraded and quarantined."
+
+RATIONALE:
+- Today's single rerun with a trivial fixture cannot tell a source fault from a deterministic harness defect. A2(b) and C1 forbid penalizing the latter, so the current path must be replaced.
+- The brief's condition 3 uses an OR. That lets `runtime_stack_overflow` be attributed to the source on the list alone. This is exactly the r4 B1 failure shape: a real `recurse.dsp` getting exit 126 because the worker's limits differ from native.
+- For signatures that a harness limit can produce, the native cross-check is the only evidence that actually separates source fault from harness fault, so I make it mandatory there.
+- A7-S regrades fix receipts but cannot undo gradient updates already applied. A shadow period lets us check A2-T against human triage before it can affect training.
+- Under the Q1 whole-group drop, staying conservative costs only throughput.
+
+CONDITIONS:
+- Shadow mode first: A2-T computes and logs attributions, but humans triage until A2-T agrees with them on an agreed sample and the gold canary is clean.
+- If shadow data shows crash rows below ~0.1% of samples, keep auto-attribution off entirely, following the brief's own fallback.
+- If native cross-check is unavailable in the loop, harness-limit signatures stay ungraded. The source-class-only fallback is narrowed to the inherently source-side signatures.
+- Exit 124 is attributed only with a native or independent-runner timeout at the same limit, not on fixture evidence alone.
+- Gold canary (dev-suite references, cleared-corpus sample, SFT targets) runs on a schedule. Any crash there freezes its signature.
+- Land the r5 L1 fix (RangeError restricted to stack overflow), the L2 fix (line-start matching on the failing stage) and the L3 fix (rerun hooks for 124 and 125) before A2-T leaves shadow.
+- A7-S thresholds (20% share, 2× rise, 500-sample window) are provisional. They are reviewed against shadow data before going live.
+
+CONFIDENCE: medium - Shadow-period disagreement between A2-T and human triage would push me to no auto-attribution. Clean canaries plus high agreement would raise confidence.
+
+**Q3**
+
+DECISION: MODIFIED: "TOKEN_FLOOR stays 40 and provisional. It is accepted or changed only by the measured protocol in Q3, extended as follows:
+- the protocol uses the real slicer and real cleared hosts, with mutation operators that include H1-style splitting of one rejected file across 3+ cleared files;
+- it reports per-bucket recall with Wilson CIs and hand-labelled FP cost;
+- it runs after H2/H3 land;
+- spans under 15 tokens remain checked by exact hash on the canonical stream, with their reject-class count reported.
+
+The containment and allowlist preconditions are confirmed by ADVERSARY against the shipping slicer path, not only whole-file code. T07 does not freeze its split on the provisional floor without a recorded leakage caveat and a scheduled re-check."
+
+RATIONALE:
+- C2's third precondition is unmet: the existing floor-40 result is tautological (0/83 by construction).
+- Function slicing moves short-kernel recall onto the sub-floor path, so measuring before H2/H3 would measure the wrong system.
+- The brief marks the first two C2 preconditions as only appearing met. Open item H1 is itself a containment evasion. I therefore require confirmation, and I add H1 to the mutation set rather than treating containment as fully closed.
+- Ruling sub-15 spans out of automatic matching is acceptable for idioms. It should not hide reject-class short copies, hence exact hash on the canonical stream plus a reported count.
+
+CONDITIONS:
+- C2 is binding: no acceptance of 40, or any other value, until containment and allowlist-bypass fixes are confirmed on the slicing path and the measured analysis passes.
+- Danny sets the acceptance numbers before the run: recall lower bound, zero reject-class copies left in cleared, and FP blob budget.
+- If only the 20–39 bucket fails at 40, a function-unit-only lower floor is allowed. Whole files keep 40.
+- Use SemDeDup-style semantic similarity only as an advisory T07 leakage signal, never as a clearance criterion.
+- If T07 freezes on the provisional floor, holdout novelty is re-checked when the floor is accepted. Any leaked items are removed and the removal is logged.
+
+CONFIDENCE: medium - A measurement showing the canonical-stream fallback already meets recall at 40 would let me accept 40 outright. Weak sub-15 reject-class results would force a stricter scope.
+
+**Q4**
+
+DECISION: MODIFIED: "Accept ADR-0002 with an amendment block that:
+- (a) makes P3's reward the ADR-0006 grader with the Q1 binary ruling, whole-group drop of quarantined groups, and A2-T (Q2) as the only auto-attribution path;
+- (b) replaces the P0 Spark throughput smoke test with R-001 0.3.1 (fingerprint receipt; throughput at T10);
+- (c) requires P0 to exit with TOKEN_FLOOR either accepted by the Q3 protocol or marked provisional with a leakage caveat, and requires holdout novelty to be re-checked once the floor is accepted, before any P3 exit claim rests on the holdout;
+- (d) adds graded/ungraded split, A7 quarantine and group-drop rates within limits, and no frozen auto-attribution signature at exit to the P3 audit;
+- (e) defines compile@10 'does not drop beyond noise' and the 2-point general-code loss as paired-CI tests.
+
+The ~5M-token CPT-skip threshold is ratified as written. Spec §17, the CHANGELOG and the P0 inline note are updated on acceptance."
+
+RATIONALE:
+- The phase structure already underpins accepted decisions. B1–B3 are wording and ruling gaps, and Q1–Q3 are now ruled.
+- Accepting with a provisional floor does not contradict C2, because it accepts the plan and gates, not the floor value. The added novelty re-check keeps the sealed holdout honest.
+- I would not ratify "2 points" as a raw delta. Defining it as a paired CI matches how the other gates are specified.
+- The 5M threshold is ratified. At ~1.4M official tokens it implies P1 is likely skipped, which is consistent with the brief's inference.
+
+CONDITIONS:
+- The amendment block cites the Q1–Q3 rulings verbatim so later readers cannot reinterpret them.
+- If Danny prefers, P0–P2 may be accepted now with P3 marked PROPOSED pending A2-T leaving shadow mode. Both paths are acceptable.
+- No ADR text may imply TOKEN_FLOOR is accepted (C2).
+- P0 completion items (T07/T08, base-model shortlist) are not acceptance blockers but remain exit-gate items.
+
+CONFIDENCE: high - New Spark memory or base-model evidence contradicting the CPT/LoRA split, or a Q2 shadow result rejecting auto-attribution, would require further P3 edits.
+
+**DISAGREEMENTS WITH THE BRIEF:**
+- Q1: I narrowed "held or dropped" to "dropped from training." Held rows serve triage and receipts only and never re-enter training as stale samples.
+- Q1: I added per-prompt and overall group-drop monitoring with a halt threshold. I also required the R-005 wording amendment as part of the ruling, not just as a suggestion.
+- Q2: Condition 3 changes from OR to a requirement. Harness-limit signatures (stack, wasm_trap, timeout) need a matching native failure. The source-class list alone suffices only for inherently source-side signatures.
+- Q2: I added a mandatory shadow period before auto-attribution affects training, and adopted the brief's "no auto-attribution if crash rows <0.1%" as an operative rule.
+- Q2: Exit 124 needs native or independent-runner timeout evidence. The L1, L2 and L3 fixes are prerequisites for going live.
+- Q3: H1 multi-file split is added as a mutation operator, and ADVERSARY must confirm the containment and allowlist preconditions on the slicing path instead of treating them as met.
+- Q3: Sub-15-token spans keep exact-hash checking on the canonical stream with a reported reject-class count. T07's provisional freeze requires a scheduled novelty re-check.
+- Q4: Amendment (a) explicitly includes A2-T. I added a holdout-novelty re-check once the floor is accepted, plus group-drop rate in the P3 audit.
+- Q4: The 2-point general-code threshold is not ratified as a raw number but redefined as a paired-CI test alongside compile@10. Only the 5M threshold is ratified as written.

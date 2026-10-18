@@ -53,11 +53,13 @@ Implements the dataset machine (spec §7.1) and training machine (spec §7.3).
   - Depends on: T05, T02. Milestone: v0.2.
   - Acceptance: deterministic snapshot; implements `normalized` and `dedup_passed` transitions.
   - Proposed (D-013, Danny yes 2026-10-17 1:04 PM PT): an n-gram or AST near-duplicate filter on generated `.dsp` against the training-only set, including vendored near-copies of `faust/examples`. The threshold is not set. This is a requirement to carry into the task, not an implementation in T05.
+  - Amended 0.3.5 (Q3): dedup uses provisional `TOKEN_FLOOR=40`. P0 exits only if that floor is accepted by the Q3 protocol or marked provisional with a recorded leakage caveat. The protocol runs after H2 and H3.
   - Workflows: anti-slop-code, production-systems.
 - [ ] T07 [J-04] Split freeze.
   - Depends on: T06. Milestone: v0.2.
   - Acceptance: leakage checks and signed split manifest; implements `split_frozen` (R-003).
   - Proposed (D-013): the same near-duplicate filter is a split gate, so training-only and impulse-test families cannot land in eval or the sealed holdout. The threshold is not set.
+  - Amended 0.3.5 (Q3, Q4): a freeze on the provisional floor records a leakage caveat and a scheduled re-check. Leaked items are removed and the removal is logged. Holdout novelty is re-checked once the floor is accepted, before any P3 exit claim rests on the holdout.
   - Workflows: production-systems.
 - [ ] T08 [J-04] Baseline models.
   - Depends on: T04, T07. Milestone: v0.2.
@@ -68,9 +70,10 @@ Implements the dataset machine (spec §7.1) and training machine (spec §7.3).
   - Acceptance: for v0.2, cited external DGX Spark benchmarks plus a per-machine environment fingerprint receipt (R-001, amended 0.3.1); implements `env_verified`. On-hardware throughput is deferred to T10 on the dedicated, cleared Spark.
   - Workflows: production-systems.
 - [ ] T10 [J-04] Training path P1 to P3 (ADR-0002).
-  - Depends on: T08, T09. Milestone: v0.2 (P1, P2) and v0.3 (P3).
+  - Depends on: T08, T09, GD-1. Milestone: v0.2 (P1, P2) and v0.3 (P3).
   - Acceptance: one pinned, reproducible `TrainingRun` per phase with its exit-gate result (R-008, R-009, R-015); P1 may be a recorded skip; implements `run_started` to `COMPLETED`.
   - Sub-steps: P1 continued pretraining or skip; P2 SFT on validated pairs; P3 compiler-feedback RL (R-016).
+  - Amended 0.3.5 (Q4): ADR-0002 is accepted in full (Jev's call). P3 reward is the ADR-0006 grader with the Q1 binary ruling, whole-group drop, and A2-T as the only auto-attribution path. The P3 exit gate requires the graded/ungraded split, the A7 quarantine rate and the group-drop rate within pre-registered limits, and no frozen auto-attribution signature at exit. Only the ~5M-token CPT-skip threshold is ratified. The 2-point loss and compile@10 noise are paired-CI tests. GD-1 is a prerequisite, not a follow-on.
   - Workflows: anti-slop-code, production-systems.
 - [ ] T11 [J-04] Independent DSP evaluation.
   - Depends on: T10, T04. Milestone: v0.3.
@@ -137,6 +140,56 @@ Implements the release machine (spec §7.4).
   - Acceptance: signed release manifest and rollback test; full §15 gate.
   - Workflows: production-systems, google-developer-style (model and data cards).
 
+## Follow-ups 0.3.5 (Jev, 2026-10-17 7:40 PM PT)
+
+Mirror of the KANBAN rows. The rulings are the verbatim blocks in spec §24.
+These tasks are the implementation. This record does not change code.
+
+- [x] L1 [Found] RangeError is stack overflow only for `Maximum call stack size exceeded`.
+  - Depends on: T03. Milestone: v0.3. Done in #49 (`f0fcdf9`), on main with #46 (`42ee1e4`).
+  - Acceptance: landed. Prerequisite for A2-T leaving shadow.
+  - Workflows: anti-slop-code, production-systems.
+- [x] L2 [Found] Line-start matching on the failing stage; split on `\n` only.
+  - Depends on: T03. Milestone: v0.3. Done in #49. This is the r5 L2 fix Jev cited.
+  - Acceptance: landed. `_compile_stack_line` splits on `\n` only.
+  - Workflows: anti-slop-code, production-systems.
+- [ ] L3 [Found] Rerun hooks for exits 124 and 125 on the compile and render stages (r5 L3).
+  - Depends on: T03. Milestone: v0.3.
+  - Acceptance: the hooks feed A2-T in shadow only. Not quarantine-age tracking, and not a substitute for it.
+  - Workflows: production-systems.
+- [ ] A7-S [J-04] Per-signature attribution-rate tracking.
+  - Depends on: T03. Milestone: v0.3. Prerequisite of A2-T.
+  - Acceptance: provisional thresholds 20% share, 2× rise, 500-sample window, distinct from A7. `resolved_by: "auto"` and stored evidence. A gold-canary crash freezes its signature. Reviewed against shadow data before A2-T goes live.
+  - Workflows: production-systems.
+- [ ] A2-T [J-04] A2-T shadow mode, then live auto-attribution.
+  - Depends on: L1, L2, L3, A7-S. Milestone: v0.3.
+  - Acceptance: shadow computes and logs attributions; humans triage. Leaves shadow only when L1–L3 have landed, agreement is on a sample fixed before shadow starts, the gold canary (dev-suite references, cleared-corpus sample, SFT targets) is clean and any crash there freezes its signature, A7-S thresholds are reviewed, and the go-live is recorded. Crash rows below ~0.1% of samples keep auto-attribution off entirely. That rate is a reason to stay off, never a reason to go live.
+  - Workflows: production-systems, ADVERSARY review.
+- [ ] A2-PATH [J-04] Training callers must not supply the replaced path.
+  - Depends on: T03. Milestone: v0.3.
+  - Acceptance: until A2-T is live, no training caller supplies `rerun` or `known_good`. `runtime_stack_overflow` and `wasm_trap` stay ungraded without a matching native Faust 2.88.0 failure. The source-class list alone suffices only for a line-start Faust `ERROR`, a source over 1 MiB, and a remote import.
+  - Workflows: production-systems, ADVERSARY review.
+- [ ] EVAL-SO [Found] Grader and compiler disagree on `ERROR : stack overflow in eval`.
+  - Depends on: T03. Milestone: v0.3. Noted after #46. Not a code change in the 0.3.5 record.
+  - Acceptance: the disagreement is recorded. Suggested treatment: that line is a stack signature and needs the Faust 2.88.0 native match.
+  - Workflows: production-systems.
+- [ ] GD-1 [J-04] GRPO whole-group drop (Q1).
+  - Depends on: T04. Milestone: v0.3. Prerequisite of T10.
+  - Acceptance: a group with a quarantined member is dropped whole, not masked. Rows are held only for triage and receipts and never re-enter. Rate logged per checkpoint and per prompt. The halt pauses P3 instead of resampling. A prompt dropped repeatedly goes to human triage.
+  - Workflows: production-systems.
+- [ ] H2 [J-04] Slicing-path change required before the floor protocol.
+  - Depends on: T06. Milestone: v0.2.
+  - Acceptance: Jev names H2 as prior to the protocol and does not define it further here.
+  - Workflows: production-systems.
+- [ ] H3 [J-04] Slicing-path change required before the floor protocol.
+  - Depends on: T06. Milestone: v0.2.
+  - Acceptance: same gate as H2. The protocol does not run until both have landed.
+  - Workflows: production-systems.
+- [ ] FLOOR [J-04] TOKEN_FLOOR measurement protocol (Q3).
+  - Depends on: T06, H2, H3. Milestone: v0.2.
+  - Acceptance: real slicer and real cleared hosts; H1-style split of one rejected file across 3 or more cleared files; per-bucket recall with Wilson intervals and hand-labelled FP cost. Danny sets the recall lower bound, zero reject-class copies left in cleared, and the FP blob budget before the run. Spans under 15 tokens stay on exact hash on the canonical stream, with the reject-class count reported. If only the 20–39 bucket fails at 40, a function-unit-only lower floor is allowed and whole files keep 40. ADVERSARY confirms containment and allowlist fixes on the shipping slicer path. SemDeDup-style similarity is advisory for T07 only and never a clearance criterion.
+  - Workflows: production-systems, ADVERSARY review.
+
 ## Dependency graph
 
 ```mermaid
@@ -148,6 +201,7 @@ graph LR
     T01 --> T09
     T08 --> T10
     T09 --> T10 --> T11
+    T04 --> GD1["GD-1"] --> T10
     T04 --> T11 --> T12 --> T13 --> T14 --> T15 --> T16
     T03 --> T17
     T04 --> T18
@@ -157,4 +211,4 @@ graph LR
     T04 --> T22
 ```
 
-Parallel starts after T01: T02, T05 and T09. Lanes T17 to T19, T21 and T22 run in parallel with T10.
+Parallel starts after T01: T02, T05 and T09. Lanes T17 to T19, T21 and T22 run in parallel with T10. From 0.3.5: GD-1 precedes T10, and A7-S precedes A2-T.

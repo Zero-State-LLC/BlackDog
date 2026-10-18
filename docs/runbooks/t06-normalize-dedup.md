@@ -366,3 +366,15 @@ artifact. It is not a field of the manifest.
 - OBSERVED: the §7.1 table and diagram; T02 digest rules; ADR-0003; the 2026-10-17 defaults; spec §4.2 (no custom parser); `DatasetSnapshot` is the `split_frozen` effect; T03b stages faustlibraries `2edec0537f53` and T06 still does not compile-check corpus units; T05's inventory uses `rights_cleared`, `rights_rejected` and `needs_human`, with `files[]` or `functions[]` and a notice manifest keyed by commit, path, function and blob sha.
 - INFERRED: T06 stops at `normalized` and admits through T05's guard against the pinned inventory and notice digests; `generated_at` is outside that digest; the ingested blob is hashed before normalization; a mixed-license family, and a family that contains a rejected or `needs_human` member, is `needs-human` rather than an intersection that still stores the text; a cleared excerpt of a non-cleared blob is `needs-human` at containment 1/2 in either direction or a run of `TOKEN_FLOOR` tokens, including when the cleared file is longer and vendors the rejected blob; `TOKEN_FLOOR` is one constant (currently 40), the manifest status is `provisional`, and Danny has not accepted it; the four syfala upstream originals stay cleared only when every non-cleared family member is that entry's recorded copy; a shared blob with any non-cleared unit is `needs-human` because function rows have no line range; character 5-gram Jaccard for texts under `TOKEN_FLOOR`; the 32-character and 1/3 skeleton thresholds; `ffunction` as a token backstop; `DedupManifest` rather than `DatasetSnapshot`; receipt time is `--created-at`; the compiler flag refuses instead of compiling. Slicing `.lib` function units is a follow-up.
 - SPECULATIVE: the 4/5 threshold and the short-text 1/3 skeleton threshold need a retune before they are treated as settled; full commit hashes are not in the approval note. The 40 recommendation is SPECULATIVE and not accepted by Danny.
+
+## Amendment 2026-10-17 7:40 PM PT (Jev Q3)
+
+The `TOKEN_FLOOR` paragraph above is the 2026-10-17 4:11 PM PT note.
+It is not the acceptance ruling. The ruling is the verbatim Q3 block
+in [ADR-0002](../adr/0002-training-path.md). `TOKEN_FLOOR` stays 40
+and provisional. The protocol runs only after H2 and H3 land. A T07
+freeze on the provisional floor records a leakage caveat and a
+scheduled re-check. Leaked items found later are removed and the
+removal is logged. SemDeDup-style similarity is advisory for T07 only
+and never a clearance criterion. Sub-15-token spans are exact-hash
+checked on the canonical stream.

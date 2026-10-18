@@ -274,3 +274,22 @@ text. That is outside this constant.
   because the unique padding makes detection a run inside the kernel.
 - SPECULATIVE: any floor other than the four measured here; the 40
   recommendation. Danny has not accepted it.
+
+## Amendment 2026-10-17 7:40 PM PT (Jev Q3)
+
+The counts above are the 2026-10-17 measurement. They are not an
+acceptance of 40. The ruling is the verbatim Q3 block in
+[ADR-0002](../adr/0002-training-path.md) and spec §24, from Jev output
+sha256 `d9a4632ed29786182ee61e67b7c3a6b1df92c8468f011b8e1331b54e794264df`
+([jev-output-2026-10-17.txt](../decisions/jev-output-2026-10-17.txt)),
+authorized by Danny's instruction "use jev to make decisions"
+(2026-10-17 7:37 PM PT).
+
+`TOKEN_FLOOR` stays 40 and provisional. The protocol runs only after
+H2 and H3 land. Before the run, Danny sets the recall lower bound,
+requires zero reject-class copies left in cleared, and sets the FP
+blob budget. Recall is per bucket with Wilson intervals, with
+hand-labelled FP cost. Sub-15-token spans are exact-hash checked on
+the canonical stream. The cutter in "How a span was cut" is a
+measurement aid. It is not the real slicer. ADVERSARY confirms
+containment and allowlist fixes against the shipping slicer path.
