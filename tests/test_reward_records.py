@@ -115,9 +115,11 @@ def _members(
     group_id: str,
     members: list[tuple[str, str, dict, bytes]],
     task: dict | None = None,
+    canaries: tuple[int, ...] = (),
 ):
     bound = _task() if task is None else task
     run_key = derive_run_key(root, run_id)
+    marked = set(canaries)
     header = sign_group_header(
         group_id=group_id,
         task_digest_full=task_digest_full(bound),
@@ -142,6 +144,7 @@ def _members(
                 outcome=outcome,
                 kind=kind,
                 graded_at=STAMP,
+                canary=index in marked,
             )
         )
     return header, rows
@@ -164,8 +167,21 @@ def _batch(
     run_id: str = RUN,
     checkpoints: tuple[str, ...] = (CHECKPOINT,),
 ):
+    from faustcoder.reward.audit import AuditReportLog, audit_sampled_reruns
+
     ring = RewardKeyring(root, run_id=run_id)
     loaded = load_records(path, ring)
+    reports = AuditReportLog(consumed.path.with_name(consumed.path.name + ".audit.jsonl"))
+    if not reports.path.is_file():
+        audit_sampled_reruns(
+            loaded.rows,
+            ring,
+            rerun=lambda record: record.outcome,
+            consumed=ConsumedLog(
+                consumed.path.with_name(consumed.path.name + ".audit-consumed.jsonl")
+            ),
+            reports=reports,
+        )
     return rl_batch_from_records(
         loaded.headers,
         loaded.rows,
@@ -175,6 +191,7 @@ def _batch(
         queue=queue,
         rates=rates,
         consumed=consumed,
+        reports=reports,
     )
 
 
@@ -962,6 +979,8 @@ def test_cross_run_replay_and_checkpoint_mismatch_are_refused(tmp_path: Path) ->
     ring = RewardKeyring(secret, run_id="run-b")
     with pytest.raises(RewardKeyError, match="keyring"):
         load_records(log, ring)
+    from faustcoder.reward.audit import AuditReportLog
+
     consumed = ConsumedLog(tmp_path / "consumed.jsonl")
     with pytest.raises(RewardRecordError, match="run id"):
         rl_batch_from_records(
@@ -973,6 +992,7 @@ def test_cross_run_replay_and_checkpoint_mismatch_are_refused(tmp_path: Path) ->
             queue=QuarantineQueue(tmp_path / "q.jsonl"),
             rates=UngradedRateTracker(),
             consumed=consumed,
+            reports=AuditReportLog(tmp_path / "audit-reports.jsonl"),
         )
     assert consumed.disposition("group-replay") is None
     retired = derive_run_key(secret, "run-a")

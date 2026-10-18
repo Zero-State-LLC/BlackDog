@@ -7,8 +7,10 @@ MAC'd records and are re-checked on every load.
 """
 
 from faustcoder.reward.audit import (
+    AuditReportLog,
     RerunAudit,
     audit_sampled_reruns,
+    derive_audit_seed,
     p3_may_proceed,
     select_fail_sample,
 )
@@ -36,6 +38,7 @@ from faustcoder.reward.profiles import REWARD_PROFILES, reward_profiles
 from faustcoder.reward.records import (
     ConsumedLog,
     GroupHeader,
+    RewardGroupConsumed,
     RewardKeyError,
     RewardKeyring,
     RewardRecordError,
@@ -69,6 +72,7 @@ __all__ = [
     "UNGRADED_BASELINE_MULTIPLE",
     "UNGRADED_RATE_LIMIT",
     "UNGRADED_WINDOW",
+    "AuditReportLog",
     "AutoAttributionRefused",
     "ConsumedLog",
     "FixtureOutcome",
@@ -77,6 +81,7 @@ __all__ = [
     "QuarantineQueue",
     "QuarantineRecord",
     "RerunOutcome",
+    "RewardGroupConsumed",
     "RewardKeyError",
     "RewardKeyring",
     "RewardLedger",
@@ -97,6 +102,7 @@ __all__ = [
     "RerunAudit",
     "audit_sampled_reruns",
     "dataset_reward_row",
+    "derive_audit_seed",
     "grade_compiler_exclusion",
     "grade_receipt",
     "grader_digest",

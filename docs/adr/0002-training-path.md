@@ -281,7 +281,7 @@ The P0 build list above includes "one Spark throughput smoke test."
 That item is replaced by R-001 0.3.1: a fingerprint receipt, with
 throughput at T10 on the cleared dedicated Spark (spec §20).
 
-The P3 exit gate also requires: the graded/ungraded split reported; the A7 quarantine rate and the group-drop rate within their pre-registered limits; no frozen auto-attribution signature at exit; audit disagreements = 0 unresolved; and the consumed log intact (D3 option H; the sampled audit is D3-H2, before P3). P0 exits only with `TOKEN_FLOOR` accepted by the Q3 protocol or marked provisional with a recorded leakage caveat. No P3 exit claim may rest on the holdout until the holdout novelty re-check under the accepted floor has run.
+The P3 exit gate also requires: the graded/ungraded split reported; the A7 quarantine rate and the group-drop rate within their pre-registered limits; no frozen auto-attribution signature at exit; audit disagreements = 0 unresolved; and the consumed log intact (D3 option H; the sampled audit is D3-H2, spec §26 0.3.9, before P3). P0 exits only with `TOKEN_FLOOR` accepted by the Q3 protocol or marked provisional with a recorded leakage caveat. No P3 exit claim may rest on the holdout until the holdout novelty re-check under the accepted floor has run.
 
 The ~5M-token threshold in the P1 skip rule is ratified as written. No other INFERRED number is ratified.
 

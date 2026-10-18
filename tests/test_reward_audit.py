@@ -1,4 +1,4 @@
-"""D3-H2: sampled rerun-from-source audit before P3."""
+"""D3-H2: sampled rerun-from-source audit before P3 (spec §26 0.3.9)."""
 
 from __future__ import annotations
 
@@ -8,9 +8,33 @@ from pathlib import Path
 
 import pytest
 
-from faustcoder.reward.audit import audit_sampled_reruns, p3_may_proceed, select_fail_sample
-from faustcoder.reward.records import ConsumedLog, RewardKeyring, RewardRecordError
-from tests.test_reward_records import CHECKPOINT, HARNESS, RUN, _members, _signal, _write_key
+from faustcoder.canonical import canonical_bytes, loads_strict
+from faustcoder.reward.audit import (
+    AuditReportLog,
+    audit_sampled_reruns,
+    derive_audit_seed,
+    p3_may_proceed,
+    select_fail_sample,
+)
+from faustcoder.reward.records import (
+    ConsumedLog,
+    RewardGroupConsumed,
+    RewardKeyring,
+    RewardRecordError,
+    load_records,
+    rl_batch_from_records,
+)
+from faustcoder.reward.types import QuarantineQueue, UngradedRateTracker
+from tests.test_reward_records import (
+    CHECKPOINT,
+    HARNESS,
+    RUN,
+    _compiler,
+    _members,
+    _signal,
+    _store,
+    _write_key,
+)
 
 
 @pytest.fixture(autouse=True)
@@ -21,25 +45,46 @@ def _pin_harness(monkeypatch: pytest.MonkeyPatch) -> None:
     )
 
 
-def _rows(secret: bytes, group_id: str, members: list[tuple[str, str, dict, bytes]]):
-    _header, rows = _members(secret, run_id=RUN, group_id=group_id, members=members)
+def _rows(secret: bytes, group_id: str, members, *, canaries: tuple[int, ...] = ()):
+    _header, rows = _members(
+        secret,
+        run_id=RUN,
+        group_id=group_id,
+        members=members,
+        canaries=canaries,
+    )
     return tuple(rows)
 
 
-def _audit(tmp_path: Path, secret: bytes, rows, rerun, *, seed: str, canary_ids=()):
-    consumed_path = tmp_path / f"consumed-{seed}.jsonl"
+def _audit(tmp_path: Path, secret: bytes, rows, rerun, *, name: str, seed=None, canary_ids=None):
+    ring = RewardKeyring(secret, run_id=RUN)
+    consumed = ConsumedLog(tmp_path / f"{name}-consumed.jsonl")
+    reports = AuditReportLog(tmp_path / f"{name}-reports.jsonl")
     audit = audit_sampled_reruns(
         rows,
-        RewardKeyring(secret, run_id=RUN),
-        seed=seed,
+        ring,
         rerun=rerun,
-        consumed=ConsumedLog(consumed_path),
+        consumed=consumed,
+        reports=reports,
+        seed=seed,
         canary_ids=canary_ids,
     )
-    return audit, consumed_path
+    return audit, consumed, reports, ring
 
 
-def test_agreement_passes(tmp_path: Path) -> None:
+def _echo(record):
+    return record.outcome
+
+
+def test_fail_sample_is_ceil_five_percent() -> None:
+    assert select_fail_sample((), "seed") == ()
+    for count, expected in ((1, 1), (19, 1), (20, 1), (21, 2), (40, 2), (100, 5)):
+        ids = [f"id-{index:03d}" for index in range(count)]
+        assert len(select_fail_sample(ids, "seed")) == expected
+        assert len(select_fail_sample(ids, "seed")) == (count * 5 + 99) // 100
+
+
+def test_agreement_persists_a_clear_report(tmp_path: Path) -> None:
     secret = _write_key(tmp_path / "reward-root.key")
     source = b"process = _;"
     rows = _rows(
@@ -53,16 +98,31 @@ def test_agreement_passes(tmp_path: Path) -> None:
         seen.append(record.source)
         return record.outcome
 
-    audit, path = _audit(tmp_path, secret, rows, rerun, seed="seed-agree")
+    audit, consumed, reports, ring = _audit(tmp_path, secret, rows, rerun, name="agree")
+    derived = derive_audit_seed(ring, RUN)
     assert audit.halted is False
     assert audit.report()["p3"] == "clear"
-    assert audit.report()["seed"] == "seed-agree"
-    assert p3_may_proceed(audit) is True
-    assert ConsumedLog(path).disposition(rows[0].group_id) is None
-    assert not path.exists()
+    assert audit.seed == derived
+    assert audit.report()["seed"] == derived
+    assert audit.report()["sample_ids"] == list(audit.sample_ids)
+    assert p3_may_proceed(RUN, keyring=ring, reports=reports) is True
+    restarted = AuditReportLog(reports.path)
+    assert p3_may_proceed(RUN, keyring=ring, reports=restarted) is True
+    assert consumed.disposition(rows[0].group_id) is None
+    assert not consumed.path.exists()
     assert rows[0].outcome == "pass"
     assert seen == [source]
     assert rows[0].record_id in audit.audited_ids
+    again, _consumed, _reports, _ring = _audit(
+        tmp_path,
+        secret,
+        rows,
+        rerun,
+        name="agree-again",
+        seed=derived,
+    )
+    assert again.halted is False
+    assert again.seed == derived
 
 
 def test_pass_that_fails_on_rerun_halts_and_drops_the_group(tmp_path: Path) -> None:
@@ -77,19 +137,21 @@ def test_pass_that_fails_on_rerun_halts_and_drops_the_group(tmp_path: Path) -> N
             ("signal", "fail", _signal(bad, passed=False), bad),
         ],
     )
-    audit, path = _audit(
+    audit, consumed, reports, ring = _audit(
         tmp_path,
         secret,
         rows,
         lambda _record: "fail",
-        seed="seed-flip",
+        name="flip",
     )
     report = audit.report()
     assert audit.halted is True
     assert report["p3"] == "halt"
-    assert p3_may_proceed(audit) is False
+    assert p3_may_proceed(RUN, keyring=ring, reports=reports) is False
+    assert p3_may_proceed(RUN, keyring=ring, reports=AuditReportLog(reports.path)) is False
     assert audit.dropped_groups == ("group-flip",)
-    assert audit.sample_ids == ()
+    assert audit.late_groups == ()
+    assert len(audit.sample_ids) == 1
     assert len(audit.disagreements) == 1
     item = audit.disagreements[0]
     assert item.record_id == rows[0].record_id
@@ -100,90 +162,230 @@ def test_pass_that_fails_on_rerun_halts_and_drops_the_group(tmp_path: Path) -> N
     assert rows[0].outcome == "pass"
     assert rows[1].outcome == "fail"
     assert audit.kept_ids == ()
-    assert ConsumedLog(path).disposition("group-flip") == "dropped:audit"
-    before = path.stat().st_size
+    assert consumed.disposition("group-flip") == "dropped:audit"
+    before = consumed.path.stat().st_size
     with pytest.raises(RewardRecordError, match="already consumed"):
-        ConsumedLog(path).claim(
+        ConsumedLog(consumed.path).claim(
             "group-flip",
             "used",
             task_digest_full=rows[0].task_digest_full,
             policy_checkpoint=CHECKPOINT,
         )
-    assert path.stat().st_size == before
+    assert consumed.path.stat().st_size == before
     repeat = audit_sampled_reruns(
         rows,
-        RewardKeyring(secret, run_id=RUN),
-        seed="seed-flip",
+        ring,
         rerun=lambda _record: "fail",
-        consumed=ConsumedLog(path),
+        consumed=ConsumedLog(consumed.path),
+        reports=reports,
     )
     assert repeat.halted is True
     assert repeat.dropped_groups == ("group-flip",)
-    assert path.stat().st_size == before
+    assert consumed.path.stat().st_size == before
+    frozen = reports.path.read_bytes()
+    with pytest.raises(RewardRecordError, match="not cleared"):
+        audit_sampled_reruns(
+            rows,
+            ring,
+            rerun=_echo,
+            consumed=ConsumedLog(tmp_path / "flip-echo-consumed.jsonl"),
+            reports=reports,
+        )
+    assert reports.path.read_bytes() == frozen
+    assert p3_may_proceed(RUN, keyring=ring, reports=reports) is False
+    with pytest.raises(RewardRecordError, match="seed"):
+        audit_sampled_reruns(
+            rows,
+            ring,
+            seed="0" * 64,
+            rerun=_echo,
+            consumed=ConsumedLog(tmp_path / "flip-seed-consumed.jsonl"),
+            reports=reports,
+        )
+    assert reports.path.read_bytes() == frozen
 
 
-def test_sampled_fail_that_passes_on_rerun_halts(tmp_path: Path) -> None:
+def test_source_attributed_rows_are_in_the_fail_sample(tmp_path: Path) -> None:
     secret = _write_key(tmp_path / "reward-root.key")
-    members = []
-    for index in range(20):
-        source = f"process = {index};".encode()
-        members.append(("signal", "fail", _signal(source, passed=False), source))
-    rows = _rows(secret, "group-sample", members)
-    audit, path = _audit(
+    source = b"process = +;"
+    envelope = _compiler(
+        source,
+        exit_code=1,
+        diagnostic_class="parse_error",
+        diagnostics="parse error\n",
+    )
+    rows = _rows(
+        secret,
+        "group-attributed",
+        [("compiler", "source_attributed", envelope, source)],
+    )
+    called: list[str] = []
+
+    def rerun(record):
+        called.append(record.record_id)
+        return "pass"
+
+    audit, consumed, reports, ring = _audit(
         tmp_path,
         secret,
         rows,
-        lambda _record: "pass",
-        seed="seed-sample",
+        rerun,
+        name="attributed",
     )
-    assert len(audit.sample_ids) == 1
-    assert audit.sample_ids[0] in {row.record_id for row in rows}
+    assert audit.sample_ids == (rows[0].record_id,)
+    assert called == [rows[0].record_id]
     assert audit.halted is True
-    assert audit.report()["p3"] == "halt"
-    assert audit.dropped_groups == ("group-sample",)
-    assert audit.disagreements[0].record_id == audit.sample_ids[0]
-    assert audit.disagreements[0].stored_outcome == "fail"
+    assert audit.disagreements[0].stored_outcome == "source_attributed"
     assert audit.disagreements[0].rerun_outcome == "pass"
-    stored = next(row for row in rows if row.record_id == audit.sample_ids[0])
-    assert stored.outcome == "fail"
-    assert ConsumedLog(path).disposition("group-sample") == "dropped:audit"
-    assert p3_may_proceed(audit) is False
+    assert rows[0].outcome == "source_attributed"
+    assert consumed.disposition("group-attributed") == "dropped:audit"
+    assert p3_may_proceed(RUN, keyring=ring, reports=reports) is False
 
 
-def test_canary_disagreement_halts(tmp_path: Path) -> None:
+def test_foreign_seed_cannot_dodge_a_sampled_fail(tmp_path: Path) -> None:
     secret = _write_key(tmp_path / "reward-root.key")
-    source = b"process = +;"
+    members = []
+    for index in range(21):
+        source = f"process = {index};".encode()
+        members.append(("signal", "fail", _signal(source, passed=False), source))
+    rows = _rows(secret, "group-dodge", members)
+    ring = RewardKeyring(secret, run_id=RUN)
+    derived = derive_audit_seed(ring, RUN)
+    ids = [row.record_id for row in rows]
+    real = select_fail_sample(ids, derived)
+    assert len(real) == 2
+    target = real[0]
+    foreign = None
+    for index in range(64):
+        trial = f"trial-{index}"
+        if target not in select_fail_sample(ids, trial):
+            foreign = trial
+            break
+    assert foreign is not None
+    called: list[str] = []
+    reports = AuditReportLog(tmp_path / "dodge-reports.jsonl")
+    with pytest.raises(RewardRecordError, match="seed"):
+        audit_sampled_reruns(
+            rows,
+            ring,
+            seed=foreign,
+            rerun=lambda record: called.append(record.record_id) or record.outcome,
+            consumed=ConsumedLog(tmp_path / "dodge-consumed.jsonl"),
+            reports=reports,
+        )
+    assert called == []
+    assert not reports.path.exists()
+    audit, _consumed, _reports, _ring = _audit(
+        tmp_path,
+        secret,
+        rows,
+        _echo,
+        name="dodge-real",
+    )
+    assert target in audit.sample_ids
+    assert audit.seed == derived
+
+
+def test_signed_canaries_are_audited_and_a_spoofed_list_is_refused(tmp_path: Path) -> None:
+    secret = _write_key(tmp_path / "reward-root.key")
+    plain = b"process = 1;"
+    marked = b"process = 2;"
+    plain_env = _compiler(
+        plain,
+        exit_code=124,
+        diagnostic_class="timeout",
+        diagnostics="timeout: wall clock limit exceeded\n",
+    )
+    marked_env = _compiler(
+        marked,
+        exit_code=124,
+        diagnostic_class="timeout",
+        diagnostics="timeout: wall clock limit exceeded\n",
+    )
     rows = _rows(
         secret,
         "group-canary",
-        [("signal", "fail", _signal(source, passed=False), source)],
+        [
+            ("compiler", "ungraded:unattributed", plain_env, plain),
+            ("compiler", "ungraded:unattributed", marked_env, marked),
+        ],
+        canaries=(1,),
     )
-    assert select_fail_sample([rows[0].record_id], "seed-canary") == ()
-    audit, path = _audit(
+    assert rows[0].canary is False
+    assert rows[1].canary is True
+    called: list[str] = []
+
+    def rerun(record):
+        called.append(record.record_id)
+        return "pass"
+
+    audit, consumed, reports, ring = _audit(
         tmp_path,
         secret,
         rows,
-        lambda _record: "pass",
-        seed="seed-canary",
-        canary_ids={rows[0].record_id},
+        rerun,
+        name="canary",
     )
     assert audit.sample_ids == ()
-    assert rows[0].record_id in audit.audited_ids
+    assert called == [rows[1].record_id]
+    assert rows[1].record_id in audit.audited_ids
+    assert rows[0].record_id not in audit.audited_ids
     assert audit.halted is True
-    assert audit.report()["p3"] == "halt"
-    assert audit.disagreements[0].stored_outcome == "fail"
-    assert audit.disagreements[0].rerun_outcome == "pass"
-    assert audit.dropped_groups == ("group-canary",)
-    assert rows[0].outcome == "fail"
-    assert ConsumedLog(path).disposition("group-canary") == "dropped:audit"
+    assert audit.disagreements[0].stored_outcome == "ungraded:unattributed"
+    assert consumed.disposition("group-canary") == "dropped:audit"
+    assert p3_may_proceed(RUN, keyring=ring, reports=reports) is False
+
+    secret_ok = _write_key(tmp_path / "reward-root-ok.key")
+    quiet = _rows(
+        secret_ok,
+        "group-quiet",
+        [("compiler", "ungraded:unattributed", marked_env, marked)],
+        canaries=(0,),
+    )
+    skipped: list[str] = []
+    omitted = AuditReportLog(tmp_path / "omit-reports.jsonl")
+    with pytest.raises(RewardRecordError, match="canary"):
+        audit_sampled_reruns(
+            quiet,
+            RewardKeyring(secret_ok, run_id=RUN),
+            rerun=lambda record: skipped.append(record.record_id) or "pass",
+            consumed=ConsumedLog(tmp_path / "omit-consumed.jsonl"),
+            reports=omitted,
+            canary_ids=(),
+        )
+    assert skipped == []
+    assert not omitted.path.exists()
+    extra: list[str] = []
+    spoofed = AuditReportLog(tmp_path / "spoof-reports.jsonl")
+    with pytest.raises(RewardRecordError, match="canary"):
+        audit_sampled_reruns(
+            quiet,
+            RewardKeyring(secret_ok, run_id=RUN),
+            rerun=lambda record: extra.append(record.record_id) or "pass",
+            consumed=ConsumedLog(tmp_path / "spoof-consumed.jsonl"),
+            reports=spoofed,
+            canary_ids={quiet[0].record_id, "not-a-signed-canary"},
+        )
+    assert extra == []
+    assert not spoofed.path.exists()
+    matched, _consumed, _reports, _ring = _audit(
+        tmp_path,
+        secret_ok,
+        quiet,
+        lambda _record: "ungraded:unattributed",
+        name="canary-match",
+        canary_ids={quiet[0].record_id},
+    )
+    assert matched.halted is False
+    assert quiet[0].record_id in matched.audited_ids
 
 
-def test_sample_is_reproducible_from_its_seed(tmp_path: Path) -> None:
+def test_sample_is_reproducible_from_the_derived_seed(tmp_path: Path) -> None:
     ids = [f"id-{index:02d}" for index in range(40)]
     first = select_fail_sample(ids, "seed-a")
     assert first == select_fail_sample(list(reversed(ids)), "seed-a")
     assert first == select_fail_sample(ids + list(ids), "seed-a")
-    assert len(first) == (40 * 5) // 100
+    assert len(first) == 2
     other = select_fail_sample(ids, "seed-b")
     if other == first:
         other = select_fail_sample(ids, "seed-c")
@@ -194,23 +396,20 @@ def test_sample_is_reproducible_from_its_seed(tmp_path: Path) -> None:
         source = f"process = {index};".encode()
         members.append(("signal", "fail", _signal(source, passed=False), source))
     rows = _rows(secret, "group-repro", members)
-
-    def agree(record):
-        return record.outcome
-
-    forward, _forward_path = _audit(tmp_path, secret, rows, agree, seed="seed-repro")
-    backward, _backward_path = _audit(
+    forward, _consumed, _reports, ring = _audit(tmp_path, secret, rows, _echo, name="repro-f")
+    backward, _back_consumed, _back_reports, _ring = _audit(
         tmp_path,
         secret,
         tuple(reversed(rows)),
-        agree,
-        seed="seed-repro",
+        _echo,
+        name="repro-b",
     )
     assert forward.sample_ids == backward.sample_ids
     assert len(forward.sample_ids) == 1
+    assert forward.seed == derive_audit_seed(ring, RUN)
     assert forward.halted is False
     assert forward.report()["sample_ids"] == list(forward.sample_ids)
-    assert forward.report()["seed"] == "seed-repro"
+    assert forward.report()["seed"] == forward.seed
 
 
 def test_hmac_invalid_rows_are_refused(tmp_path: Path) -> None:
@@ -223,21 +422,376 @@ def test_hmac_invalid_rows_are_refused(tmp_path: Path) -> None:
     )
     bad = replace(rows[0], mac="00" * 32)
     called: list[str] = []
-
-    def rerun(record):
-        called.append(record.record_id)
-        return record.outcome
-
-    path = tmp_path / "consumed-mac.jsonl"
+    reports = AuditReportLog(tmp_path / "mac-reports.jsonl")
     with pytest.raises(RewardRecordError, match="HMAC"):
         audit_sampled_reruns(
             [bad],
             RewardKeyring(secret, run_id=RUN),
-            seed="seed-mac",
-            rerun=rerun,
-            consumed=ConsumedLog(path),
+            rerun=lambda record: called.append(record.record_id) or record.outcome,
+            consumed=ConsumedLog(tmp_path / "mac-consumed.jsonl"),
+            reports=reports,
         )
     assert called == []
-    assert not path.exists()
+    assert not reports.path.exists()
     assert bad.outcome == "pass"
     assert rows[0].outcome == "pass"
+
+
+def test_an_already_used_group_is_reported_late(tmp_path: Path) -> None:
+    secret = _write_key(tmp_path / "reward-root.key")
+    source = b"process = _;"
+    rows = _rows(
+        secret,
+        "group-used",
+        [("signal", "pass", _signal(source, passed=True), source)],
+    )
+    consumed = ConsumedLog(tmp_path / "used-consumed.jsonl")
+    consumed.claim(
+        "group-used",
+        "used",
+        task_digest_full=rows[0].task_digest_full,
+        policy_checkpoint=CHECKPOINT,
+    )
+    before = consumed.path.read_bytes()
+    ring = RewardKeyring(secret, run_id=RUN)
+    reports = AuditReportLog(tmp_path / "used-reports.jsonl")
+    audit = audit_sampled_reruns(
+        rows,
+        ring,
+        rerun=lambda _record: "fail",
+        consumed=consumed,
+        reports=reports,
+    )
+    assert audit.late_groups == ("group-used",)
+    assert audit.dropped_groups == ()
+    assert audit.report()["late_groups"] == [{"disposition": "late", "group_id": "group-used"}]
+    assert audit.halted is True
+    assert consumed.path.read_bytes() == before
+    assert ConsumedLog(consumed.path).disposition("group-used") == "used"
+    assert p3_may_proceed(RUN, keyring=ring, reports=reports) is False
+
+
+def test_an_unexpected_disposition_fails_closed_and_persists_the_halt(tmp_path: Path) -> None:
+    secret = _write_key(tmp_path / "reward-root.key")
+    source = b"process = _;"
+    rows = _rows(
+        secret,
+        "group-held",
+        [("signal", "pass", _signal(source, passed=True), source)],
+    )
+    consumed = ConsumedLog(tmp_path / "held-consumed.jsonl")
+    consumed.claim(
+        "group-held",
+        "dropped:quarantined",
+        task_digest_full=rows[0].task_digest_full,
+        policy_checkpoint=CHECKPOINT,
+    )
+    ring = RewardKeyring(secret, run_id=RUN)
+    reports = AuditReportLog(tmp_path / "held-reports.jsonl")
+    with pytest.raises(RewardGroupConsumed) as raised:
+        audit_sampled_reruns(
+            rows,
+            ring,
+            rerun=lambda _record: "fail",
+            consumed=consumed,
+            reports=reports,
+        )
+    assert raised.value.group_id == "group-held"
+    assert raised.value.disposition == "dropped:quarantined"
+    assert ConsumedLog(consumed.path).disposition("group-held") == "dropped:quarantined"
+    assert p3_may_proceed(RUN, keyring=ring, reports=reports) is False
+
+
+def test_a_rerun_crash_is_a_disagreement(tmp_path: Path) -> None:
+    secret = _write_key(tmp_path / "reward-root.key")
+    first = b"process = _;"
+    second = b"process = +;"
+    header_a, rows_a = _members(
+        secret,
+        run_id=RUN,
+        group_id="group-a",
+        members=[("signal", "pass", _signal(first, passed=True), first)],
+    )
+    header_b, rows_b = _members(
+        secret,
+        run_id=RUN,
+        group_id="group-b",
+        members=[("signal", "pass", _signal(second, passed=True), second)],
+    )
+    rows = tuple(rows_a + rows_b)
+
+    def rerun(record):
+        if record.group_id == "group-a":
+            return "fail"
+        raise RuntimeError("rerun crashed")
+
+    audit, consumed, reports, ring = _audit(tmp_path, secret, rows, rerun, name="crash")
+    assert audit.halted is True
+    assert {item.group_id for item in audit.disagreements} == {"group-a", "group-b"}
+    crashed = next(item for item in audit.disagreements if item.group_id == "group-b")
+    assert crashed.rerun_outcome == ""
+    assert set(audit.dropped_groups) == {"group-a", "group-b"}
+    assert consumed.disposition("group-a") == "dropped:audit"
+    assert consumed.disposition("group-b") == "dropped:audit"
+    assert rows_a[0].outcome == "pass"
+    assert rows_b[0].outcome == "pass"
+    assert p3_may_proceed(RUN, keyring=ring, reports=reports) is False
+    assert header_a.group_id == "group-a"
+    assert header_b.group_id == "group-b"
+
+
+def test_a_non_str_rerun_result_is_a_disagreement(tmp_path: Path) -> None:
+    secret = _write_key(tmp_path / "reward-root.key")
+    source = b"process = _;"
+
+    class _Outcome(str):
+        pass
+
+    cases = (
+        ("none", lambda _record: None),
+        ("int", lambda _record: 1),
+        ("subclass", lambda record: _Outcome(record.outcome)),
+    )
+    for name, rerun in cases:
+        rows = _rows(
+            secret,
+            f"group-{name}",
+            [("signal", "pass", _signal(source, passed=True), source)],
+        )
+        audit, consumed, reports, ring = _audit(tmp_path, secret, rows, rerun, name=name)
+        assert audit.halted is True
+        assert audit.disagreements[0].rerun_outcome == ""
+        assert audit.report()["p3"] == "halt"
+        assert type(audit.report()["disagreements"][0]["rerun_outcome"]) is str
+        assert consumed.disposition(f"group-{name}") == "dropped:audit"
+        assert rows[0].outcome == "pass"
+        assert p3_may_proceed(RUN, keyring=ring, reports=reports) is False
+
+
+def test_triage_is_the_only_clear(tmp_path: Path) -> None:
+    secret = _write_key(tmp_path / "reward-root.key")
+    first = b"process = _;"
+    second = b"process = +;"
+    _header_a, rows_a = _members(
+        secret,
+        run_id=RUN,
+        group_id="group-a",
+        members=[("signal", "pass", _signal(first, passed=True), first)],
+    )
+    _header_b, rows_b = _members(
+        secret,
+        run_id=RUN,
+        group_id="group-b",
+        members=[("signal", "pass", _signal(second, passed=True), second)],
+    )
+    rows = tuple(rows_a + rows_b)
+    audit, consumed, reports, ring = _audit(
+        tmp_path,
+        secret,
+        rows,
+        lambda _record: "fail",
+        name="triage",
+    )
+    assert len(audit.disagreements) == 2
+    assert p3_may_proceed(RUN, keyring=ring, reports=reports) is False
+    reports.record_triage(
+        ring,
+        record_id=audit.disagreements[0].record_id,
+        triaged_by="danny",
+        triaged_at="2026-10-18T15:10:00Z",
+    )
+    assert p3_may_proceed(RUN, keyring=ring, reports=AuditReportLog(reports.path)) is False
+    size = reports.path.stat().st_size
+    reports.record_triage(
+        ring,
+        record_id=audit.disagreements[0].record_id,
+        triaged_by="danny",
+        triaged_at="2026-10-18T15:10:00Z",
+    )
+    assert reports.path.stat().st_size == size
+    with pytest.raises(RewardRecordError, match="triage"):
+        reports.record_triage(
+            ring,
+            record_id="0" * 64,
+            triaged_by="danny",
+            triaged_at="2026-10-18T15:10:00Z",
+        )
+    reports.record_triage(
+        ring,
+        record_id=audit.disagreements[1].record_id,
+        triaged_by="danny",
+        triaged_at="2026-10-18T15:11:00Z",
+    )
+    assert p3_may_proceed(RUN, keyring=ring, reports=reports) is True
+    assert consumed.disposition("group-a") == "dropped:audit"
+    assert consumed.disposition("group-b") == "dropped:audit"
+    with pytest.raises(RewardGroupConsumed) as raised:
+        consumed.claim(
+            "group-a",
+            "used",
+            task_digest_full=rows_a[0].task_digest_full,
+            policy_checkpoint=CHECKPOINT,
+        )
+    assert raised.value.disposition == "dropped:audit"
+
+
+def test_rl_batch_requires_a_clear_report_and_keeps_a_dropped_group_out(tmp_path: Path) -> None:
+    secret = _write_key(tmp_path / "reward-root.key")
+    source = b"process = _;"
+    header, rows = _members(
+        secret,
+        run_id=RUN,
+        group_id="group-train",
+        members=[("signal", "pass", _signal(source, passed=True), source)],
+    )
+    log = tmp_path / "rows.jsonl"
+    _store(log, header, rows)
+    ring = RewardKeyring(secret, run_id=RUN)
+    loaded = load_records(log, ring)
+    reports = AuditReportLog(tmp_path / "train-reports.jsonl")
+    consumed = ConsumedLog(tmp_path / "train-consumed.jsonl")
+    with pytest.raises(RewardRecordError, match="clear audit report"):
+        rl_batch_from_records(
+            loaded.headers,
+            loaded.rows,
+            keyring=ring,
+            expected_run_id=RUN,
+            policy_checkpoints=(CHECKPOINT,),
+            queue=QuarantineQueue(tmp_path / "q.jsonl"),
+            rates=UngradedRateTracker(),
+            consumed=consumed,
+            reports=reports,
+        )
+    assert consumed.disposition("group-train") is None
+    audit_sampled_reruns(
+        loaded.rows,
+        ring,
+        rerun=_echo,
+        consumed=ConsumedLog(tmp_path / "train-audit-consumed.jsonl"),
+        reports=reports,
+    )
+    batch = rl_batch_from_records(
+        loaded.headers,
+        loaded.rows,
+        keyring=ring,
+        expected_run_id=RUN,
+        policy_checkpoints=(CHECKPOINT,),
+        queue=QuarantineQueue(tmp_path / "q2.jsonl"),
+        rates=UngradedRateTracker(),
+        consumed=consumed,
+        reports=reports,
+    )
+    assert batch.rows[0]["example_id"] == rows[0].record_id
+    assert batch.rows[0]["reward"] == 1.0
+
+    halted_source = b"process = +;"
+    halted_header, halted_rows = _members(
+        secret,
+        run_id=RUN,
+        group_id="group-halted",
+        members=[("signal", "pass", _signal(halted_source, passed=True), halted_source)],
+    )
+    halted_log = tmp_path / "halted.jsonl"
+    _store(halted_log, halted_header, halted_rows)
+    halted_loaded = load_records(halted_log, ring)
+    halted_reports = AuditReportLog(tmp_path / "halted-reports.jsonl")
+    halted_consumed = ConsumedLog(tmp_path / "halted-consumed.jsonl")
+    audit_sampled_reruns(
+        halted_loaded.rows,
+        ring,
+        rerun=lambda _record: "fail",
+        consumed=halted_consumed,
+        reports=halted_reports,
+    )
+    with pytest.raises(RewardRecordError, match="clear audit report"):
+        rl_batch_from_records(
+            halted_loaded.headers,
+            halted_loaded.rows,
+            keyring=ring,
+            expected_run_id=RUN,
+            policy_checkpoints=(CHECKPOINT,),
+            queue=QuarantineQueue(tmp_path / "q3.jsonl"),
+            rates=UngradedRateTracker(),
+            consumed=ConsumedLog(tmp_path / "halted-batch-consumed.jsonl"),
+            reports=halted_reports,
+        )
+    halted_reports.record_triage(
+        ring,
+        record_id=halted_rows[0].record_id,
+        triaged_by="danny",
+        triaged_at="2026-10-18T15:12:00Z",
+    )
+    fresh_source = b"process = _;"
+    fresh_header, fresh_rows = _members(
+        secret,
+        run_id=RUN,
+        group_id="group-fresh",
+        members=[("signal", "pass", _signal(fresh_source, passed=True), fresh_source)],
+    )
+    fresh_log = tmp_path / "fresh.jsonl"
+    _store(fresh_log, fresh_header, fresh_rows)
+    fresh_loaded = load_records(fresh_log, ring)
+    with pytest.raises(RewardGroupConsumed):
+        rl_batch_from_records(
+            halted_loaded.headers + fresh_loaded.headers,
+            halted_loaded.rows + fresh_loaded.rows,
+            keyring=ring,
+            expected_run_id=RUN,
+            policy_checkpoints=(CHECKPOINT,),
+            queue=QuarantineQueue(tmp_path / "q4.jsonl"),
+            rates=UngradedRateTracker(),
+            consumed=halted_consumed,
+            reports=halted_reports,
+        )
+    resumed = rl_batch_from_records(
+        fresh_loaded.headers,
+        fresh_loaded.rows,
+        keyring=ring,
+        expected_run_id=RUN,
+        policy_checkpoints=(CHECKPOINT,),
+        queue=QuarantineQueue(tmp_path / "q5.jsonl"),
+        rates=UngradedRateTracker(),
+        consumed=halted_consumed,
+        reports=halted_reports,
+    )
+    assert resumed.rows[0]["example_id"] == fresh_rows[0].record_id
+    assert halted_consumed.disposition("group-halted") == "dropped:audit"
+    assert halted_consumed.disposition("group-fresh") == "used"
+
+
+def test_a_tampered_report_mac_does_not_read_as_clear(tmp_path: Path) -> None:
+    secret = _write_key(tmp_path / "reward-root.key")
+    source = b"process = _;"
+    rows = _rows(
+        secret,
+        "group-tamper",
+        [("signal", "pass", _signal(source, passed=True), source)],
+    )
+    _audit_result, _consumed, reports, ring = _audit(tmp_path, secret, rows, _echo, name="tamper")
+    assert p3_may_proceed(RUN, keyring=ring, reports=reports) is True
+    raw = bytearray(reports.path.read_bytes())
+    raw[0] ^= 0x01
+    reports.path.write_bytes(raw)
+    with pytest.raises(RewardRecordError, match="mac|corrupt"):
+        p3_may_proceed(RUN, keyring=ring, reports=AuditReportLog(reports.path))
+
+
+def test_a_row_signed_before_canary_is_refused_on_load(tmp_path: Path) -> None:
+    secret = _write_key(tmp_path / "reward-root.key")
+    source = b"process = _;"
+    header, rows = _members(
+        secret,
+        run_id=RUN,
+        group_id="group-old",
+        members=[("signal", "pass", _signal(source, passed=True), source)],
+    )
+    log = tmp_path / "old.jsonl"
+    _store(log, header, rows)
+    lines = log.read_text(encoding="utf-8").splitlines()
+    body = loads_strict(lines[1])
+    assert body["canary"] is False
+    del body["canary"]
+    lines[1] = canonical_bytes(body).decode("ascii")
+    log.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    with pytest.raises(RewardRecordError, match="not signed"):
+        load_records(log, RewardKeyring(secret, run_id=RUN))

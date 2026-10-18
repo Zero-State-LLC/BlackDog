@@ -510,6 +510,64 @@ def test_rl_batch_refuses_a_mapping_that_splits_get_and_items() -> None:
     raise AssertionError("rl_batch emitted a row from a split mapping")
 
 
+def test_rl_batch_refuses_a_mapping_whose_reads_disagree() -> None:
+    """Two provenance reads must not let a passing receipt authorize a failing one."""
+    task = _linear_task()
+    passing = grade_receipt(allowlisted_reward_envelope(passed=True), task=task)
+    failing = grade_receipt(allowlisted_reward_envelope(passed=False), task=task)
+    reads = {"provenance": 0}
+
+    class _Flip(Mapping):
+        def __getitem__(self, key):
+            if key == "provenance":
+                reads["provenance"] += 1
+                return passing if reads["provenance"] == 1 else failing
+            if key == "reward":
+                return 1.0
+            if key == "task":
+                return task
+            raise KeyError(key)
+
+        def __iter__(self):
+            return iter(("provenance", "reward", "task"))
+
+        def __len__(self) -> int:
+            return 3
+
+    try:
+        rl_batch([_Flip()])
+    except RewardProvenanceError:
+        return
+    raise AssertionError("rl_batch accepted a mapping that changes between reads")
+
+
+def test_rl_batch_refuses_a_dict_subclass() -> None:
+    """A dict subclass is not a dict. isinstance would emit the second receipt."""
+    task = _linear_task()
+    passing = grade_receipt(allowlisted_reward_envelope(passed=True), task=task)
+    failing = grade_receipt(allowlisted_reward_envelope(passed=False), task=task)
+
+    class _Hostile(dict):
+        def __init__(self) -> None:
+            super().__init__(example_id="e-sub", provenance=passing, reward=1.0, task=task)
+            self.reads = 0
+
+        def __getitem__(self, key):
+            if key == "provenance":
+                self.reads += 1
+                return passing if self.reads == 1 else failing
+            return super().__getitem__(key)
+
+    row = _Hostile()
+    assert isinstance(row, dict)
+    assert type(row) is not dict
+    try:
+        rl_batch([row])
+    except RewardProvenanceError:
+        return
+    raise AssertionError("rl_batch accepted a dict subclass")
+
+
 def test_require_explicit_example_id_refuses_a_blank_id() -> None:
     assert require_explicit_example_id({"example_id": "row-1"}) == "row-1"
     for row in ({}, {"example_id": ""}, {"example_id": 1}):

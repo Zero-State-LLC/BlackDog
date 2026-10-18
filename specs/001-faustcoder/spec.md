@@ -3,7 +3,7 @@
 Formerly FaustCoder; renamed 2026-10-17 PT.
 
 - Status: DRAFT / refinement-ready
-- Version: 0.3.8 (FLOOR lower-floor detections, Danny 2026-10-18 2:27 AM PT, "continue as recommended"; see §25). 0.3.7 (D3 option H, Danny 2026-10-18; see §26). 0.3.6 (FLOOR bounds ratified, Danny 2026-10-18 12:34 AM PT; see §25). 0.3.5 (Jev Q1–Q4, 2026-10-17 7:40 PM PT; Danny "use jev to make decisions" 7:37 PM PT; see §24). 0.3.4 (ADR-0006 reward ladder, Danny 2026-10-17 4:11 PM PT, A2 extended 4:28 PM PT; see §23). 0.3.3: D-013 rights defaults, Danny yes 2026-10-17 1:04 PM PT; see §22. 0.3.2: CompilerReceipt diagnostic classes, ADR-0005, Danny yes 2026-10-17 1:13 PM PT; see §21. 0.3.1: R-001 v0.2 evidence, Danny yes 2026-10-17 12:54 PM PT; see §20. 0.3.0: Faust-tooling assimilation and target lanes, ADR-0004; see §19. 0.2.0 training path: ADR-0002, §17
+- Version: 0.3.9 (D3-H2 sampled rerun audit, Danny 2026-10-18 8:10 AM PT, "Approve the §26 0.3.9 amendment as recommended"; see §26). 0.3.8 (FLOOR lower-floor detections, Danny 2026-10-18 2:27 AM PT, "continue as recommended"; see §25). 0.3.7 (D3 option H, Danny 2026-10-18; see §26). 0.3.6 (FLOOR bounds ratified, Danny 2026-10-18 12:34 AM PT; see §25). 0.3.5 (Jev Q1–Q4, 2026-10-17 7:40 PM PT; Danny "use jev to make decisions" 7:37 PM PT; see §24). 0.3.4 (ADR-0006 reward ladder, Danny 2026-10-17 4:11 PM PT, A2 extended 4:28 PM PT; see §23). 0.3.3: D-013 rights defaults, Danny yes 2026-10-17 1:04 PM PT; see §22. 0.3.2: CompilerReceipt diagnostic classes, ADR-0005, Danny yes 2026-10-17 1:13 PM PT; see §21. 0.3.1: R-001 v0.2 evidence, Danny yes 2026-10-17 12:54 PM PT; see §20. 0.3.0: Faust-tooling assimilation and target lanes, ADR-0004; see §19. 0.2.0 training path: ADR-0002, §17
 - Target: NVIDIA DGX Spark (128 GB unified memory)
 
 ## 1. Constitution
@@ -462,6 +462,7 @@ never from scratch, in weeks rather than months. Evidence is in
 | Q2 | Auto-attribution only as A2-T after shadow. §23 rerun-plus-fixture path is not sanctioned. Below ~0.1% keeps auto-attribution off. Gold canary must be clean. L3 is rerun hooks for 124 and 125. A7-S 20% share, 2× rise, 500-sample window, provisional | ACCEPTED | Jev 2026-10-17 7:40 PM PT; Danny "use jev to make decisions" 7:37 PM PT | ADR-0006, §24 verbatim |
 | Q3 | TOKEN_FLOOR stays 40 and provisional. Protocol after H2 (brief: canonical ID/NUM stream) and H3 (brief: NFKC and drop Cf/Cc). `lib.fn`, the 1/2 rule and the `STR` collapse are an ADVERSARY r6 addition; not ruled by Jev. Wilson CIs, Danny sets the numbers before the run, exact hash on the ID/NUM stream under 15 tokens with idioms allowlisted. T07 freeze needs a leakage caveat and a scheduled re-check | ACCEPTED; bounds ratified 2026-10-18 (§25); lower-floor detections ruled 2026-10-18 2:27 AM PT (§25); floor value still provisional | Jev 2026-10-17 7:40 PM PT; Danny "use jev to make decisions" 7:37 PM PT | ADR-0002, §24 verbatim |
 | Q4 | ADR-0002 accepted in full (Jev's default; Danny may still choose P3 PROPOSED, the partial P0–P2 acceptance). P3 exit gates in §24. Only the ~5M-token CPT-skip threshold is ratified as written | ACCEPTED | Jev 2026-10-17 7:40 PM PT; Danny "use jev to make decisions" 7:37 PM PT | ADR-0002, §24 verbatim |
+| D3-H2 | Sampled rerun audit rules (§26 0.3.9) | ACCEPTED | Danny 2026-10-18 8:10 AM PT | §26, ADR-0006 |
 
 ## 19. Amendments 0.3.0 (ADR-0004, ACCEPTED)
 
@@ -726,4 +727,21 @@ A pin mismatch is `stale_pin`. That group is dropped and is not regraded into tr
 
 The process-local seal binds the whole task, not only the task id and effect. `rl_batch` refuses a duplicate row. The duplicate check holds within a single `rl_batch` call. `rates.json` is rewritten under a file lock. A NUL byte in `faust --pathslist` is a `SandboxError`.
 
-The sampled rerun-from-source audit (D3-H2) is a later change, before P3. It is not this section. The P3 exit gate adds: audit disagreements = 0 unresolved, and the consumed log intact. D3-H1 blocks T10. Frozen impulse digests are unchanged.
+The sampled rerun-from-source audit (D3-H2) is specified in the subsection below (0.3.9). The P3 exit gate adds: audit disagreements = 0 unresolved, and the consumed log intact. D3-H1 blocks T10. Frozen impulse digests are unchanged.
+
+### D3-H2 sampled rerun audit (0.3.9)
+
+Approval: Danny, 2026-10-18 8:10 AM PT, "Approve the §26 0.3.9 amendment as recommended". Record: [danny-d3h2-audit-2026-10-18.md](../../docs/decisions/danny-d3h2-audit-2026-10-18.md). This applies D3 option H. It does not change the H1 text above or ADR-0006 A2.
+
+> D3-H2 audit rules (Danny, 2026-10-18 8:10 AM PT):
+>
+> 1. Scope. Before any P3 gradient update uses a run's reward rows, those rows MUST be audited. The audit reruns from source, through the same pinned harness, every row whose stored outcome is a pass, a sample of the failing rows (item 2), and every canary row (item 4). "Failing" means every graded `0.0` row: stored outcome `fail` or `source_attributed`.
+> 2. Sample size. The fail sample is ceil(5% of the failing rows). When at least one failing row exists, at least one is sampled. The sample is ordered by SHA-256(seed, record id) over the unique signed record ids. Row order does not affect it.
+> 3. Seed. The seed MUST be fixed before any row of the run is graded and MUST NOT be a free argument at audit time. It is derived as HMAC-SHA256(run key, "d3-h2-seed" || run id). The audit refuses any other seed. The report records the seed and the sample ids.
+> 4. Canaries. A canary row is marked at rollout time by a field inside the signed row or group header. The audit takes the canary set from the signed rows only. A caller-supplied canary list that disagrees with the signed set is refused. Canary content follows the gold canary definition in §24 (dev-suite references, cleared-corpus sample, SFT targets) unless Danny names another set.
+> 5. Integrity first. Every row MUST pass the H1 MAC check and keyring scope before any rerun. One failure refuses the whole audit, and no rerun runs.
+> 6. Disagreement. A rerun whose outcome differs from the stored outcome, or that cannot produce an outcome, is a disagreement. The row becomes ungraded. Its stored pass or fail is never rewritten, and the opposite value is never emitted. Its whole group is claimed in the consumed log as `dropped:audit` before the audit returns, and it does not re-enter. A group already claimed `used` when the audit disagrees is reported as `late`, not as dropped, and also halts.
+> 7. Halt. Any disagreement halts P3. The audit report is canonical, records `p3` = `halt` or `clear`, and is persisted, together with the seed and the sample ids, before P3 may start. P3 MUST NOT start or resume for a run unless the latest persisted report for that run is `clear`. A halt clears only through human triage recorded against each disagreement. Rerunning the audit with another seed does not clear it.
+> 8. Training rows. Every T10 training row carries an explicit non-empty `example_id`, the signed record id. A row without one is refused.
+
+Not ruled here: Ed25519 and DSSE; the audit cadence after P3 starts; any numeric halt threshold other than zero disagreements.

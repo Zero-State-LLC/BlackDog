@@ -199,7 +199,7 @@ These tasks are the implementation. This record does not change code.
   - Workflows: production-systems.
 - [x] D3-H2 [J-04] Sampled rerun-from-source audit.
   - Depends on: D3-H1. Milestone: v0.3. Before P3. Does not block P1 or P2.
-  - Acceptance: before P3, every passing row, a deterministic 5% sample of failing rows, and every canary are rerun from source. The seed and the sample ids are recorded. A disagreement leaves that row ungraded, drops its whole group so the group is not re-entered, and halts P3 with a machine-readable report. The audit refuses a row that fails the H1 HMAC check and does not flip a stored pass or fail. Ed25519 is out of scope. Spec §26 is unchanged and still says this audit is not that section. Done in the D3-H2 change.
+  - Acceptance: spec §26 0.3.9. Before P3, every passing row, a ceil(5%) sample of failing rows (`fail` and `source_attributed`, at least one when any exist), and every signed canary are rerun from source. The seed is HMAC-SHA256(run key, "d3-h2-seed" || run id); any other seed is refused. A disagreement leaves that row ungraded, drops its group as `dropped:audit`, and halts P3. A group already `used` is reported `late` and still halts. `rl_batch_from_records` refuses unless the latest persisted report for the run is clear. Another seed does not clear a halt. Ed25519 is out of scope. Done in the D3-H2 change.
   - Workflows: production-systems, ADVERSARY review.
 - [ ] A2-PATH [J-04] Training callers must not supply the replaced path.
   - Status: done in code in #51 (`cef8a14`), not fully done. The grader enforces this, but `run_signal` and `commit_signal_check` do not yet pass the task or a native receipt to `grade_receipt`. The box is checked when that live wiring lands.

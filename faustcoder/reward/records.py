@@ -14,7 +14,9 @@ off the row. A group with a missing, ungraded or quarantined member is
 dropped and claimed in the consumed log so it is not re-entered. A
 re-check does not observe A7 rates.
 
-The pass-weighted re-execution audit and Ed25519 are not this module.
+The sampled rerun audit lives in ``faustcoder.reward.audit``.
+``rl_batch_from_records`` refuses a batch unless that audit's latest
+persisted report for the run is clear. Ed25519 is not this module.
 """
 
 from __future__ import annotations
@@ -31,7 +33,10 @@ import stat
 from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from faustcoder.reward.audit import AuditReportLog
 
 from faustcoder.canonical import canonical_bytes, content_digest_for, loads_strict
 from faustcoder.compiler import NATIVE_FAUST_VERSION
@@ -97,6 +102,7 @@ _HEADER_STATEMENT = (
     "type",
 )
 _ROW_IDENTITY = (
+    "canary",
     "compiler_schema_version",
     "diagnostics",
     "envelope",
@@ -133,6 +139,15 @@ class RewardKeyError(Exception):
 
 class RewardRecordError(Exception):
     """A persisted reward record or its log failed closed."""
+
+
+class RewardGroupConsumed(RewardRecordError):
+    """The group is already in the consumed log. ``disposition`` is that claim."""
+
+    def __init__(self, group_id: str, disposition: str) -> None:
+        self.group_id = group_id
+        self.disposition = disposition
+        super().__init__("reward group was already consumed")
 
 
 def grader_digest() -> str:
@@ -457,6 +472,7 @@ class RewardRowRecord:
     mac: str
     task: dict[str, Any]
     source: bytes
+    canary: bool
     log_index: int = -1
 
     def __repr__(self) -> str:
@@ -622,6 +638,7 @@ def sign_reward_row(
     diagnostics: str = "",
     native_diagnostics: str = "",
     grader_commit: str = "",
+    canary: bool = False,
 ) -> RewardRowRecord:
     """Sign one member. This does not grade. The loader grades again.
 
@@ -646,6 +663,8 @@ def sign_reward_row(
         raise RewardRecordError("reward record checkpoint is not usable")
     if type(grader_commit) is not str or len(grader_commit) > 128 or "\n" in grader_commit:
         raise RewardRecordError("reward record grader commit is not usable")
+    if type(canary) is not bool:
+        raise RewardRecordError("reward record canary is not usable")
     size = _count(group_size, "group size")
     index = _count(member_index, "member index", zero=True)
     if index >= size:
@@ -694,6 +713,7 @@ def sign_reward_row(
         if not _stderr_matches(payload, diagnostics):
             raise RewardRecordError("reward record diagnostics do not match the envelope")
     identity = {
+        "canary": canary,
         "compiler_schema_version": _COMPILER_SCHEMA,
         "diagnostics": diagnostics,
         "envelope": frozen_envelope,
@@ -757,6 +777,7 @@ def sign_reward_row(
         mac="",
         task=frozen_task,
         source=bytes(source),
+        canary=canary,
     )
     return RewardRowRecord(
         record_id=record.record_id,
@@ -791,6 +812,7 @@ def sign_reward_row(
         mac=mac(record, run_key),
         task=record.task,
         source=record.source,
+        canary=record.canary,
     )
 
 
@@ -1192,6 +1214,9 @@ def _row_from_body(body: Mapping[str, Any], log_index: int) -> RewardRowRecord:
     envelope = body["envelope"]
     task = body["task"]
     native = body["native_envelope"]
+    canary = body["canary"]
+    if type(canary) is not bool:
+        raise RewardRecordError("reward record canary is not usable")
     if not isinstance(envelope, dict) or not isinstance(task, dict):
         raise RewardRecordError("reward record task or envelope is not an object")
     if native is not None and not isinstance(native, dict):
@@ -1231,6 +1256,7 @@ def _row_from_body(body: Mapping[str, Any], log_index: int) -> RewardRowRecord:
         mac=mac_value,
         task=task,
         source=source,
+        canary=canary,
         log_index=log_index,
     )
 
@@ -1293,7 +1319,7 @@ class ConsumedLog:
                 os.lseek(fd, 0, os.SEEK_SET)
                 self._ingest(_read_text(fd))
                 if group_id in self._seen:
-                    raise RewardRecordError("reward group was already consumed")
+                    raise RewardGroupConsumed(group_id, self._seen[group_id])
                 _write_all(fd, encoded)
                 os.fsync(fd)
                 if created:
@@ -1353,14 +1379,17 @@ def rl_batch_from_records(
     queue: QuarantineQueue,
     rates: UngradedRateTracker,
     consumed: ConsumedLog,
+    reports: AuditReportLog,
 ) -> RecordBatch:
     """Build a binary batch. A bad member drops its whole group.
 
     ``expected_run_id`` is the run this builder accepts. ``policy_checkpoints``
     is the allowlist for ``policy_checkpoint``. A mismatch raises before
-    any group is claimed. A1 source failures are graded ``0.0`` members.
-    Ungraded, quarantined, stale, incomplete and duplicate groups
-    contribute no row. A group id already in ``consumed`` is refused.
+    any group is claimed. ``reports`` is the persisted D3-H2 audit. P3
+    does not start unless the latest report for the run is clear. A1
+    source failures are graded ``0.0`` members. Ungraded, quarantined,
+    stale, incomplete and duplicate groups contribute no row. A group id
+    already in ``consumed`` is refused.
     """
     allowed = _checkpoint_allowlist(policy_checkpoints)
     if (
@@ -1372,6 +1401,10 @@ def rl_batch_from_records(
         raise RewardRecordError("reward record run id does not match")
     if any(record.policy_checkpoint not in allowed for record in records):
         raise RewardRecordError("reward record checkpoint is not allowed")
+    from faustcoder.reward.audit import p3_may_proceed
+
+    if not p3_may_proceed(expected_run_id, keyring=keyring, reports=reports):
+        raise RewardRecordError("P3 has no clear audit report")
     header_by_id: dict[str, GroupHeader] = {}
     for header in headers:
         verify(header, keyring)
@@ -1387,8 +1420,9 @@ def rl_batch_from_records(
             order.append(record.group_id)
         members[record.group_id].append(record)
     for group_id in order:
-        if consumed.disposition(group_id) is not None:
-            raise RewardRecordError("reward group was already consumed")
+        existing = consumed.disposition(group_id)
+        if existing is not None:
+            raise RewardGroupConsumed(group_id, existing)
     record_ids: dict[str, int] = {}
     for record in records:
         record_ids[record.record_id] = record_ids.get(record.record_id, 0) + 1
