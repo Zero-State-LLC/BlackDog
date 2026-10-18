@@ -1285,8 +1285,9 @@ class ConsumedLog:
 
     ``claim`` requires the run key. When an audit anchor is present, the
     claim checks that anchor against the current log bytes before
-    appending, then refreshes it over the new bytes. A bad anchor or a
-    wrong key raises before any write.
+    appending, then refreshes it over the new bytes. The refresh checks
+    that same MAC again and accepts only those bytes plus the new claim.
+    A bad anchor or a wrong key raises before any write.
     """
 
     def __init__(self, path: Path | str) -> None:
@@ -1326,11 +1327,12 @@ class ConsumedLog:
             try:
                 os.lseek(fd, 0, os.SEEK_SET)
                 prior = _read_text(fd)
-                from faustcoder.reward.audit import _verified_anchor, refresh_anchor_bind
+                from faustcoder.reward.audit import _refresh_anchor_bind, _verified_anchor
 
                 # The anchor MAC is over these bytes. A deleted halt marker
                 # or a wrong key fails here, before the append or its fsync.
-                _verified_anchor(prior.encode("utf-8"), run_key, self.path)
+                prior_bytes = prior.encode("utf-8")
+                _verified_anchor(prior_bytes, run_key, self.path)
                 self._seen.clear()
                 self._ingest(prior)
                 if group_id in self._seen:
@@ -1339,7 +1341,7 @@ class ConsumedLog:
                 os.fsync(fd)
                 if created:
                     _fsync_dir(self.path.parent)
-                refresh_anchor_bind(self.path, run_key, locked=True)
+                _refresh_anchor_bind(self.path, run_key, locked=True, prior=prior_bytes)
                 self._seen[group_id] = disposition
             finally:
                 fcntl.flock(fd, fcntl.LOCK_UN)
