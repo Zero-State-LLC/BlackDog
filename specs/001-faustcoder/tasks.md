@@ -71,8 +71,8 @@ Implements the dataset machine (spec §7.1) and training machine (spec §7.3).
   - Depends on: T04, T07. Milestone: v0.2.
   - Acceptance: frozen baseline measurements (R-007); input to D-002 and D-005.
   - Workflows: production-systems.
-- [x] T09 [P] [J-04] DGX Spark feasibility study.
-  - Done in #36 (2026-10-17) for v0.2. On-hardware throughput is deferred to T10.
+- [ ] T09 [P] [J-04] DGX Spark feasibility study.
+  - Status: the study and the `env_verified` harness landed in #36 (2026-10-17). Not done: acceptance needs the per-machine fingerprint receipt from the cleared dedicated Spark (and the second Spark if it will train). See `docs/dgx-spark-feasibility.md`, "Evidence still required on the machines". On-hardware throughput is deferred to T10.
   - Depends on: T01. Milestone: v0.2.
   - Acceptance: for v0.2, cited external DGX Spark benchmarks plus a per-machine environment fingerprint receipt (R-001, amended 0.3.1); implements `env_verified`. On-hardware throughput is deferred to T10 on the dedicated, cleared Spark.
   - Workflows: production-systems.
