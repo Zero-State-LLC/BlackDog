@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import json
 import subprocess
+from collections.abc import Mapping
 from pathlib import Path
 
 from faustcoder.canonical import content_digest_for
@@ -32,6 +33,7 @@ from faustcoder.reward import (
     grade_receipt,
     is_minted,
     mint_native_stack_match,
+    require_explicit_example_id,
     reward_profiles,
     reward_value,
     rl_batch,
@@ -466,6 +468,63 @@ def test_rl_batch_keeps_two_grades_of_the_same_program() -> None:
     first = dataset_reward_row(grade_receipt(envelope, task=task), task=task, example_id="e1")
     second = dataset_reward_row(grade_receipt(envelope, task=task), task=task, example_id="e2")
     assert len(rl_batch([first, second])) == 2
+
+
+def test_rl_batch_refuses_a_mapping_that_splits_get_and_items() -> None:
+    """A hostile Mapping cannot check a passing receipt and emit a failing one."""
+    task = _linear_task()
+    passing = grade_receipt(allowlisted_reward_envelope(passed=True), task=task)
+    failing = grade_receipt(allowlisted_reward_envelope(passed=False), task=task)
+    stored = {
+        "example_id": "e-split",
+        "provenance": failing,
+        "reward": 1.0,
+        "task": task,
+    }
+
+    class _SplitReceipt(Mapping):
+        def get(self, key, default=None):
+            if key == "provenance":
+                return passing
+            if key in stored:
+                return stored[key]
+            return default
+
+        def __getitem__(self, key):
+            return stored[key]
+
+        def __iter__(self):
+            return iter(stored)
+
+        def __len__(self) -> int:
+            return len(stored)
+
+    row = _SplitReceipt()
+    assert row.get("provenance") is passing
+    assert row["provenance"] is failing
+    assert row["reward"] == 1.0
+    try:
+        rl_batch([row])
+    except RewardProvenanceError:
+        return
+    raise AssertionError("rl_batch emitted a row from a split mapping")
+
+
+def test_require_explicit_example_id_refuses_a_blank_id() -> None:
+    assert require_explicit_example_id({"example_id": "row-1"}) == "row-1"
+    for row in ({}, {"example_id": ""}, {"example_id": 1}):
+        try:
+            require_explicit_example_id(row)
+        except RewardProvenanceError as exc:
+            assert "example_id" in str(exc)
+        else:
+            raise AssertionError("a training row without an example_id was accepted")
+    try:
+        require_explicit_example_id([("example_id", "row-1")])
+    except RewardProvenanceError as exc:
+        assert "dict" in str(exc)
+    else:
+        raise AssertionError("a non-dict training row was accepted")
 
 
 def test_rl_batch_keeps_two_grades_of_the_same_program_without_ids() -> None:

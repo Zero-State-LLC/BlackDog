@@ -304,6 +304,16 @@ def _row_identities(row: Mapping[str, object], graded: object) -> tuple[tuple[ob
     return tuple(found)
 
 
+def require_explicit_example_id(row: Mapping[str, object]) -> str:
+    """Return the training example id. T10 refuses a row without one."""
+    if type(row) is not dict:
+        raise RewardProvenanceError("training row must be a dict")
+    example_id = row.get("example_id")
+    if type(example_id) is not str or example_id == "":
+        raise RewardProvenanceError("training row requires an explicit example_id")
+    return example_id
+
+
 def rl_batch(rows: list[Mapping[str, object]] | tuple[Mapping[str, object], ...]) -> tuple[dict[str, object], ...]:
     """Copy ``rows`` after every reward row proves its provenance.
 
@@ -311,20 +321,28 @@ def rl_batch(rows: list[Mapping[str, object]] | tuple[Mapping[str, object], ...]
     graded failure. A group with any quarantined member is dropped
     whole and is never re-entered. A quarantined row is not a
     ``RewardableSignalReceipt``, so the provenance check refuses it
-    instead of masking it into the batch.
+    instead of masking it into the batch. A row must be a ``dict``.
+    A mapping whose ``get`` and items disagree is refused, so a
+    failing receipt cannot be substituted after the check.
     """
+    if type(rows) not in (list, tuple):
+        raise RewardProvenanceError("RL batch rows must be a list or tuple")
     built: list[dict[str, object]] = []
     seen: set[tuple[object, ...]] = set()
     for row in rows:
-        if not isinstance(row, Mapping) or "reward" not in row:
+        if type(row) is not dict or "reward" not in row or "provenance" not in row or "task" not in row:
             raise RewardProvenanceError("RL batch row is missing a reward")
-        graded = require_rewardable_provenance(row.get("provenance"))
+        if any(type(key) is not str for key in row):
+            raise RewardProvenanceError("RL batch row field names must be strings")
+        graded = require_rewardable_provenance(row["provenance"])
         from faustcoder.signal_suite import require_task_rewardable
 
-        task = row.get("task")
-        require_task_rewardable(task if isinstance(task, Mapping) else {})
+        task = row["task"]
+        if type(task) is not dict:
+            raise RewardProvenanceError("RL batch row task must be a dict")
+        require_task_rewardable(task)
         _require_receipt_task(graded, task)
-        reward = _finite_reward(row.get("reward"))
+        reward = _finite_reward(row["reward"])
         # Jev Q1 (2026-10-17): binary reward. A full pass is 1.0 and
         # every graded failure is 0.0. A group with any quarantined
         # member is dropped whole and never re-entered. The provenance

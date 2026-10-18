@@ -39,6 +39,7 @@ from faustcoder.reward.grader import (
     RewardProvenanceError,
     grade_receipt,
     mint_native_stack_match,
+    require_explicit_example_id,
     task_binding_digest,
     task_digest_full,
 )
@@ -871,7 +872,10 @@ def regrade_record(
     A reload does not observe A7 rates. The rollout already counted the sample.
     A native stack row is graded again from its stored diagnostics and a
     reminted match. If that evidence does not reconstruct, the row stays
-    ungraded. A stored pass or fail is not replaced by the other.
+    ungraded. A signal receipt whose fresh pass or fail is the other bit
+    is left ungraded and is not returned as that other bit. A compiler
+    row that does not match its stored outcome is dropped. That stored
+    outcome is not rewritten to pass or fail.
     """
     verify(record, keyring)
     if _pins_stale(record):
@@ -1008,7 +1012,7 @@ def _write_all(fd: int, data: bytes) -> None:
 
 
 def _fsync_dir(path: Path) -> None:
-    fd = os.open(path, os.O_RDONLY)
+    fd = os.open(path, os.O_RDONLY | os.O_DIRECTORY)
     try:
         os.fsync(fd)
     finally:
@@ -1241,6 +1245,15 @@ def _exact_str(value: object, label: str) -> str:
     return value
 
 
+def _open_consumed(path: Path) -> tuple[int, bool]:
+    """Open the consumed log. The first create uses ``O_EXCL``."""
+    flags = os.O_RDWR | os.O_APPEND | os.O_CLOEXEC
+    try:
+        return os.open(path, flags | os.O_CREAT | os.O_EXCL, _LOG_MODE), True
+    except FileExistsError:
+        return os.open(path, flags), False
+
+
 class ConsumedLog:
     """Append-only ``group_id`` decisions. A group already present is refused."""
 
@@ -1271,12 +1284,7 @@ class ConsumedLog:
         }
         encoded = canonical_bytes(line) + b"\n"
         self.path.parent.mkdir(parents=True, exist_ok=True)
-        created = not self.path.exists()
-        fd = os.open(
-            self.path,
-            os.O_CREAT | os.O_RDWR | os.O_APPEND | os.O_CLOEXEC,
-            _LOG_MODE,
-        )
+        fd, created = _open_consumed(self.path)
         try:
             os.fchmod(fd, _LOG_MODE)
             fcntl.flock(fd, fcntl.LOCK_EX)
@@ -1520,16 +1528,17 @@ def _grade_group(
             reward = 1.0 if grade.passed else 0.0
         else:
             reward = 0.0
-        built.append(
-            {
-                "group_id": record.group_id,
-                "member_index": record.member_index,
-                "provenance": grade,
-                "record_id": record.record_id,
-                "reward": reward,
-                "task": record.task,
-            }
-        )
+        row = {
+            "example_id": record.record_id,
+            "group_id": record.group_id,
+            "member_index": record.member_index,
+            "provenance": grade,
+            "record_id": record.record_id,
+            "reward": reward,
+            "task": record.task,
+        }
+        require_explicit_example_id(row)
+        built.append(row)
     if header.group_id != ordered[0].group_id:
         return "incomplete", []
     return None, built

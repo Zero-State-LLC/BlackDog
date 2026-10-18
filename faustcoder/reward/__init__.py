@@ -6,6 +6,12 @@ reward and A2 rows stay in the quarantine queue. Persisted rows are
 MAC'd records and are re-checked on every load.
 """
 
+from faustcoder.reward.audit import (
+    RerunAudit,
+    audit_sampled_reruns,
+    p3_may_proceed,
+    select_fail_sample,
+)
 from faustcoder.reward.grader import (
     grade_compiler_exclusion,
     grade_receipt,
@@ -13,6 +19,7 @@ from faustcoder.reward.grader import (
     is_minted,
     is_native_minted,
     mint_native_stack_match,
+    require_explicit_example_id,
     require_rewardable_provenance,
     reward_value,
     rl_batch,
@@ -87,6 +94,8 @@ __all__ = [
     "Ungraded",
     "UngradedRateTracker",
     "UngradedReason",
+    "RerunAudit",
+    "audit_sampled_reruns",
     "dataset_reward_row",
     "grade_compiler_exclusion",
     "grade_receipt",
@@ -97,11 +106,14 @@ __all__ = [
     "load_records",
     "load_root_key",
     "mint_native_stack_match",
+    "p3_may_proceed",
     "regrade_record",
+    "require_explicit_example_id",
     "require_rewardable_provenance",
     "reward_profiles",
     "reward_value",
     "rl_batch",
     "rl_batch_from_records",
+    "select_fail_sample",
     "shadow_observe",
 ]
