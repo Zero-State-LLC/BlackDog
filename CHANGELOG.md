@@ -8,6 +8,10 @@ See [docs/VERSIONING.md](docs/VERSIONING.md).
 
 ## [Unreleased]
 
+### Security
+
+- Audit triage strips `triaged_by`, requires a non-empty printable name of at most 128 characters, and requires `triaged_at` to be RFC 3339, on write and on read. The writing OS user (`writer_uid` and `writer_user`, from the effective uid) is stored under the report MAC. A triage whose actor or recorded OS user is `fc-grader`, the dedicated grader uid, or root is refused and does not clear a halt. `rl_batch` is private (`_rl_batch`); `rl_batch_from_records` is the only public batch builder.
+
 ### Added
 
 - D3-H2 sampled rerun audit (spec §26 0.3.9), before P3: every passing row, a ceil(5%) sample of graded `0.0` rows (`fail` and `source_attributed`, at least one when any exist), and every signed canary are rerun from source. The seed is HMAC-SHA256(run key, "d3-h2-seed" || run id); any other seed is refused. The report records the seed and the sample ids. A disagreement leaves that row ungraded, claims the group `dropped:audit`, and persists a halt. A group already claimed `used` is reported `late` and still halts. A rerun that crashes, or that returns a non-`str` (including a `str` subclass), is a disagreement. The report is MAC'd under the run key. `rl_batch_from_records` refuses unless the latest persisted report is clear. Triage recorded against each disagreement is the only clear; another seed does not clear a halt. The audit refuses a row that fails the H1 HMAC check and does not rewrite a stored pass or fail. A row signed before the `canary` field is refused on load. T10 rows carry an explicit `example_id`, the signed record id. `rl_batch` accepts only a real `dict`, so a mapping cannot check one receipt and emit another.

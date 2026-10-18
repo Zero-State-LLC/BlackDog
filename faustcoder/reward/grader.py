@@ -314,7 +314,7 @@ def require_explicit_example_id(row: Mapping[str, object]) -> str:
     return example_id
 
 
-def rl_batch(rows: list[Mapping[str, object]] | tuple[Mapping[str, object], ...]) -> tuple[dict[str, object], ...]:
+def _rl_batch(rows: list[Mapping[str, object]] | tuple[Mapping[str, object], ...]) -> tuple[dict[str, object], ...]:
     """Copy ``rows`` after every reward row proves its provenance.
 
     Jev Q1: the reward is binary, 1.0 on a full pass and 0.0 on every

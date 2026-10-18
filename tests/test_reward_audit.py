@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
+import pwd
 from dataclasses import replace
 from pathlib import Path
 
@@ -15,6 +17,7 @@ from faustcoder.reward.audit import (
     _advance_anchor,
     _line_mac,
     _refresh_anchor_bind,
+    _untriaged,
     audit_sampled_reruns,
     derive_audit_seed,
     p3_may_proceed,
@@ -1657,3 +1660,168 @@ def test_canary_must_be_a_bool_when_the_mac_is_valid(tmp_path: Path) -> None:
         _store(log, header, [forged])
         with pytest.raises(RewardRecordError, match="canary"):
             load_records(log, ring)
+
+
+def _halted(tmp_path: Path, name: str):
+    secret = _write_key(tmp_path / "reward-root.key")
+    source = b"process = _;"
+    rows = _rows(
+        secret,
+        f"group-{name}",
+        [("signal", "pass", _signal(source, passed=True), source)],
+    )
+    audit, consumed, reports, ring = _audit(
+        tmp_path,
+        secret,
+        rows,
+        lambda _record: "fail",
+        name=name,
+    )
+    assert audit.halted is True
+    assert len(audit.disagreements) == 1
+    assert p3_may_proceed(RUN, keyring=ring, reports=reports, consumed=consumed) is False
+    return secret, audit, consumed, reports, ring
+
+
+def _gate_opened(ring: RewardKeyring, reports: AuditReportLog, consumed: ConsumedLog) -> bool:
+    """True only when the gate returns True. A refusal or a raised read stays closed."""
+    try:
+        return p3_may_proceed(RUN, keyring=ring, reports=reports, consumed=consumed) is True
+    except RewardRecordError:
+        return False
+
+
+def test_refused_triage_probes_leave_the_halt_closed(tmp_path: Path) -> None:
+    _secret, audit, consumed, reports, ring = _halted(tmp_path, "probes")
+    record_id = audit.disagreements[0].record_id
+    when = "2026-10-18T15:10:00Z"
+    probes = (
+        {"triaged_by": " ", "triaged_at": when},
+        {"triaged_by": "\t", "triaged_at": when},
+        {"triaged_by": "\u200b", "triaged_at": when},
+        {"triaged_by": "fc-grader", "triaged_at": when},
+        {"triaged_by": " fc-grader ", "triaged_at": when},
+        {"triaged_by": "root", "triaged_at": when},
+        {"triaged_by": "a" * 4096, "triaged_at": when},
+        {"triaged_by": "danny", "triaged_at": "not a time"},
+        {"triaged_by": "danny", "triaged_at": "2026-10-18T15:10:00"},
+        {"triaged_by": "danny", "triaged_at": "2026-10-18T15:10:00Z\n"},
+        {"triaged_by": "danny", "triaged_at": "2026-02-31T00:00:00Z"},
+    )
+    for probe in probes:
+        size = reports.path.stat().st_size
+        with pytest.raises(RewardRecordError, match="triage"):
+            reports.record_triage(ring, record_id=record_id, **probe)
+        assert reports.path.stat().st_size == size
+        assert p3_may_proceed(RUN, keyring=ring, reports=reports, consumed=consumed) is False
+    reports.record_triage(
+        ring,
+        record_id=record_id,
+        triaged_by="  danny  ",
+        triaged_at=when,
+    )
+    assert p3_may_proceed(RUN, keyring=ring, reports=reports, consumed=consumed) is True
+    body = loads_strict(reports.path.read_text(encoding="utf-8").splitlines()[-1])
+    assert isinstance(body, dict)
+    assert body["triaged_by"] == "danny"
+    assert body["triaged_at"] == when
+    assert body["writer_uid"] == os.geteuid()
+    assert body["writer_user"] == pwd.getpwuid(os.geteuid()).pw_name
+    assert body["writer_uid"] != 0
+    assert body["writer_user"] not in {"fc-grader", "root"}
+
+
+def test_triage_refuses_root_and_the_grader_uid(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _secret, audit, consumed, reports, ring = _halted(tmp_path, "uid")
+    record_id = audit.disagreements[0].record_id
+    when = "2026-10-18T15:10:00Z"
+    size = reports.path.stat().st_size
+    monkeypatch.setattr("faustcoder.reward.audit.os.geteuid", lambda: 0)
+    with pytest.raises(RewardRecordError, match="triage"):
+        reports.record_triage(ring, record_id=record_id, triaged_by="danny", triaged_at=when)
+    assert reports.path.stat().st_size == size
+    assert p3_may_proceed(RUN, keyring=ring, reports=reports, consumed=consumed) is False
+    monkeypatch.setattr("faustcoder.reward.audit.os.geteuid", os.geteuid)
+    monkeypatch.setattr("faustcoder.reward.audit._dedicated_grader_uid", os.geteuid)
+    with pytest.raises(RewardRecordError, match="triage"):
+        reports.record_triage(ring, record_id=record_id, triaged_by="danny", triaged_at=when)
+    assert reports.path.stat().st_size == size
+    assert p3_may_proceed(RUN, keyring=ring, reports=reports, consumed=consumed) is False
+
+
+def test_refused_triage_lines_do_not_clear_a_halt() -> None:
+    record_id = "ab" * 32
+    halt = {
+        "type": "audit_report",
+        "report": {"p3": "halt", "disagreements": [{"record_id": record_id}]},
+    }
+    uid = os.geteuid()
+    user = pwd.getpwuid(uid).pw_name
+    assert uid != 0
+    assert user not in {"fc-grader", "root"}
+    good = {
+        "type": "audit_triage",
+        "record_id": record_id,
+        "triaged_by": "danny",
+        "triaged_at": "2026-10-18T15:10:00Z",
+        "writer_uid": uid,
+        "writer_user": user,
+    }
+    assert _untriaged((halt, good)) is False
+    assert _untriaged((halt, {**good, "triaged_by": "  danny  "})) is False
+    assert _untriaged((halt, {**good, "triaged_by": "d" * 128})) is False
+    assert _untriaged((halt, {**good, "triaged_at": "2026-10-18T15:10:00+00:00"})) is False
+    refused = (
+        {**good, "triaged_by": " "},
+        {**good, "triaged_by": "\u200b"},
+        {**good, "triaged_by": "fc-grader"},
+        {**good, "triaged_by": "a" * 4096},
+        {**good, "triaged_at": "not a time"},
+        {**good, "triaged_at": "2026-10-18T15:10:00Z\n"},
+        {**good, "triaged_at": "2026-02-31T00:00:00Z"},
+        {**good, "triaged_by": "root"},
+        {**good, "triaged_by": "d" * 129},
+        {**good, "writer_uid": 0, "writer_user": "root"},
+        {**good, "writer_user": "fc-grader"},
+        {**good, "writer_user": "root"},
+        {key: value for key, value in good.items() if key != "writer_uid"},
+        {key: value for key, value in good.items() if key != "writer_user"},
+    )
+    for line in refused:
+        assert _untriaged((halt, line)) is True
+
+
+@pytest.mark.parametrize(
+    "overrides",
+    (
+        {"triaged_by": " "},
+        {"triaged_by": "\u200b"},
+        {"triaged_by": "fc-grader"},
+        {"triaged_by": "a" * 4096},
+        {"triaged_at": "not a time"},
+        {"triaged_at": "2026-10-18T15:10:00Z\n"},
+        {"writer_uid": 0, "writer_user": "root"},
+        {"writer_user": "fc-grader"},
+        {"triaged_by": "root"},
+    ),
+)
+def test_a_forged_triage_line_does_not_open_the_gate(
+    tmp_path: Path, overrides: dict[str, object]
+) -> None:
+    secret, audit, consumed, reports, ring = _halted(tmp_path, "forged")
+    uid = os.geteuid()
+    user = pwd.getpwuid(uid).pw_name
+    body: dict[str, object] = {
+        "record_id": audit.disagreements[0].record_id,
+        "run_id": RUN,
+        "triaged_at": "2026-10-18T15:10:00Z",
+        "triaged_by": "danny",
+        "type": "audit_triage",
+        "writer_uid": uid,
+        "writer_user": user,
+    }
+    body.update(overrides)
+    reports._append_line(derive_run_key(secret, RUN), body)
+    assert _gate_opened(ring, reports, consumed) is False

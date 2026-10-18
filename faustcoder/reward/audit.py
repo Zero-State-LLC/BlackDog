@@ -17,12 +17,17 @@ import hashlib
 import hmac
 import json
 import os
+import pwd
+import unicodedata
 from collections.abc import Callable, Collection, Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 
+from rfc3339_validator import RFC3339_REGEX, validate_rfc3339
+
 from faustcoder.canonical import CanonicalError, canonical_bytes, loads_strict
 from faustcoder.reward.records import (
+    GRADER_USER,
     ConsumedLog,
     RewardGroupConsumed,
     RewardKeyError,
@@ -30,6 +35,7 @@ from faustcoder.reward.records import (
     RewardRecordError,
     RewardRowRecord,
     _fsync_dir,
+    _grader_uid,
     _open_consumed,
     _read_text,
     _write_all,
@@ -47,6 +53,8 @@ _FAIL_OUTCOMES = frozenset({"fail", "source_attributed"})
 _LOG_MODE = 0o640
 _GENESIS_MAC = "0" * 64
 _ANCHOR_LEN = 248
+_ACTOR_MAX = 128
+_ROOT_USER = "root"
 
 
 @dataclass(frozen=True)
@@ -112,8 +120,9 @@ class AuditReportLog:
     """Append-only MAC'd audit reports for one run.
 
     The file sits next to the consumed log. A halt stays until human
-    triage is recorded against each disagreement. A later clear report
-    does not replace it.
+    triage is recorded against each disagreement. A triage from the
+    grader account or from root does not clear it. A later clear report
+    does not replace a halt.
     """
 
     def __init__(self, path: Path | str, consumed: ConsumedLog) -> None:
@@ -139,13 +148,18 @@ class AuditReportLog:
         triaged_by: str,
         triaged_at: str,
     ) -> None:
-        """Record human triage for one disagreement. This is the only clear."""
+        """Record human triage for one disagreement. This is the only clear.
+
+        ``triaged_by`` is stripped and must be a short printable name.
+        ``triaged_at`` is RFC 3339. The effective uid and its account
+        name are stored on the line, under the same MAC. The grader
+        account and root are refused.
+        """
         if type(record_id) is not str or record_id == "":
             raise RewardRecordError("audit triage record id is not usable")
-        if type(triaged_by) is not str or triaged_by == "" or "\n" in triaged_by:
-            raise RewardRecordError("audit triage actor is not usable")
-        if type(triaged_at) is not str or triaged_at == "" or "\n" in triaged_at:
-            raise RewardRecordError("audit triage time is not usable")
+        actor = _require_actor(triaged_by)
+        when = _require_triaged_at(triaged_at)
+        writer_uid, writer_user = _writing_os_user()
         lines = self._verified(keyring)
         open_ids = _halt_ids(lines)
         if record_id not in open_ids:
@@ -157,9 +171,11 @@ class AuditReportLog:
             {
                 "record_id": record_id,
                 "run_id": keyring.run_id,
-                "triaged_at": triaged_at,
-                "triaged_by": triaged_by,
+                "triaged_at": when,
+                "triaged_by": actor,
                 "type": "audit_triage",
+                "writer_uid": writer_uid,
+                "writer_user": writer_user,
             },
         )
 
@@ -564,6 +580,101 @@ def _line_mac(run_key: bytes, body: Mapping[str, object]) -> str:
     return hmac.new(run_key, message, hashlib.sha256).hexdigest()
 
 
+def _printable_name(name: str) -> bool:
+    """True when every character is printable and none is format or control."""
+    if name == "" or not name.isprintable():
+        return False
+    for char in name:
+        category = unicodedata.category(char)
+        if category[0] == "C" or category in {"Zl", "Zp"}:
+            return False
+    return True
+
+
+def _require_actor(value: object) -> str:
+    """Strip ``value`` and refuse a blank, huge, or non-printable name.
+
+    The grader account and root are not a human triage actor.
+    """
+    if type(value) is not str:
+        raise RewardRecordError("audit triage actor is not usable")
+    name = value.strip()
+    if name == "" or len(name) > _ACTOR_MAX or not _printable_name(name):
+        raise RewardRecordError("audit triage actor is not usable")
+    if name == GRADER_USER or name == _ROOT_USER:
+        raise RewardRecordError("audit triage actor is not usable")
+    return name
+
+
+def _dedicated_grader_uid() -> int | None:
+    """Uid of the dedicated grader account, or None when it is not provisioned.
+
+    ``_grader_uid`` refuses a missing account and a root-owned grader.
+    A host without that account has no grader uid to match. Uid 0 is
+    still refused by the writer check.
+    """
+    try:
+        return _grader_uid()
+    except RewardKeyError:
+        return None
+
+
+def _require_os_user(name: object, uid: object) -> tuple[int, str]:
+    """Refuse root, the grader account, and an unusable recorded writer."""
+    if type(uid) is not int or isinstance(uid, bool) or uid <= 0:
+        raise RewardRecordError("audit triage writer is not usable")
+    if type(name) is not str or name != name.strip():
+        raise RewardRecordError("audit triage writer is not usable")
+    if name == "" or len(name) > _ACTOR_MAX or not _printable_name(name):
+        raise RewardRecordError("audit triage writer is not usable")
+    if name == GRADER_USER or name == _ROOT_USER:
+        raise RewardRecordError("audit triage writer is not usable")
+    grader_uid = _dedicated_grader_uid()
+    if grader_uid is not None and uid == grader_uid:
+        raise RewardRecordError("audit triage writer is not usable")
+    return uid, name
+
+
+def _writing_os_user() -> tuple[int, str]:
+    """The effective uid and its account name, or a refusal."""
+    uid = os.geteuid()
+    if type(uid) is not int or isinstance(uid, bool) or uid < 0:
+        raise RewardRecordError("audit triage writer is not usable")
+    try:
+        entry = pwd.getpwuid(uid)
+    except KeyError as exc:
+        raise RewardRecordError("audit triage writer is not usable") from exc
+    return _require_os_user(entry.pw_name, uid)
+
+
+def _require_triaged_at(value: object) -> str:
+    """Refuse a timestamp that is not RFC 3339 for its whole length.
+
+    ``validate_rfc3339`` uses ``$``, which matches before one trailing
+    newline. A newline is not part of the timestamp.
+    """
+    if type(value) is not str or "\n" in value or "\r" in value:
+        raise RewardRecordError("audit triage time is not usable")
+    if RFC3339_REGEX.fullmatch(value) is None or validate_rfc3339(value) is not True:
+        raise RewardRecordError("audit triage time is not usable")
+    return value
+
+
+def _accepted_triage_id(body: Mapping[str, object]) -> str:
+    """Return the disagreement id when this line is a human triage.
+
+    The same rules apply on write and on read. A refused line does not
+    clear the halt.
+    """
+    record_id = body.get("record_id")
+    if type(record_id) is not str or record_id == "":
+        raise RewardRecordError("audit triage is not usable")
+    _require_actor(body.get("triaged_by"))
+    _require_triaged_at(body.get("triaged_at"))
+    _require_os_user(body.get("writer_user"), body.get("writer_uid"))
+    return record_id
+
+
 def _verify_line(body: dict[str, object], run_key: bytes, run_id: str) -> None:
     mac = body.get("mac")
     if type(mac) is not str or len(mac) != 64:
@@ -595,8 +706,7 @@ def _verify_line(body: dict[str, object], run_key: bytes, run_id: str) -> None:
             raise RewardRecordError("audit report consumed log does not match")
         return
     if kind == "audit_triage":
-        if type(body.get("record_id")) is not str or type(body.get("triaged_by")) is not str:
-            raise RewardRecordError("audit triage is not usable")
+        _accepted_triage_id(body)
         return
     raise RewardRecordError("audit report is not usable")
 
@@ -1210,13 +1320,20 @@ def _halt_ids(lines: Sequence[Mapping[str, object]]) -> set[str]:
 
 
 def _triaged_ids(lines: Sequence[Mapping[str, object]]) -> set[str]:
+    """Ids cleared by a triage this process would still accept.
+
+    A line that fails the actor, time, or OS-user check does not clear
+    its halt. The same check runs in ``_verify_line``, so a refused
+    line also fails a full read.
+    """
     found: set[str] = set()
     for line in lines:
         if line.get("type") != "audit_triage":
             continue
-        record_id = line.get("record_id")
-        if type(record_id) is str:
-            found.add(record_id)
+        try:
+            found.add(_accepted_triage_id(line))
+        except RewardRecordError:
+            continue
     return found
 
 
