@@ -8,10 +8,6 @@ See [docs/VERSIONING.md](docs/VERSIONING.md).
 
 ## [Unreleased]
 
-### Changed
-
-- Renamed the project and repository from FaustCoder to BlackDog (2026-10-17 PT); the GitHub repo is now `Zero-State-LLC/BlackDog`. The Python package `faustcoder`, CLI commands and spec paths are unchanged.
-
 ### Added
 
 - T03b follow-up: the native sandbox also masks `<binary>/../share/faust`, `<binary>/../lib/faust`, and every directory `faust --libdir`, `--dspdir`, `--includedir`, `--archdir` and `--pathslist` print, except the hashed private copy. A library planted beside a copied `faust` binary cannot be imported. CI installs Faust 2.88.0 so that check runs.
@@ -54,6 +50,7 @@ See [docs/VERSIONING.md](docs/VERSIONING.md).
 
 ### Changed
 
+- Renamed the project and repository from FaustCoder to BlackDog (2026-10-17 PT); the GitHub repo is now `Zero-State-LLC/BlackDog`. The Python package `faustcoder`, CLI commands and spec paths are unchanged.
 - Spec 001 to 0.3.4 (ADR-0006, Danny 2026-10-17 4:11 PM PT, A2 extended 4:28 PM PT): the R-005 reward ladder incorporates A1–A7 by reference to the ADR. A7's 1%, 500-sample and 2× numbers are provisional. Reward code keeps ADR-0005 behavior until the grader PR lands. See spec §23.
 
 - ADR-0006 accepted 2026-10-17 4:11 PM PT (Danny): source-attributable failures graded at `parse_error`; environment and harness errors (reproducible infrastructure failures and deterministic harness defects) ungraded and quarantined; A1–A7 (A7 numbers provisional). A2 extended 2026-10-17 4:28 PM PT (Danny): untraced timeouts and crashes stay ungraded and quarantined until triage attributes them to the source. Docs only; reward behavior stays on the ADR-0005 table until the grader changes land.
