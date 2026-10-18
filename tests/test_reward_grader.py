@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import subprocess
+from pathlib import Path
+
 from faustcoder.canonical import content_digest_for
 from faustcoder.candidate_machine import CandidateState, apply_signal
 from faustcoder.compiler import reproducible_receipt_digest
@@ -27,8 +30,11 @@ from faustcoder.reward import (
     reward_value,
     rl_batch,
 )
+from faustcoder.reward.grader import _compile_stack_line
 from faustcoder.schemas import SchemaValidationError, validate
 from tests.support import allowlisted_reward_envelope, compiler_failure_envelope, make_envelope
+
+_REPO = Path(__file__).resolve().parents[1]
 
 
 def _rerun(envelope: dict, *, failed: bool = True, digest: str | None = None) -> RerunOutcome:
@@ -1141,6 +1147,58 @@ def test_compile_stack_lines_are_source_and_harness_prose_is_not() -> None:
     trapped = grade_receipt(trap, diagnostics="internal: worker failed\n")
     assert isinstance(trapped, SourceAttributedFailure)
     assert trapped.detail == "wasm trap"
+
+
+def test_compile_stack_line_breaks_on_newline_only() -> None:
+    assert _compile_stack_line("ERROR : stack overflow in eval\n")
+    assert _compile_stack_line("ok\nERROR : stack overflow\n")
+    assert _compile_stack_line("ERROR : stack overflow in eval\r\n")
+    for separator in ("\u0085", "\u2028", "\r"):
+        forged = f"note{separator}ERROR : stack overflow in eval\n"
+        assert not _compile_stack_line(forged), repr(separator)
+        buried = compiler_failure_envelope(
+            exit_code=126, diagnostic_class="internal", diagnostics=forged
+        )
+        pending = grade_receipt(buried, diagnostics=forged)
+        assert isinstance(pending, Ungraded), repr(separator)
+        assert pending.reason is UngradedReason.UNATTRIBUTED
+
+
+def test_range_error_is_stack_overflow_only_for_the_exact_message() -> None:
+    script = r"""
+import { terminationFields } from "./faust/worker/termination.mjs";
+const exact = "Maximum call stack size exceeded";
+const cases = [
+  [new RangeError(exact), true, null],
+  [new RangeError("Invalid array length"), false, null],
+  [new RangeError(exact + " during render"), false, null],
+  [new RangeError("maximum call stack size exceeded"), false, null],
+  [new RangeError(exact + "\n"), false, null],
+  [new TypeError(exact), false, null],
+  [new RangeError("\u2028" + exact), false, null],
+  [new RangeError(exact + "\u0085"), false, null],
+  [new WebAssembly.RuntimeError("unreachable"), false, "unreachable"],
+];
+const failures = [];
+for (const [error, stack, trap] of cases) {
+  const fields = terminationFields(error);
+  if (fields.runtime_stack_overflow !== stack || fields.wasm_trap !== trap) {
+    failures.push(`${error.name} ${JSON.stringify(error.message)} ${JSON.stringify(fields)}`);
+  }
+}
+if (failures.length) {
+  console.error(failures.join("\n"));
+  process.exit(1);
+}
+"""
+    completed = subprocess.run(
+        ["node", "--input-type=module", "-e", script],
+        cwd=_REPO,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert completed.returncode == 0, completed.stderr
 
 
 def test_injected_infra_crash_stays_unattributed_when_the_fixture_fails() -> None:

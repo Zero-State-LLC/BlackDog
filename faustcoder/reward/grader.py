@@ -729,8 +729,12 @@ def _structured_source(payload: Mapping[str, Any]) -> str | None:
 
 
 def _compile_stack_line(text: str) -> bool:
-    """True when a compile diagnostic line starts with Faust's stack error."""
-    for line in text.splitlines():
+    """True when a compile diagnostic line starts with Faust's stack error.
+
+    Lines break on ``\\n`` only. NEL (U+0085) and U+2028 stay inside the
+    line, so they cannot open a line-start match.
+    """
+    for line in text.split("\n"):
         if any(line.startswith(prefix) for prefix in _COMPILE_STACK_LINES):
             return True
     return False

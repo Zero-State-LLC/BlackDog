@@ -146,8 +146,8 @@ Harness failures override that text:
   even when Faust echoes a crash token from the program. Lines split on
   ``\\n`` only.
   The receipt records ``termination_signal`` when the process died on a
-  signal, ``runtime_stack_overflow`` when the worker caught a JS
-  ``RangeError`` or ``Maximum call stack size exceeded``, and
+  signal, ``runtime_stack_overflow`` when a RangeError message is
+  exactly ``Maximum call stack size exceeded``, and
   ``wasm_trap`` when the worker caught a wasm trap. Harness text stays
   ``internal: worker failed`` for a signal death. Reward grading reads
   the structured fields. It does not treat that harness text as a

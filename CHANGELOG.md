@@ -14,6 +14,8 @@ See [docs/VERSIONING.md](docs/VERSIONING.md).
 
 - T03b follow-up: diagnostic lines split on `\n` only. U+2028, U+2029, NEL, VT, FF, and the file separators cannot open a fake JS exception. An absent prefix, fallback, or reported Faust directory is refused unless `realpath` of its parent is root-owned and not group- or world-writable, so the caller cannot create it before exec. A symlink such as `/usr/share` is checked at its target. `scripts/install-faust-2.88.0.sh` creates `/usr/share/faust`, `/usr/local/share/faust`, and `<prefix>/bin/architecture` root-owned mode `0755`. `faust --libdir`, `--dspdir`, `--includedir`, `--archdir` and `--pathslist` fail closed unless each exits 0 and `--pathslist` prints `FAUST dsp library paths:`. The script checks the release tarball sha256 `e4e175cf236924b5b7d4784cbb8c50cc01e211159e169655dd9e6d8f92b871d9` before it extracts.
 
+- A Faust stack-overflow line breaks on `\n` only, so NEL and U+2028 cannot open a match. `runtime_stack_overflow` is set only for a RangeError whose message is exactly `Maximum call stack size exceeded`.
+
 - T03b follow-up: the native sandbox also masks `<binary>/../share/faust`, `<binary>/../lib/faust`, and every directory `faust --libdir`, `--dspdir`, `--includedir`, `--archdir` and `--pathslist` print, except the hashed private copy. A library planted beside a copied `faust` binary cannot be imported. CI installs Faust 2.88.0 so that check runs.
 
 - T03b follow-up: creating the share lock directory happens while the in-process lock's release is armed, so a failed `mkdir` cannot stick the lock. The native sandbox masks `/usr/share/faust` and `/usr/local/share/faust` when they exist. Faust cannot fall back to them after `-I`.

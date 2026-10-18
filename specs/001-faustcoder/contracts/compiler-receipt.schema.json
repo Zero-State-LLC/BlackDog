@@ -89,7 +89,7 @@
     },
     "runtime_stack_overflow": {
       "type": "boolean",
-      "description": "True when the JS runtime itself raised RangeError or Maximum call stack size exceeded. Absent means it did not."
+      "description": "True only when a RangeError message is exactly Maximum call stack size exceeded. Absent means it did not."
     },
     "wasm_trap": {
       "type": "string",

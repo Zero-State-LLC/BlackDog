@@ -31,12 +31,13 @@ not 0. The row stays in the quarantine queue. Auto-attribution reruns
 the same digest on a quiet worker with a known-good fixture. If the
 fixture passes and the candidate fails again, the rung is `parse_error`.
 If the fixture fails, the reason is `infra_fault`. Triage can mark
-`harness_defect`. A remote import, a source over 1 MiB, a JS
-`runtime_stack_overflow` flag, or a `wasm_trap` kind is already
+`harness_defect`. A remote import, a source over 1 MiB, a
+`runtime_stack_overflow` flag (a RangeError whose message is exactly
+`Maximum call stack size exceeded`), or a `wasm_trap` kind is already
 `parse_error` and does not wait. Faust's `ERROR : stack overflow`
 counts only as a case-sensitive line-start on the compile diagnostics
-of the stage that failed. Harness text such as `internal: worker failed`
-is not a marker. An untagged exit 126 on the ledger commit path is
+of the stage that failed. That line break is `\n` only. Harness text
+such as `internal: worker failed` is not a marker. An untagged exit 126 on the ledger commit path is
 rerun on the same worker beside `process = _;`. The fixture passing
 and the same failure reproducing is `parse_error`. The fixture failing,
 or the failure not reproducing, stays `unattributed`. A7 alerts

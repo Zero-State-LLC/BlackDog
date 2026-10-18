@@ -29,8 +29,11 @@ function matchesKind(line, kind) {
 export function terminationFields(error) {
   const name = error instanceof Error ? error.name : "";
   const line = firstLine(error);
+  const message = error instanceof Error ? error.message : "";
+  // A RangeError counts as a stack overflow only when its message is
+  // exactly this string. "Invalid array length" and a longer prefix are not.
   const runtimeStack =
-    name === "RangeError" || line.startsWith("Maximum call stack size exceeded");
+    name === "RangeError" && message === "Maximum call stack size exceeded";
   let wasmTrap = null;
   if (name === "RuntimeError") {
     for (const kind of WASM_TRAPS) {
