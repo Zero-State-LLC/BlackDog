@@ -74,4 +74,4 @@ See [docs/VERSIONING.md](docs/VERSIONING.md).
 
 - Spec 001 to 0.2.0: small-model shortlist, per-phase training method, phase gates and flagged slowdowns (§17).
 
-[Unreleased]: https://github.com/Zero-State-LLC/FaustCoder/commits/main
+[Unreleased]: https://github.com/Zero-State-LLC/BlackDog/commits/main
