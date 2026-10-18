@@ -12,7 +12,9 @@ import pytest
 from faustcoder.canonical import canonical_bytes, loads_strict
 from faustcoder.reward.audit import (
     AuditReportLog,
+    _advance_anchor,
     _line_mac,
+    _refresh_anchor_bind,
     audit_sampled_reruns,
     derive_audit_seed,
     p3_may_proceed,
@@ -1348,6 +1350,88 @@ def test_a_wrong_run_key_does_not_write_over_an_anchor(tmp_path: Path) -> None:
         )
     assert consumed.path.read_bytes() == before
     assert ConsumedLog(consumed.path).disposition("group-other") is None
+
+
+def test_rebind_refuses_a_consumed_log_whose_halt_marker_was_deleted(tmp_path: Path) -> None:
+    """The rebind itself must not sign a deleted halt marker."""
+    secret = _write_key(tmp_path / "reward-root.key")
+    ring = RewardKeyring(secret, run_id=RUN)
+    run_key = derive_run_key(secret, RUN)
+    late = _stored_pass(tmp_path, secret, "group-rebind")
+    consumed = ConsumedLog(tmp_path / "rebind-consumed.jsonl")
+    reports = AuditReportLog(tmp_path / "rebind-reports.jsonl", consumed)
+    consumed.claim(
+        "group-rebind",
+        "used",
+        task_digest_full=late.rows[0].task_digest_full,
+        policy_checkpoint=CHECKPOINT,
+        run_key=run_key,
+    )
+    audit = audit_sampled_reruns(
+        late.rows,
+        ring,
+        rerun=lambda _record: "fail",
+        consumed=consumed,
+        reports=reports,
+    )
+    assert audit.halted is True
+    original = consumed.path.read_bytes()
+    kept = [
+        line
+        for line in original.decode("utf-8").splitlines()
+        if not line.startswith("audit-halt v1 ")
+    ]
+    assert any(line.startswith("audit-anchor v1 ") for line in kept)
+    consumed.path.write_text("\n".join(kept) + "\n", encoding="utf-8")
+    tampered = consumed.path.read_bytes()
+    assert tampered != original
+    with pytest.raises(RewardRecordError, match="anchor"):
+        _refresh_anchor_bind(consumed.path, run_key)
+    assert consumed.path.read_bytes() == tampered
+    with pytest.raises(RewardRecordError, match="anchor"):
+        _refresh_anchor_bind(consumed.path, run_key, prior=original)
+    assert consumed.path.read_bytes() == tampered
+
+
+def test_advance_anchor_rechecks_before_signing_a_deleted_halt_marker(tmp_path: Path) -> None:
+    """The advance must re-verify the anchor on the bytes it holds.
+
+    The report append checks the anchor before it takes the consumed-log
+    lock. Calling the advance on the tampered log is the state that gap
+    would hand it.
+    """
+    secret = _write_key(tmp_path / "reward-root.key")
+    ring = RewardKeyring(secret, run_id=RUN)
+    run_key = derive_run_key(secret, RUN)
+    late = _stored_pass(tmp_path, secret, "group-advance")
+    consumed = ConsumedLog(tmp_path / "advance-consumed.jsonl")
+    reports = AuditReportLog(tmp_path / "advance-reports.jsonl", consumed)
+    consumed.claim(
+        "group-advance",
+        "used",
+        task_digest_full=late.rows[0].task_digest_full,
+        policy_checkpoint=CHECKPOINT,
+        run_key=run_key,
+    )
+    audit = audit_sampled_reruns(
+        late.rows,
+        ring,
+        rerun=lambda _record: "fail",
+        consumed=consumed,
+        reports=reports,
+    )
+    assert audit.halted is True
+    assert any(line.startswith("audit-halt v1 ") for line in consumed.path.read_text(encoding="utf-8").splitlines())
+    kept = [
+        line
+        for line in consumed.path.read_text(encoding="utf-8").splitlines()
+        if not line.startswith("audit-halt v1 ")
+    ]
+    consumed.path.write_text("\n".join(kept) + "\n", encoding="utf-8")
+    before = consumed.path.read_bytes()
+    with pytest.raises(RewardRecordError, match="anchor"):
+        _advance_anchor(consumed, run_key, 2, "ab" * 32, record_ids=("c" * 64,))
+    assert consumed.path.read_bytes() == before
 
 
 def test_deleting_the_report_and_anchor_does_not_allow_a_new_audit(tmp_path: Path) -> None:

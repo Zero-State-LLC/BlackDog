@@ -915,8 +915,20 @@ def _pwrite_all(fd: int, data: bytes, offset: int) -> None:
         view = view[written:]
 
 
-def refresh_anchor_bind(path: Path, run_key: bytes, *, locked: bool = False) -> None:
+def _refresh_anchor_bind(
+    path: Path,
+    run_key: bytes,
+    *,
+    locked: bool = False,
+    prior: bytes | None = None,
+) -> None:
     """Re-MAC an existing anchor over the claim bytes now in ``path``.
+
+    The anchor MAC is checked before the bind is rewritten. ``prior`` is
+    the byte string that MAC must cover when the caller has already
+    appended; the file must be that string plus a suffix. Omitting
+    ``prior`` checks the bytes in the file, so a deleted halt marker
+    cannot be signed. With no anchor yet, this is a no-op.
 
     ``locked`` means the caller already holds the consumed-log lock. A
     second flock on this file would deadlock, so this open does not lock.
@@ -938,11 +950,16 @@ def refresh_anchor_bind(path: Path, run_key: bytes, *, locked: bool = False) -> 
             data = b"".join(chunks)
             offset = _anchor_offset(data)
             if offset is None:
+                if prior is not None and _anchor_offset(prior) is not None:
+                    raise RewardRecordError("audit anchor is not usable")
                 return
-            seq, line_mac, consumed_id, _bind = _parse_anchor(data[offset:offset + _ANCHOR_LEN])
-            expected_id = _consumed_id(run_key, path)
-            if len(consumed_id) != len(expected_id) or not hmac.compare_digest(consumed_id, expected_id):
+            signed = data if prior is None else prior
+            if prior is not None and not data.startswith(prior):
                 raise RewardRecordError("audit anchor is not usable")
+            verified = _verified_anchor(signed, run_key, path)
+            if verified is None:
+                raise RewardRecordError("audit anchor is not usable")
+            seq, line_mac, consumed_id = verified
             bind = _anchor_bind(
                 run_key,
                 seq=seq,
@@ -992,6 +1009,10 @@ def _advance_anchor(
                     break
                 chunks.append(block)
             data = b"".join(chunks)
+            # The report-chain check ran before this lock. Re-verify the
+            # anchor against the bytes held here, before any marker or bind
+            # write, so a marker deleted in between is not signed.
+            _verified_anchor(data, run_key, consumed.path)
             offset = _anchor_offset(data)
             if record_ids is not None:
                 os.lseek(fd, 0, os.SEEK_END)
