@@ -777,6 +777,65 @@ def test_eval_guard_uses_the_source_path(store: ArtifactStore) -> None:
     assert result.state == "RIGHTS_CLEARED"
 
 
+def test_impulse_eval_uses_entry_id_not_a_path_substring(store: ArtifactStore) -> None:
+    """faust-impulse-* refuses eval. A path that only contains 'impulse' does not."""
+    path = "examples/impulseResponse.dsp"
+    entry = {
+        "id": "faust-impulse-readme",
+        "decision": "rights_cleared",
+        "license": "MIT",
+        "evidence_label": "OBSERVED",
+        "eligible_for": ["train", "eval", "redistribute"],
+        "attribution_complete": True,
+        "pin": {"repo": "example/faust", "commit": COMMIT, "ref": "test"},
+        "path": "examples/",
+        "reviewer": None,
+        "redistribute": True,
+        "files": [{"path": path, "blob_sha": BLOB}],
+    }
+    notice = {
+        "entries": [
+            {
+                "commit": COMMIT,
+                "path": path,
+                "blob_sha": BLOB,
+                "function": None,
+                "copyright": "Copyright 2020 Example Author",
+                "license": "MIT",
+            }
+        ]
+    }
+    evidence = _evidence(inventory_id="faust-impulse-readme")
+    blocked = register_source(store, _source(path=path), created_at=WHEN)
+    before = set(store.list())
+    with pytest.raises(LicenseEvidenceError, match="impulse-test"):
+        apply_transition(
+            store,
+            blocked["artifact_id"],
+            "rights_cleared",
+            evidence,
+            actor=ACTOR,
+            timestamp=WHEN,
+            inventory={"entries": [entry]},
+            notice=notice,
+        )
+    assert set(store.list()) == before
+    plain = dict(entry)
+    plain["id"] = "faust-examples-mit"
+    allowed = register_source(store, _source(path=path), created_at=WHEN)
+    result = apply_transition(
+        store,
+        allowed["artifact_id"],
+        "rights_cleared",
+        _evidence(inventory_id="faust-examples-mit"),
+        actor=ACTOR,
+        timestamp=WHEN,
+        inventory={"entries": [plain]},
+        notice=notice,
+    )
+    assert result.state == "RIGHTS_CLEARED"
+
+
 def test_inferred_reviewer_is_the_evidence_or_the_unit(
     store: ArtifactStore,
 ) -> None:
