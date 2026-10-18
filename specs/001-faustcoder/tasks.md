@@ -39,6 +39,7 @@ spec-kit; security-relevant tasks add ADVERSARY review.
   - Depends on: T03. Milestone: v0.1.
   - Acceptance: known-good and known-bad fixtures; legal delayed feedback passes (ADR-0001, V0.3).
   - Amended 0.3.0 (ADR-0004): offline render with faustwasm at 44.1 and 48 kHz; reference comparison in the style of Faust `tests/impulse-tests`; CPU only on promotion candidates.
+  - Follow-up (N6, Danny yes 2026-10-17): `nonlinear-suite-v1` renders eight float32 stimuli at the 144000-frame floor. The signed sample check is the gate. THD+N, IMD and the Farina inverse filter are diagnostics. The suite is not in `REWARD_PROFILES`. TaskSpec `effect` is a closed enum; only `linear` and `time_invariant` are rewardable. `require_task_rewardable` is called by `dataset_reward_row` and `rl_batch` (D5). `nonlinear-suite-fallback-v1` is the four-stimulus fallback. x86 DSP-bank goldens live in `tests/fixtures/signal/`. `scripts/signal_cross_arch.py` compares them; the ARM side is pending on the DGX Spark.
   - Workflows: anti-slop-code, production-systems. Evidence: `faustcoder/signal.py`, `docs/runbooks/signal-harness.md`; local receipts under the artifact store (gitignored).
 
 ## Phase 3: User story J-04, maintainer ingests examples through to a release decision
