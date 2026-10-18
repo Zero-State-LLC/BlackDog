@@ -15,21 +15,24 @@ an AST shingle):
 - The comparison is integer: ``intersection * 5 >= union * 4``.
   A reported float is not the decision.
 - Jaccard is symmetric, so a verbatim excerpt of a rejected file
-  stays under 4/5. An excerpt check is separate:
-  ``|shingles(part) ∩ shingles(whole)| / |shingles(part)| >= 1/2``,
-  or a contiguous run of ``TOKEN_FLOOR`` tokens appears in both.
-  The run counts when the cleared file is the longer one. The part
-  must still have at least ``TOKEN_FLOOR`` tokens.
-  ``cluster_families`` applies that only from a non-comparison text
-  into a comparison text.
+  stays under 4/5. An excerpt check is separate. Forward containment
+  is ``|shingles(cleared) ∩ shingles(rejected)| / |shingles(cleared)|
+  >= 1/2``, and a contiguous run of ``TOKEN_FLOOR`` tokens counts in
+  either direction. Reverse containment is
+  ``|shingles(rejected) ∩ shingles(cleared)| / |shingles(rejected)|
+  >= 1/2`` when the rejected text has at least ``TOKEN_FLOOR`` tokens.
+  ``cluster_families`` applies both from a non-comparison text into a
+  comparison text. The upstream allowlist, not this predicate, keeps
+  a recorded original.
 
 ``TOKEN_FLOOR`` is the single length constant for that minimum and
-for the verbatim run. It is 40. That value is the operating floor,
-not an accepted clearance policy. The measurement is
-``docs/analysis/t06-short-kernel-floor.md``. Below the floor, shared
-Faust boilerplate (``declare``, ``import``, ``process``) dominates
-the shingles and unrelated programs look alike. Exact normalized-hash
-equality is a separate pass and still clusters short texts.
+for the verbatim run. It is 40. ``TOKEN_FLOOR_STATUS`` is
+``provisional``. Danny has not accepted 40 as clearance policy. The
+measurement is ``docs/analysis/t06-short-kernel-floor.md``. Below the
+floor, shared Faust boilerplate (``declare``, ``import``, ``process``)
+dominates the shingles and unrelated programs look alike. Exact
+normalized-hash equality is a separate pass and still clusters short
+texts.
 
 Family ids are ``sha256:`` of the canonical JSON array of the sorted
 unique normalized digests in the component. The id does not depend on
@@ -48,8 +51,10 @@ NGRAM_N = 5
 THRESHOLD_NUMERATOR = 4
 THRESHOLD_DENOMINATOR = 5
 # Single length constant. Jaccard, excerpt containment, and the
-# verbatim run all use it. Not an accepted clearance policy.
+# verbatim run all use it. The status is provisional: Danny has not
+# accepted 40 as clearance policy.
 TOKEN_FLOOR = 40
+TOKEN_FLOOR_STATUS = "provisional"
 MIN_TOKENS = TOKEN_FLOOR
 VERBATIM_RUN = TOKEN_FLOOR
 # Asymmetric excerpt check. Jaccard 4/5 misses a half-file copy
@@ -241,21 +246,29 @@ def has_verbatim_run(
 
 
 def is_excerpt(part: str, whole: str) -> bool:
-    """Return whether ``part`` is a verbatim excerpt of ``whole``.
+    """Return whether ``part`` copies ``whole`` or contains ``whole``.
 
-    Both the containment ratio and the long token run require
-    ``TOKEN_FLOOR`` on the part. Identical texts are not excerpts;
-    the exact-hash pass owns those.
+    Forward containment and the token run require ``TOKEN_FLOOR`` on
+    ``part``. Reverse containment requires ``TOKEN_FLOOR`` on
+    ``whole`` and ``|sh(whole) ∩ sh(part)| / |sh(whole)| >= 1/2``.
+    Identical texts are not excerpts; the exact-hash pass owns those.
+    The upstream allowlist is applied by the snapshot, not here.
     """
     if part == whole:
         return False
     part_tokens = tokens(part)
+    whole_tokens = tokens(whole)
+    # Rejected text mostly contained in the cleared file. One edited
+    # literal per statement, padding, or interleaving can keep the
+    # forward ratio under 1/2 and still break a 40-token run.
+    if len(whole_tokens) >= TOKEN_FLOOR and containment_at_least(
+        shingles(whole_tokens), shingles(part_tokens)
+    ):
+        return True
     if len(part_tokens) < TOKEN_FLOOR:
         return False
-    whole_tokens = tokens(whole)
     # A run counts in either direction. A cleared file that vendors a
     # shorter rejected file, plus its own padding, still shares that run.
-    # Upstream originals are kept by the allowlist, not by skipping here.
     if has_verbatim_run(part_tokens, whole_tokens):
         return True
     return containment_at_least(shingles(part_tokens), shingles(whole_tokens))
@@ -347,9 +360,12 @@ def cluster_families(
 
     ``items`` is ``(id, normalized_text)``. Exact normalized hashes are
     unioned first. Near-duplicate pairs are unioned after that. When
-    ``comparison_ids`` is set, a non-comparison text that is an excerpt
-    of a comparison text joins that component. The other direction does
-    not. The family id is :func:`family_id` of the component's digests.
+    ``comparison_ids`` is set, a non-comparison text joins a comparison
+    text when either side's shingles are at least half contained in the
+    other, or the two share a ``TOKEN_FLOOR`` token run. Reverse
+    containment requires the comparison text to have at least
+    ``TOKEN_FLOOR`` tokens. The family id is :func:`family_id` of the
+    component's digests.
     """
     if not items:
         return {}
@@ -431,16 +447,21 @@ def cluster_families(
         }
         for part_id in cleared_ids:
             part_tokens = token_of[part_id]
-            if len(part_tokens) < TOKEN_FLOOR:
-                continue
             part_shingles = shingles(part_tokens)
-            part_runs = (
-                shingles(part_tokens, TOKEN_FLOOR)
-                if len(part_tokens) >= TOKEN_FLOOR
-                else frozenset()
-            )
+            part_long = len(part_tokens) >= TOKEN_FLOOR
+            part_runs = shingles(part_tokens, TOKEN_FLOOR) if part_long else frozenset()
             for whole_id in compared_ids:
                 if find(part_id) == find(whole_id):
+                    continue
+                # |sh(R) ∩ sh(C)| / |sh(R)| >= 1/2. The rejected side is
+                # the denominator, so padding and interleaving in C do
+                # not dilute it.
+                if len(token_of[whole_id]) >= TOKEN_FLOOR and containment_at_least(
+                    whole_shingles[whole_id], part_shingles
+                ):
+                    union(part_id, whole_id)
+                    continue
+                if not part_long:
                     continue
                 run = bool(part_runs and part_runs & whole_runs[whole_id])
                 if run or containment_at_least(part_shingles, whole_shingles[whole_id]):

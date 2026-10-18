@@ -8,11 +8,10 @@ cleared fixtures, and reports detection and extra quarantines at
 floors 40, 30, 20 and 15.
 
 The recommended floor is **40**. `TOKEN_FLOOR=40` is not accepted by
-Danny. At floor 40, 0/83 embedded short-kernel copies are detected.
-The proposed follow-up is function-unit slicing. Lowering the floor
-catches a minority of those embedded copies and quarantines cleared
-files that only share a Grame `declare` header with a rejected
-example.
+Danny. That recommendation is SPECULATIVE. At floor 40, 0/83 embedded
+short-kernel copies are detected. With the unique padding used below,
+that zero is tautological. The meaningful population is the 44 spans
+of 20–39 tokens. The proposed follow-up is function-unit slicing.
 
 ## What the constant does
 
@@ -92,22 +91,32 @@ below use 83 distinct span texts. The shortest spans are 4 tokens
 (`aanl.lib` `clip`, `motion.lib` `clamp01`, several pinktrombone
 constants).
 
+The meaningful population is the 44 spans of 20–39 tokens (29 in
+20–29, 15 in 30–39). A floor of 20 or 30 can see a run inside those
+spans. The 32 spans under 15 tokens, and the 8 spans of 15–19 tokens,
+are shorter than every floor except 15, so a run cannot land in them
+once they are the whole compared text.
+
 ## Planted copies
 
 Each distinct short text was planted four ways, then scored with the
-production predicates at each floor:
+production predicates at each floor.
 
-- Embedded verbatim: 80 `padN` tokens, then the kernel. This is own
-  code plus the rejected kernel.
+The embedded column is a post-slicing model. With unique padding,
+detection is tautological. The 80 `padN` tokens share no shingles with
+the kernel, so containment of the padded text in the kernel stays under
+1/2 by construction. A hit is exactly a verbatim run of `TOKEN_FLOOR`
+tokens inside the kernel. A kernel shorter than the floor cannot supply
+that run, so the embedded rate at floor 40 is 0/83 because every planted
+span is shorter than 40 tokens.
+
+- Embedded verbatim: 80 unique `padN` tokens, then the kernel.
 - Embedded trailing edit: same, after the last identifier in the
   kernel is replaced with `renamed`.
 - Embedded middle edit: same, with the middle identifier replaced.
 - Whole-text verbatim and the same two edits, with no padding. This
-  is the comparison a sliced function unit would see. Verbatim
-  whole text is an exact hash at every floor.
-
-Padding is long enough that containment of the padded file inside the
-short kernel stays under 1/2. An embedded hit is a verbatim run.
+  is the span compared as its own text. Verbatim whole text is an
+  exact hash at every floor.
 
 ### Short function spans (83 distinct texts)
 
@@ -124,9 +133,10 @@ the token run or containment path, and the net rate rises. A middle
 edit of an embedded span still misses 64 of 83 texts at floor 15,
 because the edit splits the only run the kernel has.
 
-The 32 spans under 15 tokens are invisible to every run floor tested
-once they sit inside other code. A run cannot be longer than the
-kernel.
+The embedded zeros follow from the padding. Of the 83 spans, the 44
+of 20–39 tokens are the ones a lower floor could newly detect. At
+floor 30 that is 15 spans (all of them in the 30–39 bucket). At floor
+20 it is 44, which is every span of at least 20 tokens.
 
 ### The one short file (`mixer.dsp`, 38 tokens)
 
@@ -169,6 +179,57 @@ Floors 20 and 15 add more of the same header matches, plus 20-token
 and 15-token runs into `filters.lib`, `demos.lib`, `effect.lib` and
 `basics.lib`.
 
+### The 17 floor-30 additions that are not `mixer.dsp`
+
+The first comparison blob above names the blob, not the function that
+owns the run. `basics.lib` is one blob. Its inventory row
+`processArray` is the AGPL-3.0-only function, and `tabulateNd` is the
+other AGPL function in that file. None of the eight runs land in either
+function. The file default outside those two declares is the GRAME
+LGPL-2.1 section.
+
+| Cleared file | Run | What it is |
+|---|---|---|
+| `karplus.dsp`, `karplus32.dsp`, impulse `karplus.dsp`, `SNoiseburst.dsp`, `Granulator.dsp`, bela `granulator.dsp` | `release(n) = + ~ decay(n); trigger(n) = upfront : release(n) : >(0.0);` | Generic idiom. It is the body of GRAME `ba.spulse`, also used by the BSD karplus and granulator examples. Not AGPL leakage. |
+| `maxmsp.lib` | `state ~ (_,_) : !,_ with { state(t, c) = nt, nc` | Verbatim `ba.line` ramp. LGPL helper in the same file as the AGPL functions. Not AGPL leakage. Floor 40 misses this copy. |
+| `envelopes.lib` | `(b, x) = (x / ((((1.0 / b) - 2.0) * (1.0 - x)) + 1.0))` | Verbatim `ba.bpf._bias_curve`. Same GRAME section, not `processArray`. Not AGPL leakage. Floor 40 misses this copy. |
+| `flanger.dsp`, `SAM/flanger/flanger.dsp`, `flangerForBrowser.dsp` | `fdelay(dmax, curdel)) ~ *(fb)` | Verbatim `flanger_mono` from impulse `effect.lib` (declare license STK-4.3). Real copy of that function. Not AGPL. Floor 40 misses the 30-token fragment. |
+| `maths.lib` | `2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47` | Prime table shared with `effect.lib` `prime_power_delays` and `ma.primes`. Generic number list, not a DSP kernel. |
+| `SClarinet.dsp`, `STinkle.dsp`, `STibetanBowl.dsp` | `declare author "Romain Michon"` plus the copyright and version declares | Declare metadata, same class as the `mixer.dsp` header. |
+| `debug.lib` | `ma = library("maths.lib"); ba = library("basics.lib"); fi = library("filters.lib")` | Import boilerplate shared with `noises.lib`. |
+| `synths.lib` | `library("filters.lib"); os = library("oscillators.lib"); no = library` | Import boilerplate shared with `demos.lib`. |
+
+No floor-30 addition is a real AGPL function that floor 40 misses.
+Two are verbatim LGPL helpers (`ba.line`, `ba.bpf._bias_curve`) and
+three are a verbatim STK `flanger_mono` fragment. The other 12 are a
+generic idiom, a prime table, declare headers, or import lines.
+
+### Stripping `declare` before the run
+
+Measured option, not the shipped check. `declare` statements are
+removed, then the verbatim run is computed again. Containment is
+unchanged. This is the false-positive and false-negative change at
+floors 30 and 20.
+
+False positives are the cleared blobs added versus floor 40.
+
+| Floor | Added vs 40 | Run survives `declare` stripping | Run lost |
+|---|---|---|---|
+| 30 | 53 | 14 | 39 |
+| 20 | 90 | 26 | 64 |
+
+At floor 30 the 39 lost runs are the 36 `mixer.dsp` headers and the
+3 Romain Michon declare headers. The 14 that survive are the idiom,
+helper, flanger, prime-table and import rows above.
+
+False negatives are planted embedded copies. None of the 83 short
+spans contain a `declare` token, so stripping does not change their
+detection: 15/83 at floor 30 and 44/83 at floor 20, with or without
+the strip. The one short file, `mixer.dsp`, is the change. Embedded
+verbatim is a hit at floors 30 and 20 before the strip and a miss
+after it, because the file falls from 38 tokens to `process = _;`
+(4 tokens). Floor 40 misses that file either way.
+
 The 80 blobs already quarantined at floor 40 include the 11 STK
 examples that share an 89-token `nonLinearity` block with `NLFfm.dsp`.
 That set does not grow or shrink inside this table's "added" column;
@@ -177,24 +238,23 @@ the column is only the new blobs.
 ## Recommendation
 
 Keep `TOKEN_FLOOR` at 40. `TOKEN_FLOOR=40` is not accepted by Danny.
-At floor 40, 0/83 embedded short-kernel copies are detected. The
-proposed follow-up is function-unit slicing.
+The 40 recommendation is SPECULATIVE. At floor 40, 0/83 embedded
+short-kernel copies are detected, and with unique padding that zero is
+tautological. The meaningful population is the 44 spans of 20–39
+tokens. The proposed follow-up is function-unit slicing.
 
-Floor 30 is the first step down. It detects 15 of 83 embedded verbatim
-short spans (18.1%) and none of the embedded middle edits. It also
-quarantines 53 more cleared blobs, 36 of them because they share the
-BSD `declare` header with `mixer.dsp`. Floors 20 and 15 raise embedded
-verbatim detection to 53.0% and 62.7% and add 90 and 119 cleared blobs.
-They still miss every embedded kernel shorter than the floor, including
-the 32 spans under 15 tokens, and they still miss most embedded middle
-edits.
+Floor 30 detects 15 of those 44 spans when they are planted after
+unique padding, and none of the embedded middle edits. It also
+quarantines 53 more cleared blobs. Thirty-six are the `mixer.dsp`
+header and 3 more are other `declare` headers. Stripping `declare`
+before the run drops those 39 and leaves 14. Those 14 are not AGPL
+function bodies. Floor 20 raises the tautological embedded rate to
+44/83 and adds 90 cleared blobs; stripping `declare` drops 64 of them.
 
 An exact copy of a short span, compared as its own text, is already
-detected at every floor by the hash pass. The miss is the embedded
-span inside a longer cleared file. Closing that miss by shortening the
-run also quarantines ordinary Faust headers. The follow-up that
-matches the measurement is slicing function units so the span is the
-compared text. That is outside this constant.
+detected at every floor by the hash pass. The follow-up that matches
+the measurement is slicing function units so the span is the compared
+text. That is outside this constant.
 
 40 remains an operating value. It is not an accepted clearance policy.
 
@@ -202,12 +262,15 @@ compared text. That is outside this constant.
 
 - OBSERVED: the inventory counts, the blob-id checks, the 38-token
   text of `mixer.dsp`, the span length table, the planted-copy rates,
-  and the quarantine counts at each floor.
+  the quarantine counts at each floor, the 17 non-header runs quoted
+  above, and the declare-stripping counts (39 and 64 runs lost; span
+  detection unchanged; `mixer.dsp` embedded detection flips off).
 - INFERRED: the depth-0 semicolon cutter, including `name@line`; the
   80-token `padN` prefix; "light edit" as one identifier replaced by
-  `renamed`; calling the added quarantines false when the shared run
-  is the `declare` header. The 17 floor-30 additions that are not
-  `mixer.dsp` are extra quarantines. They were not each proved to be
-  a copied short kernel.
-- SPECULATIVE: any floor other than the four measured here; treating
-  40 as settled policy. Danny has not accepted it.
+  `renamed`; calling `ba.spulse`, the prime table, the import lines
+  and the declare headers generic, and calling `ba.line`,
+  `ba.bpf._bias_curve` and `flanger_mono` real copies that are not
+  AGPL function bodies. The embedded column is a post-slicing model
+  because the unique padding makes detection a run inside the kernel.
+- SPECULATIVE: any floor other than the four measured here; the 40
+  recommendation. Danny has not accepted it.

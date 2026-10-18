@@ -164,12 +164,14 @@ AST shingle:
 - Strip `//` and `/* */` comments outside double-quoted strings.
 - Tokenize identifiers, numbers and operators.
 - Build a set of 5-token shingles.
-- A pair is a near-duplicate when each side has at least 40 tokens and
-  the Jaccard index is at least 4/5. The comparison is
-  `intersection * 5 >= union * 4`.
-- Texts under 40 tokens use a fallback, because a renamed short holdout
-  would otherwise stay in training. Identical texts are not a
-  near-duplicate here; the exact-hash pass owns those.
+- A pair is a near-duplicate when each side has at least `TOKEN_FLOOR`
+  tokens and the Jaccard index is at least 4/5. The comparison is
+  `intersection * 5 >= union * 4`. The manifest records
+  `token_floor_status: provisional`. The operating value is 40, and
+  that value is not a settled clearance policy.
+- Texts under `TOKEN_FLOOR` tokens use a fallback, because a renamed
+  short holdout would otherwise stay in training. Identical texts are
+  not a near-duplicate here; the exact-hash pass owns those.
 - When both sides have at least 32 non-space characters, character
   5-grams match at Jaccard 4/5 (`intersection * 5 >= union * 4`).
 - Shorter texts match only when the identifier-and-number skeletons are
@@ -208,26 +210,42 @@ The snapshot does, once the pinned commits are checked out.
 
 Jaccard is symmetric, so a verbatim excerpt of a long rejected file
 stays under 4/5. An excerpt check is asymmetric (INFERRED). It fires
-when the cleared text has at least `TOKEN_FLOOR` tokens and either:
+when either of these holds:
 
-- `|shingles(cleared) ∩ shingles(non-cleared)| / |shingles(cleared)|`
+- the cleared text has at least `TOKEN_FLOOR` tokens and
+  `|shingles(cleared) ∩ shingles(non-cleared)| / |shingles(cleared)|`
   is at least 1/2 (`intersection * 2 >= |cleared shingles|`), or
-- the two texts share a contiguous run of `TOKEN_FLOOR` normalized tokens.
+- the two texts share a contiguous run of `TOKEN_FLOOR` normalized tokens, or
+- the non-cleared text has at least `TOKEN_FLOOR` tokens and
+  `|shingles(non-cleared) ∩ shingles(cleared)| / |shingles(non-cleared)|`
+  is at least 1/2. That reverse containment is what catches a cleared
+  file that holds a rejected file after one literal change per
+  statement, with or without padding, or after the rejected statements
+  are interleaved with the cleared file's own code.
 
 The run counts when the cleared file is the longer one. A cleared file
 that vendors an entire rejected blob and then adds its own padding is
 `needs-human`. The upstream allowlist below, not a length comparison,
-is what keeps an original that a later copy quotes.
+is what keeps an original that a later copy quotes. Reverse containment
+uses that same allowlist: a recorded upstream original stays cleared
+when every non-cleared family member is that entry's copy.
 
 `TOKEN_FLOOR` in `faustcoder/neardup.py` is the single length constant
 for the Jaccard minimum, the excerpt minimum, and the verbatim run.
-It is 40 today. Danny has not accepted that value as clearance policy
+The manifest field `token_floor_status` is `provisional`. The operating
+value is 40. Danny has not accepted that value as clearance policy
 (2026-10-17, 4:11 PM PT). The measurement and the recommendation are
 in [the short-kernel note](../analysis/t06-short-kernel-floor.md).
-A cleared text under the floor is not an excerpt. A rejected blob
-shorter than the floor cannot supply a run of that length, so own code
-plus one shorter rejected function stays admitted at the current
-constant.
+A rejected blob shorter than the floor cannot supply the run or the
+reverse-containment denominator, so own code plus one shorter rejected
+function stays admitted at the current constant. The forward check
+still requires the cleared text to meet the floor. Reverse containment
+does not.
+
+On the pinned corpus, reverse containment adds no cleared blob that the
+40-token run and forward containment do not already quarantine. The
+highest reverse ratio among those admitted blobs is 0.156
+(`SClarinet.dsp` against `NLFfm.dsp`), under the 1/2 threshold.
 
 On the pinned corpus, dropping the length guard newly quarantines 11
 cleared STK examples. Each shares an 89-token `nonLinearity` block
@@ -346,5 +364,5 @@ artifact. It is not a field of the manifest.
 ## Labels
 
 - OBSERVED: the §7.1 table and diagram; T02 digest rules; ADR-0003; the 2026-10-17 defaults; spec §4.2 (no custom parser); `DatasetSnapshot` is the `split_frozen` effect; T03b stages faustlibraries `2edec0537f53` and T06 still does not compile-check corpus units; T05's inventory uses `rights_cleared`, `rights_rejected` and `needs_human`, with `files[]` or `functions[]` and a notice manifest keyed by commit, path, function and blob sha.
-- INFERRED: T06 stops at `normalized` and admits through T05's guard against the pinned inventory and notice digests; `generated_at` is outside that digest; the ingested blob is hashed before normalization; a mixed-license family, and a family that contains a rejected or `needs_human` member, is `needs-human` rather than an intersection that still stores the text; a cleared excerpt of a non-cleared blob is `needs-human` at containment 1/2 or a run of `TOKEN_FLOOR` tokens, including when the cleared file is longer and vendors the rejected blob; `TOKEN_FLOOR` is one constant (currently 40) and is not an accepted clearance policy; the four syfala upstream originals stay cleared only when every non-cleared family member is that entry's recorded copy; a shared blob with any non-cleared unit is `needs-human` because function rows have no line range; character 5-gram Jaccard for texts under 40 tokens; the 32-character and 1/3 skeleton thresholds; `ffunction` as a token backstop; `DedupManifest` rather than `DatasetSnapshot`; receipt time is `--created-at`; the compiler flag refuses instead of compiling. Slicing `.lib` function units is a follow-up.
-- SPECULATIVE: the 4/5 threshold and the short-text 1/3 skeleton threshold need a retune before they are treated as settled; full commit hashes are not in the approval note. The length floor is measured in the short-kernel note and the recommendation there is 40.
+- INFERRED: T06 stops at `normalized` and admits through T05's guard against the pinned inventory and notice digests; `generated_at` is outside that digest; the ingested blob is hashed before normalization; a mixed-license family, and a family that contains a rejected or `needs_human` member, is `needs-human` rather than an intersection that still stores the text; a cleared excerpt of a non-cleared blob is `needs-human` at containment 1/2 in either direction or a run of `TOKEN_FLOOR` tokens, including when the cleared file is longer and vendors the rejected blob; `TOKEN_FLOOR` is one constant (currently 40), the manifest status is `provisional`, and Danny has not accepted it; the four syfala upstream originals stay cleared only when every non-cleared family member is that entry's recorded copy; a shared blob with any non-cleared unit is `needs-human` because function rows have no line range; character 5-gram Jaccard for texts under `TOKEN_FLOOR`; the 32-character and 1/3 skeleton thresholds; `ffunction` as a token backstop; `DedupManifest` rather than `DatasetSnapshot`; receipt time is `--created-at`; the compiler flag refuses instead of compiling. Slicing `.lib` function units is a follow-up.
+- SPECULATIVE: the 4/5 threshold and the short-text 1/3 skeleton threshold need a retune before they are treated as settled; full commit hashes are not in the approval note. The 40 recommendation is SPECULATIVE and not accepted by Danny.

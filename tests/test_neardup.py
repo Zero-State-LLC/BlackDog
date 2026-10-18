@@ -5,10 +5,12 @@ from __future__ import annotations
 from faustcoder.neardup import (
     MIN_TOKENS,
     TOKEN_FLOOR,
+    TOKEN_FLOOR_STATUS,
     VERBATIM_RUN,
     char_shingles,
     cluster_families,
     containment_at_least,
+    has_verbatim_run,
     is_excerpt,
     is_near_duplicate,
     jaccard_counts,
@@ -24,8 +26,87 @@ from tests.t06support import long_text
 def test_token_floor_is_one_constant() -> None:
     """Jaccard, containment, and the verbatim run share ``TOKEN_FLOOR``."""
     assert TOKEN_FLOOR == 40
+    assert TOKEN_FLOOR_STATUS == "provisional"
     assert MIN_TOKENS == TOKEN_FLOOR
     assert VERBATIM_RUN == TOKEN_FLOOR
+
+
+def _words(count: int, prefix: str) -> list[str]:
+    return [f"{prefix}{index}" for index in range(count)]
+
+
+def _rejected_347(*, edit: bool) -> str:
+    """347 tokens, one literal changed every 34 when ``edit`` is set."""
+    words = _words(347, "w")
+    if edit:
+        index = 17
+        while index < 347:
+            words[index] = f"edited{index}"
+            index += 34
+    return " ".join(words) + "\n"
+
+
+def _interleave_statements(rejected: str) -> str:
+    words = rejected.split()
+    parts: list[str] = []
+    own = 0
+    for start in range(0, len(words), 34):
+        parts.append(" ".join(words[start : start + 34]))
+        if start + 34 < len(words):
+            parts.append(" ".join(_words(40, f"own{own}_")))
+            own += 40
+    return " ".join(parts) + "\n"
+
+
+def _forward_excerpt(cleared: str, rejected: str) -> bool:
+    """The pre-r5 check: a run, or half of the cleared shingles in the rejected text."""
+    cleared_tokens = tokens(cleared)
+    rejected_tokens = tokens(rejected)
+    if len(cleared_tokens) < TOKEN_FLOOR:
+        return False
+    if has_verbatim_run(cleared_tokens, rejected_tokens):
+        return True
+    return containment_at_least(shingles(cleared_tokens), shingles(rejected_tokens))
+
+
+def test_reverse_containment_catches_padded_and_interleaved_copies() -> None:
+    """A 347-token rejected file stays inside a cleared file that edits or interleaves it.
+
+    The unpadded edit is the control: forward containment already holds.
+    Padding at 1.0x and 1.6x, and interleaving verbatim statements with
+    the cleared file's own code, keep the forward ratio under 1/2 and
+    break every 40-token run. Reverse containment still quarantines.
+    """
+    rejected = _rejected_347(edit=False)
+    edited = _rejected_347(edit=True)
+    pad_1 = edited.strip() + " " + " ".join(_words(347, "pad"))
+    pad_16 = edited.strip() + " " + " ".join(_words((347 * 8) // 5, "wide"))
+    interleaved = _interleave_statements(rejected)
+    assert len(tokens(rejected)) == 347
+    assert _forward_excerpt(edited, rejected) is True
+    assert is_excerpt(edited, rejected) is True
+    cases = {
+        "pad-1.0": pad_1,
+        "pad-1.6": pad_16,
+        "interleaved": interleaved,
+    }
+    for name, cleared in cases.items():
+        assert has_verbatim_run(tokens(cleared), tokens(rejected)) is False, name
+        assert _forward_excerpt(cleared, rejected) is False, name
+        assert containment_at_least(shingles(tokens(rejected)), shingles(tokens(cleared))), name
+        assert is_excerpt(cleared, rejected) is True, name
+        families = cluster_families(
+            [("cleared", cleared), ("rejected", rejected), ("other", long_text("omega"))],
+            ["rejected"],
+        )
+        assert families["cleared"] == families["rejected"], name
+        assert families["other"] != families["rejected"], name
+    control = cluster_families(
+        [("cleared", edited), ("rejected", rejected), ("other", long_text("omega"))],
+        ["rejected"],
+    )
+    assert control["cleared"] == control["rejected"]
+    assert control["other"] != control["rejected"]
 
 
 def test_comments_are_stripped_and_strings_stay() -> None:

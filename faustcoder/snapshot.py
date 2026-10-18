@@ -52,6 +52,7 @@ from faustcoder.neardup import (
     CONTAINMENT_DENOMINATOR,
     CONTAINMENT_NUMERATOR,
     TOKEN_FLOOR,
+    TOKEN_FLOOR_STATUS,
     NGRAM_N,
     SHORT_SKELETON_DENOMINATOR,
     SHORT_SKELETON_NUMERATOR,
@@ -229,9 +230,11 @@ def _quarantine_uncleared_families(
     """A family that contains a non-cleared member admits nothing.
 
     The rejected member's flags are empty, so the intersection is empty.
-    The cleared members are ``needs-human`` and are not emitted. An
-    allowlisted upstream original stays cleared only when every
-    non-cleared member of that family is the recorded copy.
+    The cleared members are ``needs-human`` and are not emitted. That
+    includes a cleared file whose shingles cover at least half of a
+    rejected text (reverse containment). An allowlisted upstream
+    original stays cleared only when every non-cleared member of that
+    family is the recorded copy.
     """
     peers_of: dict[str, list[tuple[str, str]]] = defaultdict(list)
     for item in compared:
@@ -367,6 +370,7 @@ def _assemble(
             ),
             "threshold": f"{THRESHOLD_NUMERATOR}/{THRESHOLD_DENOMINATOR}",
             "token_floor": TOKEN_FLOOR,
+            "token_floor_status": TOKEN_FLOOR_STATUS,
             "verbatim_run": TOKEN_FLOOR,
         },
         "normalization": {

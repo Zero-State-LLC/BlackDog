@@ -13,7 +13,14 @@ from faustcoder.dataset import PRODUCER, current_state
 from faustcoder.errors import AcquireError, InventoryError, MutationError
 from faustcoder.inventory import content_digest, parse_corpus
 from faustcoder.libraries import library_root
-from faustcoder.neardup import is_excerpt, is_near_duplicate
+from faustcoder.neardup import (
+    containment_at_least,
+    has_verbatim_run,
+    is_excerpt,
+    is_near_duplicate,
+    shingles,
+    tokens,
+)
 from faustcoder.snapshot import commit_snapshot, compile_snapshot
 from faustcoder.store import ArtifactStore
 
@@ -76,6 +83,10 @@ def test_same_clock_is_byte_identical_and_shuffle_does_not_matter(tmp_path: Path
     entries, notices = _two(root)
     first = _compile(root, entries, notices)
     second = _compile(root, list(reversed(entries)), list(reversed(notices)))
+    near = _manifest(first)["near_duplicate"]
+    assert near["token_floor"] == 40  # type: ignore[index]
+    assert near["token_floor_status"] == "provisional"  # type: ignore[index]
+    assert near["min_tokens"] == near["verbatim_run"] == near["token_floor"]  # type: ignore[index]
     assert first.manifest_digest == second.manifest_digest
     assert content_digest(inventory_doc(entries)) == content_digest(
         inventory_doc(list(reversed(entries)))
@@ -530,6 +541,158 @@ def test_vendored_rejected_file_plus_padding_is_needs_human(tmp_path: Path) -> N
     stored = b"".join(path.read_bytes() for path in store.root.rglob("*") if path.is_file())
     assert b"rejected0" not in stored
     assert b"gamma0" in stored
+
+
+def _words(count: int, prefix: str) -> list[str]:
+    return [f"{prefix}{index}" for index in range(count)]
+
+
+def _rejected_347(*, edit: bool) -> str:
+    words = _words(347, "w")
+    if edit:
+        index = 17
+        while index < 347:
+            words[index] = f"edited{index}"
+            index += 34
+    return " ".join(words) + "\n"
+
+
+def _interleave_statements(rejected: str) -> str:
+    words = rejected.split()
+    parts: list[str] = []
+    own = 0
+    for start in range(0, len(words), 34):
+        parts.append(" ".join(words[start : start + 34]))
+        if start + 34 < len(words):
+            parts.append(" ".join(_words(40, f"own{own}_")))
+            own += 40
+    return " ".join(parts) + "\n"
+
+
+def test_reverse_containment_of_a_rejected_file_is_needs_human(tmp_path: Path) -> None:
+    """Edited padding and interleaved statements are needs-human, origin dedup.
+
+    The unpadded edit is the control. It is already a forward excerpt.
+    """
+    root = tmp_path / "fixtures"
+    rejected = _rejected_347(edit=False)
+    edited = _rejected_347(edit=True)
+    padded = edited.strip() + " " + " ".join(_words(347, "pad"))
+    wider = edited.strip() + " " + " ".join(_words((347 * 8) // 5, "wide"))
+    interleaved = _interleave_statements(rejected)
+    other = long_text("gamma")
+    assert len(tokens(rejected)) == 347
+    assert has_verbatim_run(tokens(padded), tokens(rejected)) is False
+    assert has_verbatim_run(tokens(wider), tokens(rejected)) is False
+    assert has_verbatim_run(tokens(interleaved), tokens(rejected)) is False
+    for planted in (padded, wider, interleaved):
+        assert containment_at_least(shingles(tokens(planted)), shingles(tokens(rejected))) is False
+        assert containment_at_least(shingles(tokens(rejected)), shingles(tokens(planted))) is True
+        assert is_excerpt(planted, rejected) is True
+    assert is_excerpt(edited, rejected) is True
+    texts = {
+        "gpl.dsp": rejected,
+        "control.dsp": edited,
+        "pad.dsp": padded,
+        "wide.dsp": wider,
+        "interleaved.dsp": interleaved,
+        "other.dsp": other,
+    }
+    for path, text in texts.items():
+        stage(root, REPO, PIN, path, text.encode())
+    refused = entry(
+        "gpl",
+        rejected.encode(),
+        path="gpl.dsp",
+        decision="rights_rejected",
+        license_name="GPL-2.0-or-later",
+        eligible_for=[],
+        reason="GPL source is not cleared",
+        reviewer="",
+    )
+    rows = []
+    notices = []
+    for entry_id, path in (
+        ("control", "control.dsp"),
+        ("pad", "pad.dsp"),
+        ("wide", "wide.dsp"),
+        ("interleaved", "interleaved.dsp"),
+        ("other", "other.dsp"),
+    ):
+        built, notice = cleared(entry_id, texts[path].encode(), path=path)
+        rows.append(built)
+        notices.append(notice)
+    compiled = _compile(root, [refused, *rows], notices)
+    payload = _manifest(compiled)
+    assert [row["entry_id"] for row in payload["units"]] == ["other"]  # type: ignore[index]
+    excluded = _by_entry(payload["excluded"])  # type: ignore[arg-type]
+    for entry_id in ("control", "pad", "wide", "interleaved"):
+        assert excluded[entry_id]["reason"] == "needs-human"
+        assert excluded[entry_id]["origin"] == "dedup"
+        assert excluded[entry_id]["duplicate_family"] == excluded["gpl"]["duplicate_family"]
+    assert excluded["gpl"]["origin"] == "inventory"
+    store = ArtifactStore(tmp_path / "store")
+    commit_snapshot(store, compiled)
+    stored = b"".join(path.read_bytes() for path in store.root.rglob("*") if path.is_file())
+    assert b"w0" not in stored
+    assert b"gamma0" in stored
+
+
+def test_allowlist_keeps_reverse_containment_of_the_recorded_copy(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Reverse containment does not clear past the recorded copy path."""
+    root = tmp_path / "fixtures"
+    rejected = _rejected_347(edit=False)
+    edited = _rejected_347(edit=True)
+    original = (edited.strip() + " " + " ".join(_words(347, "pad"))).encode()
+    copied = rejected.encode()
+    other = long_text("gamma").encode()
+    assert has_verbatim_run(tokens(original.decode()), tokens(rejected)) is False
+    assert containment_at_least(
+        shingles(tokens(original.decode())), shingles(tokens(rejected))
+    ) is False
+    assert is_excerpt(original.decode(), rejected) is True
+    stage(root, REPO, PIN, "Birds.dsp", original)
+    stage(root, REPO, PIN, "birds.dsp", copied)
+    stage(root, REPO, PIN, "other.dsp", other)
+    birds, birds_notice = cleared("birds", original, path="Birds.dsp")
+    refused = entry(
+        "syfala-examples",
+        copied,
+        path="birds.dsp",
+        decision="rights_rejected",
+        license_name="unlicensed",
+        eligible_for=[],
+        reason="Syfala has no repository license",
+        reviewer="",
+    )
+    kept, kept_notice = cleared("other", other, path="other.dsp")
+    import faustcoder.upstream as upstream
+
+    monkeypatch.setattr(
+        upstream,
+        "UPSTREAM_ORIGINALS",
+        (
+            UpstreamOriginal(
+                blob_sha=git_blob_sha1(original),
+                repo=REPO,
+                path="Birds.dsp",
+                copy_repo=REPO,
+                copy_path="birds.dsp",
+                copied_on="2024-02-13",
+                evidence="c" * 40,
+            ),
+        ),
+    )
+    compiled = _compile(root, [birds, refused, kept], [birds_notice, kept_notice])
+    payload = _manifest(compiled)
+    rows = _by_entry(payload["units"])  # type: ignore[arg-type]
+    assert rows["birds"]["eligible_for"] == ["train", "eval", "redistribute"]
+    assert rows["other"]["eligible_for"] == ["train", "eval", "redistribute"]
+    excluded = _by_entry(payload["excluded"])  # type: ignore[arg-type]
+    assert "birds" not in excluded
+    assert excluded["syfala-examples"]["origin"] == "inventory"
 
 
 def test_allowlisted_original_near_another_repo_is_needs_human(
