@@ -302,7 +302,7 @@ MODIFIED 0.3.0 (R-004): adds `category` (faustlibraries library name), `target` 
 
 MODIFIED 0.3.0 (R-005): adds `compiler` (`libfaust-wasm` or `faust-cli`), `lang` (output backend), `options` and `diagnostic_class` (`ok`, `warning`, `type_error`, `arity_error`, `parse_error`, `timeout`, `other`).
 
-MODIFIED 0.3.2 (ADR-0005, Danny yes 2026-10-17 1:13 PM PT): `diagnostic_class` adds `unbound_symbol`, `resource_limit` and `internal`. Optional `termination_signal`, `runtime_stack_overflow` and `wasm_trap` record a worker signal, a JS RangeError or stack overflow from the runtime itself, and a wasm trap kind.
+MODIFIED 0.3.2 (ADR-0005, Danny yes 2026-10-17 1:13 PM PT): `diagnostic_class` adds `unbound_symbol`, `resource_limit` and `internal`. Optional `termination_signal`, `runtime_stack_overflow` and `wasm_trap` record a worker signal, a RangeError whose message is exactly `Maximum call stack size exceeded`, and a wasm trap kind.
 
 ### DSPTestReceipt
 

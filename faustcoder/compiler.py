@@ -137,8 +137,8 @@ Harness failures override that text:
   recursive source once ``--stack-size=8192`` lets it pass the old V8
   limit), or an unreadable result -> ``internal``, exit 126.
   The receipt records ``termination_signal`` when the process died on a
-  signal, ``runtime_stack_overflow`` when the worker caught a JS
-  ``RangeError`` or ``Maximum call stack size exceeded``, and
+  signal, ``runtime_stack_overflow`` when a RangeError message is
+  exactly ``Maximum call stack size exceeded``, and
   ``wasm_trap`` when the worker caught a wasm trap. Harness text stays
   ``internal: worker failed`` for a signal death. Reward grading reads
   the structured fields. It does not treat that harness text as a
