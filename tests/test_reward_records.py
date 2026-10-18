@@ -59,6 +59,7 @@ HARNESS = "sha256:" + "cd" * 32
 CHECKPOINT = "sha256:" + "11" * 32
 STAMP = "2026-10-18T00:00:00Z"
 RUN = "run-1"
+_CLAIM_KEY = bytes(range(32))
 ROLLOUT = "rollout-1"
 
 
@@ -1031,6 +1032,23 @@ def test_cross_run_replay_and_checkpoint_mismatch_are_refused(tmp_path: Path) ->
         )
 
 
+def test_consumed_claim_requires_a_run_key(tmp_path: Path) -> None:
+    log = ConsumedLog(tmp_path / "consumed.jsonl")
+    with pytest.raises(TypeError):
+        log.claim("g-new", "used", task_digest_full="", policy_checkpoint="")
+    with pytest.raises(RewardKeyError, match="run key"):
+        log.claim("g-new", "used", task_digest_full="", policy_checkpoint="", run_key=b"")
+    with pytest.raises(RewardKeyError, match="run key"):
+        log.claim(
+            "g-new",
+            "used",
+            task_digest_full="",
+            policy_checkpoint="",
+            run_key=b"\x00" * 31,
+        )
+    assert not log.path.exists()
+
+
 def test_consumed_log_past_16_mib_keeps_dropped_groups(tmp_path: Path) -> None:
     path = tmp_path / "consumed.jsonl"
     boundary = 16 * 1024 * 1024
@@ -1072,9 +1090,10 @@ def test_consumed_log_past_16_mib_keeps_dropped_groups(tmp_path: Path) -> None:
             "used",
             task_digest_full="",
             policy_checkpoint="",
+            run_key=_CLAIM_KEY,
         )
     assert path.stat().st_size == before
-    consumed.claim("g-new", "used", task_digest_full="", policy_checkpoint="")
+    consumed.claim("g-new", "used", task_digest_full="", policy_checkpoint="", run_key=_CLAIM_KEY)
     assert path.stat().st_size > before
     assert ConsumedLog(path).disposition("g-dropped") == "dropped:quarantined"
     assert stat.S_IMODE(path.stat().st_mode) == 0o640
@@ -1109,7 +1128,7 @@ def test_consumed_log_fsyncs_the_parent_directory_when_created(
     monkeypatch.setattr(os, "open", spy_open)
     path = tmp_path / "consumed.jsonl"
     log = ConsumedLog(path)
-    log.claim("g-new", "used", task_digest_full="", policy_checkpoint="")
+    log.claim("g-new", "used", task_digest_full="", policy_checkpoint="", run_key=_CLAIM_KEY)
     assert directory_syncs == 1
     creates = [
         (flags, mode)
@@ -1126,14 +1145,14 @@ def test_consumed_log_fsyncs_the_parent_directory_when_created(
     assert len(directories) == 1
     assert directories[0] & (os.O_WRONLY | os.O_RDWR) == 0
     after_create = len(opened)
-    log.claim("g-next", "used", task_digest_full="", policy_checkpoint="")
+    log.claim("g-next", "used", task_digest_full="", policy_checkpoint="", run_key=_CLAIM_KEY)
     assert directory_syncs == 1
     later = opened[after_create:]
     assert any(flags & os.O_EXCL and not ok for _name, flags, _mode, ok in later)
     assert not any(flags & os.O_EXCL and ok for _name, flags, _mode, ok in later)
     assert not any(flags & os.O_DIRECTORY for _name, flags, _mode, _ok in later)
     reopened = ConsumedLog(path)
-    reopened.claim("g-later", "used", task_digest_full="", policy_checkpoint="")
+    reopened.claim("g-later", "used", task_digest_full="", policy_checkpoint="", run_key=_CLAIM_KEY)
     assert directory_syncs == 1
     assert sum(1 for _name, flags, _mode, ok in opened if ok and flags & os.O_EXCL) == 1
 

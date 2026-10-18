@@ -1281,7 +1281,11 @@ def _open_consumed(path: Path) -> tuple[int, bool]:
 
 
 class ConsumedLog:
-    """Append-only ``group_id`` decisions. A group already present is refused."""
+    """Append-only ``group_id`` decisions. A group already present is refused.
+
+    ``claim`` requires the run key. When an audit anchor is present, the
+    claim refreshes that anchor over the new bytes.
+    """
 
     def __init__(self, path: Path | str) -> None:
         self.path = Path(path)
@@ -1299,8 +1303,10 @@ class ConsumedLog:
         *,
         task_digest_full: str,
         policy_checkpoint: str,
-        run_key: bytes | None = None,
+        run_key: bytes,
     ) -> None:
+        if type(run_key) is not bytes or len(run_key) != _ROOT_KEY_BYTES:
+            raise RewardKeyError("reward run key is not usable")
         if type(disposition) is not str or disposition == "":
             raise RewardRecordError("reward consumed disposition is empty")
         line = {
@@ -1325,10 +1331,9 @@ class ConsumedLog:
                 os.fsync(fd)
                 if created:
                     _fsync_dir(self.path.parent)
-                if run_key is not None:
-                    from faustcoder.reward.audit import refresh_anchor_bind
+                from faustcoder.reward.audit import refresh_anchor_bind
 
-                    refresh_anchor_bind(self.path, run_key, locked=True)
+                refresh_anchor_bind(self.path, run_key, locked=True)
                 self._seen[group_id] = disposition
             finally:
                 fcntl.flock(fd, fcntl.LOCK_UN)
@@ -1351,7 +1356,7 @@ class ConsumedLog:
         for number, line in enumerate(text.splitlines(), start=1):
             if not line.strip():
                 continue
-            if line.startswith("audit-anchor v1 "):
+            if line.startswith("audit-anchor v1 ") or line.startswith("audit-halt v1 "):
                 continue
             try:
                 body = loads_strict(line)
