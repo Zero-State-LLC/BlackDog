@@ -34,6 +34,7 @@ from faustcoder.reward.records import (
     load_records,
     load_root_key,
     outcome_for,
+    regrade_record,
     rl_batch_from_records,
     sign_group_header,
     sign_reward_row,
@@ -114,9 +115,11 @@ def _members(
     group_id: str,
     members: list[tuple[str, str, dict, bytes]],
     task: dict | None = None,
+    canaries: tuple[int, ...] = (),
 ):
     bound = _task() if task is None else task
     run_key = derive_run_key(root, run_id)
+    marked = set(canaries)
     header = sign_group_header(
         group_id=group_id,
         task_digest_full=task_digest_full(bound),
@@ -141,6 +144,7 @@ def _members(
                 outcome=outcome,
                 kind=kind,
                 graded_at=STAMP,
+                canary=index in marked,
             )
         )
     return header, rows
@@ -163,8 +167,22 @@ def _batch(
     run_id: str = RUN,
     checkpoints: tuple[str, ...] = (CHECKPOINT,),
 ):
+    from faustcoder.reward.audit import AuditReportLog, audit_sampled_reruns
+
     ring = RewardKeyring(root, run_id=run_id)
     loaded = load_records(path, ring)
+    reports = AuditReportLog(
+        consumed.path.with_name(consumed.path.name + ".audit.jsonl"),
+        consumed,
+    )
+    if not reports.path.is_file():
+        audit_sampled_reruns(
+            loaded.rows,
+            ring,
+            rerun=lambda record: record.outcome,
+            consumed=consumed,
+            reports=reports,
+        )
     return rl_batch_from_records(
         loaded.headers,
         loaded.rows,
@@ -174,6 +192,7 @@ def _batch(
         queue=queue,
         rates=rates,
         consumed=consumed,
+        reports=reports,
     )
 
 
@@ -756,6 +775,68 @@ def test_regrade_does_not_flip_a_stored_pass_or_fail(tmp_path: Path) -> None:
     assert flipped.drops == (("group-flipped", "outcome"),)
 
 
+def test_regrade_leaves_unreconstructed_native_evidence_ungraded(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Pins the guard after ``_reconstruct_native`` returns None.
+
+    Deleting that guard unpacks None and raises. The stored outcome stays
+    ``pass`` and the group does not train.
+    """
+    secret = _write_key(tmp_path / "reward-root.key")
+    source = b"process = _;"
+    header, rows = _members(
+        secret,
+        run_id=RUN,
+        group_id="group-reconstruct",
+        members=[("signal", "pass", _signal(source, passed=True), source)],
+    )
+    record = rows[0]
+    monkeypatch.setattr("faustcoder.reward.records._reconstruct_native", lambda _record: None)
+    check = regrade_record(record, RewardKeyring(secret, run_id=RUN))
+    assert check.reason == "outcome"
+    assert isinstance(check.grade, Ungraded)
+    assert check.grade.reason is UngradedReason.UNATTRIBUTED
+    assert "reconstruct" in check.grade.detail
+    assert record.outcome == "pass"
+    log = tmp_path / "reconstruct.jsonl"
+    _store(log, header, rows)
+    batch = _batch(
+        log,
+        secret,
+        QuarantineQueue(tmp_path / "q.jsonl"),
+        ConsumedLog(tmp_path / "consumed.jsonl"),
+        UngradedRateTracker(),
+    )
+    assert batch.rows == ()
+    assert batch.drops == (("group-reconstruct", "outcome"),)
+
+
+def test_training_rows_carry_the_signed_record_id(tmp_path: Path) -> None:
+    secret = _write_key(tmp_path / "reward-root.key")
+    source = b"process = _;"
+    header, rows = _members(
+        secret,
+        run_id=RUN,
+        group_id="group-example",
+        members=[("signal", "pass", _signal(source, passed=True), source)],
+    )
+    log = tmp_path / "example.jsonl"
+    _store(log, header, rows)
+    batch = _batch(
+        log,
+        secret,
+        QuarantineQueue(tmp_path / "q.jsonl"),
+        ConsumedLog(tmp_path / "consumed.jsonl"),
+        UngradedRateTracker(),
+    )
+    assert len(batch.rows) == 1
+    example_id = batch.rows[0]["example_id"]
+    assert type(example_id) is str and example_id != ""
+    assert example_id == rows[0].record_id
+    assert batch.rows[0]["record_id"] == rows[0].record_id
+
+
 def test_shadow_log_is_not_a_reward_row() -> None:
     from faustcoder.reward.grader import shadow_observe
 
@@ -899,6 +980,8 @@ def test_cross_run_replay_and_checkpoint_mismatch_are_refused(tmp_path: Path) ->
     ring = RewardKeyring(secret, run_id="run-b")
     with pytest.raises(RewardKeyError, match="keyring"):
         load_records(log, ring)
+    from faustcoder.reward.audit import AuditReportLog
+
     consumed = ConsumedLog(tmp_path / "consumed.jsonl")
     with pytest.raises(RewardRecordError, match="run id"):
         rl_batch_from_records(
@@ -910,6 +993,7 @@ def test_cross_run_replay_and_checkpoint_mismatch_are_refused(tmp_path: Path) ->
             queue=QuarantineQueue(tmp_path / "q.jsonl"),
             rates=UngradedRateTracker(),
             consumed=consumed,
+            reports=AuditReportLog(tmp_path / "audit-reports.jsonl", consumed),
         )
     assert consumed.disposition("group-replay") is None
     retired = derive_run_key(secret, "run-a")
@@ -1002,24 +1086,56 @@ def test_consumed_log_fsyncs_the_parent_directory_when_created(
     parent_inode = tmp_path.stat().st_ino
     directory_syncs = 0
     real_fsync = os.fsync
+    real_open = os.open
+    opened: list[tuple[str, int, int, bool]] = []
 
-    def spy(fd: int) -> None:
+    def spy_fsync(fd: int) -> None:
         nonlocal directory_syncs
         info = os.fstat(fd)
         if stat.S_ISDIR(info.st_mode) and info.st_ino == parent_inode:
             directory_syncs += 1
         real_fsync(fd)
 
-    monkeypatch.setattr(os, "fsync", spy)
+    def spy_open(path: object, flags: int, mode: int = 0o777, *args: object, **kwargs: object) -> int:
+        try:
+            fd = real_open(path, flags, mode, *args, **kwargs)
+        except FileExistsError:
+            opened.append((os.fspath(path), flags, mode, False))
+            raise
+        opened.append((os.fspath(path), flags, mode, True))
+        return fd
+
+    monkeypatch.setattr(os, "fsync", spy_fsync)
+    monkeypatch.setattr(os, "open", spy_open)
     path = tmp_path / "consumed.jsonl"
     log = ConsumedLog(path)
     log.claim("g-new", "used", task_digest_full="", policy_checkpoint="")
     assert directory_syncs == 1
+    creates = [
+        (flags, mode)
+        for name, flags, mode, ok in opened
+        if name == os.fspath(path) and ok and flags & os.O_CREAT and flags & os.O_EXCL
+    ]
+    assert len(creates) == 1
+    assert creates[0][1] == 0o640
+    directories = [
+        flags
+        for name, flags, _mode, ok in opened
+        if ok and name == os.fspath(tmp_path) and flags & os.O_DIRECTORY
+    ]
+    assert len(directories) == 1
+    assert directories[0] & (os.O_WRONLY | os.O_RDWR) == 0
+    after_create = len(opened)
     log.claim("g-next", "used", task_digest_full="", policy_checkpoint="")
     assert directory_syncs == 1
+    later = opened[after_create:]
+    assert any(flags & os.O_EXCL and not ok for _name, flags, _mode, ok in later)
+    assert not any(flags & os.O_EXCL and ok for _name, flags, _mode, ok in later)
+    assert not any(flags & os.O_DIRECTORY for _name, flags, _mode, _ok in later)
     reopened = ConsumedLog(path)
     reopened.claim("g-later", "used", task_digest_full="", policy_checkpoint="")
     assert directory_syncs == 1
+    assert sum(1 for _name, flags, _mode, ok in opened if ok and flags & os.O_EXCL) == 1
 
 
 def test_resolved_hold_still_drops_a_g1_rewrite(tmp_path: Path) -> None:

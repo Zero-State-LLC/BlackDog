@@ -81,7 +81,7 @@ Implements the dataset machine (spec §7.1) and training machine (spec §7.3).
   - Acceptance: one pinned, reproducible `TrainingRun` per phase with its exit-gate result (R-008, R-009, R-015); P1 may be a recorded skip; implements `run_started` to `COMPLETED`.
   - Sub-steps: P1 continued pretraining or skip; P2 SFT on validated pairs; P3 compiler-feedback RL (R-016).
   - Amended 0.3.5 (Q4): ADR-0002 is accepted in full (Jev's default; Danny may still choose P3 PROPOSED). P3 reward is the ADR-0006 grader with the Q1 binary ruling, whole-group drop, and A2-T as the only auto-attribution path. The P3 exit gate requires the graded/ungraded split, the A7 quarantine rate and the group-drop rate within pre-registered limits, and no frozen auto-attribution signature at exit. Only the ~5M-token CPT-skip threshold is ratified. The 2-point loss and compile@10 noise are paired-CI tests. GD-1 is a prerequisite, not a follow-on.
-  - Amended 0.3.7 (D3 option H): D3-H1 blocks T10. P3 also waits on D3-H2. The P3 exit gate adds audit disagreements = 0 unresolved and the consumed log intact. D3-H2 does not block P1 or P2.
+  - Amended 0.3.7 (D3 option H): D3-H1 blocks T10. P3 also waits on D3-H2. The P3 exit gate adds audit disagreements = 0 unresolved and the consumed log intact. D3-H2 does not block P1 or P2. Every T10 training row from `rl_batch_from_records` carries an explicit non-empty `example_id` (the signed record id). A training row without one is refused.
   - Workflows: anti-slop-code, production-systems.
 - [ ] T11 [J-04] Independent DSP evaluation.
   - Depends on: T10, T04. Milestone: v0.3.
@@ -197,9 +197,9 @@ These tasks are the implementation. This record does not change code.
   - Depends on: D3-H1. Milestone: v0.3. Does not block T10. Follow-up from the D3-H1 adversary review (N12).
   - Acceptance: `rl_batch_from_records` does not compute `reward` inline. It uses `reward_value` or `rl_batch`, and it checks `is_minted`.
   - Workflows: production-systems.
-- [ ] D3-H2 [J-04] Sampled rerun-from-source audit.
+- [x] D3-H2 [J-04] Sampled rerun-from-source audit.
   - Depends on: D3-H1. Milestone: v0.3. Before P3. Does not block P1 or P2.
-  - Acceptance: a pass-weighted sample of training rows is re-executed from source. A disagreement halts. P3 does not exit while an audit disagreement is unresolved or the consumed log is not intact. Ed25519 is out of scope.
+  - Acceptance: spec §26 0.3.9. Before P3, every passing row, a ceil(5%) sample of failing rows (`fail` and `source_attributed`, at least one when any exist), and every signed canary are rerun from source. The seed is HMAC-SHA256(run key, "d3-h2-seed" || run id); any other seed is refused. A disagreement leaves that row ungraded, drops its group as `dropped:audit`, and halts P3. A group already `used` is reported `late` and still halts. `rl_batch_from_records` refuses unless the latest persisted report for the run is clear and every batch row is in the record ids that report covered, on the consumed log the report is bound to. The MAC'd report records those ids and the consumed log beside it. Each report line carries a sequence and the previous line's MAC, and the high-water mark is anchored in the consumed log over that log's claim bytes. Truncating the report file alone does not restore an older clear line. Not covered: restoring both the report and the consumed log to an older snapshot, a halt whose groups were all already used (until fixed), and a crash between the report fsync and the anchor move, which fails closed with no repair path. Another seed does not clear a halt. Ed25519 is out of scope. Done in the D3-H2 change.
   - Workflows: production-systems, ADVERSARY review.
 - [ ] A2-PATH [J-04] Training callers must not supply the replaced path.
   - Status: done in code in #51 (`cef8a14`), not fully done. The grader enforces this, but `run_signal` and `commit_signal_check` do not yet pass the task or a native receipt to `grade_receipt`. The box is checked when that live wiring lands.
