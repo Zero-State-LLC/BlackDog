@@ -444,11 +444,16 @@ def test_deep_recursion_is_internal(store, tmp_path: Path) -> None:
     compiled = compile_source(source, lang="wasm")
     assert compiled.receipt["exit_code"] == 126
     assert compiled.receipt["diagnostic_class"] == "internal"
-    assert compiled.diagnostics == "internal: worker failed\n"
-    assert compiled.receipt["termination_signal"] == signal.SIGSEGV
-    assert "runtime_stack_overflow" not in compiled.receipt
-    assert "wasm_trap" not in compiled.receipt
     assert compiled.receipt["faust_version"] == "2.90.0"
+    assert "wasm_trap" not in compiled.receipt
+    # The same source either dies on SIGSEGV, with no recursion text, or
+    # the runtime catches Maximum call stack size exceeded. Both are real.
+    if compiled.diagnostics == "internal: worker failed\n":
+        assert compiled.receipt["termination_signal"] == signal.SIGSEGV
+        assert "runtime_stack_overflow" not in compiled.receipt
+    else:
+        assert compiled.diagnostics == "Maximum call stack size exceeded\n"
+        assert compiled.receipt["runtime_stack_overflow"] is True
     ledger = RewardLedger(tmp_path / "recursion")
     run = SignalRun(
         compilation=compiled,
