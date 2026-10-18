@@ -8,6 +8,7 @@ import hashlib
 import os
 import selectors
 import shutil
+import stat
 import subprocess
 import sys
 import time
@@ -501,6 +502,19 @@ def _source_failure(diagnostics: str) -> object:
         outputs=[],
         duration_ms=1,
     )
+
+
+@pytest.mark.parametrize("separator", ["\u2028", "\u0085", "\v"])
+def test_unicode_separators_do_not_fake_a_runtime_line(separator: str) -> None:
+    compiled = _source_failure(f"x{separator}TypeError: y")
+    assert compiled.receipt["exit_code"] == 1
+    assert compiled.receipt["diagnostic_class"] != "internal"
+
+
+def test_real_newline_still_starts_a_runtime_line() -> None:
+    compiled = _source_failure("x\nTypeError: y\n")
+    assert compiled.receipt["exit_code"] == 126
+    assert compiled.receipt["diagnostic_class"] == "internal"
 
 
 @pytest.mark.parametrize(
@@ -1091,57 +1105,65 @@ def test_library_mounts_keep_absent_root_only_directories(
     assert private not in mounts
 
 
-def test_absent_fallback_with_world_writable_parent_is_refused(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    parent = tmp_path / "usr-share"
-    parent.mkdir()
-    parent.chmod(0o777)
-    missing = parent / "faust"
+def _mount_with_absent_candidate(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, missing: Path, *, kind: str
+) -> tuple[Path, ...]:
     binary = tmp_path / "opt" / "bin" / "faust"
     _fake_faust(binary)
     _prefix_library_dirs(binary)
-    monkeypatch.setattr("faustcoder.sandbox.FAUST_FALLBACK_DIRECTORIES", (missing,))
-    monkeypatch.setattr("faustcoder.sandbox._reported_faust_directories", lambda _binary: ())
+    if kind == "fallback":
+        monkeypatch.setattr("faustcoder.sandbox.FAUST_FALLBACK_DIRECTORIES", (missing,))
+        monkeypatch.setattr("faustcoder.sandbox._reported_faust_directories", lambda _binary: ())
+    else:
+        monkeypatch.setattr("faustcoder.sandbox.FAUST_FALLBACK_DIRECTORIES", ())
+        monkeypatch.setattr(
+            "faustcoder.sandbox._reported_faust_directories",
+            lambda _binary: (missing,),
+        )
     private = tmp_path / "private"
     private.mkdir()
-    with pytest.raises(SandboxError, match="world-writable"):
-        faust_library_mounts(binary, private=private)
+    return faust_library_mounts(binary, private=private)
 
 
-def test_absent_fallback_with_private_parent_is_passed_through(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+@pytest.mark.parametrize("kind", ["fallback", "reported"])
+def test_absent_mask_refuses_a_group_writable_parent(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, kind: str
 ) -> None:
-    parent = tmp_path / "usr-share"
+    parent = tmp_path / "share"
+    parent.mkdir()
+    parent.chmod(0o775)
+    missing = parent / "faust"
+    with pytest.raises(SandboxError, match="not root-only"):
+        _mount_with_absent_candidate(tmp_path, monkeypatch, missing, kind=kind)
+
+
+@pytest.mark.parametrize("kind", ["fallback", "reported"])
+def test_absent_mask_refuses_a_non_root_parent(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, kind: str
+) -> None:
+    parent = tmp_path / "share"
     parent.mkdir()
     parent.chmod(0o755)
     missing = parent / "faust"
-    binary = tmp_path / "opt" / "bin" / "faust"
-    _fake_faust(binary)
-    _prefix_library_dirs(binary)
-    monkeypatch.setattr("faustcoder.sandbox.FAUST_FALLBACK_DIRECTORIES", (missing,))
-    monkeypatch.setattr("faustcoder.sandbox._reported_faust_directories", lambda _binary: ())
-    private = tmp_path / "private"
-    private.mkdir()
-    mounts = faust_library_mounts(binary, private=private)
-    assert missing in mounts
+    with pytest.raises(SandboxError, match="not root-only"):
+        _mount_with_absent_candidate(tmp_path, monkeypatch, missing, kind=kind)
 
 
-def test_absent_reported_directory_is_passed_through(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+@pytest.mark.parametrize("kind", ["fallback", "reported"])
+def test_absent_mask_accepts_a_symlink_to_a_root_only_parent(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, kind: str
 ) -> None:
-    binary = tmp_path / "bin" / "faust"
-    _fake_faust(binary)
-    _prefix_library_dirs(binary)
-    reported = tmp_path / "architecture"
-    monkeypatch.setattr(
-        "faustcoder.sandbox._reported_faust_directories",
-        lambda _binary: (reported,),
-    )
-    private = tmp_path / "private"
-    private.mkdir()
-    mounts = faust_library_mounts(binary, private=private)
-    assert reported in mounts
+    target = Path("/usr")
+    info = target.stat()
+    assert info.st_uid == 0
+    assert stat.S_ISDIR(info.st_mode)
+    assert info.st_mode & 0o022 == 0
+    link = tmp_path / "share"
+    link.symlink_to(target)
+    missing = link / "faustcoder-absent-mask"
+    assert not missing.exists()
+    mounts = _mount_with_absent_candidate(tmp_path, monkeypatch, missing, kind=kind)
+    assert missing in mounts
 
 
 def test_native_sandbox_passes_an_absent_mask_candidate(tmp_path: Path) -> None:
@@ -1268,6 +1290,7 @@ def test_native_compile_rejects_a_library_planted_beside_the_binary(
     (prefix / "lib" / "faust").mkdir(parents=True)
     (prefix / "bin" / "share" / "faust").mkdir(parents=True)
     (share / "zzprobe.lib").write_text("zzprobe = 1;\n", encoding="utf-8")
+    _create_writable_reported_directories(planted)
     source = 'import("zzprobe.lib"); process = zzprobe;\n'
     dsp = tmp_path / "probe.dsp"
     dsp.write_text(source, encoding="utf-8")
@@ -1300,6 +1323,24 @@ def _fake_faust(path: Path) -> None:
         encoding="ascii",
     )
     path.chmod(0o755)
+
+
+def _create_writable_reported_directories(binary: Path) -> None:
+    """Create absent directories this binary reports under a writable parent.
+
+    The sandbox refuses an absent reported path unless ``realpath`` of its
+    parent is root-only. A prefix under tmp has to contain those
+    directories so the compile can mask them. Root-only parents are left
+    absent.
+    """
+    for path in _reported_faust_directories(binary):
+        if path.exists():
+            continue
+        parent = Path(os.path.realpath(path)).parent
+        info = parent.stat()
+        if info.st_uid == 0 and stat.S_ISDIR(info.st_mode) and info.st_mode & 0o022 == 0:
+            continue
+        path.mkdir(parents=True, exist_ok=True)
 
 
 def _prefix_library_dirs(binary: Path) -> None:

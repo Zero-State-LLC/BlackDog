@@ -94,14 +94,18 @@ nearest existing parent is not root-only (not owned by root, writable by
 group or others, or not a real directory). A caller cannot create that
 directory under `/tmp` after the check. A Faust prefix installed outside
 a root-only directory, such as under `/tmp`, has to already contain those
-directories or the native compile is refused. An absent `/usr/share/faust`
-or `/usr/local/share/faust` is refused when its parent is world-writable.
-The mount does not cover a missing path, so a user who can create it can
-plant a library after the check. GitHub-hosted Ubuntu images `chmod -R 777 /usr/share` and leave
+directories or the native compile is refused. An absent fallback or
+reported directory is refused unless `realpath` of its parent is
+root-owned and not group- or world-writable. The mount does not cover a
+missing path, so a user who can create it can plant a library before
+exec. Distros that symlink `/usr/share` are checked at the resolved
+directory. GitHub-hosted Ubuntu images `chmod -R 777 /usr/share` and leave
 `/usr/local/bin` mode `0777`. `scripts/install-faust-2.88.0.sh` creates
 root-owned mode `0755` `/usr/share/faust` and `/usr/local/share/faust`,
-plus `<prefix>/share/faust`, `<prefix>/lib/faust` and
-`<prefix>/bin/share/faust`, so those paths exist and are masked. The mount step
+plus `<prefix>/share/faust`, `<prefix>/lib/faust`,
+`<prefix>/bin/share/faust` and `<prefix>/bin/architecture`, so those
+paths exist and are masked. `faust --pathslist` names
+`<prefix>/bin/architecture`, and `<prefix>/bin` is mode `0777`. The mount step
 still fails if some other absent path exists afterward and was not
 covered.
 A loader directory such as

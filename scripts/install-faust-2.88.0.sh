@@ -48,16 +48,24 @@ make -C "$root/faust-2.88.0" compiler -j"$(nproc)"
 prefix=${PREFIX:-/usr/local}
 $SUDO make -C "$root/faust-2.88.0" install PREFIX="$prefix"
 # <prefix>/bin is mode 0777 on GitHub-hosted Ubuntu. An absent
-# <prefix>/bin/share/faust would be refused. Create the prefix library
-# directories so the sandbox masks them.
+# <prefix>/bin/share/faust or <prefix>/bin/architecture would be refused:
+# faust --pathslist names both, and a caller could create either before
+# exec. Create them so the sandbox masks them.
 $SUDO mkdir -p \
   "$prefix/share/faust" \
   "$prefix/lib/faust" \
-  "$prefix/bin/share/faust"
+  "$prefix/bin/share/faust" \
+  "$prefix/bin/architecture"
+$SUDO chown root:root \
+  "$prefix/share/faust" \
+  "$prefix/lib/faust" \
+  "$prefix/bin/share/faust" \
+  "$prefix/bin/architecture"
 $SUDO chmod 755 \
   "$prefix/share/faust" \
   "$prefix/lib/faust" \
-  "$prefix/bin/share/faust"
+  "$prefix/bin/share/faust" \
+  "$prefix/bin/architecture"
 export PATH="$prefix/bin:${PATH}"
 installed=$("$prefix/bin/faust" -v 2>&1 || true)
 echo "$installed"

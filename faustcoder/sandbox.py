@@ -18,9 +18,10 @@ Enforcement, in order:
    one of those appears during the mount and stays unmasked, the compile
    fails. An absent prefix ``share/faust`` or ``lib/faust`` whose
    nearest existing parent is not root-only is refused. An absent
-   ``/usr/share/faust`` or ``/usr/local/share/faust`` whose parent is
-   world-writable is refused too: the mount cannot cover a path that is
-   not there yet, so a racing user could plant it. Faust's own directory
+   fallback or reported directory is refused unless ``realpath`` of its
+   parent is root-owned and not group- or world-writable, so the caller
+   cannot create it before exec. A symlink such as ``/usr/share`` is
+   judged at that resolved directory. Faust's own directory
    query fails closed. Faust then runs as the calling uid with ``CapEff``
    0. The hashed private copy passed as ``-I`` is not masked. Wasm compiles
    do not take that path. Node 22's
@@ -432,11 +433,12 @@ def faust_library_mounts(
     ``--includedir``, ``--archdir`` and ``--pathslist`` add every absolute
     directory they print. A candidate that is not there yet is still
     returned. The mount step covers it if it has appeared, and fails if it
-    exists afterward and was not covered. An absent prefix
-    ``share/faust`` or ``lib/faust`` beside the binary is refused when
-    its nearest existing parent is not root-only. An absent
-    ``/usr/share/faust`` or ``/usr/local/share/faust`` is refused when
-    that parent is world-writable. A reported loader directory such
+    exists afterward and was not covered. An absent prefix, fallback, or
+    reported directory is refused unless the ``realpath`` of its parent
+    is root-owned and not group- or world-writable. The caller cannot
+    create that directory in the window before exec. A symlink such as
+    ``/usr/share`` is judged at the resolved directory. A reported loader
+    directory such
     as ``/usr/lib`` is left in place so the compiler can start;
     ``lib/faust`` under it is still masked. ``private`` is the hashed
     ``-I`` directory and is never masked. The directory query fails closed.
@@ -450,6 +452,7 @@ def faust_library_mounts(
         [*required, *reported],
         required=set(required),
         prefix=set(prefix),
+        reported=set(reported),
         protected=protected,
         binary=binary_path,
     )
@@ -559,6 +562,7 @@ def _select_mask_directories(
     *,
     required: set[Path],
     prefix: set[Path],
+    reported: set[Path],
     protected: Sequence[Path],
     binary: Path,
 ) -> tuple[Path, ...]:
@@ -579,7 +583,13 @@ def _select_mask_directories(
             continue
         if info is None:
             _pass_absent_mask(
-                path, mounts, required, prefix, protected_resolved, unmaskable
+                path,
+                mounts,
+                required,
+                prefix,
+                reported,
+                protected_resolved,
+                unmaskable,
             )
             continue
         try:
@@ -615,17 +625,17 @@ def _pass_absent_mask(
     mounts: list[Path],
     required: set[Path],
     prefix: set[Path],
+    reported: set[Path],
     protected: Sequence[Path],
     unmaskable: set[Path],
 ) -> None:
-    """Pass an absent candidate through, or refuse an unsafe parent.
+    """Pass an absent candidate through, or refuse a parent the caller can write.
 
-    A prefix ``share/faust`` or ``lib/faust`` beside the binary is
-    refused when its nearest existing parent is not root-only. An absent
-    fallback (``/usr/share/faust`` or ``/usr/local/share/faust``) is
-    refused when that parent is world-writable. The mount does not cover
-    a path that is missing, so a caller who can create the directory can
-    plant a library after this check.
+    An absent prefix, fallback, or reported directory is refused unless
+    ``realpath`` of its parent is a root-owned directory that group and
+    others cannot write. The mount does not cover a path that is missing,
+    so a caller who can create it can plant a library before exec.
+    ``/usr/share`` may be a symlink; the check follows it.
     """
     absolute = Path(os.path.abspath(path))
     if absolute in mounts:
@@ -637,26 +647,43 @@ def _pass_absent_mask(
                 f"copy: {path}"
             )
         return
-    ancestor = _nearest_existing_ancestor(absolute)
-    if path in prefix and not _is_root_only_directory(ancestor):
-        _refuse_unsafe_parent(
-            absolute,
-            ancestor,
-            "Faust prefix parent is not root-only, so an absent library "
-            "directory cannot be masked safely",
-        )
-    if absolute in _fallback_absolutes() and _is_world_writable(ancestor):
-        _refuse_unsafe_parent(
-            absolute,
-            ancestor,
-            "Faust fallback parent is world-writable, so an absent library "
-            "directory cannot be masked safely",
-        )
+    if _absent_mask_must_be_root_only(path, absolute, prefix, reported):
+        parent = _resolved_parent(absolute)
+        if not _is_root_only_directory(parent):
+            _refuse_unsafe_parent(
+                absolute,
+                parent,
+                "Faust mask parent is not root-only, so an absent directory "
+                "cannot be masked safely",
+            )
     mounts.append(absolute)
+
+
+def _absent_mask_must_be_root_only(
+    path: Path, absolute: Path, prefix: set[Path], reported: set[Path]
+) -> bool:
+    if path in prefix or absolute in {Path(os.path.abspath(item)) for item in prefix}:
+        return True
+    if absolute in _fallback_absolutes():
+        return True
+    return absolute in {Path(os.path.abspath(item)) for item in reported}
 
 
 def _fallback_absolutes() -> set[Path]:
     return {Path(os.path.abspath(path)) for path in FAUST_FALLBACK_DIRECTORIES}
+
+
+def _resolved_parent(path: Path) -> Path:
+    """Directory a caller would create ``path`` in, after symlinks.
+
+    ``os.path.realpath`` resolves existing ancestors and leaves the missing
+    leaf in place. The parent of that result is the directory to check.
+    """
+    try:
+        resolved = Path(os.path.realpath(path))
+    except OSError as exc:
+        raise SandboxError(f"Faust library path could not be resolved: {path}") from exc
+    return _nearest_existing_ancestor(resolved)
 
 
 def _refuse_unsafe_parent(path: Path, ancestor: Path, reason: str) -> None:
@@ -664,14 +691,6 @@ def _refuse_unsafe_parent(path: Path, ancestor: Path, reason: str) -> None:
     mode = 0 if info is None else info.st_mode & 0o777
     uid = -1 if info is None else info.st_uid
     raise SandboxError(f"{reason}: {path} (parent {ancestor}, uid {uid}, mode {mode:o})")
-
-
-def _is_world_writable(path: Path) -> bool:
-    """True when others can write ``path`` (the race that plants a fallback)."""
-    info = _lstat_or_none(path)
-    if info is None:
-        return False
-    return bool(info.st_mode & stat.S_IWOTH)
 
 
 def _nearest_existing_ancestor(path: Path) -> Path:

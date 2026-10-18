@@ -1216,9 +1216,12 @@ def _is_js_runtime(diagnostics: str) -> bool:
     ``Aborted(ERROR : stack overflow in eval)``. A line that is exactly
     ``Maximum call stack size exceeded`` is V8's own message for that
     crash. A crash token echoed inside any other Faust error, a comment,
-    or a declare does not match.
+    or a declare does not match. Lines are split on ``\\n`` only.
     """
-    stripped = [line.strip() for line in diagnostics.splitlines()]
+    # splitlines() also breaks on U+2028, U+2029, NEL, VT, FF, and the
+    # file separators. A source token can plant one and look like a JS
+    # exception at the start of the next piece.
+    stripped = [line.strip() for line in diagnostics.split("\n")]
     if any(_is_source_diagnostic_line(line) for line in stripped):
         return False
     return any(_is_runtime_crash_line(line) for line in stripped)
