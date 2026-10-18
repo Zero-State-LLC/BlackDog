@@ -214,6 +214,9 @@ class AuditReportLog:
                 os.fsync(fd)
                 if created:
                     _fsync_dir(self.path.parent)
+                # The report line is durable before the anchor moves. A crash
+                # in between leaves the tail ahead of the anchor. The next
+                # read and the next append both fail closed. There is no repair.
                 _advance_anchor(self.consumed, run_key, seq, signed["mac"])
             finally:
                 fcntl.flock(fd, fcntl.LOCK_UN)
@@ -373,12 +376,20 @@ def audit_sampled_reruns(
                 )
             )
             if row.group_id not in claimed:
-                claimed[row.group_id] = _claim_dropped(consumed, rows, row.group_id)
+                claimed[row.group_id] = _preview_claim(consumed, row.group_id)
     except RewardGroupConsumed:
-        _persist(reports, keyring, _audit_from(keyring.run_id, derived, sample, audited, disagreements, claimed, rows))
+        _persist(
+            reports,
+            keyring,
+            _audit_from(keyring.run_id, derived, sample, audited, disagreements, claimed, rows),
+        )
         raise
     audit = _audit_from(keyring.run_id, derived, sample, audited, disagreements, claimed, rows)
     _persist(reports, keyring, audit)
+    # Claims follow the report so a fresh halt can still open its chain.
+    # The claim refresh moves the anchor MAC over the new claim bytes.
+    for group_id in claimed:
+        _claim_dropped(consumed, rows, group_id, _run_key(keyring))
     return audit
 
 
@@ -474,10 +485,21 @@ def _refuse_bad_hmac(rows: tuple[RewardRowRecord, ...], keyring: RewardKeyring) 
             raise RewardRecordError("audit refused a row that failed the HMAC check") from exc
 
 
+def _preview_claim(consumed: ConsumedLog, group_id: str) -> str:
+    """The disposition a later claim will record, without writing it."""
+    existing = consumed.disposition(group_id)
+    if existing is None or existing == "dropped:audit":
+        return "dropped"
+    if existing == "used":
+        return "late"
+    raise RewardGroupConsumed(group_id, existing)
+
+
 def _claim_dropped(
     consumed: ConsumedLog,
     rows: tuple[RewardRowRecord, ...],
     group_id: str,
+    run_key: bytes,
 ) -> str:
     row = next(item for item in rows if item.group_id == group_id)
     try:
@@ -486,6 +508,7 @@ def _claim_dropped(
             "dropped:audit",
             task_digest_full=row.task_digest_full,
             policy_checkpoint=row.policy_checkpoint,
+            run_key=run_key,
         )
     except RewardGroupConsumed as exc:
         if exc.disposition == "dropped:audit":
@@ -598,7 +621,7 @@ def _next_link(existing: str, run_key: bytes, consumed: ConsumedLog) -> tuple[in
     """The next sequence and prev MAC, or a rollback error."""
     anchor = _read_anchor(consumed, run_key)
     if not existing.strip():
-        if anchor is not None:
+        if anchor is not None or _dropped_audit_remains(consumed):
             raise RewardRecordError("audit report log was rolled back")
         return 1, _GENESIS_MAC
     _reject_tamper(existing, run_key)
@@ -619,7 +642,16 @@ def _consumed_id(run_key: bytes, path: Path) -> str:
     return hmac.new(run_key, _CONSUMED_ID_DOMAIN + b"\n" + resolved, hashlib.sha256).hexdigest()
 
 
-def _anchor_bind(run_key: bytes, *, seq: int, line_mac: str, consumed_id: str, path: Path) -> str:
+def _anchor_bind(
+    run_key: bytes,
+    *,
+    seq: int,
+    line_mac: str,
+    consumed_id: str,
+    path: Path,
+    claim_digest: str,
+) -> str:
+    """MAC the anchor over the report tail and the consumed-log claim bytes."""
     message = (
         _ANCHOR_DOMAIN
         + b"\n"
@@ -630,8 +662,39 @@ def _anchor_bind(run_key: bytes, *, seq: int, line_mac: str, consumed_id: str, p
         + consumed_id.encode("ascii")
         + b"\n"
         + os.path.realpath(path).encode("utf-8")
+        + b"\n"
+        + claim_digest.encode("ascii")
     )
     return hmac.new(run_key, message, hashlib.sha256).hexdigest()
+
+
+def _claim_digest(data: bytes) -> str:
+    """SHA-256 of the consumed log with the anchor line removed."""
+    offset = _anchor_offset(data)
+    if offset is None:
+        material = data
+    else:
+        material = data[:offset] + data[offset + _ANCHOR_LEN :]
+    return hashlib.sha256(material).hexdigest()
+
+
+def _dropped_audit_remains(consumed: ConsumedLog) -> bool:
+    """True when a halt claim is still in the log and the anchor is gone."""
+    if not consumed.path.is_file():
+        return False
+    data = _read_consumed_bytes(consumed.path)
+    if _anchor_offset(data) is not None:
+        return False
+    for line in data.splitlines():
+        if not line.strip():
+            continue
+        try:
+            body = loads_strict(line.decode("utf-8"))
+        except CanonicalError:
+            continue
+        if isinstance(body, dict) and body.get("disposition") == "dropped:audit":
+            return True
+    return False
 
 
 def _anchor_text(seq: int, line_mac: str, consumed_id: str, bind: str) -> bytes:
@@ -713,6 +776,7 @@ def _read_anchor(consumed: ConsumedLog, run_key: bytes) -> tuple[int, str, str] 
         line_mac=line_mac,
         consumed_id=consumed_id,
         path=consumed.path,
+        claim_digest=_claim_digest(data),
     )
     if not hmac.compare_digest(consumed_id, expected_id) or not hmac.compare_digest(bind, expected_bind):
         raise RewardRecordError("audit anchor is not usable")
@@ -730,10 +794,53 @@ def _pwrite_all(fd: int, data: bytes, offset: int) -> None:
         view = view[written:]
 
 
+def refresh_anchor_bind(path: Path, run_key: bytes, *, locked: bool = False) -> None:
+    """Re-MAC an existing anchor over the claim bytes now in ``path``.
+
+    ``locked`` means the caller already holds the consumed-log lock. A
+    second flock on this file would deadlock, so this open does not lock.
+    """
+    if not path.is_file():
+        return
+    flags = os.O_RDWR | os.O_CLOEXEC
+    fd = os.open(path, flags)
+    try:
+        if not locked:
+            fcntl.flock(fd, fcntl.LOCK_EX)
+        try:
+            chunks: list[bytes] = []
+            while True:
+                block = os.read(fd, 1024 * 1024)
+                if not block:
+                    break
+                chunks.append(block)
+            data = b"".join(chunks)
+            offset = _anchor_offset(data)
+            if offset is None:
+                return
+            seq, line_mac, consumed_id, _bind = _parse_anchor(data[offset:offset + _ANCHOR_LEN])
+            expected_id = _consumed_id(run_key, path)
+            if len(consumed_id) != len(expected_id) or not hmac.compare_digest(consumed_id, expected_id):
+                raise RewardRecordError("audit anchor is not usable")
+            bind = _anchor_bind(
+                run_key,
+                seq=seq,
+                line_mac=line_mac,
+                consumed_id=consumed_id,
+                path=path,
+                claim_digest=_claim_digest(data),
+            )
+            _pwrite_all(fd, _anchor_text(seq, line_mac, consumed_id, bind), offset)
+            os.fsync(fd)
+        finally:
+            if not locked:
+                fcntl.flock(fd, fcntl.LOCK_UN)
+    finally:
+        os.close(fd)
+
+
 def _advance_anchor(consumed: ConsumedLog, run_key: bytes, seq: int, line_mac: str) -> None:
     consumed_id = _consumed_id(run_key, consumed.path)
-    bind = _anchor_bind(run_key, seq=seq, line_mac=line_mac, consumed_id=consumed_id, path=consumed.path)
-    encoded = _anchor_text(seq, line_mac, consumed_id, bind)
     consumed.path.parent.mkdir(parents=True, exist_ok=True)
     flags = os.O_RDWR | os.O_CLOEXEC
     try:
@@ -754,6 +861,15 @@ def _advance_anchor(consumed: ConsumedLog, run_key: bytes, seq: int, line_mac: s
                 chunks.append(block)
             data = b"".join(chunks)
             offset = _anchor_offset(data)
+            bind = _anchor_bind(
+                run_key,
+                seq=seq,
+                line_mac=line_mac,
+                consumed_id=consumed_id,
+                path=consumed.path,
+                claim_digest=_claim_digest(data),
+            )
+            encoded = _anchor_text(seq, line_mac, consumed_id, bind)
             if offset is None:
                 os.lseek(fd, 0, os.SEEK_END)
                 _write_all(fd, encoded)

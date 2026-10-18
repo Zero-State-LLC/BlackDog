@@ -180,7 +180,10 @@ that suite is committed.
 Reward rows are MAC'd records (D3 option H). `grade_receipt` recomputes
 digests and does not take `rerun`, `known_good` or `triage`. A load
 also checks the MAC and the current pins. The sampled
-rerun-from-source audit is spec §26 0.3.9, before P3. Ed25519 is later. `REWARD_PROFILES` in
+rerun-from-source audit is spec §26 0.3.9, before P3. The MAC'd report
+records the record ids it covered and the consumed log beside it.
+Truncating the report file alone does not restore an older clear line.
+Ed25519 is later. `REWARD_PROFILES` in
 `faustcoder/reward/profiles.py` is the only allowlist literal.
 `profile_digest` is the only profile digest computation.
 

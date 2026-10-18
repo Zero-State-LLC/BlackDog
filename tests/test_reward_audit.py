@@ -12,6 +12,7 @@ import pytest
 from faustcoder.canonical import canonical_bytes, loads_strict
 from faustcoder.reward.audit import (
     AuditReportLog,
+    _line_mac,
     audit_sampled_reruns,
     derive_audit_seed,
     p3_may_proceed,
@@ -1060,6 +1061,153 @@ def test_audit_seed_vector_includes_the_run_id() -> None:
         derive_audit_seed(ring, "run-1")
         == "7f0914a7117db5905cf37c32a6a16780bcd8e1a022f642c97e4bbdb9aeaf235e"
     )
+
+
+def _resign(line: str, run_key: bytes, **updates: object) -> str:
+    body = loads_strict(line)
+    assert isinstance(body, dict)
+    body.pop("mac", None)
+    body.update(updates)
+    body["mac"] = _line_mac(run_key, body)
+    return canonical_bytes(body).decode("ascii")
+
+
+def _anchor_bytes(path: Path) -> bytes:
+    data = path.read_bytes()
+    start = data.find(b"audit-anchor v1 ")
+    assert start >= 0
+    return data[start : start + 248]
+
+
+def _clear_then_halt(tmp_path: Path, secret: bytes, name: str):
+    ring = RewardKeyring(secret, run_id=RUN)
+    first = _stored_pass(tmp_path, secret, f"{name}-first")
+    second = _stored_pass(tmp_path, secret, f"{name}-second")
+    consumed = ConsumedLog(tmp_path / f"{name}-consumed.jsonl")
+    reports = AuditReportLog(tmp_path / f"{name}-reports.jsonl", consumed)
+    audit_sampled_reruns(first.rows, ring, rerun=_echo, consumed=consumed, reports=reports)
+    saved = _anchor_bytes(consumed.path)
+    audit_sampled_reruns(
+        second.rows,
+        ring,
+        rerun=lambda _record: "fail",
+        consumed=consumed,
+        reports=reports,
+    )
+    return ring, first, second, consumed, reports, saved
+
+
+def test_a_broken_chain_link_is_refused(tmp_path: Path) -> None:
+    secret = _write_key(tmp_path / "reward-root.key")
+    ring, _first, _second, consumed, reports, _saved = _clear_then_halt(tmp_path, secret, "link")
+    run_key = derive_run_key(secret, RUN)
+    lines = reports.path.read_text(encoding="utf-8").splitlines()
+    assert len(lines) == 2
+    broken_prev = _resign(lines[1], run_key, prev="0" * 64)
+    reports.path.write_text(lines[0] + "\n" + broken_prev + "\n", encoding="utf-8")
+    with pytest.raises(RewardRecordError, match="chain"):
+        p3_may_proceed(RUN, keyring=ring, reports=reports, consumed=consumed)
+    first_body = loads_strict(lines[0])
+    assert isinstance(first_body, dict)
+    broken_seq = _resign(lines[1], run_key, seq=1, prev=first_body["mac"])
+    reports.path.write_text(lines[0] + "\n" + broken_seq + "\n", encoding="utf-8")
+    with pytest.raises(RewardRecordError, match="chain"):
+        p3_may_proceed(RUN, keyring=ring, reports=reports, consumed=consumed)
+
+
+def test_a_boolean_sequence_is_refused(tmp_path: Path) -> None:
+    secret = _write_key(tmp_path / "reward-root.key")
+    ring = RewardKeyring(secret, run_id=RUN)
+    loaded = _stored_pass(tmp_path, secret, "group-seq")
+    consumed = ConsumedLog(tmp_path / "seq-consumed.jsonl")
+    reports = AuditReportLog(tmp_path / "seq-reports.jsonl", consumed)
+    audit_sampled_reruns(loaded.rows, ring, rerun=_echo, consumed=consumed, reports=reports)
+    run_key = derive_run_key(secret, RUN)
+    line = reports.path.read_text(encoding="utf-8").splitlines()[0]
+    reports.path.write_text(_resign(line, run_key, seq=True) + "\n", encoding="utf-8")
+    with pytest.raises(RewardRecordError, match="sequence"):
+        p3_may_proceed(RUN, keyring=ring, reports=reports, consumed=consumed)
+
+
+def test_a_new_chain_is_refused_while_an_anchor_exists(tmp_path: Path) -> None:
+    secret = _write_key(tmp_path / "reward-root.key")
+    ring = RewardKeyring(secret, run_id=RUN)
+    loaded = _stored_pass(tmp_path, secret, "group-anchor-stays")
+    consumed = ConsumedLog(tmp_path / "stay-consumed.jsonl")
+    reports = AuditReportLog(tmp_path / "stay-reports.jsonl", consumed)
+    audit_sampled_reruns(loaded.rows, ring, rerun=_echo, consumed=consumed, reports=reports)
+    reports.path.write_bytes(b"")
+    with pytest.raises(RewardRecordError, match="rolled back"):
+        audit_sampled_reruns(loaded.rows, ring, rerun=_echo, consumed=consumed, reports=reports)
+    assert reports.path.read_bytes() == b""
+
+
+def test_append_refuses_a_tail_behind_the_anchor(tmp_path: Path) -> None:
+    secret = _write_key(tmp_path / "reward-root.key")
+    ring, _first, _second, consumed, reports, _saved = _clear_then_halt(tmp_path, secret, "behind")
+    data = reports.path.read_bytes()
+    prefix, _newline, _rest = data.partition(b"\n")
+    reports.path.write_bytes(prefix + b"\n")
+    fresh = _stored_pass(tmp_path, secret, "behind-fresh")
+    with pytest.raises(RewardRecordError, match="rolled back"):
+        audit_sampled_reruns(fresh.rows, ring, rerun=_echo, consumed=consumed, reports=reports)
+    assert reports.path.read_bytes() == prefix + b"\n"
+
+
+def test_a_tampered_anchor_mac_is_refused(tmp_path: Path) -> None:
+    secret = _write_key(tmp_path / "reward-root.key")
+    ring = RewardKeyring(secret, run_id=RUN)
+    loaded = _stored_pass(tmp_path, secret, "group-bind")
+    consumed = ConsumedLog(tmp_path / "bind-consumed.jsonl")
+    reports = AuditReportLog(tmp_path / "bind-reports.jsonl", consumed)
+    audit_sampled_reruns(loaded.rows, ring, rerun=_echo, consumed=consumed, reports=reports)
+    data = bytearray(consumed.path.read_bytes())
+    start = data.find(b"audit-anchor v1 ")
+    bind_at = start + 183
+    data[bind_at] = ord("0") if data[bind_at] != ord("0") else ord("1")
+    consumed.path.write_bytes(bytes(data))
+    with pytest.raises(RewardRecordError, match="anchor"):
+        p3_may_proceed(RUN, keyring=ring, reports=reports, consumed=consumed)
+
+
+def test_an_old_anchor_spliced_over_new_claims_is_refused(tmp_path: Path) -> None:
+    secret = _write_key(tmp_path / "reward-root.key")
+    ring, _first, _second, consumed, reports, saved = _clear_then_halt(tmp_path, secret, "splice")
+    data = consumed.path.read_bytes()
+    start = data.find(b"audit-anchor v1 ")
+    assert data[start : start + 248] != saved
+    consumed.path.write_bytes(data[:start] + saved + data[start + 248 :])
+    report = reports.path.read_bytes()
+    prefix, _newline, _rest = report.partition(b"\n")
+    reports.path.write_bytes(prefix + b"\n")
+    with pytest.raises(RewardRecordError, match="anchor"):
+        p3_may_proceed(RUN, keyring=ring, reports=reports, consumed=consumed)
+
+
+def test_deleting_the_report_and_anchor_does_not_allow_a_new_audit(tmp_path: Path) -> None:
+    secret = _write_key(tmp_path / "reward-root.key")
+    ring = RewardKeyring(secret, run_id=RUN)
+    loaded = _stored_pass(tmp_path, secret, "group-deleted")
+    consumed = ConsumedLog(tmp_path / "deleted-consumed.jsonl")
+    reports = AuditReportLog(tmp_path / "deleted-reports.jsonl", consumed)
+    audit_sampled_reruns(
+        loaded.rows,
+        ring,
+        rerun=lambda _record: "fail",
+        consumed=consumed,
+        reports=reports,
+    )
+    assert consumed.disposition("group-deleted") == "dropped:audit"
+    kept = [
+        line
+        for line in consumed.path.read_text(encoding="utf-8").splitlines()
+        if not line.startswith("audit-anchor v1 ")
+    ]
+    consumed.path.write_text("\n".join(kept) + "\n", encoding="utf-8")
+    reports.path.unlink()
+    with pytest.raises(RewardRecordError, match="rolled back"):
+        audit_sampled_reruns(loaded.rows, ring, rerun=_echo, consumed=consumed, reports=reports)
+    assert reports.path.read_bytes() == b""
 
 
 def test_canary_must_be_a_bool_when_the_mac_is_valid(tmp_path: Path) -> None:

@@ -745,5 +745,3 @@ Approval: Danny, 2026-10-18 8:10 AM PT, "Approve the §26 0.3.9 amendment as rec
 > 8. Training rows. Every T10 training row carries an explicit non-empty `example_id`, the signed record id. A row without one is refused.
 
 Not ruled here: Ed25519 and DSSE; the audit cadence after P3 starts; any numeric halt threshold other than zero disagreements.
-
-Enforcement pointer: the MAC'd report records the sorted record ids it covered and the consumed log it sits beside. `rl_batch_from_records` refuses a row outside that set or a different log. Each report line carries a sequence and the previous line's MAC, and the high-water mark is anchored in the consumed log, so truncating the report does not restore an older clear line.

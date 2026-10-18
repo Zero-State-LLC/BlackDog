@@ -1299,6 +1299,7 @@ class ConsumedLog:
         *,
         task_digest_full: str,
         policy_checkpoint: str,
+        run_key: bytes | None = None,
     ) -> None:
         if type(disposition) is not str or disposition == "":
             raise RewardRecordError("reward consumed disposition is empty")
@@ -1324,6 +1325,10 @@ class ConsumedLog:
                 os.fsync(fd)
                 if created:
                     _fsync_dir(self.path.parent)
+                if run_key is not None:
+                    from faustcoder.reward.audit import refresh_anchor_bind
+
+                    refresh_anchor_bind(self.path, run_key, locked=True)
                 self._seen[group_id] = disposition
             finally:
                 fcntl.flock(fd, fcntl.LOCK_UN)
@@ -1462,6 +1467,7 @@ def rl_batch_from_records(
                 "used",
                 task_digest_full=task_digest,
                 policy_checkpoint=checkpoint,
+                run_key=keyring.run_key(expected_run_id),
             )
             rows.extend(built)
         else:
@@ -1474,6 +1480,7 @@ def rl_batch_from_records(
                 f"dropped:{reason}",
                 task_digest_full=task_digest,
                 policy_checkpoint=checkpoint,
+                run_key=keyring.run_key(expected_run_id),
             )
             drops.append((group_id, reason))
     return RecordBatch(rows=tuple(rows), drops=tuple(drops))
