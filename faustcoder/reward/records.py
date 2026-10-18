@@ -1285,9 +1285,10 @@ class ConsumedLog:
 
     ``claim`` requires the run key. When an audit anchor is present, the
     claim checks that anchor against the current log bytes before
-    appending, then refreshes it over the new bytes. The refresh checks
-    that same MAC again and accepts only those bytes plus the new claim.
-    A bad anchor or a wrong key raises before any write.
+    appending, then refreshes it over exactly those bytes plus the new
+    claim line. With no anchor, a claim is the first write only when no
+    MAC'd report for this run is already beside the log. A bad anchor, a
+    wrong key, or a report with no anchor raises before any write.
     """
 
     def __init__(self, path: Path | str) -> None:
@@ -1327,12 +1328,22 @@ class ConsumedLog:
             try:
                 os.lseek(fd, 0, os.SEEK_SET)
                 prior = _read_text(fd)
-                from faustcoder.reward.audit import _refresh_anchor_bind, _verified_anchor
+                from faustcoder.reward.audit import (
+                    _refresh_anchor_bind,
+                    _run_report_exists,
+                    _verified_anchor,
+                )
 
                 # The anchor MAC is over these bytes. A deleted halt marker
                 # or a wrong key fails here, before the append or its fsync.
+                # No anchor is a first write unless a report for this run
+                # is already on disk.
                 prior_bytes = prior.encode("utf-8")
-                _verified_anchor(prior_bytes, run_key, self.path)
+                if (
+                    _verified_anchor(prior_bytes, run_key, self.path) is None
+                    and _run_report_exists(self.path, run_key)
+                ):
+                    raise RewardRecordError("audit anchor is not usable")
                 self._seen.clear()
                 self._ingest(prior)
                 if group_id in self._seen:
@@ -1341,7 +1352,13 @@ class ConsumedLog:
                 os.fsync(fd)
                 if created:
                     _fsync_dir(self.path.parent)
-                _refresh_anchor_bind(self.path, run_key, locked=True, prior=prior_bytes)
+                _refresh_anchor_bind(
+                    self.path,
+                    run_key,
+                    locked=True,
+                    prior=prior_bytes,
+                    appended=encoded,
+                )
                 self._seen[group_id] = disposition
             finally:
                 fcntl.flock(fd, fcntl.LOCK_UN)

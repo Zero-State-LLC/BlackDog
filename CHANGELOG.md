@@ -68,6 +68,8 @@ See [docs/VERSIONING.md](docs/VERSIONING.md).
 
 ### Fixed
 
+- `ConsumedLog.claim` refreshes an audit anchor only over the exact pre-append bytes plus the one claim line it just wrote. A line injected between the append and the refresh is not signed. A claim on a log with no anchor is refused when a MAC'd report for that run is already beside the log, and still appends when no report exists yet. The refresh also refuses when the anchor disappears after the pre-append read.
+
 - Rebinding an audit anchor is private (`_refresh_anchor_bind`) and checks the existing anchor MAC before it rewrites the bind. A caller cannot re-sign a consumed log whose halt marker was deleted: the file must be the bytes that MAC covers, or those bytes plus a suffix. Advancing the anchor re-checks that MAC under the consumed-log lock before it writes a halt marker or a new bind. A report after the first one refuses a missing anchor instead of minting a new one over the truncated log.
 
 - A D3-H2 halt writes a MAC'd halt-marker claim into the consumed log, including when every disagreeing group was already `used`. The marker is inside the claim bytes the anchor MAC covers, so splicing the previous anchor back and restoring the report prefix does not clear the halt. Deleting the report and the anchor line leaves the marker, and a new chain is refused while that halt is unresolved. `ConsumedLog.claim` requires `run_key`. Before it appends, it checks the existing anchor MAC against the pre-append log bytes, and a mismatch or a wrong key raises before any write. The claim then refreshes the anchor bind.

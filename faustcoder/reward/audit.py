@@ -915,20 +915,78 @@ def _pwrite_all(fd: int, data: bytes, offset: int) -> None:
         view = view[written:]
 
 
+def _run_report_exists(consumed_path: Path, run_key: bytes) -> bool:
+    """True when a sibling file holds a MAC'd report for this consumed log.
+
+    Only the no-anchor claim path asks. A report for another log, or a
+    line that does not verify under ``run_key``, does not count.
+    """
+    parent = consumed_path.parent
+    if not parent.is_dir():
+        return False
+    try:
+        names = os.listdir(parent)
+    except OSError:
+        return False
+    expected_id = _consumed_id(run_key, consumed_path)
+    expected_real = os.path.realpath(consumed_path)
+    for name in names:
+        candidate = parent / name
+        try:
+            if os.path.realpath(candidate) == expected_real or not candidate.is_file():
+                continue
+            text = candidate.read_text(encoding="utf-8")
+        except (OSError, UnicodeError):
+            continue
+        if _text_binds_report(text, run_key, expected_id, expected_real):
+            return True
+    return False
+
+
+def _text_binds_report(text: str, run_key: bytes, expected_id: str, expected_real: str) -> bool:
+    for line in text.splitlines():
+        if not line.strip():
+            continue
+        try:
+            body = loads_strict(line)
+        except CanonicalError:
+            continue
+        if not isinstance(body, dict) or body.get("type") != "audit_report":
+            continue
+        if not _mac_matches(body, run_key):
+            continue
+        report = body.get("report")
+        if not isinstance(report, dict):
+            continue
+        consumed_id = report.get("consumed_id")
+        consumed_path = report.get("consumed_path")
+        if (
+            type(consumed_id) is str
+            and type(consumed_path) is str
+            and len(consumed_id) == len(expected_id)
+            and hmac.compare_digest(consumed_id, expected_id)
+            and consumed_path == expected_real
+        ):
+            return True
+    return False
+
+
 def _refresh_anchor_bind(
     path: Path,
     run_key: bytes,
     *,
     locked: bool = False,
     prior: bytes | None = None,
+    appended: bytes = b"",
 ) -> None:
     """Re-MAC an existing anchor over the claim bytes now in ``path``.
 
     The anchor MAC is checked before the bind is rewritten. ``prior`` is
-    the byte string that MAC must cover when the caller has already
-    appended; the file must be that string plus a suffix. Omitting
-    ``prior`` checks the bytes in the file, so a deleted halt marker
-    cannot be signed. With no anchor yet, this is a no-op.
+    the byte string that MAC covers. ``appended`` is the one claim line
+    just written. The file must be exactly those two strings; any other
+    byte, including a line injected after the append, is refused. With
+    no anchor yet, this is a no-op. An anchor that was in ``prior`` and
+    is gone now is refused.
 
     ``locked`` means the caller already holds the consumed-log lock. A
     second flock on this file would deadlock, so this open does not lock.
@@ -953,9 +1011,12 @@ def _refresh_anchor_bind(
                 if prior is not None and _anchor_offset(prior) is not None:
                     raise RewardRecordError("audit anchor is not usable")
                 return
-            signed = data if prior is None else prior
-            if prior is not None and not data.startswith(prior):
+            if prior is None:
+                signed = data
+            elif data != prior + appended:
                 raise RewardRecordError("audit anchor is not usable")
+            else:
+                signed = prior
             verified = _verified_anchor(signed, run_key, path)
             if verified is None:
                 raise RewardRecordError("audit anchor is not usable")
