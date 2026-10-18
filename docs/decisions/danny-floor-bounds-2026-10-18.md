@@ -72,7 +72,7 @@ Not part of D6. This interprets the ratified bounds and does not change their te
 > 5. Only quarantines produced by F's shipping pipeline count for F. Manual quarantine pins may be applied for corpus hygiene but do not make F pass.
 > 6. Every natural miss is inspected and recorded with its mechanism. Per-floor natural recall (detected / adjudicated COPY) is reported and not gated, and the report states that the pool comes from the detectors themselves.
 
-Same ruling: the natural-copy pool is de-duplicated, and two reviewers judge each candidate.
+Recommendation from the record, not Danny's ruling and not a clause of the ruling above. "The mitigation is to adjudicate before scoring, and to require a second reviewer for any item whose label decides the floor." "Record which floor flagged each item separately, and require a second reviewer for any floor-deciding item." For SClarinet: "Use two reviewers and record both."
 
 ## Preconditions unchanged
 
