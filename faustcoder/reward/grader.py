@@ -26,14 +26,16 @@ path is not sanctioned and must not be supplied. ``grade_receipt``
 raises ``AutoAttributionRefused`` when ``rerun`` or ``known_good``
 is passed, and it does not call either hook.
 
-A remote import, a source over 1 MiB, and a line-start Faust
-``ERROR`` on the compile stage that failed are source-class rules
-and do not wait. Marker matching is case-sensitive and does not
-read harness text or a later render crash. A JS
-``runtime_stack_overflow`` flag and a ``wasm_trap`` kind are
-harness-limit signatures. They stay ungraded and quarantined until
-triage. No native Faust 2.88.0 cross-check is wired here, so those
-flags are not a source score.
+A remote import and a source over 1 MiB are source-class rules and
+do not wait. A line-start ``ERROR : stack overflow`` or
+``ERROR : stack overflow in eval`` is a source failure only when a
+native Faust 2.88.0 receipt of the same source failed with that
+line. Without that match the row stays ungraded. Marker matching is
+case-sensitive and does not read harness text or a later render
+crash. A JS ``runtime_stack_overflow`` flag and a ``wasm_trap`` kind
+stay ungraded. ``shadow_observe`` may rerun and log. Its
+``ShadowLog`` is not a grade and never reaches ``reward_value`` or
+a receipt.
 
 Receipt signing is deferred (D3). This module recomputes digests. It
 does not require a signature.
@@ -50,11 +52,12 @@ from __future__ import annotations
 import hashlib
 import math
 from collections.abc import Callable, Mapping
+from dataclasses import dataclass
 from typing import Any
 from weakref import WeakKeyDictionary
 
 from faustcoder.canonical import content_digest_for
-from faustcoder.compiler import reproducible_receipt_digest
+from faustcoder.compiler import NATIVE_FAUST_VERSION, reproducible_receipt_digest
 from faustcoder.errors import SchemaValidationError
 from faustcoder.reward.profiles import reward_profiles
 from faustcoder.reward.types import (
@@ -150,8 +153,20 @@ class AutoAttributionRefused(Exception):
     """``rerun`` or ``known_good`` was supplied to grading.
 
     That path is not sanctioned. The row is not scored and the hooks
-    are not called.
+    are not called. Shadow mode is ``shadow_observe``, not this path.
     """
+
+
+@dataclass(frozen=True)
+class ShadowLog:
+    """A2-T shadow record. Not a grade and not a receipt.
+
+    ``reward_value`` refuses this. It cannot be minted into a
+    ``RewardableSignalReceipt`` and it cannot enter a reward row.
+    """
+
+    signature: str
+    detail: str
 
 
 def reward_value(result: Grade, task: object = None) -> float | None:
@@ -169,6 +184,8 @@ def reward_value(result: Grade, task: object = None) -> float | None:
     if isinstance(result, RewardableSignalReceipt):
         _require_receipt_task(result, task)
         return 1.0 if result.passed else 0.0
+    if isinstance(result, ShadowLog):
+        raise TypeError("a shadow log is not a grade and has no reward")
     raise TypeError("reward_value requires a grade result")
 
 
@@ -310,6 +327,8 @@ def grade_receipt(
     queue: QuarantineQueue | None = None,
     rates: UngradedRateTracker | None = None,
     task: object = None,
+    native: Mapping[str, Any] | None = None,
+    native_diagnostics: str | None = None,
 ) -> Grade:
     """Grade one stored envelope.
 
@@ -319,6 +338,8 @@ def grade_receipt(
     worker or harness crash, stays ``unattributed`` and, when
     ``queue`` is set, pending, until ``triage`` attributes it.
     ``rerun`` and ``known_good`` are not a grading path.
+    ``native`` is a Faust 2.88.0 CLI receipt. It can attribute a
+    compile stack line and nothing else.
     """
     if rerun is not None or known_good is not None:
         raise AutoAttributionRefused(
@@ -329,6 +350,8 @@ def grade_receipt(
         diagnostics=diagnostics,
         triage=triage,
         task=task,
+        native=native,
+        native_diagnostics=native_diagnostics,
     )
     _account(result, policy=policy, queue=queue, rates=rates)
     return result
@@ -368,6 +391,8 @@ def _bind_grade_receipt(grade: Callable[..., Grade]) -> tuple[
         queue: QuarantineQueue | None = None,
         rates: UngradedRateTracker | None = None,
         task: object = None,
+        native: Mapping[str, Any] | None = None,
+        native_diagnostics: str | None = None,
     ) -> Grade:
         result = grade(
             envelope,
@@ -379,6 +404,8 @@ def _bind_grade_receipt(grade: Callable[..., Grade]) -> tuple[
             queue=queue,
             rates=rates,
             task=task,
+            native=native,
+            native_diagnostics=native_diagnostics,
         )
         if isinstance(result, RewardableSignalReceipt):
             registry[result] = (id(result), token, result._snapshot())
@@ -387,12 +414,69 @@ def _bind_grade_receipt(grade: Callable[..., Grade]) -> tuple[
     return grade_receipt, is_minted
 
 
+def shadow_observe(
+    envelope: Mapping[str, Any],
+    *,
+    diagnostics: str | None = None,
+    rerun: Rerun | None = None,
+    known_good: KnownGood | None = None,
+    native: Mapping[str, Any] | None = None,
+    native_diagnostics: str | None = None,
+) -> ShadowLog:
+    """Log an A2-T observation. This does not grade.
+
+    The rerun and fixture hooks may run here. Their results are text
+    on the log. This function does not mint a receipt, does not call
+    ``grade_receipt``, and does not return a value ``reward_value``
+    accepts.
+    """
+    if not isinstance(envelope, Mapping):
+        raise RewardProvenanceError("shadow observe requires an envelope")
+    payload = envelope.get("payload")
+    notes: list[str] = []
+    if rerun is not None:
+        outcome = rerun(dict(payload) if isinstance(payload, dict) else {})
+        notes.append(f"rerun failed={getattr(outcome, 'failed', None)}")
+    if known_good is not None:
+        fixture = known_good()
+        notes.append(f"fixture passed={getattr(fixture, 'passed', None)}")
+    matched = _native_stack_match(
+        payload if isinstance(payload, Mapping) else {},
+        native,
+        native_diagnostics,
+    )
+    if native is not None or native_diagnostics is not None:
+        notes.append("native Faust 2.88.0 stack match" if matched else "native match absent")
+    detail = "; ".join(notes) if notes else "logged, not graded"
+    return ShadowLog(signature=_shadow_signature(payload, diagnostics), detail=detail)
+
+
+def _shadow_signature(payload: object, diagnostics: str | None) -> str:
+    """Name the observed signature. This name is not a reward."""
+    if isinstance(payload, Mapping):
+        if payload.get("runtime_stack_overflow") is True:
+            return "runtime_stack_overflow"
+        trap = payload.get("wasm_trap")
+        if isinstance(trap, str) and trap != "":
+            return "wasm_trap"
+        exit_code = payload.get("exit_code")
+        if exit_code in (124, 125, 126):
+            if isinstance(diagnostics, str) and _compile_stack_line(diagnostics):
+                return "stack_line"
+            return f"exit_{exit_code}"
+    if isinstance(diagnostics, str) and _compile_stack_line(diagnostics):
+        return "stack_line"
+    return "unspecified"
+
+
 def _grade(
     envelope: Mapping[str, Any],
     *,
     diagnostics: str | None,
     triage: str | None,
     task: object,
+    native: Mapping[str, Any] | None,
+    native_diagnostics: str | None,
 ) -> Grade:
     if not isinstance(envelope, Mapping):
         return Ungraded(UngradedReason.SCHEMA_INVALID, "envelope is not an object")
@@ -418,6 +502,8 @@ def _grade(
             payload,
             diagnostics=diagnostics,
             triage=triage,
+            native=native,
+            native_diagnostics=native_diagnostics,
         )
     return _grade_signal(envelope, payload, task=task)
 
@@ -573,6 +659,8 @@ def _grade_compiler(
     *,
     diagnostics: str | None,
     triage: str | None,
+    native: Mapping[str, Any] | None,
+    native_diagnostics: str | None,
 ) -> Grade:
     version = envelope.get("schema_version")
     if version not in ACCEPTED_COMPILER_SCHEMA_VERSIONS:
@@ -586,7 +674,13 @@ def _grade_compiler(
         return Ungraded(UngradedReason.SCHEMA_INVALID, exc.detail)
     if _envelope_digest_mismatch(envelope, payload):
         return Ungraded(UngradedReason.DIGEST_MISMATCH, "envelope digest does not match the payload")
-    tagged = _source_tag(payload, diagnostics, stage="compile")
+    tagged = _source_tag(
+        payload,
+        diagnostics,
+        stage="compile",
+        native=native,
+        native_diagnostics=native_diagnostics,
+    )
     if tagged == "mismatch":
         return Ungraded(
             UngradedReason.DIGEST_MISMATCH,
@@ -701,16 +795,17 @@ def _source_tag(
     diagnostics: str | None,
     *,
     stage: str,
+    native: Mapping[str, Any] | None = None,
+    native_diagnostics: str | None = None,
 ) -> str | None:
     """Return a source tag, ``mismatch``, or ``None``.
 
     Remote import and ``resource limit: source size`` are exact harness
-    diagnostics and are already the source. Faust's own ``ERROR`` is a
-    line-start, case-sensitive match on the compile diagnostics of
-    this stage only. Harness prose is not scanned. Render exceptions
-    are not scanned here. ``runtime_stack_overflow`` and ``wasm_trap``
-    are not source tags: a worker limit can produce both, and nothing
-    here has a matching native Faust 2.88.0 failure.
+    diagnostics and are already the source. The two Faust stack lines
+    are source only with a matching native Faust 2.88.0 failure of the
+    same source. Harness prose is not scanned. Render exceptions are
+    not scanned here. ``runtime_stack_overflow`` and ``wasm_trap`` are
+    not source tags.
     """
     stderr = payload.get("stderr_digest")
     if stderr == _sha256_text(_REMOTE_DIAGNOSTIC):
@@ -723,9 +818,43 @@ def _source_tag(
         return "mismatch"
     if diagnostics.startswith(_HARNESS_PREFIXES):
         return None
-    if _compile_stack_line(diagnostics):
+    if _compile_stack_line(diagnostics) and _native_stack_match(
+        payload, native, native_diagnostics
+    ):
         return "stack overflow"
     return None
+
+
+def _native_stack_match(
+    payload: Mapping[str, Any],
+    native: Mapping[str, Any] | None,
+    native_diagnostics: str | None,
+) -> bool:
+    """True when ``native`` is a failed Faust 2.88.0 CLI compile of the same source.
+
+    The native diagnostics must hash to the receipt and must contain a
+    line-start stack line. A wasm receipt, another version, a different
+    source, or a digest mismatch is not a match.
+    """
+    if not isinstance(native, Mapping) or not isinstance(native_diagnostics, str):
+        return False
+    receipt = dict(native)
+    try:
+        validate(receipt, "compiler-receipt.schema.json")
+    except SchemaValidationError:
+        return False
+    if receipt.get("compiler") != "faust-cli":
+        return False
+    if receipt.get("faust_version") != NATIVE_FAUST_VERSION:
+        return False
+    if receipt.get("exit_code") == 0:
+        return False
+    source = payload.get("source_sha256")
+    if type(source) is not str or source == "" or receipt.get("source_sha256") != source:
+        return False
+    if _sha256_text(native_diagnostics) != receipt.get("stderr_digest"):
+        return False
+    return _compile_stack_line(native_diagnostics)
 
 
 def _compile_stack_line(text: str) -> bool:

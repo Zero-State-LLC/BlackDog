@@ -94,8 +94,11 @@ specs/001-faustcoder/
 2. **Compiler sandbox** (T03): runs libfaust from faustwasm in a Node.js worker
    with no network and resource limits, cross-checks with the native Faust
    2.88.0 CLI, and emits a CompilerReceipt with classified diagnostics.
-   The R-005 reward ladder is amended 0.3.4 (ADR-0006, A1–A7). ADR-0006
-   is in force in reward code (`grade_receipt`, spec §23).
+   The R-005 reward ladder is amended 0.3.4 (ADR-0006, A1–A7). Amended
+   0.3.5 (Jev, spec §24): the ladder is a logged diagnostic only. The
+   §23 rerun-plus-fixture path is the path Q2 replaces. It is not
+   sanctioned. Until A2-T leaves shadow mode, no receipt is
+   auto-attributed to the source.
 3. **Signal harness** (T04): renders with faustwasm at fixed sample rate, block
    size and seed, compares against stored references in the style of Faust's
    impulse tests, and emits a DSPTestReceipt. INFERRED: metric numbers live in
@@ -107,6 +110,11 @@ specs/001-faustcoder/
    lanes in pinned containers emit TargetReceipts; the FPGA F0 spike decides
    the FPGA path.
 5. **Data pipeline** (T05 to T07): implements the dataset machine (spec §7.1).
+   Amended 0.3.5 (Q3): `TOKEN_FLOOR=40` stays provisional. The protocol
+   in spec §24 runs only after H2 (brief: canonical ID/NUM stream) and
+   H3 (brief: NFKC and drop Cf/Cc). The shipped dedup must use the same
+   streams that protocol measures. P0 exits only with the floor
+   accepted by that protocol or marked provisional with a leakage caveat.
 6. **Baseline and training** (T08 to T10): implements the training machine
    (spec §7.3). Throughput and memory study (T09) precedes pinning the stack.
 7. **Evaluation and decision** (T11, T12): paired comparisons with confidence

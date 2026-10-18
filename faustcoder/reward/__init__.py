@@ -13,8 +13,10 @@ from faustcoder.reward.grader import (
     require_rewardable_provenance,
     reward_value,
     rl_batch,
+    shadow_observe,
     AutoAttributionRefused,
     RewardOutcomeHeld,
+    ShadowLog,
     RewardProvenanceError,
     RewardUseRefused,
 )
@@ -51,6 +53,7 @@ __all__ = [
     "RewardProvenanceError",
     "RewardUseRefused",
     "RewardableSignalReceipt",
+    "ShadowLog",
     "SourceAttributedFailure",
     "TriageAttribution",
     "Ungraded",
@@ -65,4 +68,5 @@ __all__ = [
     "reward_profiles",
     "reward_value",
     "rl_batch",
+    "shadow_observe",
 ]

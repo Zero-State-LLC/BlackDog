@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import subprocess
 from pathlib import Path
@@ -31,6 +32,7 @@ from faustcoder.reward import (
     reward_profiles,
     reward_value,
     rl_batch,
+    shadow_observe,
 )
 from faustcoder.reward.grader import _compile_stack_line
 from faustcoder.schemas import SchemaValidationError, validate
@@ -1263,14 +1265,95 @@ def test_compiler_kill_exits_are_queued_crashes() -> None:
     assert queue.count("compiler-kill") == 3
 
 
-def test_compile_stack_lines_are_source_and_harness_prose_is_not() -> None:
+def _native_stack_receipt(
+    diagnostics: str,
+    *,
+    version: str = "2.88.0",
+    compiler: str = "faust-cli",
+    source: str = "ab" * 32,
+    exit_code: int = 1,
+) -> dict:
+    """A native CLI receipt. The stderr digest is ``diagnostics``."""
+    return {
+        "source_sha256": source,
+        "faust_version": version,
+        "command": ["faust"],
+        "exit_code": exit_code,
+        "stdout_digest": "sha256:" + "00" * 32,
+        "stderr_digest": "sha256:" + hashlib.sha256(diagnostics.encode("utf-8")).hexdigest(),
+        "duration_ms": 1,
+        "environment_digest": "sha256:" + "22" * 32,
+        "compiler": compiler,
+        "lang": "cpp",
+        "options": [],
+        "diagnostic_class": "parse_error" if exit_code == 1 else "internal",
+    }
+
+
+def test_compile_stack_lines_need_a_native_match() -> None:
     exact = "ERROR : stack overflow in eval\n"
     envelope = compiler_failure_envelope(
         exit_code=126, diagnostic_class="internal", diagnostics=exact
     )
-    graded = grade_receipt(envelope, diagnostics=exact)
+    held = grade_receipt(envelope, diagnostics=exact)
+    assert isinstance(held, Ungraded)
+    assert held.reason is UngradedReason.UNATTRIBUTED
+    assert reward_value(held) is None
+    graded = grade_receipt(
+        envelope,
+        diagnostics=exact,
+        native=_native_stack_receipt(exact),
+        native_diagnostics=exact,
+    )
     assert isinstance(graded, SourceAttributedFailure)
     assert graded.detail == "stack overflow"
+    plain = "ERROR : stack overflow\n"
+    plain_envelope = compiler_failure_envelope(
+        exit_code=126, diagnostic_class="internal", diagnostics=plain
+    )
+    plain_graded = grade_receipt(
+        plain_envelope,
+        diagnostics=plain,
+        native=_native_stack_receipt(plain),
+        native_diagnostics=plain,
+    )
+    assert isinstance(plain_graded, SourceAttributedFailure)
+    assert plain_graded.detail == "stack overflow"
+    other = "ERROR : undefined symbol\n"
+    other_envelope = compiler_failure_envelope(
+        exit_code=126, diagnostic_class="internal", diagnostics=other
+    )
+    # A line-start ERROR that is not one of the two stack lines stays
+    # ungraded. A native stack match does not attach to it.
+    untouched = grade_receipt(
+        other_envelope,
+        diagnostics=other,
+        native=_native_stack_receipt(exact),
+        native_diagnostics=exact,
+    )
+    assert isinstance(untouched, Ungraded)
+    assert untouched.reason is UngradedReason.UNATTRIBUTED
+    elsewhere = "ERROR : elsewhere\n"
+    refused = [
+        (_native_stack_receipt(exact, version="2.90.0"), exact),
+        (_native_stack_receipt(exact, compiler="libfaust-wasm"), exact),
+        (_native_stack_receipt(exact, source="cd" * 32), exact),
+        (_native_stack_receipt(exact, exit_code=0), exact),
+        (_native_stack_receipt(elsewhere), elsewhere),
+        (_native_stack_receipt(exact), "not the hashed text\n"),
+    ]
+    forged = _native_stack_receipt(exact)
+    forged["extra"] = True
+    refused.append((forged, exact))
+    for native, native_text in refused:
+        pending = grade_receipt(
+            envelope,
+            diagnostics=exact,
+            native=native,
+            native_diagnostics=native_text,
+        )
+        assert isinstance(pending, Ungraded), native
+        assert pending.reason is UngradedReason.UNATTRIBUTED
     for prose in (
         "error : stack overflow in eval\n",
         "note ERROR : stack overflow in eval\n",
@@ -1294,8 +1377,14 @@ def test_compile_stack_lines_are_source_and_harness_prose_is_not() -> None:
         producer="faustcoder.signal",
     )
     # A compile warning, even a line-start stack error, does not attribute
-    # a later render crash. A wasm trap on the crash stays unattributed.
-    later = grade_receipt(crash, diagnostics=exact)
+    # a later render crash. A native match does not either. A wasm trap
+    # on the crash stays unattributed.
+    later = grade_receipt(
+        crash,
+        diagnostics=exact,
+        native=_native_stack_receipt(exact),
+        native_diagnostics=exact,
+    )
     assert isinstance(later, Ungraded)
     assert later.reason is UngradedReason.UNATTRIBUTED
     trap_payload = dict(
@@ -1318,6 +1407,70 @@ def test_compile_stack_lines_are_source_and_harness_prose_is_not() -> None:
     assert trapped.reason is UngradedReason.UNATTRIBUTED
     assert reward_value(trapped) is None
     assert queue.count("trap") == 1
+
+
+def test_shadow_observe_reruns_and_never_grades() -> None:
+    exact = "ERROR : stack overflow in eval\n"
+    envelope = compiler_failure_envelope(
+        exit_code=126, diagnostic_class="internal", diagnostics=exact
+    )
+    called = {"rerun": 0, "fixture": 0}
+
+    def rerun(_payload: dict) -> RerunOutcome:
+        called["rerun"] += 1
+        return _rerun(envelope)
+
+    def fixture() -> FixtureOutcome:
+        called["fixture"] += 1
+        return FixtureOutcome(passed=True)
+
+    log = shadow_observe(
+        envelope,
+        diagnostics=exact,
+        rerun=rerun,
+        known_good=fixture,
+        native=_native_stack_receipt(exact),
+        native_diagnostics=exact,
+    )
+    assert called == {"rerun": 1, "fixture": 1}
+    assert log.signature == "stack_line"
+    assert "native Faust 2.88.0 stack match" in log.detail
+    assert "rerun failed=True" in log.detail
+    try:
+        reward_value(log)
+    except TypeError as exc:
+        assert "shadow" in str(exc)
+    else:
+        raise AssertionError("a shadow log was scored")
+    try:
+        dataset_reward_row(log, task=_linear_task())
+    except RewardProvenanceError:
+        pass
+    else:
+        raise AssertionError("a shadow log became a reward row")
+    try:
+        rl_batch([{"task": _linear_task(), "reward": 0.0, "provenance": log}])
+    except RewardProvenanceError:
+        pass
+    else:
+        raise AssertionError("a shadow log entered an RL batch")
+    called["rerun"] = 0
+    try:
+        grade_receipt(envelope, diagnostics=exact, rerun=rerun, known_good=fixture)
+    except AutoAttributionRefused:
+        pass
+    else:
+        raise AssertionError("grading accepted a shadow rerun")
+    assert called["rerun"] == 0
+    bare = shadow_observe(envelope, diagnostics=exact)
+    assert bare.signature == "stack_line"
+    assert bare.detail == "logged, not graded"
+    try:
+        reward_value(bare)
+    except TypeError as exc:
+        assert "shadow" in str(exc)
+    else:
+        raise AssertionError("an empty shadow log was scored")
 
 
 def test_compile_stack_line_breaks_on_newline_only() -> None:
