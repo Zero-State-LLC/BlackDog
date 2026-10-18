@@ -383,14 +383,21 @@ def test_non_object_envelope_is_rejected(store: ArtifactStore) -> None:
 
 
 def test_store_source_does_not_import_network_clients() -> None:
+    """The store does not fetch. acquire.py is the pinned-blob transport."""
     root = Path(__file__).resolve().parents[1] / "faustcoder"
     banned = ("urllib", "requests", "http.client", "httpx", "socket")
     for path in root.glob("*.py"):
+        if path.name == "acquire.py":
+            continue
         for line in path.read_text(encoding="utf-8").splitlines():
             stripped = line.strip()
             if stripped.startswith(("import ", "from ")):
                 for name in banned:
-                    assert name not in stripped
+                    assert name not in stripped, path.name
+    acquire = (root / "acquire.py").read_text(encoding="utf-8")
+    assert "import urllib" in acquire
+    for name in ("requests", "httpx"):
+        assert name not in acquire
 
 
 def test_stored_file_is_utf8_json(store: ArtifactStore) -> None:
