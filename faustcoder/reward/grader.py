@@ -195,7 +195,12 @@ def rl_batch(rows: list[Mapping[str, object]] | tuple[Mapping[str, object], ...]
             raise RewardProvenanceError("RL batch row is missing a reward")
         graded = require_rewardable_provenance(row.get("provenance"))
         reward = _finite_reward(row.get("reward"))
-        if graded.passed is False and reward != 0.0:
+        # Pending Danny's binary-versus-lowest-rung ruling. Until that
+        # lands, a passed receipt is exactly 1.0 and a failed receipt is exactly 0.0.
+        if graded.passed:
+            if reward != 1.0:
+                raise RewardProvenanceError("reward must be 1.0 when the receipt passed")
+        elif reward != 0.0:
             raise RewardProvenanceError("reward must be zero when the receipt failed")
         built.append(dict(row))
     return tuple(built)
@@ -518,6 +523,10 @@ def _grade_compiler(
         return Ungraded(UngradedReason.SCHEMA_INVALID, "triage is not source, harness or infra")
     exit_code = payload.get("exit_code")
     diagnostic_class = payload.get("diagnostic_class")
+    # A compiler receipt killed at 137, 139, or -9 is a crash. It is
+    # queued, not schema_invalid.
+    if exit_code in _SIGNAL_KILL_EXITS:
+        return _auto_attribute(digest, rerun=rerun, known_good=known_good)
     if exit_code not in _EXIT_CLASS:
         if diagnostic_class == "parse_error" or exit_code == 1:
             return SourceAttributedFailure(detail="compiler rejection")

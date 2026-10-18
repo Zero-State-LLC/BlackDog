@@ -18,6 +18,7 @@ reward code. `grade_receipt` is the consumer.
 | 124 | `timeout` | `unattributed` until triage or auto-attribution |
 | 125 | `resource_limit` | same as exit 124 |
 | 126 | `internal` | `unattributed`, unless already a remote import or a stack overflow |
+| 137, 139, -9 | any stored class | queued crash (`unattributed`), not `schema_invalid` |
 
 Do not score a stored `internal` or `resource_limit` class as `other`.
 `unbound_symbol` is a compiler result (exit 1), the class for libfaust

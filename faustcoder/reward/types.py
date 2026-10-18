@@ -187,6 +187,7 @@ class TriageResolution:
     triaged_by: str
     triaged_at: str
     grade: SourceAttributedFailure | Ungraded
+    evidence: str = ""
 
 
 def _utc_now() -> str:
@@ -241,13 +242,16 @@ class QuarantineQueue:
         attribution: TriageAttribution,
         triaged_by: str,
         triaged_at: str | None = None,
+        evidence: str = "",
     ) -> SourceAttributedFailure | Ungraded:
         """Re-grade one pending row and append the triage outcome.
 
         ``attribution`` is required. ``source`` returns the A1
-        ``parse_error`` rung. ``harness`` and ``infrastructure`` return
-        an ungraded row that is dropped and never scored. ``triaged_by``
-        and ``triaged_at`` are stored with that outcome. Calling this
+        ``parse_error`` rung and requires non-empty ``evidence``.
+        ``harness`` and ``infrastructure`` return an ungraded row that
+        is dropped and never scored. ``triaged_by`` and ``triaged_at``
+        are stored with that outcome. ``triaged_at`` is a timezone-aware
+        ISO-8601 timestamp and is not in the future. Calling this
         without an attribution raises ``TypeError`` and leaves the row
         pending.
         """
@@ -262,17 +266,17 @@ class QuarantineQueue:
         kind = _attribution(attribution)
         if not isinstance(triaged_by, str) or not triaged_by.strip():
             raise ValueError("triage requires the name of who resolved the row")
-        stamp = triaged_at or _utc_now()
-        if not isinstance(stamp, str) or not stamp.strip():
-            raise ValueError("triage requires when the row was resolved")
+        stamp = _require_triaged_at(triaged_at or _utc_now())
+        note = _require_evidence(kind, evidence)
         grade = _triage_grade(row, kind)
-        outcome = "parse_error" if kind is TriageAttribution.SOURCE else "dropped"
+        outcome = _outcome_for(kind)
         resolution = TriageResolution(
             record_id=record_id,
             attribution=kind,
             triaged_by=triaged_by.strip(),
             triaged_at=stamp,
             grade=grade,
+            evidence=note,
         )
         self._resolutions[record_id] = resolution
         self._append(
@@ -283,6 +287,7 @@ class QuarantineQueue:
                 "triaged_by": resolution.triaged_by,
                 "triaged_at": stamp,
                 "outcome": outcome,
+                "evidence": note,
             }
         )
         return grade
@@ -365,6 +370,10 @@ class QuarantineQueue:
                 )
             elif op == "resolve":
                 record_id = str(body["record_id"])
+                if record_id in self._resolutions:
+                    raise ValueError(
+                        f"quarantine log line {line_number} resolves {record_id} a second time"
+                    )
                 row = next((item for item in self._rows if item.record_id == record_id), None)
                 if row is None:
                     raise ValueError(
@@ -372,14 +381,21 @@ class QuarantineQueue:
                     )
                 kind = _attribution(body.get("attribution"))
                 triaged_by = body.get("triaged_by")
-                triaged_at = body.get("triaged_at")
                 if not isinstance(triaged_by, str) or not triaged_by.strip():
                     raise ValueError(
                         f"quarantine log line {line_number} has no triage attribution"
                     )
-                if not isinstance(triaged_at, str) or not triaged_at.strip():
+                try:
+                    triaged_at = _require_triaged_at(body.get("triaged_at"))
+                    evidence = _require_evidence(kind, body.get("evidence", ""))
+                except ValueError as exc:
                     raise ValueError(
-                        f"quarantine log line {line_number} has no triage attribution"
+                        f"quarantine log line {line_number} {exc}"
+                    ) from exc
+                expected = _outcome_for(kind)
+                if body.get("outcome") != expected:
+                    raise ValueError(
+                        f"quarantine log line {line_number} outcome does not match {kind.value}"
                     )
                 self._resolutions[record_id] = TriageResolution(
                     record_id=record_id,
@@ -387,6 +403,7 @@ class QuarantineQueue:
                     triaged_by=triaged_by.strip(),
                     triaged_at=triaged_at,
                     grade=_triage_grade(row, kind),
+                    evidence=evidence,
                 )
             else:
                 raise ValueError(f"quarantine log line {line_number} has op {op!r}")
@@ -402,6 +419,39 @@ def _attribution(value: object) -> TriageAttribution:
         raise ValueError(
             "attribution must be source, harness, or infrastructure"
         ) from exc
+
+
+def _outcome_for(attribution: TriageAttribution) -> str:
+    """Return the on-disk outcome that ``attribution`` must record."""
+    if attribution is TriageAttribution.SOURCE:
+        return "parse_error"
+    return "drop"
+
+
+def _require_evidence(attribution: TriageAttribution, evidence: object) -> str:
+    """Source triage needs a free-text note or a receipt reference."""
+    if not isinstance(evidence, str):
+        raise ValueError("evidence must be a string")
+    note = evidence.strip()
+    if attribution is TriageAttribution.SOURCE and not note:
+        raise ValueError("source triage requires evidence")
+    return note
+
+
+def _require_triaged_at(value: object) -> str:
+    """Return a timezone-aware ISO-8601 timestamp that is not in the future."""
+    if not isinstance(value, str) or not value.strip():
+        raise ValueError("triaged_at must be a timezone-aware ISO-8601 timestamp")
+    text = value.strip()
+    try:
+        parsed = datetime.fromisoformat(text.replace("Z", "+00:00"))
+    except ValueError as exc:
+        raise ValueError("triaged_at must be a timezone-aware ISO-8601 timestamp") from exc
+    if parsed.tzinfo is None or parsed.tzinfo.utcoffset(parsed) is None:
+        raise ValueError("triaged_at must be a timezone-aware ISO-8601 timestamp")
+    if parsed > datetime.now(timezone.utc):
+        raise ValueError("triaged_at must not be in the future")
+    return text
 
 
 def _triage_grade(

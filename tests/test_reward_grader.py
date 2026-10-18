@@ -466,6 +466,18 @@ def test_rl_batch_rejects_a_positive_reward_on_a_failed_receipt() -> None:
             raise AssertionError(f"reward {bad!r} was accepted")
     row["reward"] = 0.0
     assert rl_batch([row])[0]["reward"] == 0.0
+    passed = grade_receipt(allowlisted_reward_envelope(passed=True))
+    ok = dataset_reward_row(passed, example_id="e2")
+    assert ok["reward"] == 1.0
+    assert rl_batch([ok])[0]["reward"] == 1.0
+    for bad in (2.0, -5.0, 0.0, 0.5):
+        ok["reward"] = bad
+        try:
+            rl_batch([ok])
+        except RewardProvenanceError as exc:
+            assert "1.0" in str(exc)
+        else:
+            raise AssertionError(f"passed reward {bad!r} was accepted")
 
 
 def test_unknown_envelope_field_is_schema_invalid() -> None:
@@ -740,7 +752,8 @@ def test_source_triage_is_parse_error_and_harness_is_dropped() -> None:
         "row-source",
         attribution=TriageAttribution.SOURCE,
         triaged_by="danny",
-        triaged_at="2026-10-18T01:00:00Z",
+        triaged_at="2026-10-17T00:00:00Z",
+        evidence="sha256:" + "ab" * 32,
     )
     assert isinstance(source, SourceAttributedFailure)
     assert source.rung == "parse_error"
@@ -926,3 +939,140 @@ def test_reward_suite_grades_timeout_and_crash_on_commit(monkeypatch, store, tmp
     else:
         raise AssertionError("a suite sandbox failure was not held")
     assert ledger.queue.count("signal") == 3
+
+
+def _quarantine_log(*lines: dict[str, object]) -> str:
+    import json
+
+    return "".join(json.dumps(line, separators=(",", ":"), sort_keys=True) + "\n" for line in lines)
+
+
+def _held_timeout() -> dict[str, object]:
+    return {
+        "detail": "timeout",
+        "held_at": "2020-01-01T00:00:00Z",
+        "op": "hold",
+        "policy": "signal",
+        "reason": "unattributed",
+        "record_id": "row-1",
+        "reproducible_digest": "sha256:" + "ab" * 32,
+    }
+
+
+def _resolve_line(**overrides: object) -> dict[str, object]:
+    body: dict[str, object] = {
+        "attribution": "source",
+        "evidence": "quiet rerun sha256:" + "cd" * 32,
+        "op": "resolve",
+        "outcome": "parse_error",
+        "record_id": "row-1",
+        "triaged_at": "2026-10-17T00:00:00Z",
+        "triaged_by": "ada",
+    }
+    body.update(overrides)
+    return body
+
+
+def test_replay_refuses_a_second_resolve(tmp_path) -> None:
+    path = tmp_path / "quarantine.jsonl"
+    path.write_text(
+        _quarantine_log(_held_timeout(), _resolve_line(), _resolve_line()),
+        encoding="utf-8",
+    )
+    try:
+        QuarantineQueue(path)
+    except ValueError as exc:
+        assert "second time" in str(exc)
+    else:
+        raise AssertionError("a doubled resolve was replayed")
+
+
+def test_replay_refuses_a_source_to_harness_flip(tmp_path) -> None:
+    path = tmp_path / "quarantine.jsonl"
+    path.write_text(
+        _quarantine_log(
+            _held_timeout(),
+            _resolve_line(),
+            _resolve_line(attribution="harness", outcome="drop", evidence=""),
+        ),
+        encoding="utf-8",
+    )
+    try:
+        QuarantineQueue(path)
+    except ValueError as exc:
+        assert "second time" in str(exc)
+    else:
+        raise AssertionError("a source triage was flipped to harness")
+
+
+def test_replay_refuses_a_tampered_outcome(tmp_path) -> None:
+    path = tmp_path / "quarantine.jsonl"
+    path.write_text(
+        _quarantine_log(_held_timeout(), _resolve_line(outcome="drop")),
+        encoding="utf-8",
+    )
+    try:
+        QuarantineQueue(path)
+    except ValueError as exc:
+        assert "outcome" in str(exc)
+    else:
+        raise AssertionError("a source row with outcome drop was replayed")
+    harness = tmp_path / "harness.jsonl"
+    harness.write_text(
+        _quarantine_log(
+            _held_timeout(),
+            _resolve_line(attribution="infrastructure", outcome="parse_error", evidence=""),
+        ),
+        encoding="utf-8",
+    )
+    try:
+        QuarantineQueue(harness)
+    except ValueError as exc:
+        assert "outcome" in str(exc)
+    else:
+        raise AssertionError("an infrastructure row with outcome parse_error was replayed")
+
+
+def test_source_triage_requires_evidence_and_a_past_timestamp() -> None:
+    queue = QuarantineQueue()
+    queue.hold(
+        QuarantineRecord(
+            policy="signal",
+            reason=UngradedReason.UNATTRIBUTED,
+            reproducible_digest="sha256:" + "ab" * 32,
+            record_id="row-1",
+            held_at="2020-01-01T00:00:00Z",
+        )
+    )
+    for kwargs in (
+        {"evidence": "  ", "triaged_at": "2026-10-17T00:00:00Z"},
+        {"evidence": "receipt sha256:" + "ab" * 32, "triaged_at": "2099-01-01T00:00:00Z"},
+        {"evidence": "receipt sha256:" + "ab" * 32, "triaged_at": "2026-10-17T00:00:00"},
+    ):
+        try:
+            queue.resolve(
+                "row-1",
+                attribution=TriageAttribution.SOURCE,
+                triaged_by="ada",
+                **kwargs,
+            )
+        except ValueError:
+            pass
+        else:
+            raise AssertionError(f"source triage accepted {kwargs}")
+    assert queue.count() == 1
+
+
+def test_compiler_kill_exits_are_queued_crashes() -> None:
+    queue = QuarantineQueue()
+    for exit_code in (137, 139, -9):
+        envelope = compiler_failure_envelope(
+            exit_code=exit_code,
+            diagnostic_class="internal",
+            diagnostics="worker killed\n",
+        )
+        graded = grade_receipt(envelope, policy="compiler-kill", queue=queue)
+        assert isinstance(graded, Ungraded)
+        assert graded.reason is UngradedReason.UNATTRIBUTED
+        assert reward_value(graded) is None
+    assert queue.count("compiler-kill") == 3

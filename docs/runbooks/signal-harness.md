@@ -142,10 +142,14 @@ An ungraded sample is dropped from reward (`None`, not 0). A2 rows
 (`infra_fault`, `harness_defect`, `unattributed`) stay in the
 quarantine queue beside the artifact store (`reward-ledger/quarantine.jsonl`,
 append-only). `resolve` requires an attribution (`source`, `harness`,
-or `infrastructure`), who triaged the row, and when. `source` re-grades
-the row at `parse_error`. `harness` and `infrastructure` drop the row
-and it is never scored. A row nobody has resolved stays pending and is
-not a score. A pending row older than 24 hours raises the age alarm.
+or `infrastructure`), who triaged the row, and when. `triaged_at` is a
+timezone-aware ISO-8601 timestamp and is not in the future. `source`
+re-grades the row at `parse_error` and requires non-empty evidence (a
+note or a receipt reference). `harness` and `infrastructure` drop the
+row and it is never scored. Replay refuses a second resolve for the
+same row, and refuses an `outcome` that does not match the attribution
+(`parse_error` for source, `drop` for harness or infrastructure). A row
+nobody has resolved stays pending and is not a score. A pending row older than 24 hours raises the age alarm.
 Those 24 hours are provisional. `rates.json` beside the log is
 single-process.
 
