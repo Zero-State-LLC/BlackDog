@@ -27,7 +27,9 @@ an AST shingle):
 
 ``TOKEN_FLOOR`` is the single length constant for that minimum and
 for the verbatim run. It is 40. ``TOKEN_FLOOR_STATUS`` is
-``provisional``. Danny has not accepted 40 as clearance policy. The
+``provisional``. Danny has not accepted 40 as clearance policy.
+Acceptance bounds for the value are ratified
+(faustcoder/floor_protocol.py); the value itself is not. The
 measurement is ``docs/analysis/t06-short-kernel-floor.md``. Below the
 floor, shared Faust boilerplate (``declare``, ``import``, ``process``)
 dominates the shingles and unrelated programs look alike. Exact

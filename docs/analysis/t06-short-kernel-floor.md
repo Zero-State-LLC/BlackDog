@@ -297,3 +297,20 @@ Jev. It applies only on the H2 canonical stream, combined with the raw
 stream by OR, and never replaces the raw stream. The cutter in "How a span was cut" is a
 measurement aid. It is not the real slicer. ADVERSARY confirms
 containment and allowlist fixes against the shipping slicer path.
+
+## Amendment 2026-10-18 (labels)
+
+The acceptance bounds are ratified (Danny 2026-10-18 12:34 AM PT; spec §25). The value stays 40 and provisional. Recall is still not measured.
+
+The 14 floor-30 and 26 floor-20 declare-stripped survivors are now labelled. "The 26 are unlabeled survivors, not confirmed FPs" was the correction: those 26 were not confirmed false positives, and the FP count has to come from labels. Reading A is COPY / FP / UNDECIDED.
+
+| Floor | COPY | FP | UNDECIDED |
+|---|---|---|---|
+| 30 | 0 | 14 | 0 |
+| 20 | 1 | 24 | 1 |
+
+FP budget: floors 40, 30 and 20 all pass at B = 25. Floor 40 adds no blobs beyond its own set. After labelling, the floor-30 FP count is 14 and the floor-20 FP count is 24.
+
+The labels file is not in this repository. It quotes `rights_rejected` and `needs_human` source, which ADR-0003 forbids redistributing. This note records the summary counts only.
+
+Reviewer rulings (rights calls delegated to Boof), for the recall run that is still unmeasured: `needs_human` sources count as reject-class until a human clears them (fail closed). A copy that only a lower floor detects counts as a recall miss for the higher floors.
