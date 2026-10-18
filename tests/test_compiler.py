@@ -1339,6 +1339,37 @@ def test_reported_faust_directories_fail_closed(
         _reported_faust_directories(binary)
 
 
+def test_reported_faust_directories_refuse_a_non_utf8_pathslist(tmp_path: Path) -> None:
+    """A lone 0xec in --pathslist is a refusal, not a UnicodeDecodeError.
+
+    LANG=C does not make Faust's bytes ASCII. The CI flake was
+    ``text=True`` decoding that byte as UTF-8. The path does not exist.
+    """
+    binary = tmp_path / "faust"
+    # ``\354`` is byte 0xec. POSIX ``printf`` has no ``\x`` escape.
+    binary.write_bytes(
+        b"#!/bin/sh\n"
+        b'case "$1" in\n'
+        b"  --pathslist)\n"
+        b"    printf '%s\\n' 'FAUST dsp library paths:'\n"
+        b"    printf '/tmp/faust-pathslist-\\354\\n'\n"
+        b"    ;;\n"
+        b"esac\n"
+        b"exit 0\n"
+    )
+    binary.chmod(0o755)
+    try:
+        _reported_faust_directories(binary)
+    except SandboxError as exc:
+        assert "non-decodable" in str(exc)
+        assert "nonexistent" in str(exc)
+        assert not isinstance(exc.__cause__, UnicodeDecodeError)
+    except UnicodeDecodeError as exc:
+        raise AssertionError("pathslist decode crashed") from exc
+    else:
+        raise AssertionError("a non-decodable pathslist was accepted")
+
+
 def test_reported_faust_directories_keep_absolute_paths(tmp_path: Path) -> None:
     binary = tmp_path / "faust"
     binary.write_text(

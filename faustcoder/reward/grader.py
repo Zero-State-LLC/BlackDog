@@ -503,9 +503,10 @@ def _bind_native_mint() -> tuple[
         ``exit_code`` must be exactly ``int`` and equal to 1. ``1.0``,
         bools and ``int`` subclasses are refused, as are harness exits
         124, 125, 126, 137, 139 and -9, and any ``termination_signal``.
-        ``lang`` must be ``cpp``. Every ``-lang`` in ``command`` is
-        checked. The diagnostics must contain exactly one of the two
-        stack lines.
+        ``lang`` must be ``cpp``. ``command`` must contain ``-lang``
+        exactly once, and that argument must be ``cpp``. A command that
+        omits ``-lang`` is refused. The diagnostics must contain exactly
+        one of the two stack lines.
         """
         if not isinstance(receipt, Mapping) or type(diagnostics) is not str:
             raise RewardProvenanceError("native match requires a receipt and its diagnostics")
@@ -548,9 +549,9 @@ mint_native_stack_match, is_native_minted = _bind_native_mint()
 def _native_command(command: object) -> bool:
     """True when ``command`` is the native ``faust`` CLI, not libfaust-wasm.
 
-    Every ``-lang`` is checked. None means the cpp default. One ``-lang``
-    must be ``cpp``. A second ``-lang``, including another ``cpp``, is
-    refused.
+    ``-lang`` must appear exactly once and its argument must be ``cpp``.
+    Omitting ``-lang`` is refused. A second ``-lang``, including another
+    ``cpp``, is refused.
     """
     if not isinstance(command, list) or not command or type(command[0]) is not str:
         return False
@@ -571,7 +572,7 @@ def _native_command(command: object) -> bool:
             return False
         seen_lang = True
         index += 2
-    return True
+    return seen_lang
 
 
 def shadow_observe(

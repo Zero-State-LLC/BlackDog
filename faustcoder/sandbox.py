@@ -509,9 +509,12 @@ def _reported_faust_directories(binary: Path) -> tuple[Path, ...]:
     """Directories ``faust`` prints. A failed query raises ``SandboxError``.
 
     Every flag must exit 0. ``--pathslist`` must print a line
-    ``FAUST dsp library paths:``. The query runs in a network namespace
-    with ``FAUST_LIB_PATH`` unset, matching the scrubbed compile
-    environment. Non-absolute lines are ignored.
+    ``FAUST dsp library paths:``. Stdout is read as bytes and decoded
+    with ``os.fsdecode`` (``surrogateescape``). A non-decodable path is
+    refused, including one that is not on disk. A well-formed absolute
+    path that is missing is still returned. The query runs in a network
+    namespace with ``FAUST_LIB_PATH`` unset, matching the scrubbed
+    compile environment. Non-absolute lines are ignored.
     """
     if not binary.is_file():
         raise SandboxError(f"faust directory query failed: {binary} is not a file")
@@ -530,7 +533,6 @@ def _reported_faust_directories(binary: Path) -> tuple[Path, ...]:
             completed = subprocess.run(
                 [unshare, "--net", "--map-current-user", "--", str(binary), flag],
                 capture_output=True,
-                text=True,
                 timeout=10,
                 check=False,
                 env=env,
@@ -543,17 +545,81 @@ def _reported_faust_directories(binary: Path) -> tuple[Path, ...]:
             raise SandboxError(
                 f"faust directory query failed: {flag} exited {completed.returncode}"
             )
-        lines = completed.stdout.splitlines()
+        text = _decode_directory_query(completed.stdout, flag)
+        lines = text.splitlines()
         if flag == "--pathslist" and not any(line.strip() == header for line in lines):
             raise SandboxError(
                 "faust directory query failed: --pathslist did not print "
                 f"'{header}'"
             )
         for line in lines:
-            stripped = line.strip()
-            if stripped.startswith("/"):
-                found.append(Path(stripped))
+            path = _reported_directory(line, flag)
+            if path is not None:
+                found.append(path)
     return tuple(found)
+
+
+def _decode_directory_query(data: bytes, flag: str) -> str:
+    """Decode Faust's directory listing without assuming UTF-8.
+
+    ``LANG=C`` does not make the bytes ASCII. ``os.fsdecode`` uses the
+    filesystem encoding and ``surrogateescape``, so a lone byte such as
+    ``0xec`` stays visible instead of raising ``UnicodeDecodeError``.
+    """
+    if not isinstance(data, bytes):
+        raise SandboxError(f"faust directory query failed: {flag} output was not bytes")
+    try:
+        return os.fsdecode(data)
+    except UnicodeError as exc:
+        raise SandboxError(
+            f"faust directory query failed: {flag} printed a non-decodable path"
+        ) from exc
+
+
+def _reported_directory(line: str, flag: str) -> Path | None:
+    """One absolute directory from a Faust query, or ``None`` to skip.
+
+    A non-absolute line is ignored. A surrogate in the line is refused.
+    That refusal covers a nonexistent path and one that is on disk: the
+    query does not continue with a path it cannot name. A path that
+    cannot be stated is refused. A well-formed absolute path that is
+    not on disk is returned: the mount covers an absent directory, and
+    refuses one whose parent the caller can write.
+    """
+    if _has_surrogate(line):
+        stripped = line.strip()
+        present = False
+        if stripped.startswith("/"):
+            try:
+                present = Path(stripped).exists()
+            except OSError:
+                present = False
+        if not present:
+            raise SandboxError(
+                f"faust directory query failed: {flag} printed a non-decodable "
+                "nonexistent path"
+            )
+        raise SandboxError(
+            f"faust directory query failed: {flag} printed a non-decodable path"
+        )
+    stripped = line.strip()
+    if not stripped.startswith("/"):
+        return None
+    path = Path(stripped)
+    try:
+        path.lstat()
+    except FileNotFoundError:
+        return path
+    except OSError as exc:
+        raise SandboxError(
+            f"faust directory query failed: {flag} printed a path that cannot be checked"
+        ) from exc
+    return path
+
+
+def _has_surrogate(text: str) -> bool:
+    """True when ``text`` holds a byte ``surrogateescape`` could not decode."""
+    return any(0xD800 <= ord(character) <= 0xDFFF for character in text)
 
 
 def _protected_faust_paths(binary: Path, private: Path | None) -> list[Path]:

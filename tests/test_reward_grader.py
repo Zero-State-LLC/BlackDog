@@ -1397,7 +1397,7 @@ def _native_stack_receipt(
     return {
         "source_sha256": source,
         "faust_version": version,
-        "command": ["faust"] if command is None else command,
+        "command": ["faust", "-lang", "cpp"] if command is None else command,
         "exit_code": exit_code,
         "stdout_digest": "sha256:" + "00" * 32,
         "stderr_digest": "sha256:" + hashlib.sha256(diagnostics.encode("utf-8")).hexdigest(),
@@ -1960,7 +1960,8 @@ def test_native_command_checks_every_lang_flag() -> None:
     repeated = _native_stack_receipt(
         exact, command=["faust", "-lang", "cpp", "-lang", "cpp"]
     )
-    for native in (slipped, repeated):
+    omitted = _native_stack_receipt(exact, command=["faust"])
+    for native in (slipped, repeated, omitted):
         try:
             mint_native_stack_match(native, exact)
         except RewardProvenanceError as exc:
