@@ -4,18 +4,26 @@
 # has 2.88.0 is left alone.
 set -euo pipefail
 
+if command -v sudo >/dev/null 2>&1 && [[ "$(id -u)" -ne 0 ]]; then
+  SUDO=sudo
+else
+  SUDO=
+fi
+
+# An absent fallback is not mounted, only checked. On a host where
+# /usr/share is mode 0777, a racing user can plant /usr/share/faust
+# after that check. Create the directories root-owned and not
+# world-writable before any compile.
+$SUDO mkdir -p /usr/share/faust /usr/local/share/faust
+$SUDO chown root:root /usr/share/faust /usr/local/share/faust
+$SUDO chmod 755 /usr/share/faust /usr/local/share/faust
+
 if command -v faust >/dev/null 2>&1; then
   version=$(faust -v 2>&1 || true)
   if [[ "$version" == *"2.88.0"* ]]; then
     echo "Faust 2.88.0 already on PATH"
     exit 0
   fi
-fi
-
-if command -v sudo >/dev/null 2>&1 && [[ "$(id -u)" -ne 0 ]]; then
-  SUDO=sudo
-else
-  SUDO=
 fi
 
 $SUDO apt-get update

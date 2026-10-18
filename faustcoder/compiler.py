@@ -130,14 +130,18 @@ Harness failures override that text:
 - wall clock or CPU backstop -> ``timeout``, exit 124
 - memory, output size or source size -> ``resource_limit``, exit 125,
   diagnostic ``resource limit: ...``
-- a JS runtime exception (``allocate is not defined``, ``Maximum call
-  stack size exceeded``, ``ReferenceError``, ``RangeError``, ``TypeError``,
-  and the same family), Faust's ``ERROR : stack overflow in eval`` (the
-  evaluator crash libfaust-wasm sometimes returns instead of dying), a
-  remote ``import`` / ``library`` / ``component`` URL rejected before
-  spawn, a worker crash (including ``SIGSEGV`` from a recursive source
-  once ``--stack-size=8192`` lets it pass the old V8 limit), or an
-  unreadable result -> ``internal``, exit 126
+- a JS runtime exception at the start of its own line
+  (``TypeError: ``, ``RangeError: ``, ``ReferenceError: ``,
+  ``SyntaxError: ``, ``InternalError: ``, including
+  ``RangeError: Maximum call stack size exceeded``), case-sensitive, a
+  diagnostic line that is exactly ``ERROR : stack overflow in eval``
+  (the evaluator crash libfaust-wasm sometimes returns instead of
+  dying), a remote ``import`` / ``library`` / ``component`` URL rejected
+  before spawn, a worker crash (including ``SIGSEGV`` from a recursive
+  source once ``--stack-size=8192`` lets it pass the old V8 limit), or
+  an unreadable result -> ``internal``, exit 126. Any other line that
+  contains ``ERROR :`` or ``WARNING`` is a source diagnostic, even when
+  Faust echoes a crash token from the program.
 
 Compiler rejection of the source is exit 1. Exit 0 is ``ok`` or ``warning``.
 
@@ -226,16 +230,12 @@ _LIB_VERSION = re.compile(
 _REMOTE_IMPORT = re.compile(
     r"""(?ix)\b(?:import|library|component)\s*\(\s*["']https?://"""
 )
-_JS_RUNTIME = (
-    "allocate is not defined",
-    "maximum call stack size exceeded",
-    "stack overflow",
-    "referenceerror",
-    "rangeerror",
-    "typeerror",
-    "syntaxerror",
-    "is not defined",
-    "is not a function",
+# Faust's stackOverflowDetector. The whole trimmed line, not a substring.
+_STACK_OVERFLOW_EVAL = "ERROR : stack overflow in eval"
+# Node/V8 exceptions. Case-sensitive and only at the start of a line.
+# A line that starts with "ERROR :" is a Faust diagnostic, never one of these.
+_JS_RUNTIME_LINE = re.compile(
+    r"^(?:TypeError|RangeError|ReferenceError|SyntaxError|InternalError): "
 )
 _PIN_LOCK = threading.Lock()
 _PIN_CACHE: dict[tuple[str, ...], "RuntimePin"] = {}
@@ -1193,15 +1193,31 @@ def _digest(data: bytes) -> str:
 def _is_js_runtime(diagnostics: str) -> bool:
     """True when the text is a compiler crash, not a source diagnostic.
 
-    Markers win over the ``ERROR :`` prefix. Faust throws
-    ``ERROR : stack overflow in eval`` when the evaluator's stack
-    detector trips, and libfaust-wasm puts that string in the worker
-    result. The same source sometimes dies with ``SIGSEGV`` first. Both
-    stay ``internal``. A source diagnostic such as ``ERROR : syntax
-    error`` does not match a crash marker and stays a compiler rejection.
+    ``ERROR :`` or ``WARNING`` anywhere is a source diagnostic. The one
+    exception is a line that is exactly ``ERROR : stack overflow in eval``
+    after trimming: Faust throws that when the evaluator's stack detector
+    trips, and libfaust-wasm puts that string in the worker result. The
+    same source sometimes dies with ``SIGSEGV`` first. Both stay
+    ``internal``.
+
+    JS exceptions match only at the start of a line, case-sensitive
+    (``TypeError: ``, ``RangeError: ``, ``ReferenceError: ``,
+    ``SyntaxError: ``, ``InternalError: ``). A crash token echoed inside
+    a Faust error, a comment, or a declare does not match.
     """
-    folded = diagnostics.lower()
-    return any(marker in folded for marker in _JS_RUNTIME)
+    stripped = [line.strip() for line in diagnostics.splitlines()]
+    source_error = any(
+        line != _STACK_OVERFLOW_EVAL and ("ERROR :" in line or "WARNING" in line)
+        for line in stripped
+    )
+    if source_error:
+        return False
+    if any(line == _STACK_OVERFLOW_EVAL for line in stripped):
+        return True
+    return any(
+        not line.startswith("ERROR :") and _JS_RUNTIME_LINE.match(line) is not None
+        for line in stripped
+    )
 
 
 def _normalize_digest(value: str) -> str:

@@ -94,13 +94,14 @@ nearest existing parent is not root-only (not owned by root, writable by
 group or others, or not a real directory). A caller cannot create that
 directory under `/tmp` after the check. A Faust prefix installed outside
 a root-only directory, such as under `/tmp`, has to already contain those
-directories or the native compile is refused. The `/usr/share/faust` and
-`/usr/local/share/faust` fallbacks are passed through even when the
-parent is writable. GitHub-hosted Ubuntu images `chmod -R 777 /usr/share` and leave
-`/usr/local/bin` mode `0777`, so refusing that fallback, or an absent
-`<prefix>/bin/share/faust`, would stop every native compile on CI. The
-install script creates `<prefix>/share/faust`, `<prefix>/lib/faust` and
-`<prefix>/bin/share/faust` so those paths are masked. The mount step
+directories or the native compile is refused. An absent `/usr/share/faust`
+or `/usr/local/share/faust` is refused when its parent is world-writable.
+The mount does not cover a missing path, so a user who can create it can
+plant a library after the check. GitHub-hosted Ubuntu images `chmod -R 777 /usr/share` and leave
+`/usr/local/bin` mode `0777`. `scripts/install-faust-2.88.0.sh` creates
+root-owned mode `0755` `/usr/share/faust` and `/usr/local/share/faust`,
+plus `<prefix>/share/faust`, `<prefix>/lib/faust` and
+`<prefix>/bin/share/faust`, so those paths exist and are masked. The mount step
 still fails if some other absent path exists afterward and was not
 covered.
 A loader directory such as
@@ -144,8 +145,13 @@ MB, so 512 MB is not enough once its sibling is staged. 768 MB leaves
 room for the 50 ms poll. A recursive Faust definition with no base case
 hits `SIGSEGV` inside the worker at this stack size. The receipt is exit
 126 `internal`. libfaust-wasm sometimes catches the same overflow and
-returns `ERROR : stack overflow in eval` instead of dying. That text is
-still exit 126 `internal`, not a source failure.
+returns `ERROR : stack overflow in eval` instead of dying. A diagnostic
+line that is exactly that text is still exit 126 `internal`. Any other
+`ERROR :` or `WARNING` is a source failure, including when the program's
+own tokens (`TypeError`, `stack overflow`, a slider label) appear inside
+the message. A JS exception is internal only when its line starts with
+`TypeError: `, `RangeError: `, `ReferenceError: `, `SyntaxError: ` or
+`InternalError: `.
 
 ## Recorded exclusions
 

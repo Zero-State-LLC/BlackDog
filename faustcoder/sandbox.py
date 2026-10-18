@@ -17,8 +17,10 @@ Enforcement, in order:
    with an empty tmpfs, including candidates that are not there yet. If
    one of those appears during the mount and stays unmasked, the compile
    fails. An absent prefix ``share/faust`` or ``lib/faust`` whose
-   nearest existing parent is not root-only is refused. The ``/usr``
-   fallbacks are still passed through. Faust's own directory
+   nearest existing parent is not root-only is refused. An absent
+   ``/usr/share/faust`` or ``/usr/local/share/faust`` whose parent is
+   world-writable is refused too: the mount cannot cover a path that is
+   not there yet, so a racing user could plant it. Faust's own directory
    query fails closed. Faust then runs as the calling uid with ``CapEff``
    0. The hashed private copy passed as ``-I`` is not masked. Wasm compiles
    do not take that path. Node 22's
@@ -432,9 +434,9 @@ def faust_library_mounts(
     returned. The mount step covers it if it has appeared, and fails if it
     exists afterward and was not covered. An absent prefix
     ``share/faust`` or ``lib/faust`` beside the binary is refused when
-    its nearest existing parent is not root-only. The ``/usr`` fallbacks
-    are still passed through, including on a host where ``/usr/share`` is
-    world-writable. A reported loader directory such
+    its nearest existing parent is not root-only. An absent
+    ``/usr/share/faust`` or ``/usr/local/share/faust`` is refused when
+    that parent is world-writable. A reported loader directory such
     as ``/usr/lib`` is left in place so the compiler can start;
     ``lib/faust`` under it is still masked. ``private`` is the hashed
     ``-I`` directory and is never masked. The directory query fails closed.
@@ -616,13 +618,14 @@ def _pass_absent_mask(
     protected: Sequence[Path],
     unmaskable: set[Path],
 ) -> None:
-    """Pass an absent candidate through, or refuse an unsafe prefix parent.
+    """Pass an absent candidate through, or refuse an unsafe parent.
 
-    Only a prefix ``share/faust`` or ``lib/faust`` beside the binary is
-    refused when its nearest existing parent is not root-only. The
-    ``/usr`` fallbacks stay in the mount list: a hosted image may leave
-    ``/usr/share`` world-writable, and the mount step fails if that path
-    exists afterward and was not covered.
+    A prefix ``share/faust`` or ``lib/faust`` beside the binary is
+    refused when its nearest existing parent is not root-only. An absent
+    fallback (``/usr/share/faust`` or ``/usr/local/share/faust``) is
+    refused when that parent is world-writable. The mount does not cover
+    a path that is missing, so a caller who can create the directory can
+    plant a library after this check.
     """
     absolute = Path(os.path.abspath(path))
     if absolute in mounts:
@@ -636,15 +639,39 @@ def _pass_absent_mask(
         return
     ancestor = _nearest_existing_ancestor(absolute)
     if path in prefix and not _is_root_only_directory(ancestor):
-        info = _lstat_or_none(ancestor)
-        mode = 0 if info is None else info.st_mode & 0o777
-        uid = -1 if info is None else info.st_uid
-        raise SandboxError(
+        _refuse_unsafe_parent(
+            absolute,
+            ancestor,
             "Faust prefix parent is not root-only, so an absent library "
-            f"directory cannot be masked safely: {absolute} "
-            f"(parent {ancestor}, uid {uid}, mode {mode:o})"
+            "directory cannot be masked safely",
+        )
+    if absolute in _fallback_absolutes() and _is_world_writable(ancestor):
+        _refuse_unsafe_parent(
+            absolute,
+            ancestor,
+            "Faust fallback parent is world-writable, so an absent library "
+            "directory cannot be masked safely",
         )
     mounts.append(absolute)
+
+
+def _fallback_absolutes() -> set[Path]:
+    return {Path(os.path.abspath(path)) for path in FAUST_FALLBACK_DIRECTORIES}
+
+
+def _refuse_unsafe_parent(path: Path, ancestor: Path, reason: str) -> None:
+    info = _lstat_or_none(ancestor)
+    mode = 0 if info is None else info.st_mode & 0o777
+    uid = -1 if info is None else info.st_uid
+    raise SandboxError(f"{reason}: {path} (parent {ancestor}, uid {uid}, mode {mode:o})")
+
+
+def _is_world_writable(path: Path) -> bool:
+    """True when others can write ``path`` (the race that plants a fallback)."""
+    info = _lstat_or_none(path)
+    if info is None:
+        return False
+    return bool(info.st_mode & stat.S_IWOTH)
 
 
 def _nearest_existing_ancestor(path: Path) -> Path:

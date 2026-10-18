@@ -463,6 +463,120 @@ def test_stack_overflow_in_eval_stays_internal() -> None:
     )
     assert syntax.receipt["exit_code"] == 1
     assert syntax.receipt["diagnostic_class"] == "parse_error"
+    padded = _build(
+        b"f(n) = f(n - 1) + 1;\n",
+        compiler="libfaust-wasm",
+        faust_version="2.90.0",
+        lang="wasm",
+        options=(),
+        compile_ok=False,
+        diagnostics="  ERROR : stack overflow in eval  \n",
+        outputs=[],
+        duration_ms=1,
+    )
+    assert padded.receipt["exit_code"] == 126
+    near = _build(
+        b"process = 1;\n",
+        compiler="libfaust-wasm",
+        faust_version="2.90.0",
+        lang="wasm",
+        options=(),
+        compile_ok=False,
+        diagnostics="ERROR : stack overflow in eval happened\n",
+        outputs=[],
+        duration_ms=1,
+    )
+    assert near.receipt["exit_code"] == 1
+
+
+def _source_failure(diagnostics: str) -> object:
+    return _build(
+        b"process = 1;\n",
+        compiler="libfaust-wasm",
+        faust_version="2.90.0",
+        lang="wasm",
+        options=(),
+        compile_ok=False,
+        diagnostics=diagnostics,
+        outputs=[],
+        duration_ms=1,
+    )
+
+
+@pytest.mark.parametrize(
+    "diagnostics",
+    [
+        "RangeError: Maximum call stack size exceeded\n",
+        "ReferenceError: allocate is not defined\n",
+        "TypeError: foo is not a function\n",
+        "SyntaxError: Unexpected token\n",
+        "InternalError: too much recursion\n",
+    ],
+)
+def test_js_runtime_line_start_is_internal(diagnostics: str) -> None:
+    compiled = _source_failure(diagnostics)
+    assert compiled.receipt["exit_code"] == 126
+    assert compiled.receipt["diagnostic_class"] == "internal"
+
+
+@pytest.mark.parametrize(
+    "source",
+    [
+        "process = TypeError;\n",
+        "process = rangeerror;\n",
+        "process = SyntaxError;\n",
+        'process = component("stack overflow.dsp");\n',
+        'process = library("TypeError.lib");\n',
+        "typeerror(x) = x <: _, _;\nprocess = typeerror(1, 2);\n",
+        'process = hslider("stack overflow", 0, 1, 0, 0.1);\n',
+    ],
+)
+def test_echoed_crash_tokens_stay_source_errors(source: str) -> None:
+    compiled = compile_source(source, lang="wasm")
+    assert compiled.receipt["exit_code"] == 1
+    assert compiled.receipt["diagnostic_class"] != "internal"
+
+
+@pytest.mark.parametrize(
+    "diagnostics",
+    [
+        "input:1 : ERROR : undefined symbol : TypeError\n",
+        "input:1 : ERROR : undefined symbol : rangeerror\n",
+        "input:1 : ERROR : undefined symbol : SyntaxError\n",
+        "ERROR : unable to open file stack overflow.dsp\n",
+        "ERROR : unable to open file TypeError.lib\n",
+        "ERROR : too much arguments : 2, instead of : 1\nwhen applying : typeerror\nto : (1,2)\n",
+        'ERROR : min = 1 should be less than max = 0 in '
+        "'hslider(\"stack overflow\",0.0f,1.0f,0.0f,0.1f)'\n",
+        "// TypeError: Maximum call stack size exceeded\n"
+        "input:2 : ERROR : syntax error, unexpected ENDDEF\n",
+        'declare name "ReferenceError: allocate is not defined";\n'
+        "input:2 : ERROR : syntax error, unexpected ENDDEF\n",
+        "typeerror: foo is not defined\n",
+        "note TypeError: foo is not a function\n",
+    ],
+)
+def test_crash_markers_inside_source_diagnostics_stay_exit_1(diagnostics: str) -> None:
+    compiled = _source_failure(diagnostics)
+    assert compiled.receipt["exit_code"] == 1
+    assert compiled.receipt["diagnostic_class"] != "internal"
+
+
+@pytest.mark.parametrize(
+    "source",
+    [
+        "// TypeError: Maximum call stack size exceeded\n"
+        "// RangeError: Maximum call stack size exceeded\n"
+        "process = ;\n",
+        'declare name "ReferenceError: allocate is not defined";\n'
+        'declare author "SyntaxError: is not a function";\n'
+        "process = ;\n",
+    ],
+)
+def test_crash_markers_in_comments_and_declares_stay_exit_1(source: str) -> None:
+    compiled = compile_source(source, lang="wasm")
+    assert compiled.receipt["exit_code"] == 1
+    assert compiled.receipt["diagnostic_class"] != "internal"
 
 
 def test_sandbox_uid_is_unprivileged_and_offline(tmp_path: Path) -> None:
@@ -971,20 +1085,40 @@ def test_library_mounts_keep_absent_root_only_directories(
     assert private not in mounts
 
 
-def test_world_writable_usr_share_fallback_is_passed_through(
-    monkeypatch: pytest.MonkeyPatch,
+def test_absent_fallback_with_world_writable_parent_is_refused(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    # GitHub-hosted Ubuntu runs `chmod -R 777 /usr/share`. That fallback
-    # is not the binary prefix, so it is masked later instead of refused.
+    parent = tmp_path / "usr-share"
+    parent.mkdir()
+    parent.chmod(0o777)
+    missing = parent / "faust"
+    binary = tmp_path / "opt" / "bin" / "faust"
+    _fake_faust(binary)
+    _prefix_library_dirs(binary)
+    monkeypatch.setattr("faustcoder.sandbox.FAUST_FALLBACK_DIRECTORIES", (missing,))
     monkeypatch.setattr("faustcoder.sandbox._reported_faust_directories", lambda _binary: ())
+    private = tmp_path / "private"
+    private.mkdir()
+    with pytest.raises(SandboxError, match="world-writable"):
+        faust_library_mounts(binary, private=private)
 
-    def root_only(path: Path) -> bool:
-        return path != Path("/usr/share")
 
-    monkeypatch.setattr("faustcoder.sandbox._is_root_only_directory", root_only)
-    private = Path("/usr/lib/faustcoder-private-copy")
-    mounts = faust_library_mounts("/usr/local/bin/faust", private=private)
-    assert Path("/usr/share/faust") in mounts or Path("/usr/share/faust").resolve() in mounts
+def test_absent_fallback_with_private_parent_is_passed_through(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    parent = tmp_path / "usr-share"
+    parent.mkdir()
+    parent.chmod(0o755)
+    missing = parent / "faust"
+    binary = tmp_path / "opt" / "bin" / "faust"
+    _fake_faust(binary)
+    _prefix_library_dirs(binary)
+    monkeypatch.setattr("faustcoder.sandbox.FAUST_FALLBACK_DIRECTORIES", (missing,))
+    monkeypatch.setattr("faustcoder.sandbox._reported_faust_directories", lambda _binary: ())
+    private = tmp_path / "private"
+    private.mkdir()
+    mounts = faust_library_mounts(binary, private=private)
+    assert missing in mounts
 
 
 def test_absent_reported_directory_is_passed_through(
@@ -1096,6 +1230,10 @@ def test_install_script_pins_the_faust_tarball(tmp_path: Path) -> None:
     pinned = "e4e175cf236924b5b7d4784cbb8c50cc01e211159e169655dd9e6d8f92b871d9"
     assert pinned in script
     assert script.index("sha256sum -c") < script.index("tar -xzf")
+    assert "/usr/share/faust" in script
+    assert "/usr/local/share/faust" in script
+    assert script.index("chmod 755") < script.index("already on PATH")
+    assert "chown root:root" in script
     tarball = tmp_path / "faust-2.88.0.tar.gz"
     tarball.write_bytes(b"not-the-release\n")
     check = subprocess.run(
