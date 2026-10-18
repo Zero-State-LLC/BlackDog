@@ -59,11 +59,37 @@ the mounted tree changes `environment_digest`, and a mismatch is refused
 before a receipt is written. A checkout that does not match the pinned
 hash is refused the same way.
 
+A tamper refusal leaves the staged share in place. The harness does not
+delete it. Delete `faust/libraries/share-2edec0537f53` (the
+`share-<commit>` directory, not the checkout
+`faust/libraries/2edec0537f53`) and compile again. The next call
+re-stages that share from the verified checkout. Do not repair
+`.tree-sha256` by hand.
+
+The first publish waits at most 30 seconds in total. That bound covers
+the in-process lock and `share-<commit>.lock`, not each of them
+separately. The lock file is opened with `O_NOFOLLOW`. A symlink or a
+directory is refused. A hung holder raises `SandboxError` instead of
+blocking the caller.
+
 `scripts/fetch-faustlibraries.sh` downloads the commit on the host. The
 sandbox does not. Before every wasm compile the worker deletes
 `/usr/share/faust` in the Emscripten filesystem and writes that share.
-The native 2.88.0 cross-check passes the same directory as `-I`.
-The logical command records `--faustlibraries=2edec0537f53`.
+The native 2.88.0 cross-check copies that share into a private directory,
+hashes the copy, and passes the copy as `-I`. A mismatch raises before
+Faust starts. After `-I`, Faust searches the install prefix, then
+`<binary dir>/../share/faust` and `<binary dir>/share/faust`, then
+`/usr/local/share/faust` and `/usr/share/faust`. A copy of the binary
+under `/tmp/fprefix/bin` therefore also reads `/tmp/fprefix/share/faust`.
+The sandbox resolves the binary (symlinks followed) and covers
+`<prefix>/share/faust` and `<prefix>/lib/faust` when they exist. It also
+runs `faust --libdir`, `--dspdir`, `--includedir`, `--archdir` and
+`--pathslist` and covers every absolute directory that output names,
+except the hashed private copy. A loader directory such as `/usr/lib` is
+left in place so the dynamic linker can start Faust; `lib/faust` under
+that prefix is still covered. Each covered directory is an empty tmpfs
+in a private mount namespace. Faust still runs as the calling user with
+`CapEff` 0. The logical command records `--faustlibraries=2edec0537f53`.
 
 The data file still contains libraries 2.74.2. Those bytes are hashed so
 the runtime identity stays in the digest. They are not the libraries the
@@ -124,7 +150,10 @@ those six stay excluded after T06 normalizes them.
 
 The compiler runs as `unshare --net --map-current-user`. The uid inside
 the namespace is the calling user, not 0, and `CapEff` is 0. A connect
-fails with `ENETUNREACH`.
+fails with `ENETUNREACH`. The native cross-check adds a private mount
+namespace to mask the Faust search directories above, including
+`<binary>/../share/faust` and the directories Faust prints. The Faust
+process itself still has the calling uid and `CapEff` 0.
 
 GitHub-hosted Ubuntu sets `kernel.apparmor_restrict_unprivileged_userns=1`.
 The pytest job clears that sysctl only when `runner.environment` is
