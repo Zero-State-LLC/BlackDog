@@ -6,11 +6,14 @@ These files are byte-for-byte copies of the JSON Schemas listed in the
 | Item | Value |
 |---|---|
 | Source path | `specs/001-faustcoder/contracts/*.schema.json` |
-| Source commit | `fcc391e5b4360f594309f1e99cc1b8ac9baeaf9c` |
-| Copied | 2026-10-17 |
+| Directory added | #34 (`755c958`), 2026-10-17 |
+| Last schema edit | #45 (`af1ff4e`), 2026-10-17. No schema file changed after that commit on main `665d73b` |
 
-`inference-api.md` is not a JSON Schema and is not copied. `$id` values are
-unchanged, so each schema keeps the identity of its spec contract.
+`inference-api.md` is not a JSON Schema and is not copied. Each `$id` is
+still `https://github.com/Zero-State-LLC/FaustCoder/specs/001-faustcoder/contracts/<name>`.
+That host is the former repository name. It is the schema identity, not a
+link to a live clone. The repository is `Zero-State-LLC/BlackDog`. The
+Python package name stays `faustcoder`. Do not retarget `$id` at BlackDog.
 
 Do not edit a file here without editing the source file in the same change.
 `tests/test_schemas.py` fails when any `*.schema.json` pair differs.

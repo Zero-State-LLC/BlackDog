@@ -8,10 +8,11 @@ Compiler-verified Faust DSP coding model, developed on NVIDIA DGX Spark.
 
 ## Start here
 
-- [Canonical specification](specs/001-faustcoder/spec.md)
+- [Canonical specification](specs/001-faustcoder/spec.md) (0.3.10)
+- [Docs index](docs/INDEX.md): ADRs, decision records, runbooks, state machines, analysis and spec 001
 - [Source rights inventory](docs/rights-inventory.md)
 - [Implementation backlog](KANBAN.md)
-- Architecture decisions: [ADR-0001](docs/adr/0001-dag-evidence.md), [ADR-0002](docs/adr/0002-training-path.md), [ADR-0003](docs/adr/0003-licensing-and-data-rights.md), [ADR-0004](docs/adr/0004-target-lanes-and-faust-tooling.md)
+- Architecture decisions: [ADR-0001](docs/adr/0001-dag-evidence.md), [ADR-0002](docs/adr/0002-training-path.md), [ADR-0003](docs/adr/0003-licensing-and-data-rights.md), [ADR-0004](docs/adr/0004-target-lanes-and-faust-tooling.md), [ADR-0005](docs/adr/0005-compiler-diagnostic-classes.md), [ADR-0006](docs/adr/0006-source-attributable-failures.md)
 - [Constitution](.specify/memory/constitution.md)
 - [Contribution guidelines](CONTRIBUTING.md) and [security policy](SECURITY.md)
 - [Changelog](CHANGELOG.md) and [versioning](docs/VERSIONING.md)

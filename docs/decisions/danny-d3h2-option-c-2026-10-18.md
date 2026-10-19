@@ -28,3 +28,9 @@ P3 entry precondition, in addition to the draft's rules. P3 must not start or re
 ## Not ruled
 
 Ed25519 and DSSE for reward rows and reports. The audit cadence after P3 starts. Any numeric halt threshold other than zero disagreements. Compromise of a human key, root on the host, snapshot rollback of both logs, and social engineering of a triager stay outside this credential, as the subsection says.
+
+## Later ruling, not yet in spec §26
+
+Danny, 2026-10-18 5:45 PM PT, on [issue #68](https://github.com/Zero-State-LLC/BlackDog/issues/68): a software key is fine for Danny's triage key. Item 6 of that issue is dropped. The D3-H2-C implementation PR amends spec §26 to remove the hardware-key requirement for Danny's key, with no enforcement.
+
+The 5:11 PM approval above still says Danny's own key must be hardware-backed. Spec §26 on main `665d73b` still says that. This note does not change that text.
