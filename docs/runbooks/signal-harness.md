@@ -188,6 +188,13 @@ snapshot, including deleting the marker, anchor and report together
 without the key, which can erase a late-only halt (the same class of
 rollback), and a crash between the report fsync and the anchor move,
 which fails closed with no repair path.
+
+Triage of a disagreement is not earlier than the latest `halted_at`
+among halt reports that name that id, and not later than now plus five
+minutes. A halt with no usable `halted_at` stays un-triageable. That
+includes a legacy halt written before the stamp existed. The gate stays
+closed.
+
 Ed25519 is later. `REWARD_PROFILES` in
 `faustcoder/reward/profiles.py` is the only allowlist literal.
 `profile_digest` is the only profile digest computation.

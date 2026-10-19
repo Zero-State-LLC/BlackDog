@@ -1712,6 +1712,39 @@ def _stamp_from_now(seconds: int) -> str:
     return moment.strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
+def _append_halt_copy(
+    reports: AuditReportLog,
+    secret: bytes,
+    *,
+    halted_at: str | None,
+) -> None:
+    """Append a MAC'd copy of the first halt, with ``halted_at`` replaced.
+
+    ``halted_at`` None drops the field. That is a legacy halt: the line
+    stays in the chain, and the disagreement cannot be cleared.
+    """
+    copied: dict[str, object] | None = None
+    for line in reports.path.read_text(encoding="utf-8").splitlines():
+        if not line.strip():
+            continue
+        body = loads_strict(line)
+        if not isinstance(body, dict) or body.get("type") != "audit_report":
+            continue
+        report = body.get("report")
+        if isinstance(report, dict) and report.get("p3") == "halt":
+            copied = dict(report)
+            break
+    assert copied is not None
+    if halted_at is None:
+        copied.pop("halted_at", None)
+    else:
+        copied["halted_at"] = halted_at
+    reports._append_line(
+        derive_run_key(secret, RUN),
+        {"report": copied, "run_id": RUN, "type": "audit_report"},
+    )
+
+
 def test_refused_triage_probes_leave_the_halt_closed(tmp_path: Path) -> None:
     _secret, audit, consumed, reports, ring = _halted(tmp_path, "probes")
     record_id = audit.disagreements[0].record_id
@@ -1967,6 +2000,108 @@ def test_triage_time_is_bounded_by_the_halt_and_now(tmp_path: Path) -> None:
     size = reports.path.stat().st_size
     reports.record_triage(ring, record_id=record_id, triaged_by="danny", triaged_at=stamp)
     assert reports.path.stat().st_size == size
+
+
+_OVERFLOW_STAMPS = (
+    "0001-01-01T00:00:00+14:00",
+    "9999-12-31T23:59:59-12:00",
+)
+
+
+@pytest.mark.parametrize("extreme", _OVERFLOW_STAMPS)
+def test_an_overflowing_triage_stamp_is_refused_and_a_later_triage_clears(
+    tmp_path: Path, extreme: str
+) -> None:
+    secret, audit, consumed, reports, ring = _halted(tmp_path, "overflow")
+    record_id = audit.disagreements[0].record_id
+    stamp = _halt_stamp(reports)
+    uid = os.geteuid()
+    user = pwd.getpwuid(uid).pw_name
+    size = reports.path.stat().st_size
+    with pytest.raises(RewardRecordError, match="triage") as caught:
+        reports.record_triage(
+            ring, record_id=record_id, triaged_by="danny", triaged_at=extreme
+        )
+    assert type(caught.value) is RewardRecordError
+    assert reports.path.stat().st_size == size
+    assert p3_may_proceed(RUN, keyring=ring, reports=reports, consumed=consumed) is False
+    reports._append_line(
+        derive_run_key(secret, RUN),
+        {
+            "record_id": record_id,
+            "run_id": RUN,
+            "triaged_at": extreme,
+            "triaged_by": "danny",
+            "type": "audit_triage",
+            "writer_uid": uid,
+            "writer_user": user,
+        },
+    )
+    assert p3_may_proceed(RUN, keyring=ring, reports=reports, consumed=consumed) is False
+    refused = reports.refused_triages(ring)
+    assert len(refused) == 1
+    assert refused[0].record_id == record_id
+    assert "time" in refused[0].reason
+    reports.record_triage(ring, record_id=record_id, triaged_by="danny", triaged_at=stamp)
+    assert p3_may_proceed(RUN, keyring=ring, reports=reports, consumed=consumed) is True
+    assert len(reports.refused_triages(ring)) == 1
+
+
+def test_triage_is_bounded_by_the_latest_halted_at(tmp_path: Path) -> None:
+    secret, audit, consumed, reports, ring = _halted(tmp_path, "rehalt")
+    record_id = audit.disagreements[0].record_id
+    earliest = _halt_stamp(reports)
+    latest = _shift_stamp(earliest, 4 * 60)
+    between = _shift_stamp(earliest, 60)
+    _append_halt_copy(reports, secret, halted_at=latest)
+    _append_halt_copy(reports, secret, halted_at=earliest)
+    for too_early in (earliest, between):
+        size = reports.path.stat().st_size
+        with pytest.raises(RewardRecordError, match="triage"):
+            reports.record_triage(
+                ring, record_id=record_id, triaged_by="danny", triaged_at=too_early
+            )
+        assert reports.path.stat().st_size == size
+        assert p3_may_proceed(RUN, keyring=ring, reports=reports, consumed=consumed) is False
+    reports.record_triage(ring, record_id=record_id, triaged_by="danny", triaged_at=latest)
+    assert p3_may_proceed(RUN, keyring=ring, reports=reports, consumed=consumed) is True
+
+
+def test_a_legacy_halt_without_halted_at_stays_untriageable(tmp_path: Path) -> None:
+    secret, audit, consumed, reports, ring = _halted(tmp_path, "legacy")
+    record_id = audit.disagreements[0].record_id
+    stamp = _halt_stamp(reports)
+    uid = os.geteuid()
+    user = pwd.getpwuid(uid).pw_name
+    _append_halt_copy(reports, secret, halted_at=None)
+    assert p3_may_proceed(RUN, keyring=ring, reports=reports, consumed=consumed) is False
+    size = reports.path.stat().st_size
+    with pytest.raises(RewardRecordError, match="triage") as caught:
+        reports.record_triage(ring, record_id=record_id, triaged_by="danny", triaged_at=stamp)
+    assert type(caught.value) is RewardRecordError
+    assert reports.path.stat().st_size == size
+    reports._append_line(
+        derive_run_key(secret, RUN),
+        {
+            "record_id": record_id,
+            "run_id": RUN,
+            "triaged_at": stamp,
+            "triaged_by": "danny",
+            "type": "audit_triage",
+            "writer_uid": uid,
+            "writer_user": user,
+        },
+    )
+    assert p3_may_proceed(RUN, keyring=ring, reports=reports, consumed=consumed) is False
+    refused = reports.refused_triages(ring)
+    assert len(refused) == 1
+    assert refused[0].record_id == record_id
+    later = _shift_stamp(stamp, 60)
+    size = reports.path.stat().st_size
+    with pytest.raises(RewardRecordError, match="triage"):
+        reports.record_triage(ring, record_id=record_id, triaged_by="danny", triaged_at=later)
+    assert reports.path.stat().st_size == size
+    assert p3_may_proceed(RUN, keyring=ring, reports=reports, consumed=consumed) is False
 
 
 def test_nbsp_inside_a_name_is_refused(tmp_path: Path) -> None:

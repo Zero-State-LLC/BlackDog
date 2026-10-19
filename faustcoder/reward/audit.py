@@ -752,7 +752,8 @@ def _parse_rfc3339(value: object) -> datetime | None:
 
     ``validate_rfc3339`` uses ``$``, which matches before one trailing
     newline. A newline is not part of the timestamp. Lowercase ``t``
-    and ``z`` are refused.
+    and ``z`` are refused. An offset that cannot be converted to UTC
+    is refused rather than raised.
     """
     if type(value) is not str or value == "" or "\n" in value or "\r" in value:
         return None
@@ -763,9 +764,15 @@ def _parse_rfc3339(value: object) -> datetime | None:
         parsed = datetime.fromisoformat(text)
     except ValueError:
         return None
-    if parsed.tzinfo is None or parsed.tzinfo.utcoffset(parsed) is None:
+    # astimezone raises OverflowError for offsets that leave the
+    # datetime range (year 1 with +14:00, year 9999 with -12:00).
+    # That is a refused stamp, not an error the gate may raise.
+    try:
+        if parsed.tzinfo is None or parsed.tzinfo.utcoffset(parsed) is None:
+            return None
+        return parsed.astimezone(timezone.utc)
+    except (OverflowError, ValueError):
         return None
-    return parsed.astimezone(timezone.utc)
 
 
 def _require_triaged_at(value: object) -> str:
