@@ -229,7 +229,7 @@ of `linear`, `time_invariant`, `nonlinear`, `time_variant`. Only
 to the bool false. The string `"false"` is rejected.
 
 `require_task_rewardable` is the check. `dataset_reward_row` and
-`rl_batch` call it. A diagnostic render does not.
+`_rl_batch` call it. A diagnostic render does not.
 `assert_reward_allowed` still refuses the suite digest. Adding that
 digest to `REWARD_PROFILES` is a later review.
 

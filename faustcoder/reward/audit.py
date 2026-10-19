@@ -19,8 +19,10 @@ import json
 import os
 import pwd
 import unicodedata
+import warnings
 from collections.abc import Callable, Collection, Mapping, Sequence
 from dataclasses import dataclass
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from rfc3339_validator import RFC3339_REGEX, validate_rfc3339
@@ -55,6 +57,34 @@ _GENESIS_MAC = "0" * 64
 _ANCHOR_LEN = 248
 _ACTOR_MAX = 128
 _ROOT_USER = "root"
+_TRIAGE_SKEW = timedelta(minutes=5)
+# Hyphen-like and letter confusables that NFKC + casefold do not fold
+# to ASCII. U+2011 (non-breaking hyphen) becomes U+2010, not "-".
+_CONFUSABLE_SKELETON = str.maketrans(
+    {
+        "\u2010": "-",
+        "\u2011": "-",
+        "\u2012": "-",
+        "\u2013": "-",
+        "\u2014": "-",
+        "\u2015": "-",
+        "\u02d7": "-",
+        "\u2043": "-",
+        "\u207b": "-",
+        "\u208b": "-",
+        "\u2212": "-",
+        "\ufe58": "-",
+        "\u0261": "g",
+        "\u03bf": "o",
+        "\u03c4": "t",
+        "\u0430": "a",
+        "\u0435": "e",
+        "\u043e": "o",
+        "\u0441": "c",
+        "\u0442": "t",
+        "\u0501": "d",
+    }
+)
 
 
 @dataclass(frozen=True)
@@ -116,13 +146,31 @@ class RerunAudit:
         return canonical_bytes(self.report())
 
 
+class RefusedTriageWarning(UserWarning):
+    """A MAC'd triage line was skipped and did not clear a halt."""
+
+
+@dataclass(frozen=True)
+class RefusedTriage:
+    """One MAC'd triage line that does not clear a halt.
+
+    The line stays in the report log. ``reason`` is the refusal.
+    """
+
+    seq: int
+    record_id: str
+    reason: str
+
+
 class AuditReportLog:
     """Append-only MAC'd audit reports for one run.
 
     The file sits next to the consumed log. A halt stays until human
     triage is recorded against each disagreement. A triage from the
-    grader account or from root does not clear it. A later clear report
-    does not replace a halt.
+    grader account or from root does not clear it. A MAC'd triage line
+    that fails that check stays in the log and is reported; it does not
+    make the log unreadable and it does not clear the halt. A later
+    clear report does not replace a halt.
     """
 
     def __init__(self, path: Path | str, consumed: ConsumedLog) -> None:
@@ -132,11 +180,17 @@ class AuditReportLog:
         self.consumed = consumed
 
     def append(self, keyring: RewardKeyring, report: Mapping[str, object]) -> None:
-        """Persist ``report``. A clear report cannot cover an open halt."""
+        """Persist ``report``. A clear report cannot cover an open halt.
+
+        A halt is stamped ``halted_at`` from this clock, under the MAC.
+        Triage cannot be earlier than that stamp.
+        """
         run_key = _run_key(keyring)
         stored = dict(report)
         stored["consumed_id"] = _consumed_id(run_key, self.consumed.path)
         stored["consumed_path"] = os.path.realpath(self.consumed.path)
+        if stored.get("p3") == "halt":
+            stored["halted_at"] = _utc_stamp()
         body = _report_body(keyring.run_id, stored)
         self._append_line(run_key, body)
 
@@ -151,9 +205,11 @@ class AuditReportLog:
         """Record human triage for one disagreement. This is the only clear.
 
         ``triaged_by`` is stripped and must be a short printable name.
-        ``triaged_at`` is RFC 3339. The effective uid and its account
-        name are stored on the line, under the same MAC. The grader
-        account and root are refused.
+        ``triaged_at`` is RFC 3339, not earlier than the halt it clears,
+        and not later than now plus five minutes. The effective uid and
+        its account name are stored on the line, under the same MAC.
+        The grader account and root are refused after NFKC, casefold,
+        and a small confusable skeleton.
         """
         if type(record_id) is not str or record_id == "":
             raise RewardRecordError("audit triage record id is not usable")
@@ -164,6 +220,7 @@ class AuditReportLog:
         open_ids = _halt_ids(lines)
         if record_id not in open_ids:
             raise RewardRecordError("audit triage does not match a disagreement")
+        _require_not_before_halt(when, record_id, lines)
         if record_id in _triaged_ids(lines):
             return
         self._append_line(
@@ -178,6 +235,13 @@ class AuditReportLog:
                 "writer_user": writer_user,
             },
         )
+
+    def refused_triages(self, keyring: RewardKeyring) -> tuple[RefusedTriage, ...]:
+        """MAC'd triage lines that do not clear a halt.
+
+        The log stays readable. A listed line never clears its halt.
+        """
+        return _refused_triages(self._verified(keyring))
 
     def _verified(self, keyring: RewardKeyring) -> tuple[dict[str, object], ...]:
         if not self.path.is_file():
@@ -205,7 +269,14 @@ class AuditReportLog:
         if not found:
             raise RewardRecordError("audit report log is not usable")
         _check_chain(found)
-        return tuple(found)
+        lines = tuple(found)
+        for item in _refused_triages(lines):
+            warnings.warn(
+                f"refused audit triage seq {item.seq} does not clear a halt",
+                RefusedTriageWarning,
+                stacklevel=2,
+            )
+        return lines
 
     def _append_line(self, run_key: bytes, body: dict[str, object]) -> None:
         """Append one chained line and move the consumed-log anchor with it."""
@@ -281,7 +352,8 @@ def p3_may_proceed(
     The report must be the chain anchored in ``consumed``. An open halt
     stays closed until triage is recorded for each disagreement. A
     missing report is not clear. A bad MAC, a foreign consumed log, or
-    a truncated chain raises.
+    a truncated chain raises. A MAC'd triage line that fails the actor,
+    time, or writer check does not raise and does not clear the halt.
     """
     if not isinstance(reports, AuditReportLog):
         raise RewardRecordError("P3 requires the persisted audit report")
@@ -580,6 +652,28 @@ def _line_mac(run_key: bytes, body: Mapping[str, object]) -> str:
     return hmac.new(run_key, message, hashlib.sha256).hexdigest()
 
 
+def _name_skeleton(name: str) -> str:
+    """Fold ``name`` for the reserved-name comparison.
+
+    NFKC and casefold turn ``FC-GRADER``, ``Root``, and fullwidth
+    letters into the ASCII names. The confusable map then folds
+    hyphen-like characters and letters that NFKC leaves unchanged.
+    """
+    folded = unicodedata.normalize("NFKC", name).casefold()
+    folded = unicodedata.normalize("NFKC", folded)
+    return folded.translate(_CONFUSABLE_SKELETON)
+
+
+_RESERVED_SKELETONS = frozenset(
+    (_name_skeleton(GRADER_USER), _name_skeleton(_ROOT_USER))
+)
+
+
+def _is_reserved_name(name: str) -> bool:
+    """True when ``name`` is the grader account or root after folding."""
+    return _name_skeleton(name) in _RESERVED_SKELETONS
+
+
 def _printable_name(name: str) -> bool:
     """True when every character is printable and none is format or control."""
     if name == "" or not name.isprintable():
@@ -594,14 +688,15 @@ def _printable_name(name: str) -> bool:
 def _require_actor(value: object) -> str:
     """Strip ``value`` and refuse a blank, huge, or non-printable name.
 
-    The grader account and root are not a human triage actor.
+    The grader account and root are refused after NFKC, casefold, and
+    the confusable skeleton. The stored name is the stripped text.
     """
     if type(value) is not str:
         raise RewardRecordError("audit triage actor is not usable")
     name = value.strip()
     if name == "" or len(name) > _ACTOR_MAX or not _printable_name(name):
         raise RewardRecordError("audit triage actor is not usable")
-    if name == GRADER_USER or name == _ROOT_USER:
+    if _is_reserved_name(name):
         raise RewardRecordError("audit triage actor is not usable")
     return name
 
@@ -627,7 +722,7 @@ def _require_os_user(name: object, uid: object) -> tuple[int, str]:
         raise RewardRecordError("audit triage writer is not usable")
     if name == "" or len(name) > _ACTOR_MAX or not _printable_name(name):
         raise RewardRecordError("audit triage writer is not usable")
-    if name == GRADER_USER or name == _ROOT_USER:
+    if _is_reserved_name(name):
         raise RewardRecordError("audit triage writer is not usable")
     grader_uid = _dedicated_grader_uid()
     if grader_uid is not None and uid == grader_uid:
@@ -647,32 +742,132 @@ def _writing_os_user() -> tuple[int, str]:
     return _require_os_user(entry.pw_name, uid)
 
 
-def _require_triaged_at(value: object) -> str:
-    """Refuse a timestamp that is not RFC 3339 for its whole length.
+def _utc_stamp() -> str:
+    """RFC 3339 UTC time, whole seconds, uppercase ``Z``."""
+    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+def _parse_rfc3339(value: object) -> datetime | None:
+    """The UTC instant, or None when ``value`` is not a whole RFC 3339 stamp.
 
     ``validate_rfc3339`` uses ``$``, which matches before one trailing
-    newline. A newline is not part of the timestamp.
+    newline. A newline is not part of the timestamp. Lowercase ``t``
+    and ``z`` are refused.
     """
-    if type(value) is not str or "\n" in value or "\r" in value:
-        raise RewardRecordError("audit triage time is not usable")
+    if type(value) is not str or value == "" or "\n" in value or "\r" in value:
+        return None
     if RFC3339_REGEX.fullmatch(value) is None or validate_rfc3339(value) is not True:
+        return None
+    text = value[:-1] + "+00:00" if value.endswith("Z") else value
+    try:
+        parsed = datetime.fromisoformat(text)
+    except ValueError:
+        return None
+    if parsed.tzinfo is None or parsed.tzinfo.utcoffset(parsed) is None:
+        return None
+    return parsed.astimezone(timezone.utc)
+
+
+def _require_triaged_at(value: object) -> str:
+    """Refuse a stamp that is not RFC 3339 or is later than now plus skew."""
+    parsed = _parse_rfc3339(value)
+    if parsed is None or type(value) is not str:
+        raise RewardRecordError("audit triage time is not usable")
+    if parsed > datetime.now(timezone.utc) + _TRIAGE_SKEW:
         raise RewardRecordError("audit triage time is not usable")
     return value
 
 
-def _accepted_triage_id(body: Mapping[str, object]) -> str:
+def _disagreement_ids(report: Mapping[str, object]) -> set[str]:
+    items = report.get("disagreements")
+    if not isinstance(items, list):
+        return set()
+    found: set[str] = set()
+    for item in items:
+        if isinstance(item, dict) and type(item.get("record_id")) is str:
+            found.add(item["record_id"])
+    return found
+
+
+def _halt_instant(lines: Sequence[Mapping[str, object]], record_id: str) -> datetime:
+    """Latest usable ``halted_at`` among halts that include ``record_id``.
+
+    A halt that names the id and has no usable stamp fails closed.
+    """
+    latest: datetime | None = None
+    for line in lines:
+        if line.get("type") != "audit_report":
+            continue
+        report = line.get("report")
+        if not isinstance(report, dict) or report.get("p3") != "halt":
+            continue
+        if record_id not in _disagreement_ids(report):
+            continue
+        parsed = _parse_rfc3339(report.get("halted_at"))
+        if parsed is None:
+            raise RewardRecordError("audit triage time is not usable")
+        if latest is None or parsed > latest:
+            latest = parsed
+    if latest is None:
+        raise RewardRecordError("audit triage time is not usable")
+    return latest
+
+
+def _require_not_before_halt(
+    stamp: str,
+    record_id: str,
+    lines: Sequence[Mapping[str, object]],
+) -> None:
+    parsed = _parse_rfc3339(stamp)
+    if parsed is None or parsed < _halt_instant(lines, record_id):
+        raise RewardRecordError("audit triage time is not usable")
+
+
+def _accepted_triage_id(
+    body: Mapping[str, object],
+    lines: Sequence[Mapping[str, object]],
+) -> str:
     """Return the disagreement id when this line is a human triage.
 
     The same rules apply on write and on read. A refused line does not
-    clear the halt.
+    clear the halt. ``lines`` supplies the halt this triage would clear.
     """
     record_id = body.get("record_id")
     if type(record_id) is not str or record_id == "":
         raise RewardRecordError("audit triage is not usable")
     _require_actor(body.get("triaged_by"))
-    _require_triaged_at(body.get("triaged_at"))
+    when = _require_triaged_at(body.get("triaged_at"))
     _require_os_user(body.get("writer_user"), body.get("writer_uid"))
+    _require_not_before_halt(when, record_id, lines)
     return record_id
+
+
+def _shown_record_id(value: object) -> str:
+    if type(value) is not str or len(value) > _ACTOR_MAX:
+        return ""
+    return value
+
+
+def _refused_triages(lines: Sequence[Mapping[str, object]]) -> tuple[RefusedTriage, ...]:
+    """Triage lines in ``lines`` that fail acceptance."""
+    found: list[RefusedTriage] = []
+    for line in lines:
+        if line.get("type") != "audit_triage":
+            continue
+        try:
+            _accepted_triage_id(line, lines)
+        except RewardRecordError as exc:
+            seq = line.get("seq")
+            if type(seq) is not int or isinstance(seq, bool):
+                seq = 0
+            found.append(
+                RefusedTriage(
+                    seq=seq,
+                    record_id=_shown_record_id(line.get("record_id")),
+                    reason=str(exc),
+                )
+            )
+    return tuple(found)
 
 
 def _verify_line(body: dict[str, object], run_key: bytes, run_id: str) -> None:
@@ -706,7 +901,8 @@ def _verify_line(body: dict[str, object], run_key: bytes, run_id: str) -> None:
             raise RewardRecordError("audit report consumed log does not match")
         return
     if kind == "audit_triage":
-        _accepted_triage_id(body)
+        # The MAC and the chain already held. Acceptance is what clears
+        # a halt. A line that fails it is reported and skipped.
         return
     raise RewardRecordError("audit report is not usable")
 
@@ -1310,12 +1506,7 @@ def _halt_ids(lines: Sequence[Mapping[str, object]]) -> set[str]:
         report = line.get("report")
         if not isinstance(report, dict) or report.get("p3") != "halt":
             continue
-        items = report.get("disagreements")
-        if not isinstance(items, list):
-            continue
-        for item in items:
-            if isinstance(item, dict) and type(item.get("record_id")) is str:
-                found.add(item["record_id"])
+        found.update(_disagreement_ids(report))
     return found
 
 
@@ -1323,15 +1514,14 @@ def _triaged_ids(lines: Sequence[Mapping[str, object]]) -> set[str]:
     """Ids cleared by a triage this process would still accept.
 
     A line that fails the actor, time, or OS-user check does not clear
-    its halt. The same check runs in ``_verify_line``, so a refused
-    line also fails a full read.
+    its halt. The line stays readable and is reported separately.
     """
     found: set[str] = set()
     for line in lines:
         if line.get("type") != "audit_triage":
             continue
         try:
-            found.add(_accepted_triage_id(line))
+            found.add(_accepted_triage_id(line, lines))
         except RewardRecordError:
             continue
     return found

@@ -10,6 +10,8 @@ See [docs/VERSIONING.md](docs/VERSIONING.md).
 
 ### Security
 
+- Audit triage folds reserved actor and OS-user names with NFKC, casefold, and a small confusable skeleton before matching `fc-grader` and `root`. `FC-GRADER`, `Root`, fullwidth letters, and a non-breaking hyphen in `fc-grader` are refused. `triaged_at` must be RFC 3339, at or after the halt it clears (`halted_at` on that halt), and no later than now plus five minutes, on write and on read. A MAC'd triage line that fails those checks is reported (`AuditReportLog.refused_triages`) and does not make the report log unreadable. It does not clear the halt. The gate stays closed until a valid triage exists.
+
 - Audit triage strips `triaged_by`, requires a non-empty printable name of at most 128 characters, and requires `triaged_at` to be RFC 3339, on write and on read. The writing OS user (`writer_uid` and `writer_user`, from the effective uid) is stored under the report MAC. A triage whose actor or recorded OS user is `fc-grader`, the dedicated grader uid, or root is refused and does not clear a halt. `rl_batch` is private (`_rl_batch`); `rl_batch_from_records` is the only public batch builder.
 
 ### Added

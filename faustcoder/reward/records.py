@@ -1606,6 +1606,11 @@ def _grade_group(
             if type(exc).__name__ != "SignalHarnessError":
                 raise
             return "ungraded", []
+        # TODO(D3-H1-N12): reward is still chosen here. Route these
+        # rows through _rl_batch once an A1 SourceAttributedFailure,
+        # scored 0.0, can pass that builder. It accepts only a minted
+        # RewardableSignalReceipt. Tracked in
+        # specs/001-faustcoder/tasks.md.
         if isinstance(grade, RewardableSignalReceipt):
             reward = 1.0 if grade.passed else 0.0
         else:

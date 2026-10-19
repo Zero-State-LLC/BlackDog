@@ -99,7 +99,7 @@ omitted from `reproducible_digest`, along with per-stimulus
 `linear`, `time_invariant`, `nonlinear`, `time_variant`. Only the
 first two are rewardable. A missing or misspelled value is rejected.
 `require_task_rewardable` is that check. `dataset_reward_row` and
-`rl_batch` call it. A task with `effect` of `nonlinear` or
+`_rl_batch` call it. A task with `effect` of `nonlinear` or
 `time_variant` is not a reward sample (D5, 2026-10-17). Golden
 `sample_sha256` values are the raw little-endian binary32 bytes.
 NaN payloads are not canonicalized. `cpu_duration_ms`
