@@ -194,19 +194,25 @@ among halt reports that name that id (`persisted_at`, or `halted_at`
 on a line written before that field), and not later than now plus five
 minutes. A halt with no usable stamp stays un-triageable. That includes
 a legacy halt written before the stamp existed. The gate stays closed.
+Persist times, `triaged_at`, `appended_at`, `valid-after`,
+`valid-before`, and `-Overify-time` are UTC.
 
-Human triage signatures need OpenSSH 8.7 or newer (`ssh` and
-`ssh-keygen` on `PATH`). P3 checks that version before it starts. A
-missing binary, or an older OpenSSH, refuses to start. CI installs
-`openssh-client` and fails the job when `ssh -V` is older than 8.7.
+Human triage signatures need OpenSSH 8.7 or newer. Verification calls
+`/usr/bin/ssh-keygen` (not a `ssh-keygen` found on `PATH`). That binary
+must be root-owned, not a symlink, and not group- or world-writable.
+P3 version-checks that same binary before it starts. A missing binary,
+a timeout, or an older OpenSSH refuses to start. CI installs
+`openssh-client` and fails the job when that binary is older than 8.7.
 
 The allowed-signers file is `/etc/faustcoder/triage-allowed-signers`.
 It is root-owned, mode `0644`, in root-owned `/etc/faustcoder`. Mode
 `0444` is refused. `fc-grader` must not be able to write the file or
-that directory. Each line is one principal, with
-`namespaces="faustcoder-triage-v1"`, `valid-after`, and `valid-before`
-when the key is revoked. Do not delete an entry while any run that
-used it is retained. Set `valid-before` on the old line instead.
+that directory. Each line is one principal, with no `*`, `?`, `!`, or
+`,`, with `namespaces="faustcoder-triage-v1"` and a UTC `valid-after`,
+and `valid-before` when the key is revoked. The same public key on two
+lines is refused. Do not delete an entry while any run that used it is
+retained. Set `valid-before` on the old line instead. A late halt needs
+two distinct principals and two distinct key fingerprints.
 
 Create the grader account before P3. It must not be uid 1000, and it
 must not be the OS user of an enrolled reviewer. The principal in the
@@ -228,7 +234,9 @@ key type. Nothing checks that a key is hardware-backed.
 The reviewer signs as their own uid. The private key is mode `0400` or
 `0600` and is not group-readable. Then `fc-grader` appends the drop.
 The recorded writer is the owner of the drop file. Do not `chown` the
-drop to `fc-grader` or root.
+drop to `fc-grader` or root. The drop must be a regular file with one
+hard link. The grader opens it `O_NONBLOCK` and `O_NOFOLLOW`, so a FIFO
+cannot hang the append and a symlink is refused.
 
 ```sh
 faustcoder-snapshot triage sign \

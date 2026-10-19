@@ -33,4 +33,6 @@ Ed25519 and DSSE for reward rows and reports. The audit cadence after P3 starts.
 
 Danny, 2026-10-18 5:45 PM PT, on [issue #68](https://github.com/Zero-State-LLC/BlackDog/issues/68): a software key is fine for Danny's triage key. Item 6 of that issue is dropped. Spec §26 0.3.11 applies that ruling. The hardware-key requirement for Danny's key is removed. A hardware key is not required and is not enforced.
 
+Danny, 2026-10-18 9:27 PM PT, approved the two further edits that spec 0.3.11 carries beside that software-key ruling. Rule 5's file mode is `0644` only. A grader that backdates `appended_at` into a former validity window of a later-revoked key stays under "not covered". Both stay in spec 0.3.11.
+
 The 5:11 PM approval above still records the words Danny approved at that time, including that his own key must be hardware-backed. Spec 0.3.11 is the later text.

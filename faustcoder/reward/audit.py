@@ -224,10 +224,11 @@ class AuditReportLog:
         ``triaged_at`` is RFC 3339, not earlier than the halt it clears,
         and not later than now plus five minutes. ``drop_path`` is the
         human's signed drop. Its owner, read with ``fstat`` on an
-        ``O_NOFOLLOW`` fd, is the recorded writer. The grader account
-        and root are refused after NFKC, casefold, and a small
-        confusable skeleton. The same principal cannot sign one
-        disagreement twice. A late halt still needs a second principal.
+        ``O_NONBLOCK | O_NOFOLLOW`` fd, is the recorded writer. The grader
+        account and root are refused after NFKC, casefold, and a small
+        confusable skeleton. The same principal, and the same key
+        fingerprint, cannot sign one disagreement twice. A late halt
+        needs two distinct principals and two distinct key fingerprints.
         """
         if type(record_id) is not str or record_id == "":
             raise RewardRecordError("audit triage record id is not usable")
@@ -253,7 +254,11 @@ class AuditReportLog:
         )
         if type(drop.principal) is not str or drop.principal == "":
             raise RewardRecordError("audit triage signature is not usable")
-        if drop.principal in _accepted_principals(lines, self.allowed_signers).get(record_id, set()):
+        principals, fingerprints = _accepted_votes(lines, self.allowed_signers).get(
+            record_id, (set(), set())
+        )
+        fingerprint = drop.statement.get("key_fingerprint")
+        if drop.principal in principals or fingerprint in fingerprints:
             raise RewardRecordError("audit triage signature is not usable")
         appended_at = _utc_stamp()
         appended = _parse_rfc3339(appended_at)
@@ -955,7 +960,7 @@ def _latest_halt_seq(lines: Sequence[Mapping[str, object]], record_id: str) -> i
 def _late_disagreement(lines: Sequence[Mapping[str, object]], record_id: str) -> bool:
     """True when any halt names ``record_id`` in a late group.
 
-    A disagreement with no group id fails closed and needs two principals.
+    A disagreement with no group id fails closed and needs two votes.
     """
     saw = False
     late = False
@@ -994,8 +999,8 @@ def _accepted_triage(
     body: Mapping[str, object],
     lines: Sequence[Mapping[str, object]],
     allowed_signers: Path | None,
-) -> tuple[str, str]:
-    """Return ``(record_id, principal)`` when this line clears one vote.
+) -> tuple[str, str, str]:
+    """Return ``(record_id, principal, key_fingerprint)`` for one vote.
 
     The same rules apply on write and on read. A refused line does not
     clear the halt. Only ``v == 2`` can count, and only after the
@@ -1033,7 +1038,10 @@ def _accepted_triage(
         appended_at=appended_at,
         triaged_at=when,
     )
-    return record_id, principal
+    fingerprint = statement.get("key_fingerprint")
+    if type(fingerprint) is not str or fingerprint == "":
+        raise RewardRecordError("audit triage signature is not usable")
+    return record_id, principal, fingerprint
 
 
 def _line_run_id(body: Mapping[str, object], lines: Sequence[Mapping[str, object]]) -> str:
@@ -1717,20 +1725,22 @@ def _halt_ids(lines: Sequence[Mapping[str, object]]) -> set[str]:
     return found
 
 
-def _accepted_principals(
+def _accepted_votes(
     lines: Sequence[Mapping[str, object]],
     allowed_signers: Path | None = None,
-) -> dict[str, set[str]]:
-    """Distinct principals whose triage line still verifies."""
-    found: dict[str, set[str]] = {}
+) -> dict[str, tuple[set[str], set[str]]]:
+    """Principals and key fingerprints whose triage line still verifies."""
+    found: dict[str, tuple[set[str], set[str]]] = {}
     for line in lines:
         if line.get("type") != "audit_triage":
             continue
         try:
-            record_id, principal = _accepted_triage(line, lines, allowed_signers)
+            record_id, principal, fingerprint = _accepted_triage(line, lines, allowed_signers)
         except RewardRecordError:
             continue
-        found.setdefault(record_id, set()).add(principal)
+        principals, fingerprints = found.setdefault(record_id, (set(), set()))
+        principals.add(principal)
+        fingerprints.add(fingerprint)
     return found
 
 
@@ -1738,16 +1748,19 @@ def _triaged_ids(
     lines: Sequence[Mapping[str, object]],
     allowed_signers: Path | None = None,
 ) -> set[str]:
-    """Ids whose distinct accepted principals meet the quorum.
+    """Ids whose accepted votes meet the quorum.
 
     A line that fails the actor, time, writer, or signature check does
-    not count. One principal clears an ordinary halt. A late halt needs
-    two. The same principal twice counts once.
+    not count. One reviewer clears an ordinary halt. A late halt needs
+    two distinct principals and two distinct key fingerprints. The same
+    principal twice counts once. The same key twice counts once, even
+    when the two lines name different principals.
     """
     found: set[str] = set()
-    accepted = _accepted_principals(lines, allowed_signers)
-    for record_id, principals in accepted.items():
-        if len(principals) >= _quorum(lines, record_id):
+    accepted = _accepted_votes(lines, allowed_signers)
+    for record_id, (principals, fingerprints) in accepted.items():
+        need = _quorum(lines, record_id)
+        if len(principals) >= need and len(fingerprints) >= need:
             found.add(record_id)
     return found
 

@@ -7,6 +7,11 @@ message on stdin; a trailing filename is not that message. The key
 must be valid at both ``appended_at`` and ``triaged_at``. OpenSSH
 treats the ``valid-before`` instant as still valid, and this module
 does not: a key revoked at that instant does not clear a halt.
+
+Every timestamp this module hands to OpenSSH is UTC.
+``valid-after``, ``valid-before``, and ``-Overify-time`` are
+``YYYYMMDD`` or ``YYYYMMDDHHMMSS`` with no offset, interpreted as UTC.
+RFC 3339 stamps are converted to UTC before that formatting.
 """
 
 from __future__ import annotations
@@ -27,11 +32,18 @@ from faustcoder.reward.records import GRADER_USER, RewardRecordError
 
 NAMESPACE = "faustcoder-triage-v1"
 ALLOWED_SIGNERS_PATH = Path("/etc/faustcoder/triage-allowed-signers")
+# Absolute path. ``PATH`` is not consulted: a caller-controlled
+# ssh-keygen earlier on ``PATH`` must not be the verifier.
+SSH_KEYGEN_PATH = "/usr/bin/ssh-keygen"
+_KEYGEN_TIMEOUT_SECONDS = 30
 _MIN_OPENSSH = (8, 7)
+_PROBE_PRINCIPAL = "fc-version-probe"
+_PROBE_STAMP = "20200101000000"
 _BOX_UID = 1000
 _ALLOWED_MODE = 0o644
 _MAX_SIGNERS_BYTES = 1_048_576
 _MAX_DROP_BYTES = 1_048_576
+_PRINCIPAL_FORBIDDEN = frozenset("*?!,")
 _KEY_TYPES = frozenset({"ssh-ed25519", "sk-ssh-ed25519@openssh.com"})
 _DECISIONS = frozenset({"accept_stored", "accept_rerun", "exclude"})
 _STATEMENT_KEYS = frozenset(
@@ -91,31 +103,18 @@ def default_allowed_signers() -> Path:
 
 
 def require_openssh() -> tuple[int, int]:
-    """Fail closed unless ``ssh`` and ``ssh-keygen`` are OpenSSH 8.7 or newer.
+    """Fail closed unless ``SSH_KEYGEN_PATH`` is OpenSSH 8.7 or newer.
 
-    Called when a signature is checked and when P3 starts.
+    The binary is that constant (default ``/usr/bin/ssh-keygen``), not
+    whatever ``ssh`` or ``ssh-keygen`` ``PATH`` finds. It must be a
+    root-owned regular file and not group- or world-writable. A symlink
+    is refused. The version is read from that binary: a printed
+    ``OpenSSH_M.N`` banner, or, when the binary prints none, acceptance
+    of ``-Overify-time``, which OpenSSH added in 8.7. A timeout is a
+    refusal. Called when a signature is checked and when P3 starts.
     """
-    ssh = _which("ssh")
-    keygen = _which("ssh-keygen")
-    if ssh is None or keygen is None:
-        raise RewardRecordError("audit triage requires ssh-keygen")
-    try:
-        completed = subprocess.run(
-            [ssh, "-V"],
-            check=False,
-            capture_output=True,
-            text=True,
-        )
-    except OSError as exc:
-        raise RewardRecordError("audit triage requires ssh-keygen") from exc
-    text = f"{completed.stderr or ''}{completed.stdout or ''}"
-    match = _OPENSSH_VERSION.search(text)
-    if match is None:
-        raise RewardRecordError("audit triage requires OpenSSH 8.7 or newer")
-    version = (int(match.group(1)), int(match.group(2)))
-    if version < _MIN_OPENSSH:
-        raise RewardRecordError("audit triage requires OpenSSH 8.7 or newer")
-    return version
+    _checked_keygen()
+    return _openssh_version()
 
 
 def canonical_statement(statement: Mapping[str, object]) -> bytes:
@@ -140,9 +139,8 @@ def sign_statement(statement: Mapping[str, object], key_path: Path | str) -> str
         signature = root / "statement.sig"
         message.write_bytes(payload)
         os.chmod(message, 0o600)
-        completed = subprocess.run(
+        completed = _run_keygen(
             [
-                "ssh-keygen",
                 "-Y",
                 "sign",
                 "-f",
@@ -153,8 +151,7 @@ def sign_statement(statement: Mapping[str, object], key_path: Path | str) -> str
                 str(signature),
                 str(message),
             ],
-            check=False,
-            capture_output=True,
+            reason="audit triage signature is not usable",
         )
         if completed.returncode != 0 or not signature.is_file():
             raise RewardRecordError("audit triage signature is not usable")
@@ -274,11 +271,15 @@ def require_p3_grader_account(allowed_signers: Path | str | None = None) -> None
 
 
 def read_drop(path: Path | str) -> DropFile:
-    """Read a regular drop file and its owner from one O_NOFOLLOW fd."""
+    """Read a regular drop file and its owner from one no-follow fd.
+
+    The open is ``O_RDONLY | O_NONBLOCK | O_NOFOLLOW``, so a FIFO cannot
+    block the grader. A hard link (``st_nlink`` other than 1) is refused.
+    """
     fd = _open_nofollow(path, "audit triage drop file is not usable")
     try:
         info = os.fstat(fd)
-        if not stat.S_ISREG(info.st_mode):
+        if not stat.S_ISREG(info.st_mode) or info.st_nlink != 1:
             raise RewardRecordError("audit triage drop file is not usable")
         if info.st_size > _MAX_DROP_BYTES:
             raise RewardRecordError("audit triage drop file is not usable")
@@ -326,15 +327,13 @@ def read_drop(path: Path | str) -> DropFile:
 def public_fingerprint(key_path: Path | str) -> str:
     """OpenSSH ``SHA256:`` fingerprint of ``key_path``."""
     require_openssh()
-    completed = subprocess.run(
-        ["ssh-keygen", "-lf", str(key_path)],
-        check=False,
-        capture_output=True,
-        text=True,
+    completed = _run_keygen(
+        ["-lf", str(key_path)],
+        reason="audit triage key is not usable",
     )
     if completed.returncode != 0:
         raise RewardRecordError("audit triage key is not usable")
-    return _fingerprint_token(completed.stdout)
+    return _fingerprint_token(completed.stdout.decode("utf-8", "replace"))
 
 
 def write_drop(
@@ -353,7 +352,7 @@ def write_drop(
         "triaged_by": triaged_by,
     }
     data = canonical_bytes(body) + b"\n"
-    flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW | os.O_CLOEXEC
+    flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW | os.O_NONBLOCK | os.O_CLOEXEC
     try:
         fd = os.open(path, flags, 0o644)
     except OSError as exc:
@@ -418,6 +417,11 @@ def _refuse_revoked(entry: SignerEntry, instant: datetime) -> None:
 
 
 def _openssh_time(value: str) -> datetime | None:
+    """Parse an OpenSSH validity stamp as UTC.
+
+    The text has no zone. ``YYYYMMDD`` and ``YYYYMMDDHHMMSS`` are UTC,
+    the same clock ``-Overify-time`` uses.
+    """
     if _STAMP14.fullmatch(value) is not None:
         parsed = datetime.strptime(value, "%Y%m%d%H%M%S")
     elif _STAMP8.fullmatch(value) is not None:
@@ -441,6 +445,7 @@ def _ssh_verify(
     allowed: Path,
     when: datetime,
 ) -> None:
+    # ``-Overify-time`` is UTC. ``when`` is an absolute instant.
     stamp = when.astimezone(timezone.utc).strftime("%Y%m%d%H%M%S")
     with tempfile.TemporaryDirectory(prefix="fc-triage-sig-") as directory:
         root = Path(directory)
@@ -448,9 +453,8 @@ def _ssh_verify(
         sig_path = root / "statement.sig"
         sig_path.write_text(signature, encoding="utf-8")
         os.chmod(sig_path, 0o600)
-        completed = subprocess.run(
+        completed = _run_keygen(
             [
-                "ssh-keygen",
                 "-Y",
                 "verify",
                 "-f",
@@ -463,9 +467,8 @@ def _ssh_verify(
                 str(sig_path),
                 f"-Overify-time={stamp}",
             ],
-            input=payload,
-            check=False,
-            capture_output=True,
+            input_bytes=payload,
+            reason="audit triage signature is not usable",
         )
     if completed.returncode != 0:
         raise RewardRecordError("audit triage signature is not usable")
@@ -506,22 +509,34 @@ def _read_allowed(path: Path) -> str:
 
 def _parse_allowed(text: str) -> tuple[SignerEntry, ...]:
     found: list[SignerEntry] = []
+    seen: set[str] = set()
     for line in text.splitlines():
         stripped = line.strip()
         if stripped == "" or stripped.startswith("#"):
             continue
-        found.append(_parse_signer_line(stripped))
+        entry = _parse_signer_line(stripped)
+        identity = entry.fingerprint()
+        if identity in seen:
+            raise RewardRecordError("audit triage allowed signers are not usable")
+        seen.add(identity)
+        found.append(entry)
     if not found:
         raise RewardRecordError("audit triage allowed signers are not usable")
     return tuple(found)
 
 
 def _parse_signer_line(line: str) -> SignerEntry:
+    """One principal, no pattern characters, and a UTC ``valid-after``.
+
+    OpenSSH allows several comma-separated principals, and ``*``, ``?``,
+    and ``!`` as patterns. One key listed twice, or once as ``alice,bob``,
+    would otherwise count as two votes. This parser refuses those lines.
+    """
     parts = line.split()
-    if len(parts) < 3 or "," in parts[0] and parts[0].startswith(","):
+    if len(parts) < 3:
         raise RewardRecordError("audit triage allowed signers are not usable")
-    principals = tuple(part for part in parts[0].split(",") if part != "")
-    if not principals:
+    principal = parts[0]
+    if principal == "" or any(char in _PRINCIPAL_FORBIDDEN for char in principal):
         raise RewardRecordError("audit triage allowed signers are not usable")
     index = 1
     options: tuple[tuple[str, str], ...] = ()
@@ -535,13 +550,15 @@ def _parse_signer_line(line: str) -> SignerEntry:
     if key_type not in _KEY_TYPES or key_blob == "":
         raise RewardRecordError("audit triage allowed signers are not usable")
     entry = SignerEntry(
-        principals=principals,
+        principals=(principal,),
         options=options,
         key_type=key_type,
         key_blob=key_blob,
         raw=line,
     )
     if NAMESPACE not in _namespaces(entry):
+        raise RewardRecordError("audit triage allowed signers are not usable")
+    if _openssh_time(entry.option("valid-after") or "") is None:
         raise RewardRecordError("audit triage allowed signers are not usable")
     return entry
 
@@ -561,17 +578,15 @@ def _parse_options(text: str) -> tuple[tuple[str, str], ...]:
 
 
 def _fingerprint_of(key_type: str, key_blob: str) -> str:
-    line = f"{key_type} {key_blob}\n"
-    completed = subprocess.run(
-        ["ssh-keygen", "-lf", "-"],
-        input=line,
-        check=False,
-        capture_output=True,
-        text=True,
+    line = f"{key_type} {key_blob}\n".encode("ascii")
+    completed = _run_keygen(
+        ["-lf", "-"],
+        input_bytes=line,
+        reason="audit triage signature is not usable",
     )
     if completed.returncode != 0:
         raise RewardRecordError("audit triage signature is not usable")
-    return _fingerprint_token(completed.stdout)
+    return _fingerprint_token(completed.stdout.decode("utf-8", "replace"))
 
 
 def _fingerprint_token(text: str) -> str:
@@ -627,8 +642,13 @@ def _writable_by(info: os.stat_result, uid: int, gid: int) -> bool:
 
 
 def _open_nofollow(path: Path | str, reason: str) -> int:
+    """Open ``path`` for reading without following a symlink or blocking.
+
+    ``O_NONBLOCK`` is what stops a FIFO from hanging the grader. A
+    regular file is unaffected.
+    """
     try:
-        return os.open(path, os.O_RDONLY | os.O_NOFOLLOW | os.O_CLOEXEC)
+        return os.open(path, os.O_RDONLY | os.O_NONBLOCK | os.O_NOFOLLOW | os.O_CLOEXEC)
     except OSError as exc:
         raise RewardRecordError(reason) from exc
 
@@ -652,12 +672,111 @@ def _write_fd(fd: int, data: bytes) -> None:
         view = view[wrote:]
 
 
-def _which(name: str) -> str | None:
-    paths = os.environ.get("PATH", "").split(os.pathsep)
-    for directory in paths:
-        if directory == "":
+def _completed_text(completed: subprocess.CompletedProcess[bytes] | subprocess.CompletedProcess[str]) -> str:
+    chunks: list[str] = []
+    for part in (completed.stderr, completed.stdout):
+        if part is None:
             continue
-        candidate = Path(directory) / name
-        if os.access(candidate, os.X_OK) and candidate.is_file():
-            return str(candidate)
-    return None
+        if isinstance(part, bytes):
+            chunks.append(part.decode("utf-8", "replace"))
+        else:
+            chunks.append(part)
+    return "".join(chunks)
+
+
+def _checked_keygen() -> str:
+    """Absolute ``SSH_KEYGEN_PATH`` after the root-owned binary checks."""
+    raw = SSH_KEYGEN_PATH
+    if type(raw) is not str or not raw.startswith("/") or raw.endswith("/"):
+        raise RewardRecordError("audit triage requires ssh-keygen")
+    path = Path(raw)
+    try:
+        info = os.lstat(path)
+    except OSError as exc:
+        raise RewardRecordError("audit triage requires ssh-keygen") from exc
+    if stat.S_ISLNK(info.st_mode) or not stat.S_ISREG(info.st_mode):
+        raise RewardRecordError("audit triage requires ssh-keygen")
+    if info.st_uid != 0 or stat.S_IMODE(info.st_mode) & 0o022:
+        raise RewardRecordError("audit triage requires ssh-keygen")
+    if not os.access(path, os.X_OK):
+        raise RewardRecordError("audit triage requires ssh-keygen")
+    return str(path)
+
+
+def _run_keygen(
+    args: list[str],
+    *,
+    reason: str,
+    input_bytes: bytes | None = None,
+) -> subprocess.CompletedProcess[bytes]:
+    """Run the checked ``ssh-keygen``. A timeout or an exec error is refused."""
+    binary = _checked_keygen()
+    command = [binary, *args]
+    try:
+        return subprocess.run(
+            command,
+            input=input_bytes,
+            stdin=None if input_bytes is not None else subprocess.DEVNULL,
+            check=False,
+            capture_output=True,
+            timeout=_KEYGEN_TIMEOUT_SECONDS,
+        )
+    except (subprocess.TimeoutExpired, OSError) as exc:
+        raise RewardRecordError(reason) from exc
+
+
+def _openssh_version() -> tuple[int, int]:
+    """Version of the checked ``ssh-keygen`` binary.
+
+    ``ssh -V`` is not used. OpenSSH's ``ssh-keygen`` has no version flag
+    (``-V`` is a certificate validity interval). The probe runs that
+    binary with ``-Overify-time``. A banner of ``OpenSSH_M.N`` in the
+    output is the version. When the binary prints no banner, accepting
+    the option is OpenSSH 8.7 or newer and the returned pair is that
+    floor. Rejecting the option, or timing out, is a refusal.
+    """
+    with tempfile.TemporaryDirectory(prefix="fc-triage-version-") as directory:
+        root = Path(directory)
+        os.chmod(root, 0o700)
+        allowed = root / "allowed"
+        signature = root / "statement.sig"
+        allowed.write_text(
+            f'{_PROBE_PRINCIPAL} namespaces="{NAMESPACE}",valid-after="{_PROBE_STAMP}" '
+            "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\n",
+            encoding="utf-8",
+        )
+        os.chmod(allowed, 0o644)
+        signature.write_text(
+            "-----BEGIN SSH SIGNATURE-----\nAAAA\n-----END SSH SIGNATURE-----\n",
+            encoding="utf-8",
+        )
+        os.chmod(signature, 0o600)
+        completed = _run_keygen(
+            [
+                "-Y",
+                "verify",
+                "-f",
+                str(allowed),
+                "-I",
+                _PROBE_PRINCIPAL,
+                "-n",
+                NAMESPACE,
+                "-s",
+                str(signature),
+                f"-Overify-time={_PROBE_STAMP}",
+            ],
+            reason="audit triage requires ssh-keygen",
+        )
+    text = _completed_text(completed)
+    match = _OPENSSH_VERSION.search(text)
+    if match is not None:
+        version = (int(match.group(1)), int(match.group(2)))
+        if version < _MIN_OPENSSH:
+            raise RewardRecordError("audit triage requires OpenSSH 8.7 or newer")
+        return version
+    lowered = text.lower()
+    if "invalid option" in lowered or "unknown option" in lowered or "unsupported" in lowered:
+        raise RewardRecordError("audit triage requires OpenSSH 8.7 or newer")
+    if completed.returncode != 0 and "signature" in lowered:
+        return _MIN_OPENSSH
+    raise RewardRecordError("audit triage requires OpenSSH 8.7 or newer")

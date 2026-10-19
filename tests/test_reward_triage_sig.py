@@ -4,7 +4,9 @@ from __future__ import annotations
 
 import os
 import pwd
+import shutil
 import subprocess
+import sys
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
@@ -22,6 +24,9 @@ from faustcoder.reward.records import (
     rl_batch_from_records,
 )
 from faustcoder.reward.triage_sig import (
+    SSH_KEYGEN_PATH,
+    _openssh_time,
+    open_allowed_signers,
     public_fingerprint,
     read_drop,
     require_allowed_signers,
@@ -71,6 +76,23 @@ def _return_root_owned_tmp(tmp_path: Path):
 def _openssh(stamp: str) -> str:
     parsed = datetime.fromisoformat(stamp.replace("Z", "+00:00"))
     return parsed.astimezone(timezone.utc).strftime("%Y%m%d%H%M%S")
+
+
+def _is_version_probe(args: object) -> bool:
+    return isinstance(args, list) and "fc-version-probe" in args
+
+
+def _foreign_gid() -> str:
+    """A group id that is not ``fc-grader``'s, so group-writable is not the grader check."""
+    banned = -1
+    try:
+        banned = pwd.getpwnam("fc-grader").pw_gid
+    except KeyError:
+        pass
+    for candidate in (1, 65534, 2, 0):
+        if candidate != banned:
+            return str(candidate)
+    return "3"
 
 
 def _submit(
@@ -672,22 +694,23 @@ def test_old_or_missing_openssh_fails_closed(
     real_run = subprocess.run
 
     def old_ssh(args, **kwargs):
-        if isinstance(args, list) and len(args) >= 2 and args[1] == "-V" and "keygen" not in str(args[0]):
-            return subprocess.CompletedProcess(args, 0, "", "OpenSSH_8.6p1\n")
+        if _is_version_probe(args):
+            return subprocess.CompletedProcess(args, 255, "", "OpenSSH_8.6p1\n")
         return real_run(args, **kwargs)
 
     monkeypatch.setattr("faustcoder.reward.triage_sig.subprocess.run", old_ssh)
     with pytest.raises(RewardRecordError, match="OpenSSH 8.7"):
         _submit(reports, ring, record_id, stamp, statement, signature, principal="danny")
     _assert_stays_halted(reports, ring, consumed)
-    monkeypatch.setattr("faustcoder.reward.triage_sig._which", lambda _name: None)
+    monkeypatch.setattr("faustcoder.reward.triage_sig.subprocess.run", real_run)
+    monkeypatch.setattr("faustcoder.reward.triage_sig.SSH_KEYGEN_PATH", str(tmp_path / "missing-ssh-keygen"))
     with pytest.raises(RewardRecordError, match="ssh-keygen"):
         _submit(reports, ring, record_id, stamp, statement, signature, principal="danny")
     _assert_stays_halted(reports, ring, consumed)
 
 
 def test_p3_refuses_uid_1000_and_a_reviewer_uid(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    assert os.geteuid() == 1000
+    monkeypatch.setattr("faustcoder.reward.triage_sig.os.geteuid", lambda: 1000)
     secret = _write_key(tmp_path / "reward-root.key")
     source = b"process = _;"
     header, rows = _members(
@@ -756,8 +779,8 @@ def test_p3_startup_refuses_old_openssh(tmp_path: Path, monkeypatch: pytest.Monk
     real_run = subprocess.run
 
     def old_ssh(args, **kwargs):
-        if isinstance(args, list) and len(args) >= 2 and args[1] == "-V" and "keygen" not in str(args[0]):
-            return subprocess.CompletedProcess(args, 0, "", "OpenSSH_8.6p1\n")
+        if _is_version_probe(args):
+            return subprocess.CompletedProcess(args, 255, "", "OpenSSH_8.6p1\n")
         return real_run(args, **kwargs)
 
     monkeypatch.setattr("faustcoder.reward.triage_sig.subprocess.run", old_ssh)
@@ -865,3 +888,305 @@ def test_option_b_still_refuses_a_reserved_actor(tmp_path: Path) -> None:
         )
     assert reports.path.stat().st_size == size
     _assert_stays_halted(reports, ring, consumed)
+
+
+def test_openssh_validity_stamps_are_utc() -> None:
+    parsed = _openssh_time("20200101000000")
+    assert parsed == datetime(2020, 1, 1, tzinfo=timezone.utc)
+    assert parsed is not None and parsed.tzinfo is timezone.utc
+
+
+def test_ssh_keygen_is_the_absolute_root_owned_binary(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """``PATH`` is not the verifier, and a non-root or writable binary is refused."""
+    bindir = tmp_path / "bin"
+    bindir.mkdir()
+    fake = bindir / "ssh-keygen"
+    fake.write_text("#!/bin/sh\necho OpenSSH_8.6p1 >&2\nexit 1\n", encoding="utf-8")
+    os.chmod(fake, 0o755)
+    monkeypatch.setenv("PATH", f"{bindir}{os.pathsep}{os.environ.get('PATH', '')}")
+    assert require_openssh() >= (8, 7)
+
+    owned = tmp_path / "ssh-keygen-user"
+    shutil.copy(SSH_KEYGEN_PATH, owned)
+    os.chmod(owned, 0o755)
+    monkeypatch.setattr("faustcoder.reward.triage_sig.SSH_KEYGEN_PATH", str(owned))
+    with pytest.raises(RewardRecordError, match="ssh-keygen"):
+        require_openssh()
+
+    link = tmp_path / "ssh-keygen-link"
+    link.symlink_to(SSH_KEYGEN_PATH)
+    monkeypatch.setattr("faustcoder.reward.triage_sig.SSH_KEYGEN_PATH", str(link))
+    with pytest.raises(RewardRecordError, match="ssh-keygen"):
+        require_openssh()
+
+    wide = tmp_path / "ssh-keygen-wide"
+    shutil.copy(SSH_KEYGEN_PATH, wide)
+    subprocess.run(["sudo", "-n", "chown", "root:root", str(wide)], check=True)
+    subprocess.run(["sudo", "-n", "chmod", "0775", str(wide)], check=True)
+    monkeypatch.setattr("faustcoder.reward.triage_sig.SSH_KEYGEN_PATH", str(wide))
+    with pytest.raises(RewardRecordError, match="ssh-keygen"):
+        require_openssh()
+
+
+def test_ssh_keygen_timeout_is_refused(monkeypatch: pytest.MonkeyPatch) -> None:
+    real_run = subprocess.run
+
+    def timed(args, **kwargs):
+        if isinstance(args, list) and "ssh-keygen" in str(args[0]):
+            if kwargs.get("timeout") is None:
+                raise AssertionError("ssh-keygen was started without a timeout")
+            raise subprocess.TimeoutExpired(args, kwargs["timeout"])
+        return real_run(args, **kwargs)
+
+    monkeypatch.setattr("faustcoder.reward.triage_sig.subprocess.run", timed)
+    with pytest.raises(RewardRecordError, match="ssh-keygen|usable"):
+        require_openssh()
+
+
+def test_allowed_signers_refuse_split_principals_patterns_and_duplicate_keys(tmp_path: Path) -> None:
+    """One key must not become two votes, and a bad line fails closed on load."""
+    _secret, audit, consumed, reports, ring = _halted(tmp_path, "signers-shape")
+    record_id = audit.disagreements[0].record_id
+    stamp = _halt_stamp(reports)
+    key = make_key(tmp_path / "keys", "danny")
+    honest = signer_line("danny", key)
+    cases = {
+        "comma": honest.replace("danny ", "alice,danny ", 1),
+        "star": honest.replace("danny ", "* ", 1),
+        "question": honest.replace("danny ", "dann? ", 1),
+        "bang": honest.replace("danny ", "!danny ", 1),
+        "duplicate": honest + "\n" + honest.replace("danny ", "bob ", 1),
+        "missing-after": honest.replace(',valid-after="20200101000000"', ""),
+        "bad-after": honest.replace('valid-after="20200101000000"', 'valid-after="nope"'),
+    }
+    statement, signature = _signed_statement(reports, ring, record_id, stamp, key)
+    for name, line in cases.items():
+        path = install_signers(tmp_path / name, [line])
+        with pytest.raises(RewardRecordError, match="allowed signers"):
+            open_allowed_signers(path)
+        reports.allowed_signers = path
+        with pytest.raises(RewardRecordError, match="triage|allowed"):
+            _submit(reports, ring, record_id, stamp, statement, signature, principal="danny")
+        _assert_stays_halted(reports, ring, consumed)
+
+
+def test_late_quorum_counts_key_fingerprints(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Two principal names on one key are one vote. Two keys under one name are one vote."""
+    secret = _write_key(tmp_path / "reward-root.key")
+    source = b"process = _;"
+    rows = _rows(
+        secret,
+        "group-fp",
+        [("signal", "pass", _signal(source, passed=True), source)],
+    )
+    consumed = ConsumedLog(tmp_path / "fp-consumed.jsonl")
+    consumed.claim(
+        "group-fp",
+        "used",
+        task_digest_full=rows[0].task_digest_full,
+        policy_checkpoint=CHECKPOINT,
+        run_key=derive_run_key(secret, RUN),
+    )
+    ring = RewardKeyring(secret, run_id=RUN)
+    reports = AuditReportLog(tmp_path / "fp-reports.jsonl", consumed)
+    from faustcoder.reward.audit import audit_sampled_reruns
+
+    audit = audit_sampled_reruns(
+        rows,
+        ring,
+        rerun=lambda _record: "fail",
+        consumed=consumed,
+        reports=reports,
+    )
+    record_id = audit.disagreements[0].record_id
+    stamp = _halt_stamp(reports)
+    alice = make_key(tmp_path / "keys", "alice")
+    enroll(reports, tmp_path / "keys", [("alice", alice)])
+    record_signed(
+        reports,
+        ring,
+        record_id=record_id,
+        triaged_by="alice",
+        triaged_at=stamp,
+        principal="alice",
+        key_path=alice,
+    )
+    first = loads_strict(reports.path.read_text(encoding="utf-8").splitlines()[-1])
+    assert isinstance(first, dict)
+    monkeypatch.setattr("faustcoder.reward.audit.verify_statement", lambda *_args, **_kwargs: None)
+    same_key = {key: value for key, value in first.items() if key not in {"mac", "seq", "prev"}}
+    same_key["principal"] = "bob"
+    same_key["triaged_by"] = "bob"
+    reports._append_line(derive_run_key(secret, RUN), same_key)
+    _assert_stays_halted(reports, ring, consumed)
+
+    second = AuditReportLog(tmp_path / "fp-reports-two.jsonl", ConsumedLog(tmp_path / "fp-consumed-two.jsonl"))
+    # A second late halt, so two fingerprints under one principal are a separate log.
+    rows_b = _rows(
+        secret,
+        "group-fp-b",
+        [("signal", "pass", _signal(source, passed=True), source)],
+    )
+    consumed_b = second.consumed
+    consumed_b.claim(
+        "group-fp-b",
+        "used",
+        task_digest_full=rows_b[0].task_digest_full,
+        policy_checkpoint=CHECKPOINT,
+        run_key=derive_run_key(secret, RUN),
+    )
+    audit_b = audit_sampled_reruns(
+        rows_b,
+        ring,
+        rerun=lambda _record: "fail",
+        consumed=consumed_b,
+        reports=second,
+    )
+    record_b = audit_b.disagreements[0].record_id
+    stamp_b = _halt_stamp(second)
+    enroll(second, tmp_path / "keys-b", [("alice", alice)])
+    record_signed(
+        second,
+        ring,
+        record_id=record_b,
+        triaged_by="alice",
+        triaged_at=stamp_b,
+        principal="alice",
+        key_path=alice,
+    )
+    body = loads_strict(second.path.read_text(encoding="utf-8").splitlines()[-1])
+    assert isinstance(body, dict)
+    other = {key: value for key, value in body.items() if key not in {"mac", "seq", "prev"}}
+    statement = dict(other["statement"]) if isinstance(other["statement"], dict) else {}
+    statement["key_fingerprint"] = "SHA256:abcdefghijklmnopqrstuvwxyz0123456789ABCD"
+    other["statement"] = statement
+    second._append_line(derive_run_key(secret, RUN), other)
+    assert p3_may_proceed(RUN, keyring=ring, reports=second, consumed=consumed_b) is False
+
+
+def test_a_group_writable_or_non_root_parent_does_not_clear(tmp_path: Path) -> None:
+    _secret, audit, consumed, reports, ring = _halted(tmp_path, "parent")
+    record_id = audit.disagreements[0].record_id
+    stamp = _halt_stamp(reports)
+    key = make_key(tmp_path / "keys", "danny")
+    path = enroll(reports, tmp_path / "keys", [("danny", key)])
+    record_signed(
+        reports,
+        ring,
+        record_id=record_id,
+        triaged_by="danny",
+        triaged_at=stamp,
+        principal="danny",
+        key_path=key,
+    )
+    assert p3_may_proceed(RUN, keyring=ring, reports=reports, consumed=consumed) is True
+    parent = path.parent
+    subprocess.run(["sudo", "-n", "chown", f"{os.getuid()}:{os.getgid()}", str(parent)], check=True)
+    subprocess.run(["sudo", "-n", "chmod", "0755", str(parent)], check=True)
+    assert p3_may_proceed(RUN, keyring=ring, reports=reports, consumed=consumed) is False
+    with pytest.raises(RewardRecordError, match="allowed signers"):
+        require_allowed_signers(path)
+    subprocess.run(["sudo", "-n", "chown", f"0:{_foreign_gid()}", str(parent)], check=True)
+    subprocess.run(["sudo", "-n", "chmod", "0775", str(parent)], check=True)
+    assert p3_may_proceed(RUN, keyring=ring, reports=reports, consumed=consumed) is False
+    with pytest.raises(RewardRecordError, match="allowed signers"):
+        require_allowed_signers(path)
+    subprocess.run(["sudo", "-n", "chown", "root:root", str(parent)], check=True)
+    subprocess.run(["sudo", "-n", "chmod", "0755", str(parent)], check=True)
+    assert p3_may_proceed(RUN, keyring=ring, reports=reports, consumed=consumed) is True
+
+
+def test_a_non_regular_or_hard_linked_drop_is_refused(tmp_path: Path) -> None:
+    _secret, audit, consumed, reports, ring = _halted(tmp_path, "drop-shape")
+    record_id = audit.disagreements[0].record_id
+    stamp = _halt_stamp(reports)
+    key = make_key(tmp_path / "keys", "danny")
+    enroll(reports, tmp_path / "keys", [("danny", key)])
+    statement, signature = _signed_statement(reports, ring, record_id, stamp, key)
+    folder = tmp_path / "drop-dir"
+    folder.mkdir()
+    with pytest.raises(RewardRecordError, match="drop file"):
+        read_drop(folder)
+    fifo = tmp_path / "drop.fifo"
+    os.mkfifo(fifo)
+    completed = subprocess.run(
+        [
+            sys.executable,
+            "-c",
+            "import sys\n"
+            "from faustcoder.reward.records import RewardRecordError\n"
+            "from faustcoder.reward.triage_sig import read_drop\n"
+            "try:\n"
+            "    read_drop(sys.argv[1])\n"
+            "except RewardRecordError:\n"
+            "    raise SystemExit(0)\n"
+            "raise SystemExit(1)\n",
+            str(fifo),
+        ],
+        timeout=5,
+        check=False,
+    )
+    assert completed.returncode == 0
+    real = tmp_path / "real-drop.json"
+    write_drop(
+        real,
+        principal="danny",
+        triaged_by="danny",
+        statement=statement,
+        signature=signature,
+    )
+    primed = tmp_path / "primed.fifo"
+    os.mkfifo(primed)
+    holder = os.open(primed, os.O_RDWR | os.O_NONBLOCK)
+    try:
+        os.write(holder, real.read_bytes())
+        with pytest.raises(RewardRecordError, match="drop file"):
+            read_drop(primed)
+    finally:
+        os.close(holder)
+    linked = tmp_path / "linked-drop.json"
+    os.link(real, linked)
+    with pytest.raises(RewardRecordError, match="drop file"):
+        read_drop(linked)
+    with pytest.raises(RewardRecordError, match="drop|triage"):
+        reports.record_triage(
+            ring,
+            record_id=record_id,
+            triaged_by="danny",
+            triaged_at=stamp,
+            drop_path=linked,
+        )
+    _assert_stays_halted(reports, ring, consumed)
+
+
+def test_a_stale_halt_binding_does_not_clear_and_the_latest_does(tmp_path: Path) -> None:
+    secret, audit, consumed, reports, ring = _halted(tmp_path, "latest-only")
+    record_id = audit.disagreements[0].record_id
+    stamp = _halt_stamp(reports)
+    key = make_key(tmp_path / "keys", "danny")
+    enroll(reports, tmp_path / "keys", [("danny", key)])
+    stale, signature = _signed_statement(reports, ring, record_id, stamp, key)
+    _append_halt_copy(reports, secret, halted_at=stamp)
+    from faustcoder.reward.audit import _latest_halt_seq
+
+    lines = [
+        loads_strict(line)
+        for line in reports.path.read_text(encoding="utf-8").splitlines()
+        if line.strip()
+    ]
+    latest = halt_body(reports, record_id)
+    assert _latest_halt_seq(lines, record_id) == latest["seq"]
+    assert stale["halt_seq"] != latest["seq"]
+    with pytest.raises(RewardRecordError, match="triage"):
+        _submit(reports, ring, record_id, stamp, stale, signature, principal="danny")
+    _assert_stays_halted(reports, ring, consumed)
+    record_signed(
+        reports,
+        ring,
+        record_id=record_id,
+        triaged_by="danny",
+        triaged_at=stamp,
+        principal="danny",
+        key_path=key,
+    )
+    assert p3_may_proceed(RUN, keyring=ring, reports=reports, consumed=consumed) is True
