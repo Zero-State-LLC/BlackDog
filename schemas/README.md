@@ -6,8 +6,13 @@ These files are byte-for-byte copies of the JSON Schemas listed in the
 | Item | Value |
 |---|---|
 | Source path | `specs/001-faustcoder/contracts/*.schema.json` |
-| Directory added | #34 (`755c958`), 2026-10-17 |
-| Last schema edit | #45 (`af1ff4e`), 2026-10-17. No schema file changed after that commit on main `665d73b` |
+| Source commit | `fcc391e5b4360f594309f1e99cc1b8ac9baeaf9c` |
+| Later schema edits | through #45 (`af1ff4e`), 2026-10-17. The two trees still match on main `665d73b` |
+
+`tests/test_schemas.py` requires the source commit above to stay in this
+file. That commit is #31, when `target-receipt.schema.json` was added to
+the contracts. The schema files were edited again after it. The last of
+those edits is #45.
 
 `inference-api.md` is not a JSON Schema and is not copied. Each `$id` is
 still `https://github.com/Zero-State-LLC/FaustCoder/specs/001-faustcoder/contracts/<name>`.
