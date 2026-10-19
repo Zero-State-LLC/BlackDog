@@ -43,7 +43,7 @@ Status as of 2026-10-18 2:27 AM PT (Danny ruled on FLOOR lower-floor detections,
 
 Proposed T06/T07 requirement (D-013, Danny yes 2026-10-17 1:04 PM PT): an n-gram or AST near-duplicate filter on generated `.dsp` against the training-only set. The threshold is not set. Impulse-test paths already cannot take `eval`.
 
-T04 follow-up (N6, Danny yes 2026-10-17): `nonlinear-suite-v1` is an eight-stimulus float32 suite at the 144000-frame floor. The signed sample check is the gate. THD+N, IMD and the Farina inverse filter are diagnostics. The suite is not in `REWARD_PROFILES`. TaskSpec `effect` is a closed enum; only `linear` and `time_invariant` are rewardable. `require_task_rewardable` is called by `dataset_reward_row` and `rl_batch` (D5). `nonlinear-suite-fallback-v1` is the four-stimulus fallback. x86 DSP-bank goldens are committed. The ARM compare is pending on the DGX Spark.
+T04 follow-up (N6, Danny yes 2026-10-17): `nonlinear-suite-v1` is an eight-stimulus float32 suite at the 144000-frame floor. The signed sample check is the gate. THD+N, IMD and the Farina inverse filter are diagnostics. The suite is not in `REWARD_PROFILES`. TaskSpec `effect` is a closed enum; only `linear` and `time_invariant` are rewardable. `require_task_rewardable` is called by `dataset_reward_row` and `_rl_batch` (D5). `nonlinear-suite-fallback-v1` is the four-stimulus fallback. x86 DSP-bank goldens are committed. The ARM compare is pending on the DGX Spark.
 
 Lane issues (ADR-0004): T17 #25, T18 #26, T19 #27, T20 #28, T21 #29, T22 #30.
 
