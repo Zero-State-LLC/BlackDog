@@ -43,6 +43,11 @@ from faustcoder.reward.records import (
     _write_all,
     verify,
 )
+from faustcoder.reward.triage_sig import (
+    read_drop,
+    verify_statement,
+    _require_statement,
+)
 
 _SAMPLE_PERCENT = 5
 _SEED_LABEL = b"d3-h2-seed"
@@ -165,19 +170,27 @@ class RefusedTriage:
 class AuditReportLog:
     """Append-only MAC'd audit reports for one run.
 
-    The file sits next to the consumed log. A halt stays until human
-    triage is recorded against each disagreement. A triage from the
-    grader account or from root does not clear it. A MAC'd triage line
-    that fails that check stays in the log and is reported; it does not
-    make the log unreadable and it does not clear the halt. A later
-    clear report does not replace a halt.
+    The file sits next to the consumed log. A halt stays until a
+    signed human triage is recorded against each disagreement. A
+    run-key MAC alone does not clear it. A triage from the grader
+    account or from root does not clear it. A MAC'd triage line that
+    fails a check stays in the log and is reported; it does not make
+    the log unreadable and it does not clear the halt. A later clear
+    report does not replace a halt.
     """
 
-    def __init__(self, path: Path | str, consumed: ConsumedLog) -> None:
+    def __init__(
+        self,
+        path: Path | str,
+        consumed: ConsumedLog,
+        *,
+        allowed_signers: Path | str | None = None,
+    ) -> None:
         if not isinstance(consumed, ConsumedLog):
             raise RewardRecordError("audit report requires its consumed log")
         self.path = Path(path)
         self.consumed = consumed
+        self.allowed_signers = None if allowed_signers is None else Path(allowed_signers)
 
     def append(self, keyring: RewardKeyring, report: Mapping[str, object]) -> None:
         """Persist ``report``. A clear report cannot cover an open halt.
@@ -190,7 +203,9 @@ class AuditReportLog:
         stored["consumed_id"] = _consumed_id(run_key, self.consumed.path)
         stored["consumed_path"] = os.path.realpath(self.consumed.path)
         if stored.get("p3") == "halt":
-            stored["halted_at"] = _utc_stamp()
+            stamp = _utc_stamp()
+            stored["halted_at"] = stamp
+            stored["persisted_at"] = stamp
         body = _report_body(keyring.run_id, stored)
         self._append_line(run_key, body)
 
@@ -201,36 +216,71 @@ class AuditReportLog:
         record_id: str,
         triaged_by: str,
         triaged_at: str,
+        drop_path: Path | str | None = None,
     ) -> None:
-        """Record human triage for one disagreement. This is the only clear.
+        """Record one signed human triage. This is the only clear.
 
         ``triaged_by`` is stripped and must be a short printable name.
         ``triaged_at`` is RFC 3339, not earlier than the halt it clears,
-        and not later than now plus five minutes. The effective uid and
-        its account name are stored on the line, under the same MAC.
-        The grader account and root are refused after NFKC, casefold,
-        and a small confusable skeleton.
+        and not later than now plus five minutes. ``drop_path`` is the
+        human's signed drop. Its owner, read with ``fstat`` on an
+        ``O_NOFOLLOW`` fd, is the recorded writer. The grader account
+        and root are refused after NFKC, casefold, and a small
+        confusable skeleton. The same principal cannot sign one
+        disagreement twice. A late halt still needs a second principal.
         """
         if type(record_id) is not str or record_id == "":
             raise RewardRecordError("audit triage record id is not usable")
         actor = _require_actor(triaged_by)
         when = _require_triaged_at(triaged_at)
-        writer_uid, writer_user = _writing_os_user()
         lines = self._verified(keyring)
         open_ids = _halt_ids(lines)
         if record_id not in open_ids:
             raise RewardRecordError("audit triage does not match a disagreement")
         _require_not_before_halt(when, record_id, lines)
-        if record_id in _triaged_ids(lines):
-            return
+        if drop_path is None:
+            raise RewardRecordError("audit triage signature is not usable")
+        drop = read_drop(drop_path)
+        if _require_actor(drop.triaged_by) != actor:
+            raise RewardRecordError("audit triage actor is not usable")
+        writer_uid, writer_user = _require_os_user(drop.owner_name, drop.owner_uid)
+        decision = _require_statement_binding(
+            drop.statement,
+            record_id,
+            when,
+            lines,
+            keyring.run_id,
+        )
+        if type(drop.principal) is not str or drop.principal == "":
+            raise RewardRecordError("audit triage signature is not usable")
+        if drop.principal in _accepted_principals(lines, self.allowed_signers).get(record_id, set()):
+            raise RewardRecordError("audit triage signature is not usable")
+        appended_at = _utc_stamp()
+        appended = _parse_rfc3339(appended_at)
+        if appended is None or appended < _halt_instant(lines, record_id):
+            raise RewardRecordError("audit triage time is not usable")
+        verify_statement(
+            drop.statement,
+            drop.signature,
+            principal=drop.principal,
+            allowed_signers=_signers_path(self.allowed_signers),
+            appended_at=appended_at,
+            triaged_at=when,
+        )
         self._append_line(
             _run_key(keyring),
             {
+                "appended_at": appended_at,
+                "decision": decision,
+                "principal": drop.principal,
                 "record_id": record_id,
                 "run_id": keyring.run_id,
+                "signature": drop.signature,
+                "statement": dict(drop.statement),
                 "triaged_at": when,
                 "triaged_by": actor,
                 "type": "audit_triage",
+                "v": 2,
                 "writer_uid": writer_uid,
                 "writer_user": writer_user,
             },
@@ -241,7 +291,8 @@ class AuditReportLog:
 
         The log stays readable. A listed line never clears its halt.
         """
-        return _refused_triages(self._verified(keyring))
+        lines = self._verified(keyring)
+        return _refused_triages(lines, self.allowed_signers)
 
     def _verified(self, keyring: RewardKeyring) -> tuple[dict[str, object], ...]:
         if not self.path.is_file():
@@ -270,7 +321,7 @@ class AuditReportLog:
             raise RewardRecordError("audit report log is not usable")
         _check_chain(found)
         lines = tuple(found)
-        for item in _refused_triages(lines):
+        for item in _refused_triages(lines, self.allowed_signers):
             warnings.warn(
                 f"refused audit triage seq {item.seq} does not clear a halt",
                 RefusedTriageWarning,
@@ -297,7 +348,7 @@ class AuditReportLog:
                     if (
                         isinstance(report, dict)
                         and report.get("p3") == "clear"
-                        and _untriaged(_bodies(existing, run_key))
+                        and _untriaged(_bodies(existing, run_key), self.allowed_signers)
                     ):
                         raise RewardRecordError("audit halt is not cleared by another report")
                 signed = dict(chained)
@@ -353,7 +404,9 @@ def p3_may_proceed(
     stays closed until triage is recorded for each disagreement. A
     missing report is not clear. A bad MAC, a foreign consumed log, or
     a truncated chain raises. A MAC'd triage line that fails the actor,
-    time, or writer check does not raise and does not clear the halt.
+    time, writer, or signature check does not raise and does not clear
+    the halt. A line counts only at ``v == 2`` after the signature
+    verifies. A late halt needs two distinct principals.
     """
     if not isinstance(reports, AuditReportLog):
         raise RewardRecordError("P3 requires the persisted audit report")
@@ -369,14 +422,14 @@ def p3_may_proceed(
     run_key = _run_key(keyring)
     _require_consumed_binding(lines, run_key, consumed.path)
     _require_anchor(consumed, run_key, lines)
-    if _untriaged(lines):
+    if _untriaged(lines, reports.allowed_signers):
         return False
     latest = _latest_report(lines)
     if latest is None:
         return False
     if latest.get("p3") == "clear":
         return True
-    return _halt_ids(lines) <= _triaged_ids(lines)
+    return _halt_ids(lines) <= _triaged_ids(lines, reports.allowed_signers)
 
 
 def require_audit_coverage(
@@ -730,18 +783,6 @@ def _require_os_user(name: object, uid: object) -> tuple[int, str]:
     return uid, name
 
 
-def _writing_os_user() -> tuple[int, str]:
-    """The effective uid and its account name, or a refusal."""
-    uid = os.geteuid()
-    if type(uid) is not int or isinstance(uid, bool) or uid < 0:
-        raise RewardRecordError("audit triage writer is not usable")
-    try:
-        entry = pwd.getpwuid(uid)
-    except KeyError as exc:
-        raise RewardRecordError("audit triage writer is not usable") from exc
-    return _require_os_user(entry.pw_name, uid)
-
-
 def _utc_stamp() -> str:
     """RFC 3339 UTC time, whole seconds, uppercase ``Z``."""
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -796,11 +837,24 @@ def _disagreement_ids(report: Mapping[str, object]) -> set[str]:
     return found
 
 
-def _halt_instant(lines: Sequence[Mapping[str, object]], record_id: str) -> datetime:
-    """Latest usable ``halted_at`` among halts that include ``record_id``.
+def _persist_instant(report: Mapping[str, object]) -> datetime:
+    """The halt's persist time.
 
-    A halt that names the id and has no usable stamp fails closed.
+    ``persisted_at`` is that time when the line carries it. A line
+    written before that field existed uses ``halted_at``. A halt that
+    names the disagreement and has no usable stamp fails closed.
     """
+    if "persisted_at" in report:
+        parsed = _parse_rfc3339(report.get("persisted_at"))
+    else:
+        parsed = _parse_rfc3339(report.get("halted_at"))
+    if parsed is None:
+        raise RewardRecordError("audit triage time is not usable")
+    return parsed
+
+
+def _halt_instant(lines: Sequence[Mapping[str, object]], record_id: str) -> datetime:
+    """Latest persist time among halts that include ``record_id``."""
     latest: datetime | None = None
     for line in lines:
         if line.get("type") != "audit_report":
@@ -810,9 +864,7 @@ def _halt_instant(lines: Sequence[Mapping[str, object]], record_id: str) -> date
             continue
         if record_id not in _disagreement_ids(report):
             continue
-        parsed = _parse_rfc3339(report.get("halted_at"))
-        if parsed is None:
-            raise RewardRecordError("audit triage time is not usable")
+        parsed = _persist_instant(report)
         if latest is None or parsed > latest:
             latest = parsed
     if latest is None:
@@ -830,14 +882,125 @@ def _require_not_before_halt(
         raise RewardRecordError("audit triage time is not usable")
 
 
-def _accepted_triage_id(
+def _signers_path(path: Path | None) -> Path:
+    from faustcoder.reward.triage_sig import default_allowed_signers
+
+    return default_allowed_signers() if path is None else path
+
+
+def _require_statement_binding(
+    statement: object,
+    record_id: str,
+    when: str,
+    lines: Sequence[Mapping[str, object]],
+    run_id: str,
+) -> str:
+    """Return the decision when ``statement`` names this halt line."""
+    if not isinstance(statement, Mapping):
+        raise RewardRecordError("audit triage signature is not usable")
+    checked = _require_statement(statement)
+    if checked["run_id"] != run_id or checked["record_id"] != record_id:
+        raise RewardRecordError("audit triage signature is not usable")
+    if checked["triaged_at"] != when:
+        raise RewardRecordError("audit triage signature is not usable")
+    halt_seq = checked["halt_seq"]
+    halt: Mapping[str, object] | None = None
+    for line in lines:
+        if line.get("type") != "audit_report" or line.get("seq") != halt_seq:
+            continue
+        report = line.get("report")
+        if isinstance(report, dict) and report.get("p3") == "halt":
+            halt = line
+            break
+    if halt is None or halt_seq != _latest_halt_seq(lines, record_id):
+        raise RewardRecordError("audit triage signature is not usable")
+    report = halt.get("report")
+    if not isinstance(report, dict):
+        raise RewardRecordError("audit triage signature is not usable")
+    if halt.get("run_id") != run_id or halt.get("mac") != checked["halt_report_mac"]:
+        raise RewardRecordError("audit triage signature is not usable")
+    if report.get("row_ids_digest") != checked["row_ids_digest"]:
+        raise RewardRecordError("audit triage signature is not usable")
+    if report.get("consumed_id") != checked["consumed_id"]:
+        raise RewardRecordError("audit triage signature is not usable")
+    if record_id not in _disagreement_ids(report):
+        raise RewardRecordError("audit triage signature is not usable")
+    decision = checked["decision"]
+    if type(decision) is not str:
+        raise RewardRecordError("audit triage signature is not usable")
+    return decision
+
+
+def _latest_halt_seq(lines: Sequence[Mapping[str, object]], record_id: str) -> int:
+    """Sequence of the newest halt line that names ``record_id``."""
+    latest: int | None = None
+    for line in lines:
+        if line.get("type") != "audit_report":
+            continue
+        report = line.get("report")
+        if not isinstance(report, dict) or report.get("p3") != "halt":
+            continue
+        if record_id not in _disagreement_ids(report):
+            continue
+        seq = line.get("seq")
+        if type(seq) is not int or isinstance(seq, bool):
+            raise RewardRecordError("audit triage signature is not usable")
+        if latest is None or seq > latest:
+            latest = seq
+    if latest is None:
+        raise RewardRecordError("audit triage signature is not usable")
+    return latest
+
+
+def _late_disagreement(lines: Sequence[Mapping[str, object]], record_id: str) -> bool:
+    """True when any halt names ``record_id`` in a late group.
+
+    A disagreement with no group id fails closed and needs two principals.
+    """
+    saw = False
+    late = False
+    for line in lines:
+        if line.get("type") != "audit_report":
+            continue
+        report = line.get("report")
+        if not isinstance(report, dict) or report.get("p3") != "halt":
+            continue
+        late_ids: set[str] = set()
+        groups = report.get("late_groups")
+        if isinstance(groups, list):
+            for item in groups:
+                if isinstance(item, dict) and type(item.get("group_id")) is str:
+                    late_ids.add(item["group_id"])
+        items = report.get("disagreements")
+        if not isinstance(items, list):
+            continue
+        for item in items:
+            if not isinstance(item, dict) or item.get("record_id") != record_id:
+                continue
+            saw = True
+            group = item.get("group_id")
+            if type(group) is not str or group in late_ids:
+                late = True
+    if not saw:
+        return True
+    return late
+
+
+def _quorum(lines: Sequence[Mapping[str, object]], record_id: str) -> int:
+    return 2 if _late_disagreement(lines, record_id) else 1
+
+
+def _accepted_triage(
     body: Mapping[str, object],
     lines: Sequence[Mapping[str, object]],
-) -> str:
-    """Return the disagreement id when this line is a human triage.
+    allowed_signers: Path | None,
+) -> tuple[str, str]:
+    """Return ``(record_id, principal)`` when this line clears one vote.
 
     The same rules apply on write and on read. A refused line does not
-    clear the halt. ``lines`` supplies the halt this triage would clear.
+    clear the halt. Only ``v == 2`` can count, and only after the
+    signature verifies at the recorded ``appended_at`` and at
+    ``triaged_at``.
     """
     record_id = body.get("record_id")
     if type(record_id) is not str or record_id == "":
@@ -846,7 +1009,41 @@ def _accepted_triage_id(
     when = _require_triaged_at(body.get("triaged_at"))
     _require_os_user(body.get("writer_user"), body.get("writer_uid"))
     _require_not_before_halt(when, record_id, lines)
-    return record_id
+    version = body.get("v")
+    if type(version) is not int or isinstance(version, bool) or version != 2:
+        raise RewardRecordError("audit triage signature is not usable")
+    statement = body.get("statement")
+    signature = body.get("signature")
+    principal = body.get("principal")
+    appended_at = body.get("appended_at")
+    if (
+        type(signature) is not str
+        or type(principal) is not str
+        or principal == ""
+        or type(appended_at) is not str
+        or not isinstance(statement, Mapping)
+    ):
+        raise RewardRecordError("audit triage signature is not usable")
+    _require_statement_binding(statement, record_id, when, lines, _line_run_id(body, lines))
+    verify_statement(
+        statement,
+        signature,
+        principal=principal,
+        allowed_signers=_signers_path(allowed_signers),
+        appended_at=appended_at,
+        triaged_at=when,
+    )
+    return record_id, principal
+
+
+def _line_run_id(body: Mapping[str, object], lines: Sequence[Mapping[str, object]]) -> str:
+    run_id = body.get("run_id")
+    if type(run_id) is str and run_id != "":
+        return run_id
+    for line in lines:
+        if line.get("type") == "audit_report" and type(line.get("run_id")) is str:
+            return line["run_id"]
+    raise RewardRecordError("audit triage signature is not usable")
 
 
 def _shown_record_id(value: object) -> str:
@@ -855,14 +1052,17 @@ def _shown_record_id(value: object) -> str:
     return value
 
 
-def _refused_triages(lines: Sequence[Mapping[str, object]]) -> tuple[RefusedTriage, ...]:
+def _refused_triages(
+    lines: Sequence[Mapping[str, object]],
+    allowed_signers: Path | None = None,
+) -> tuple[RefusedTriage, ...]:
     """Triage lines in ``lines`` that fail acceptance."""
     found: list[RefusedTriage] = []
     for line in lines:
         if line.get("type") != "audit_triage":
             continue
         try:
-            _accepted_triage_id(line, lines)
+            _accepted_triage(line, lines, allowed_signers)
         except RewardRecordError as exc:
             seq = line.get("seq")
             if type(seq) is not int or isinstance(seq, bool):
@@ -1517,22 +1717,43 @@ def _halt_ids(lines: Sequence[Mapping[str, object]]) -> set[str]:
     return found
 
 
-def _triaged_ids(lines: Sequence[Mapping[str, object]]) -> set[str]:
-    """Ids cleared by a triage this process would still accept.
-
-    A line that fails the actor, time, or OS-user check does not clear
-    its halt. The line stays readable and is reported separately.
-    """
-    found: set[str] = set()
+def _accepted_principals(
+    lines: Sequence[Mapping[str, object]],
+    allowed_signers: Path | None = None,
+) -> dict[str, set[str]]:
+    """Distinct principals whose triage line still verifies."""
+    found: dict[str, set[str]] = {}
     for line in lines:
         if line.get("type") != "audit_triage":
             continue
         try:
-            found.add(_accepted_triage_id(line, lines))
+            record_id, principal = _accepted_triage(line, lines, allowed_signers)
         except RewardRecordError:
             continue
+        found.setdefault(record_id, set()).add(principal)
     return found
 
 
-def _untriaged(lines: Sequence[Mapping[str, object]]) -> bool:
-    return not _halt_ids(lines) <= _triaged_ids(lines)
+def _triaged_ids(
+    lines: Sequence[Mapping[str, object]],
+    allowed_signers: Path | None = None,
+) -> set[str]:
+    """Ids whose distinct accepted principals meet the quorum.
+
+    A line that fails the actor, time, writer, or signature check does
+    not count. One principal clears an ordinary halt. A late halt needs
+    two. The same principal twice counts once.
+    """
+    found: set[str] = set()
+    accepted = _accepted_principals(lines, allowed_signers)
+    for record_id, principals in accepted.items():
+        if len(principals) >= _quorum(lines, record_id):
+            found.add(record_id)
+    return found
+
+
+def _untriaged(
+    lines: Sequence[Mapping[str, object]],
+    allowed_signers: Path | None = None,
+) -> bool:
+    return not _halt_ids(lines) <= _triaged_ids(lines, allowed_signers)

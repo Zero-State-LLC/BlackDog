@@ -47,6 +47,7 @@ from tests.test_reward_records import (
     _store,
     _write_key,
 )
+from tests.triage_support import record_signed, release_tmp
 
 
 @pytest.fixture(autouse=True)
@@ -55,6 +56,21 @@ def _pin_harness(monkeypatch: pytest.MonkeyPatch) -> None:
         "faustcoder.reward.records.current_harness_digest",
         lambda: HARNESS,
     )
+
+
+@pytest.fixture(autouse=True)
+def _grader_account_is_not_this_process(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Existing reward tests are not the dedicated fc-grader account."""
+    monkeypatch.setattr(
+        "faustcoder.reward.triage_sig.require_p3_grader_account",
+        lambda *_args, **_kwargs: None,
+    )
+
+
+@pytest.fixture(autouse=True)
+def _return_root_owned_tmp(tmp_path: Path):
+    yield
+    release_tmp(tmp_path)
 
 
 def _rows(secret: bytes, group_id: str, members, *, canaries: tuple[int, ...] = ()):
@@ -617,7 +633,8 @@ def test_triage_is_the_only_clear(tmp_path: Path) -> None:
     assert len(audit.disagreements) == 2
     assert p3_may_proceed(RUN, keyring=ring, reports=reports, consumed=consumed) is False
     stamp = _halt_stamp(reports)
-    reports.record_triage(
+    record_signed(
+        reports,
         ring,
         record_id=audit.disagreements[0].record_id,
         triaged_by="danny",
@@ -625,12 +642,14 @@ def test_triage_is_the_only_clear(tmp_path: Path) -> None:
     )
     assert p3_may_proceed(RUN, keyring=ring, reports=AuditReportLog(reports.path, consumed), consumed=consumed) is False
     size = reports.path.stat().st_size
-    reports.record_triage(
-        ring,
-        record_id=audit.disagreements[0].record_id,
-        triaged_by="danny",
-        triaged_at=stamp,
-    )
+    with pytest.raises(RewardRecordError, match="triage"):
+        record_signed(
+            reports,
+            ring,
+            record_id=audit.disagreements[0].record_id,
+            triaged_by="danny",
+            triaged_at=stamp,
+        )
     assert reports.path.stat().st_size == size
     with pytest.raises(RewardRecordError, match="triage"):
         reports.record_triage(
@@ -639,7 +658,8 @@ def test_triage_is_the_only_clear(tmp_path: Path) -> None:
             triaged_by="danny",
             triaged_at=stamp,
         )
-    reports.record_triage(
+    record_signed(
+        reports,
         ring,
         record_id=audit.disagreements[1].record_id,
         triaged_by="danny",
@@ -739,7 +759,8 @@ def test_rl_batch_requires_a_clear_report_and_keeps_a_dropped_group_out(tmp_path
             consumed=halted_consumed,
             reports=halted_reports,
         )
-    halted_reports.record_triage(
+    record_signed(
+        halted_reports,
         ring,
         record_id=halted_rows[0].record_id,
         triaged_by="danny",
@@ -1737,8 +1758,10 @@ def _append_halt_copy(
     assert copied is not None
     if halted_at is None:
         copied.pop("halted_at", None)
+        copied.pop("persisted_at", None)
     else:
         copied["halted_at"] = halted_at
+        copied["persisted_at"] = halted_at
     reports._append_line(
         derive_run_key(secret, RUN),
         {"report": copied, "run_id": RUN, "type": "audit_report"},
@@ -1777,7 +1800,8 @@ def test_refused_triage_probes_leave_the_halt_closed(tmp_path: Path) -> None:
             reports.record_triage(ring, record_id=record_id, **probe)
         assert reports.path.stat().st_size == size
         assert p3_may_proceed(RUN, keyring=ring, reports=reports, consumed=consumed) is False
-    reports.record_triage(
+    record_signed(
+        reports,
         ring,
         record_id=record_id,
         triaged_by="  danny  ",
@@ -1836,14 +1860,14 @@ def test_refused_triage_lines_do_not_clear_a_halt() -> None:
         "writer_uid": uid,
         "writer_user": user,
     }
-    assert _untriaged((halt, good)) is False
-    assert _untriaged((halt, {**good, "triaged_by": "  danny  "})) is False
-    assert _untriaged((halt, {**good, "triaged_by": "d" * 128})) is False
-    assert _untriaged((halt, {**good, "triaged_by": "rootkit"})) is False
-    assert _untriaged((halt, {**good, "triaged_by": "fc-graders"})) is False
-    assert _untriaged((halt, {**good, "triaged_at": "2026-10-18T15:10:00+00:00"})) is False
+    assert _untriaged((halt, good)) is True
+    assert _untriaged((halt, {**good, "triaged_by": "  danny  "})) is True
+    assert _untriaged((halt, {**good, "triaged_by": "d" * 128})) is True
+    assert _untriaged((halt, {**good, "triaged_by": "rootkit"})) is True
+    assert _untriaged((halt, {**good, "triaged_by": "fc-graders"})) is True
+    assert _untriaged((halt, {**good, "triaged_at": "2026-10-18T15:10:00+00:00"})) is True
     soon = _stamp_from_now(4 * 60)
-    assert _untriaged((halt, {**good, "triaged_at": soon})) is False
+    assert _untriaged((halt, {**good, "triaged_at": soon})) is True
     bare = {
         "type": "audit_report",
         "report": {"disagreements": [{"record_id": record_id}], "p3": "halt"},
@@ -1953,7 +1977,7 @@ def test_a_refused_mac_triage_stays_readable_and_does_not_clear(tmp_path: Path) 
     assert len(refused) == 1
     assert refused[0].record_id == record_id
     assert refused[0].seq == 2
-    reports.record_triage(ring, record_id=record_id, triaged_by="danny", triaged_at=stamp)
+    record_signed(reports, ring, record_id=record_id, triaged_by="danny", triaged_at=stamp)
     with pytest.warns(RefusedTriageWarning):
         opened = p3_may_proceed(RUN, keyring=ring, reports=reports, consumed=consumed)
     assert opened is True
@@ -1995,10 +2019,11 @@ def test_triage_time_is_bounded_by_the_halt_and_now(tmp_path: Path) -> None:
     assert len(refused) == 1
     assert "time" in refused[0].reason
     within = _stamp_from_now(4 * 60)
-    reports.record_triage(ring, record_id=record_id, triaged_by="danny", triaged_at=within)
+    record_signed(reports, ring, record_id=record_id, triaged_by="danny", triaged_at=within)
     assert p3_may_proceed(RUN, keyring=ring, reports=reports, consumed=consumed) is True
     size = reports.path.stat().st_size
-    reports.record_triage(ring, record_id=record_id, triaged_by="danny", triaged_at=stamp)
+    with pytest.raises(RewardRecordError, match="triage"):
+        record_signed(reports, ring, record_id=record_id, triaged_by="danny", triaged_at=stamp)
     assert reports.path.stat().st_size == size
 
 
@@ -2042,12 +2067,14 @@ def test_an_overflowing_triage_stamp_is_refused_and_a_later_triage_clears(
     assert len(refused) == 1
     assert refused[0].record_id == record_id
     assert "time" in refused[0].reason
-    reports.record_triage(ring, record_id=record_id, triaged_by="danny", triaged_at=stamp)
+    record_signed(reports, ring, record_id=record_id, triaged_by="danny", triaged_at=stamp)
     assert p3_may_proceed(RUN, keyring=ring, reports=reports, consumed=consumed) is True
     assert len(reports.refused_triages(ring)) == 1
 
 
-def test_triage_is_bounded_by_the_latest_halted_at(tmp_path: Path) -> None:
+def test_triage_is_bounded_by_the_latest_halted_at(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     secret, audit, consumed, reports, ring = _halted(tmp_path, "rehalt")
     record_id = audit.disagreements[0].record_id
     earliest = _halt_stamp(reports)
@@ -2063,7 +2090,10 @@ def test_triage_is_bounded_by_the_latest_halted_at(tmp_path: Path) -> None:
             )
         assert reports.path.stat().st_size == size
         assert p3_may_proceed(RUN, keyring=ring, reports=reports, consumed=consumed) is False
-    reports.record_triage(ring, record_id=record_id, triaged_by="danny", triaged_at=latest)
+    # The copied halt is stamped ahead of the clock. The grader's
+    # appended_at has to be at or after that persist time.
+    monkeypatch.setattr("faustcoder.reward.audit._utc_stamp", lambda: latest)
+    record_signed(reports, ring, record_id=record_id, triaged_by="danny", triaged_at=latest)
     assert p3_may_proceed(RUN, keyring=ring, reports=reports, consumed=consumed) is True
 
 
@@ -2167,7 +2197,7 @@ def test_grader_uid_from_passwd_is_refused(tmp_path: Path, monkeypatch: pytest.M
         "writer_user": "alice",
     }
     assert _untriaged((halt_line, forged)) is True
-    assert _untriaged((halt_line, {**forged, "writer_uid": uid, "writer_user": user})) is False
+    assert _untriaged((halt_line, {**forged, "writer_uid": uid, "writer_user": user})) is True
     monkeypatch.setattr("faustcoder.reward.audit.os.geteuid", lambda: grader_uid)
     monkeypatch.setattr(
         "faustcoder.reward.audit.pwd.getpwuid",

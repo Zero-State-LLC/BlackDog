@@ -205,6 +205,15 @@ def _pin_harness(monkeypatch: pytest.MonkeyPatch) -> None:
     )
 
 
+@pytest.fixture(autouse=True)
+def _grader_account_is_not_this_process(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Existing reward tests are not the dedicated fc-grader account."""
+    monkeypatch.setattr(
+        "faustcoder.reward.triage_sig.require_p3_grader_account",
+        lambda *_args, **_kwargs: None,
+    )
+
+
 def test_root_key_file_is_refused_unless_it_is_private(tmp_path: Path) -> None:
     key_path = tmp_path / "reward-root.key"
     secret = _write_key(key_path)
@@ -1398,6 +1407,9 @@ def _child(argv: list[str]) -> int:
         queue_path = Path(argv[5])
         consumed_path = Path(argv[6])
         records.current_harness_digest = lambda: harness
+        import faustcoder.reward.triage_sig as triage_sig
+
+        triage_sig.require_p3_grader_account = lambda *_args, **_kwargs: None
         secret = load_root_key(key_path, grader_uid=os.getuid())
         batch = _batch(
             log,

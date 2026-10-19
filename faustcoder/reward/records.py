@@ -1430,6 +1430,9 @@ def rl_batch_from_records(
     stale, incomplete and duplicate groups contribute no row. A group id
     already in ``consumed`` is refused.
     """
+    from faustcoder.reward.triage_sig import require_p3_grader_account
+
+    require_p3_grader_account(getattr(reports, "allowed_signers", None))
     allowed = _checkpoint_allowlist(policy_checkpoints)
     if (
         type(expected_run_id) is not str

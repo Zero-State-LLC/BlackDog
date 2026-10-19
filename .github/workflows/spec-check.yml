@@ -82,5 +82,19 @@ jobs:
           done
       - name: Install Faust 2.88.0
         run: ./scripts/install-faust-2.88.0.sh
+      - name: Require OpenSSH 8.7 or newer
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y openssh-client
+          command -v ssh
+          command -v ssh-keygen
+          python - <<'PY'
+          import re, subprocess, sys
+          completed = subprocess.run(["ssh", "-V"], capture_output=True, text=True)
+          blob = f"{completed.stderr or ''}{completed.stdout or ''}"
+          match = re.search(r"OpenSSH_(\d+)\.(\d+)", blob)
+          if match is None or (int(match.group(1)), int(match.group(2))) < (8, 7):
+              sys.exit(f"OpenSSH 8.7 or newer is required, got {blob!r}")
+          PY
       - name: Test
         run: python -m pytest
