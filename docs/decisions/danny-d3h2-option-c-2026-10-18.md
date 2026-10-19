@@ -12,14 +12,14 @@
 These are ADVERSARY's recommended defaults, as Danny approved them.
 
 - **Keys.** Each human triager holds an Ed25519 key in OpenSSH format. Software keys (`ssh-ed25519`) are allowed. Hardware-backed keys (`sk-ssh-ed25519@openssh.com`) are recommended. Danny's own key must be hardware-backed.
-- **Verification.** `ssh-keygen -Y verify` against `/etc/faustcoder/triage-allowed-signers`, namespace `faustcoder-triage-v1`, with `-Overify-time` taken from `triaged_at` (OpenSSH 8.6 or newer). No new Python dependency.
+- **Verification.** `ssh-keygen -Y verify` against `/etc/faustcoder/triage-allowed-signers`, namespace `faustcoder-triage-v1` (OpenSSH 8.7 or newer). One check uses `-Overify-time` from the grader-written `appended_at`. The same entry must also cover `triaged_at`. No new Python dependency.
 - **Allowed signers.** The file is owned by root, mode `0644`, in root-owned `/etc/faustcoder`. `fc-grader` cannot write the file or its directory. Revocation is by expiry (`valid-before`). An entry is not deleted while any run that used it is retained.
 - **Quorum.** One reviewer clears a disagreement. A halt reported `late` (the group was already claimed `used`) requires 2-of-N: two valid signatures from two distinct principals.
-- **Time.** `triaged_at` is never earlier than the halt line's persist time, and not later than verification time plus 5 minutes.
+- **Time.** `triaged_at` is never earlier than the halt line's persist time, and not later than verification time plus 5 minutes. The grader writes `appended_at` inside the run-key MAC. The key must be valid at both times. A key revoked at or before `appended_at` does not clear a new halt, even if `triaged_at` is backdated. A later read uses `appended_at`, so rotation after a valid append keeps that triage.
 - **Pre-signing.** Not allowed. The statement binds `halt_report_mac`, which does not exist until the halt line is persisted.
 - **Option B.** Kept. `triaged_by`, RFC 3339 `triaged_at`, and the writing OS user stay. They are hygiene, not authority. `fc-grader` and root still do not clear a halt.
 - **Fail closed.** A missing allowed-signers list, an unknown key, a bad signature, or a parse error leaves the halt in place.
-- **Append path (draft D7).** The grader appends human-signed statements submitted through a drop directory the human can write and `fc-grader` can read. The grader cannot forge their content.
+- **Append path (draft D7).** The grader, running as `fc-grader`, appends human-signed statements from a drop directory the human can write and `fc-grader` can read. The recorded writer is the owner of that drop file, not the effective uid of the append. A drop file owned by `fc-grader` or root is refused. The grader cannot forge the signature.
 
 ## Addition
 
