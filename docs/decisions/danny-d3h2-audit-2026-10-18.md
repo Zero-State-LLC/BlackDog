@@ -17,3 +17,7 @@
 ## Not ruled
 
 Ed25519 and DSSE. The audit cadence after P3 starts. Any numeric halt threshold other than zero disagreements.
+
+## Later
+
+Human-triage Ed25519 is ruled in spec §26 0.3.10 (Danny, 2026-10-18 5:11 PM PT, "approved the BlackDog §26 option C spec amendment with ADVERSARY's defaults"). Record: [danny-d3h2-option-c-2026-10-18.md](danny-d3h2-option-c-2026-10-18.md). Issue #64. A run-key MAC alone does not clear a halt.
