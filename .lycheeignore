@@ -1,4 +1,5 @@
 # Pages that need a signed-in session or do not exist until first use.
 ^https://github\.com/Zero-State-LLC/BlackDog/security/advisories/new
 ^https://github\.com/Zero-State-LLC/BlackDog/commits/main
+# Schema $id identity. Former repo name, not a BlackDog link. See schemas/README.md.
 ^https://github\.com/Zero-State-LLC/FaustCoder/specs/
