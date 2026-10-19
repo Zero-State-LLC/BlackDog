@@ -40,10 +40,13 @@ EXIT_DATASET = 4
 
 
 def main(argv: Sequence[str] | None = None) -> int:
-    """Run one snapshot. The manifest digest is printed on stdout."""
+    """Run one snapshot, or a human-triage sign or submit."""
+    raw = list(sys.argv[1:] if argv is None else argv)
+    if raw and raw[0] == "triage":
+        return _triage_main(raw[1:])
     parser = _parser()
     try:
-        args = parser.parse_args(list(argv) if argv is not None else None)
+        args = parser.parse_args(raw)
     except SystemExit as exc:
         code = exc.code
         return EXIT_USAGE if code not in (0, None) else EXIT_OK
@@ -135,6 +138,93 @@ def _fetcher(args: argparse.Namespace) -> DirectoryFetcher | GitFetcher | GitHub
     if args.git_root or args.fixture_root:
         raise ValueError("--fetcher github does not take a local root")
     return GitHubRawFetcher()
+
+
+def _triage_main(argv: Sequence[str]) -> int:
+    """``triage sign`` writes a drop. ``triage submit`` appends it."""
+    parser = argparse.ArgumentParser(prog="faustcoder-snapshot triage")
+    sub = parser.add_subparsers(dest="command", required=True)
+    sign = sub.add_parser("sign", help="sign a triage statement into a drop file")
+    sign.add_argument("--key", required=True, help="Ed25519 private key")
+    sign.add_argument("--statement", required=True, help="canonical statement JSON")
+    sign.add_argument("--principal", required=True)
+    sign.add_argument("--triaged-by", required=True)
+    sign.add_argument("--drop", required=True, help="drop file to create")
+    submit = sub.add_parser("submit", help="append a signed drop as fc-grader")
+    submit.add_argument("--drop", required=True)
+    submit.add_argument("--reports", required=True)
+    submit.add_argument("--consumed", required=True)
+    submit.add_argument("--root-key", required=True)
+    submit.add_argument("--run-id", required=True)
+    submit.add_argument("--allowed-signers")
+    try:
+        args = parser.parse_args(list(argv))
+    except SystemExit as exc:
+        code = exc.code
+        return EXIT_USAGE if code not in (0, None) else EXIT_OK
+    try:
+        if args.command == "sign":
+            _triage_sign(args)
+        else:
+            _triage_submit(args)
+    except (OSError, ValueError, CanonicalError) as exc:
+        print(str(exc), file=sys.stderr)
+        return EXIT_USAGE
+    return EXIT_OK
+
+
+def _triage_sign(args: argparse.Namespace) -> None:
+    from faustcoder.reward.records import RewardRecordError
+    from faustcoder.reward.triage_sig import sign_statement, write_drop
+
+    statement = loads_strict(Path(args.statement).read_text(encoding="utf-8"))
+    if not isinstance(statement, dict):
+        raise ValueError("audit triage statement is not usable")
+    try:
+        signature = sign_statement(statement, args.key)
+        write_drop(
+            args.drop,
+            principal=args.principal,
+            triaged_by=args.triaged_by,
+            statement=statement,
+            signature=signature,
+        )
+    except RewardRecordError as exc:
+        raise ValueError(str(exc)) from exc
+
+
+def _triage_submit(args: argparse.Namespace) -> None:
+    from faustcoder.reward.audit import AuditReportLog
+    from faustcoder.reward.records import (
+        ConsumedLog,
+        RewardKeyError,
+        RewardKeyring,
+        RewardRecordError,
+        load_root_key,
+    )
+    from faustcoder.reward.triage_sig import read_drop
+
+    try:
+        root = load_root_key(args.root_key)
+        drop = read_drop(args.drop)
+        record_id = drop.statement.get("record_id")
+        triaged_at = drop.statement.get("triaged_at")
+        if type(record_id) is not str or type(triaged_at) is not str:
+            raise RewardRecordError("audit triage drop file is not usable")
+        reports = AuditReportLog(
+            args.reports,
+            ConsumedLog(args.consumed),
+            allowed_signers=args.allowed_signers,
+        )
+        reports.record_triage(
+            RewardKeyring(root, run_id=args.run_id),
+            record_id=record_id,
+            triaged_by=drop.triaged_by,
+            triaged_at=triaged_at,
+            drop_path=args.drop,
+        )
+    except (RewardRecordError, RewardKeyError) as exc:
+        raise ValueError(str(exc)) from exc
 
 
 def _git_roots(entries: Sequence[str]) -> dict[str, Path]:

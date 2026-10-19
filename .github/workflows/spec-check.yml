@@ -82,5 +82,22 @@ jobs:
           done
       - name: Install Faust 2.88.0
         run: ./scripts/install-faust-2.88.0.sh
+      - name: Require OpenSSH 8.7 or newer
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y openssh-client
+          python - <<'PY'
+          import os, stat, sys
+          from faustcoder.reward.triage_sig import SSH_KEYGEN_PATH, require_openssh
+          info = os.lstat(SSH_KEYGEN_PATH)
+          if stat.S_ISLNK(info.st_mode) or not stat.S_ISREG(info.st_mode):
+              sys.exit(f"{SSH_KEYGEN_PATH} is not a regular file")
+          if info.st_uid != 0 or stat.S_IMODE(info.st_mode) & 0o022:
+              sys.exit(f"{SSH_KEYGEN_PATH} is not a root-owned, non-writable binary")
+          version = require_openssh()
+          if version < (8, 7):
+              sys.exit(f"OpenSSH 8.7 or newer is required, got {version!r}")
+          print(SSH_KEYGEN_PATH, version)
+          PY
       - name: Test
         run: python -m pytest

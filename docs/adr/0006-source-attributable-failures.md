@@ -155,4 +155,4 @@ Human triage of a D3-H2 halt is specified in spec §26, subsection 0.3.10. A run
 
 P3 refuses to start or resume unless the grader process runs as its own dedicated `fc-grader` OS account, distinct from any reviewer and from the box user (uid 1000). Signature verification is not implemented by this amendment.
 
-Later ruling, not applied to spec §26 in this text: Danny, 2026-10-18 5:45 PM PT, on issue #68, a software key is fine for his triage key. The D3-H2-C implementation removes the hardware-key requirement for that key and does not enforce a hardware key. The 5:11 PM sentence above still records the approval as merged.
+Later ruling, applied in spec 0.3.11: Danny, 2026-10-18 5:45 PM PT, on issue #68, a software key is fine for his triage key. Spec §26 0.3.11 removes the hardware-key requirement for that key and does not enforce a hardware key. The 5:11 PM sentence above still records the approval as it was merged.
