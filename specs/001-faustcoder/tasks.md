@@ -82,6 +82,7 @@ Implements the dataset machine (spec §7.1) and training machine (spec §7.3).
   - Sub-steps: P1 continued pretraining or skip; P2 SFT on validated pairs; P3 compiler-feedback RL (R-016).
   - Amended 0.3.5 (Q4): ADR-0002 is accepted in full (Jev's default; Danny may still choose P3 PROPOSED). P3 reward is the ADR-0006 grader with the Q1 binary ruling, whole-group drop, and A2-T as the only auto-attribution path. The P3 exit gate requires the graded/ungraded split, the A7 quarantine rate and the group-drop rate within pre-registered limits, and no frozen auto-attribution signature at exit. Only the ~5M-token CPT-skip threshold is ratified. The 2-point loss and compile@10 noise are paired-CI tests. GD-1 is a prerequisite, not a follow-on.
   - Amended 0.3.7 (D3 option H): D3-H1 blocks T10. P3 also waits on D3-H2. The P3 exit gate adds audit disagreements = 0 unresolved and the consumed log intact. D3-H2 does not block P1 or P2. Every T10 training row from `rl_batch_from_records` carries an explicit non-empty `example_id` (the signed record id). A training row without one is refused.
+  - Amended 0.3.10 (D3-H2-C, issue #64): P3 also waits on D3-H2-C. A halt clears only with a valid human triage signature under spec §26 0.3.10. A run-key MAC alone does not clear it. P3 refuses to start unless the grader runs as the dedicated `fc-grader` OS account, distinct from any reviewer and from the box user (uid 1000).
   - Workflows: anti-slop-code, production-systems.
 - [ ] T11 [J-04] Independent DSP evaluation.
   - Depends on: T10, T04. Milestone: v0.3.
@@ -195,11 +196,34 @@ These tasks are the implementation. This record does not change code.
   - Workflows: production-systems.
 - [ ] D3-H1-N12 [J-04] `rl_batch_from_records` rewards go through the minted-receipt builders.
   - Depends on: D3-H1. Milestone: v0.3. Does not block T10. Follow-up from the D3-H1 adversary review (N12).
-  - Acceptance: `rl_batch_from_records` does not compute `reward` inline. It uses `reward_value` or `rl_batch`, and it checks `is_minted`.
+  - Acceptance: `rl_batch_from_records` does not compute `reward` inline. It uses `reward_value` or `_rl_batch`, and it checks `is_minted`. `_rl_batch` is not public API.
   - Workflows: production-systems.
 - [x] D3-H2 [J-04] Sampled rerun-from-source audit.
   - Depends on: D3-H1. Milestone: v0.3. Before P3. Does not block P1 or P2.
-  - Acceptance: spec §26 0.3.9. Before P3, every passing row, a ceil(5%) sample of failing rows (`fail` and `source_attributed`, at least one when any exist), and every signed canary are rerun from source. The seed is HMAC-SHA256(run key, "d3-h2-seed" || run id); any other seed is refused. A disagreement leaves that row ungraded, drops its group as `dropped:audit`, and halts P3. A group already `used` is reported `late` and still halts. `rl_batch_from_records` refuses unless the latest persisted report for the run is clear and every batch row is in the record ids that report covered, on the consumed log the report is bound to. The MAC'd report records those ids and the consumed log beside it. Each report line carries a sequence and the previous line's MAC, and the high-water mark is anchored in the consumed log over that log's claim bytes. Truncating the report file alone does not restore an older clear line. Not covered: restoring both the report and the consumed log to an older snapshot, including deleting the marker, anchor and report together without the key, which can erase a late-only halt (the same class of rollback), and a crash between the report fsync and the anchor move, which fails closed with no repair path. Another seed does not clear a halt. Ed25519 is out of scope. Done in the D3-H2 change.
+  - Acceptance: spec §26 0.3.9. Before P3, every passing row, a ceil(5%) sample of failing rows (`fail` and `source_attributed`, at least one when any exist), and every signed canary are rerun from source. The seed is HMAC-SHA256(run key, "d3-h2-seed" || run id); any other seed is refused. A disagreement leaves that row ungraded, drops its group as `dropped:audit`, and halts P3. A group already `used` is reported `late` and still halts. `rl_batch_from_records` refuses unless the latest persisted report for the run is clear and every batch row is in the record ids that report covered, on the consumed log the report is bound to. The MAC'd report records those ids and the consumed log beside it. Each report line carries a sequence and the previous line's MAC, and the high-water mark is anchored in the consumed log over that log's claim bytes. Truncating the report file alone does not restore an older clear line. Not covered: restoring both the report and the consumed log to an older snapshot, including deleting the marker, anchor and report together without the key, which can erase a late-only halt (the same class of rollback), and a crash between the report fsync and the anchor move, which fails closed with no repair path. Another seed does not clear a halt. Ed25519 and DSSE for reward rows and reports are out of scope for this task. Human-triage Ed25519 is D3-H2-C (spec §26 0.3.10), not this task. Done in the D3-H2 change.
+  - Workflows: production-systems, ADVERSARY review.
+- [ ] D3-H2-C [J-04] Human triage credential (spec §26 0.3.10, issue #64).
+  - Depends on: D3-H2. Milestone: v0.3. Before P3. Does not block P1 or P2.
+  - Spec status: the §26 0.3.10 text, the decision record, and this task are the spec change. Signature verification is not in that change. This task is the implementation.
+  - Owner: the implementation PR. Inputs: spec §26 0.3.10, [danny-d3h2-option-c-2026-10-18.md](../../docs/decisions/danny-d3h2-option-c-2026-10-18.md), issue #64. Outputs: `faustcoder/reward/triage_sig.py`, the audit triage path, and the triage CLI. Failure disposition: fail closed. A missing allowed-signers list, an unknown key, a bad signature, or a parse error leaves the halt and does not crash open. Evidence: `tests/test_reward_triage_sig.py`.
+  - Acceptance: spec §26 0.3.10. `faustcoder/reward/triage_sig.py` provides `canonical_statement`, `sign_statement`, `verify_statement`, and `require_allowed_signers`. `sign_statement` runs `ssh-keygen -Y sign -n faustcoder-triage-v1` as the caller and refuses a key file that is mode `0644`, group-readable, or readable by the `fc-grader` uid. `verify_statement` runs `ssh-keygen -Y verify -n faustcoder-triage-v1` with `-Overify-time` set from `triaged_at` (OpenSSH 8.6 or newer) and checks `valid-after` and `valid-before`. `require_allowed_signers` checks owner, mode, and that `fc-grader` cannot write the file or its parent, and refuses a symlink. No new Python dependency. The implementation PR documents the OpenSSH 8.6 requirement in the runbook and installs `openssh-client` in CI so the tests are required.
+  - `audit.py` records `persisted_at` (RFC 3339) inside the MAC'd halt report line. `record_triage` accepts the statement and the signature and checks the binding. A triage counts only at `v == 2` after `verify_statement`. A `v:1` line does not clear a halt. The binding check matches `halt_seq`, `halt_report_mac`, `row_ids_digest`, and `consumed_id` to the named halt line in this report log.
+  - CLI: `faustcoder-snapshot triage sign` signs as the human uid and writes the statement and the SSHSIG to a drop file. `triage submit` is the grader side and appends that statement. The grader never reads a human private key.
+  - P3 refuses to start unless the process runs as the dedicated `fc-grader` OS account, distinct from any reviewer and from the box user (uid 1000).
+  - Tests, all required in CI:
+    1. A valid software-key signature clears the halt.
+    2. A MAC'd v2 line without a signature, and a v1 line, stay halted.
+    3. A forged MAC'd line with a random signature stays halted.
+    4. A statement for the wrong `run_id`, `record_id`, `halt_seq`, `halt_report_mac`, `row_ids_digest`, or `consumed_id` stays halted, each field on its own.
+    5. A key revoked (`valid-before`) before `triaged_at` fails. A key revoked after `triaged_at` still verifies.
+    6. `triaged_at` before `persisted_at` fails. `triaged_at` after verification time plus 5 minutes fails. A time inside those bounds passes.
+    7. Signing refuses a key file with mode `0644` or group-readable by `fc-grader`'s group.
+    8. An allowed-signers file that is missing, unreadable, writable by the grader uid, or a symlink leaves the halt in place and does not crash open.
+    9. The same statement and signature appended for a second disagreement or a later halt is refused.
+    10. An unknown principal or key fails. A namespace other than `faustcoder-triage-v1` fails.
+    11. Quorum: one signature does not clear a `late` halt. Two distinct principals do. One signature still clears a halt that is not `late`.
+    12. Option-B checks still refuse `fc-grader` and root as actors and as writers.
+    13. An `sk-ssh-ed25519` test is marked hardware and manual, and the runbook says so. Danny's own key is hardware-backed.
   - Workflows: production-systems, ADVERSARY review.
 - [ ] A2-PATH [J-04] Training callers must not supply the replaced path.
   - Status: done in code in #51 (`cef8a14`), not fully done. The grader enforces this, but `run_signal` and `commit_signal_check` do not yet pass the task or a native receipt to `grade_receipt`. The box is checked when that live wiring lands.
@@ -261,7 +285,7 @@ graph LR
     T09 --> T10 --> T11
     T04 --> GD1["GD-1"] --> T10
     T04 --> D3H1["D3-H1"] --> T10
-    D3H1 --> D3H2["D3-H2"]
+    D3H1 --> D3H2["D3-H2"] --> D3H2C["D3-H2-C"]
     T03 --> A2PATH["A2-PATH"] --> T10
     T03 --> EVALSO["EVAL-SO"] --> T10
     T03 --> L3 --> A2T["A2-T"]
@@ -279,4 +303,4 @@ graph LR
     T04 --> T22
 ```
 
-Parallel starts after T01: T02, T05 and T09. Lanes T17 to T19, T21 and T22 run in parallel with T10. From 0.3.5: GD-1 precedes T10, and A7-S precedes A2-T. From 0.3.7: D3-H1 blocks T10. D3-H2 precedes P3 and does not block P1 or P2.
+Parallel starts after T01: T02, T05 and T09. Lanes T17 to T19, T21 and T22 run in parallel with T10. From 0.3.5: GD-1 precedes T10, and A7-S precedes A2-T. From 0.3.7: D3-H1 blocks T10. D3-H2 precedes P3 and does not block P1 or P2. From 0.3.10: D3-H2-C precedes P3 and does not block P1 or P2.
