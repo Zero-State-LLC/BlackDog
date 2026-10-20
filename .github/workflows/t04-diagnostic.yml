@@ -1,0 +1,57 @@
+name: T04 x86 diagnostic
+on:
+  push:
+    branches: [fix/biquad-fixture-stability]
+permissions:
+  contents: read
+jobs:
+  capture:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22.14.0'
+      - name: Install Python dependencies
+        run: python -m pip install -e ".[test]"
+      - name: Install pinned Faust WASM
+        working-directory: faust/worker
+        run: npm ci --ignore-scripts
+      - name: Fetch pinned library and example trees
+        run: |
+          ./scripts/fetch-faustlibraries.sh
+          ./scripts/fetch-faust-examples.sh
+      - name: Install dedicated namespace launcher on ephemeral runner
+        run: |
+          sudo install -d -o root -g root -m 0755 /opt/faustcoder/bin
+          sudo install -o root -g "$(id -gn)" -m 0750 /usr/bin/unshare /opt/faustcoder/bin/fc-unshare
+          cat > "$RUNNER_TEMP/faustcoder-unshare" <<'PROFILE'
+          abi <abi/4.0>,
+          include <tunables/global>
+          profile faustcoder-unshare /opt/faustcoder/bin/fc-unshare flags=(unconfined) {
+            userns,
+          }
+          PROFILE
+          sudo install -o root -g root -m 0644 "$RUNNER_TEMP/faustcoder-unshare" /etc/apparmor.d/faustcoder-unshare
+          sudo apparmor_parser -r /etc/apparmor.d/faustcoder-unshare
+          echo 'FAUSTCODER_UNSHARE=/opt/faustcoder/bin/fc-unshare' >> "$GITHUB_ENV"
+      - name: Verify dedicated namespace support
+        run: /opt/faustcoder/bin/fc-unshare --net --map-current-user -- true
+      - name: Nonlinear regressions (old goldens deliberately unchanged)
+        run: |
+          mkdir -p evidence
+          python -m pytest tests/test_signal_nonlinear.py -o addopts="" -q -k "not test_dsp_bank_matches_committed_x86_goldens" | tee evidence/nonlinear-suite.log
+      - name: Capture samples and WASM
+        run: python diagnostics/t04_capture.py
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: t04-x86-node2214
+          path: evidence/
+          retention-days: 30
+          if-no-files-found: warn
