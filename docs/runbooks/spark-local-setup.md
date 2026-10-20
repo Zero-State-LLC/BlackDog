@@ -140,6 +140,90 @@ The cited external benchmarks remain the separate R-001 evidence in the
 claimed; fingerprint that machine separately if it will train. T01 and all
 training dependency gates remain in force.
 
+## Isolated T10 environment and dependency blocker
+
+On 2026-10-20, a separate `~/blackdog-t10-venv` was created on spark-af42
+with Python 3.12.3 and editable BlackDog at main `de82d32`. This is the
+direct Hugging Face variant: Axolotl, DeepSpeed and optional attention
+kernels were not installed. The original `~/r9venv`, its shared user-site
+packages, the DSP `.venv` and the original T09 receipts remain unchanged.
+The Axolotl/torch conflict remains in r9venv; it is not inherited by this
+isolated candidate.
+
+| Component | Installed version |
+|---|---|
+| PyTorch / CUDA | `2.13.0+cu130` / 13.0 |
+| Triton | 3.7.1 |
+| Transformers / PEFT / TRL | 5.16.1 / 0.20.0 / 1.9.0 |
+| Accelerate / datasets | 1.13.0 / 4.8.4 |
+| tokenizers / huggingface-hub | 0.23.1 / 1.17.0 |
+
+Operator-local activation (not an instruction to start training):
+
+```bash
+source ~/blackdog-t10-venv/bin/activate
+export PYTHONNOUSERSITE=1
+```
+
+Do not source the DSP activation script for this environment. Validation
+confirmed user-site disabled, no r9venv/DSP path leakage, and all checked
+training imports originating inside the new venv. `Trainer`, `SFTTrainer`
+and PEFT imports passed. On GB10 (capability 12.1), small generated-tensor
+BF16 matmul/backward, SDPA backward and AdamW update checks passed with
+finite results; peak allocated CUDA memory was 67,167,744 bytes. These
+checks loaded no model and measured no training throughput. They do not
+exercise cuSPARSELt sparse matrix operations.
+
+**Dependency validation is blocked.** `pip check` reports:
+
+```text
+nvidia-cusparselt-cu13 0.8.1 is not supported on this platform
+```
+
+The upstream ARM64 wheel filename declares `manylinux2014_aarch64`, but
+its internal `WHEEL` tag is `manylinux2014_sbsa`. Its AArch64 ELF library
+loads successfully; that does not make the dependency check pass.
+Inspection of the original upstream 0.9.1 wheel confirmed a corrected
+`manylinux2014_aarch64` tag. However, official CPython 3.12 ARM64 torch
+2.13.0, 2.14.0 and 2.14.1 CUDA 13.0 wheel metadata pins cuSPARSELt 0.8.1
+exactly. The inspected CUDA 13.2 builds of 2.13.0 and 2.14.1 have the same
+pin. An on-Spark resolver dry run for torch 2.13.0 plus cuSPARSELt 0.9.1
+failed with `ResolutionImpossible` (exit 1); it installed nothing.
+
+These are observations as of 2026-10-20, not a claim about future releases.
+Sources: [NVIDIA 0.8.1 wheel metadata](https://pypi.org/pypi/nvidia-cusparselt-cu13/0.8.1/json),
+[0.9.1 metadata](https://pypi.org/pypi/nvidia-cusparselt-cu13/0.9.1/json), and
+[official CUDA 13.0 torch wheels](https://download.pytorch.org/whl/cu130/torch/).
+The operator-local investigation retains the wheel URLs, hashes and internal
+tags. No installed metadata was rewritten, dependency pin overridden or
+validation failure suppressed.
+
+Recommended next action: preserve the candidate and seek an upstream
+corrected compatible wheel or an official torch build with compatible
+requirements. A separately built, reproducible torch candidate is a fallback
+requiring its own dependency and sparse-operation validation; none was built.
+Do not treat successful dense CUDA checks as permission to force cuSPARSELt
+0.9.1 past the resolver. Training remains blocked on clean dependency
+validation, a fresh fingerprint for the candidate and local-model/throughput
+validation, plus the existing project gates. The old T09 receipt still
+describes r9venv with `stack_pin_allowed=false`; it does not cover this venv.
+
+Evidence locations, outside Git and `/tmp`:
+
+- Spark: `~/blackdog-t10-setup-20261020T231900Z/`.
+- Local copy: `outputs/blackdog-t10-setup/blackdog-t10-setup-20261020T231900Z/`.
+- Both contain requested constraints, resolved package inventory, install
+  logs, `pip-check.txt`, CUDA validation script/results, preservation manifests
+  and `SHA256SUMS`. All 15 copied evidence file checksums passed.
+- Local investigation: `outputs/blackdog-cusparselt-investigation/REPORT.md`,
+  `upstream-wheel-tags.json` and `alternate-builds.json`.
+- Initial stack assessment: `outputs/blackdog-t10-investigation/`.
+
+All 15,296 inventoried existing setup/r9venv/T09 files and symlinks verified
+unchanged. No sudo, workload stop or model download occurred. No custom
+build or upstream issue submission was initiated. Keep these artifacts out
+of Git and ask before sudo, stopping workloads or downloading models.
+
 ## Next steps
 
 This is a proposed execution order, not authorization to run training or modify
@@ -147,7 +231,7 @@ system configuration. [KANBAN](../../KANBAN.md) retains the dependency gates.
 
 | Order | Work | Acceptance / stop condition |
 |---|---|---|
-| 1 | T10 environment and per-machine evidence | spark-af42 fingerprint is complete; retain the verified store above. Resolve the Axolotl/torch conflict through an explicitly selected supported training stack, recheck workload clearance, and validate local-model compatibility and throughput before any stack pin. Repeat fingerprinting after environment changes and on a second Spark if used. Do not replace the DSP venv or download weights implicitly. |
+| 1 | T10 environment and per-machine evidence | spark-af42 fingerprint is complete; retain the verified store above. The isolated direct HF candidate passes import/dense CUDA checks but is blocked by cuSPARSELt wheel metadata and torch's exact pin; seek an upstream-compatible fix without overriding validation. Then recheck workload clearance and validate a fresh fingerprint, local-model compatibility and throughput before any stack pin. Repeat fingerprinting after environment changes and on a second Spark if used. Do not replace the DSP venv or download weights implicitly. |
 | 2 | Audit and signature follow-ups (#62, #68, #69, #72) | Reconcile each issue against merged #71, add focused regression/feature-detection evidence, and document remaining risks. Merge status alone does not close follow-up issues. Keep credentials and signing configuration untouched without separate authorization. |
 | 3 | Live reward wiring and group handling | Complete A2-PATH/EVAL-SO task/native-receipt plumbing and GD-1 whole-group drop acceptance tests. Keep auto-attribution in shadow until L3, A7-S and CANARY gates are met. |
 | 4 | Data and training prerequisites | Resolve T01/ADR-0001, T06 H2/H3 and FLOOR evidence, then T07 split freeze and T08 baseline measurements. Record rights/leakage gates before T10; retain P3 audit, credential and dedicated-grader requirements. |
@@ -178,7 +262,8 @@ system configuration. [KANBAN](../../KANBAN.md) retains the dependency gates.
    second Spark only if it will train; do not reuse this machine's receipt.
 
 The spark-af42 fingerprint above passes the per-machine evidence checks.
-T10 remains blocked on training-stack compatibility and model/throughput
+T10 remains blocked on the isolated candidate's cuSPARSELt dependency check,
+a fresh candidate fingerprint and model/throughput
 validation (`stack_pin_allowed=false`), T01 and the data/baseline gates,
 GD-1 and live A2-PATH/EVAL-SO integration. P3 additionally retains its audit,
 human-triage credential and dedicated-grader requirements. No production

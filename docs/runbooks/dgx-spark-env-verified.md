@@ -18,8 +18,11 @@ receipts are not interchangeable.
 The [spark-af42 T09 record](spark-local-setup.md#t09-fingerprint-evidence)
 contains the successful 2026-10-20 fingerprint, both artifact IDs, receipt
 locations and off-host checksum results. `stack_pin_allowed` remains false;
-the existing Axolotl/torch conflict must be resolved before training. This
-receipt does not validate a training stack or another Spark.
+the original r9venv still has the Axolotl/torch conflict. A separate
+[T10 candidate](spark-local-setup.md#isolated-t10-environment-and-dependency-blocker)
+passes import/dense CUDA checks but remains blocked on cuSPARSELt dependency
+validation. This receipt does not validate that new environment, a training
+stack or another Spark.
 
 ## Safety
 
