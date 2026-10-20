@@ -69,3 +69,7 @@ Audit T03/T04 sandbox and render code, T05/T06 rights and slicer, T07/T08 baseli
 - Existing accepted ADRs and §25/§26 decisions remain unchanged unless a new decision record explicitly supersedes them.
 
 - No merge or training without separate review.
+
+## Documentation index reconciliation
+
+The current `docs/INDEX.md` header describes main `665d73b` and spec 001 version 0.3.10. Main has since advanced to spec 001 version 0.3.11 through PR #71. After Spec 002 is accepted, update the index to list its canonical spec, plan, tasks, traceability, and audit evidence, and replace the stale version claim. Do not present Spec 002 as accepted until its merge and review gates pass.
