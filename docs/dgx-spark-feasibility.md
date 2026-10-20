@@ -306,6 +306,13 @@ does not install a toolkit.
 
 ## Evidence still required on the machines
 
+Update, 2026-10-20: the [spark-af42 execution record](runbooks/spark-local-setup.md#t09-fingerprint-evidence)
+completes items 1 and 4 for that machine on `0cd3382`: exit 0,
+`env_verified`, both artifacts verified, and all 17 off-host file checksums
+passed. The existing Axolotl/torch conflict remains; this is not training-stack
+validation. Items 2 (if a second Spark will train) and 3 remain outstanding.
+The list below states the per-machine requirements for future runs.
+
 1. Fingerprint-only run on the cleared dedicated Spark. Probes skipped and
    `stack_pin_allowed` false are expected. Together with the benchmarks in
    this note, that receipt is the amended R-001 evidence for v0.2.
