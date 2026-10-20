@@ -8,7 +8,7 @@ Compiler-verified Faust DSP coding model, developed on NVIDIA DGX Spark.
 
 ## Start here
 
-- [Canonical specification](specs/001-faustcoder/spec.md) (0.3.10)
+- [Canonical specification](specs/001-faustcoder/spec.md) (0.3.11)
 - [Docs index](docs/INDEX.md): ADRs, decision records, runbooks, state machines, analysis and spec 001
 - [Source rights inventory](docs/rights-inventory.md)
 - [Implementation backlog](KANBAN.md)
@@ -18,6 +18,7 @@ Compiler-verified Faust DSP coding model, developed on NVIDIA DGX Spark.
 - [Changelog](CHANGELOG.md) and [versioning](docs/VERSIONING.md)
 - [DGX Spark feasibility study](docs/dgx-spark-feasibility.md) and the [env_verified runbook](docs/runbooks/dgx-spark-env-verified.md)
 - [T06 normalize and dedup runbook](docs/runbooks/t06-normalize-dedup.md)
+- [Verified Spark setup and next steps](docs/runbooks/spark-local-setup.md)
 
 ## Principles
 

@@ -8,6 +8,8 @@ See [docs/VERSIONING.md](docs/VERSIONING.md).
 
 ## [Unreleased]
 
+- Record spark-af42 setup and validation, reconcile merged #71/#74/#77 in the board and docs index, and plan outstanding ARM comparison, T09 fingerprint and training prerequisites.
+
 - Fix native sandbox capability dropping on ARM64 using libc capset; retain fail-closed behavior and verify cleared capabilities and no-new-privileges. Separate default unshare path validation from execution with the configured dedicated binary on restricted hosts.
 
 ### Security
