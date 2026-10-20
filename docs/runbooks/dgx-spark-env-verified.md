@@ -32,12 +32,17 @@ receipts are not interchangeable.
 
 ## Install
 
-Use the Python that already sees the machine's torch. A clean virtualenv
-hides that install. From a checkout of this revision:
+Use the Python that already sees the machine's supported torch/CUDA stack.
+A clean virtualenv hides that install. On spark-af42 preserve the existing
+DSP `.venv` and activation script. Replace the placeholder below with the
+verified interpreter; create a separate `~/.venvs/blackdog-t09` outside the
+checkout only if needed and not already present. If the supported environment is container-based, follow
+that environment's existing execution path instead of creating a host venv.
+From a checkout of this revision:
 
 ```bash
-python3 -m venv --system-site-packages .venv
-source .venv/bin/activate
+/path/to/supported/python -m venv --system-site-packages "$HOME/.venvs/blackdog-t09"
+source "$HOME/.venvs/blackdog-t09/bin/activate"
 python -m pip install --disable-pip-version-check -e .
 ```
 
@@ -157,17 +162,22 @@ Those tests mock the Spark fingerprint and skip the CUDA probes. A green run
 does not mean G10 passed, and it does not replace the fingerprint on the
 Spark.
 
-## Signal suite cross-arch digest (pending)
+## Signal suite cross-arch digest (T04 complete)
 
-The nonlinear suite asks for the same sample hashes on x86 and on this
-ARM machine. CI is x86 only, so that compare stays pending until this
-machine renders it. Install the signal harness the same way as the
+T04 completed on spark-af42 and x86 in [PR #79](https://github.com/Zero-State-LLC/BlackDog/pull/79)
+(`bb367c9`): all 40 corrected DSP-bank renders were finite and byte-identical.
+See [validation evidence](spark-local-setup.md#validation-and-evidence).
+This does not complete the separate T09 fingerprint. To rerun T04 on a
+configured machine, install the signal harness the same way as the
 compiler runbook (Node 22, the faustwasm worker, pinned faustlibraries,
 `fc-unshare`). Then:
 
 ```bash
-python3 scripts/signal_cross_arch.py --out /tmp/signal-arch-arm.json
-python3 scripts/signal_cross_arch.py --compare /tmp/signal-arch-arm.json tests/fixtures/signal/nonlinear-x86-goldens.json
+source ./activate-local.sh  # operator-local script on spark-af42
+mkdir -p .local
+result_dir=$(mktemp -d "$PWD/.local/t04-recheck-XXXXXX")
+python scripts/signal_cross_arch.py --out "$result_dir/arm.json" \
+  --goldens tests/fixtures/signal/nonlinear-x86-goldens.json
 ```
 
 The script runs from a checkout without installing the package. Copy

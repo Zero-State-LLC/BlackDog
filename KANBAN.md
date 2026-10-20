@@ -2,9 +2,9 @@
 
 Formerly FaustCoder; renamed 2026-10-17 PT.
 
-Status as of 2026-10-20 PT, main `19b9184` (spec 0.3.11). D3-H2-C merged in #71 (`cf319f3`), independent contract validation in #74 (`04146e3`), and the ARM64 sandbox fix in #77 (`19b9184`). On spark-af42, the full suite passed with 627 passed and 2 architecture-specific skips; merged-main readiness and the independent impulse smoke test passed. See [Spark setup, evidence and next steps](docs/runbooks/spark-local-setup.md).
+Status as of 2026-10-20 PT, main `bb367c9` (spec 0.3.11). T04's corrected ARM/x86 DSP-bank validation completed in [#79](https://github.com/Zero-State-LLC/BlackDog/pull/79): all 40 renders were finite and byte-identical, as were the five compiled WASM binaries. Full suites: ARM 635 passed, 2 skipped; x86 637 passed. All nine PR checks passed, and merged-main activation, smoke test and golden comparison passed on spark-af42. See [Spark setup, evidence and next steps](docs/runbooks/spark-local-setup.md).
 
-T09 remains HARNESS DONE, EVIDENCE PENDING: no per-machine fingerprint receipt was captured in this setup. T04's ARM DSP-bank golden comparison remains pending. A2-PATH and EVAL-SO remain CODE DONE, LIVE WIRING PENDING; their grader implementation is not proof of production reward-path integration. T01 still waits on proposed ADR-0001. T06 H2, H3 and FLOOR, and D3-H1-N9 through N12 remain separate follow-ups. Existing dependency arrows remain promotion gates; this setup does not authorize training or promotion.
+T09 remains HARNESS DONE, EVIDENCE PENDING: no per-machine fingerprint receipt was captured in this setup. T04's ARM/x86 validation is complete; it does not supply T09 fingerprint evidence. A2-PATH and EVAL-SO remain CODE DONE, LIVE WIRING PENDING; their grader implementation is not proof of production reward-path integration. T01 still waits on proposed ADR-0001. T06 H2, H3 and FLOOR, and D3-H1-N9 through N12 remain separate follow-ups. Existing dependency arrows remain promotion gates; this setup does not authorize training or promotion.
 
 ## Done
 
@@ -12,6 +12,7 @@ These merges are on main. The commit is the merge commit.
 
 | Item | PR | Commit | What landed |
 |---|---|---|---|
+| T04 finite ARM/x86 DSP-bank validation | [#79](https://github.com/Zero-State-LLC/BlackDog/pull/79) | `bb367c9` | Correct biquad feedback sign/delay, refuse nonfinite bank output, add recurrence/finite regressions, and regenerate verified goldens without widening tolerances; 40/40 exact matches |
 | D3-H2-C human triage signatures | [#71](https://github.com/Zero-State-LLC/BlackDog/pull/71) | `cf319f3` | Spec 0.3.11 signature verification and dedicated grader check; follow-ups #68 and #72 remain open |
 | Independent contract validation | [#74](https://github.com/Zero-State-LLC/BlackDog/pull/74) | `04146e3` | JSON Schema contract validation in CI |
 | ARM64 sandbox capability dropping | [#77](https://github.com/Zero-State-LLC/BlackDog/pull/77) | `19b9184` | Portable libc capset, configured namespace execution, capability and no-new-privileges regression coverage; all eight CI checks passed |
@@ -28,6 +29,7 @@ These merges are on main. The commit is the merge commit.
 
 | ID | Issues | Task |
 |---|---|---|
+| T09 fingerprint evidence | [#12](https://github.com/Zero-State-LLC/BlackDog/issues/12) | Next: confirm workload clearance and an existing supported torch/CUDA environment; run fingerprint-only, validate both stored artifacts and sidecars, and back up per-machine evidence. Preserve the DSP venv; no training or model download |
 | D3-H2-C follow-ups | [#68](https://github.com/Zero-State-LLC/BlackDog/issues/68), [#72](https://github.com/Zero-State-LLC/BlackDog/issues/72) | Implementation merged in #71; reconcile remaining review items, including OpenSSH feature detection and key-path guard coverage. Do not close issues from merge status alone |
 | D3-H2 fail-closed | [#62](https://github.com/Zero-State-LLC/BlackDog/issues/62) | Fail-closed follow-ups from the #61 review (I1–I4). A refused refresh leaves the injected line. An unreadable report is skipped by the no-anchor check. That check reads every sibling file. An unMAC'd or foreign-log report must not block a first claim |
 | Triage fail-closed | [#69](https://github.com/Zero-State-LLC/BlackDog/issues/69) | Fail-closed nits from the #67 review. A clock moving backwards can refuse an already-accepted triage on read. The confusable skeleton misses small capitals and combining marks. The r2 note asks for a direct test that `None` means refused, and records that two r1 mutants (NFKC, missing halt) still survive |
@@ -36,8 +38,8 @@ Issue #68: the D3-H2-C change reads the drop-file owner with `fstat` on an `O_NO
 
 ## Immediate execution order
 
-1. Run and preserve the T04 ARM DSP-bank comparison; do not widen tolerances or overwrite x86 goldens.
-2. Capture the T09 fingerprint using the existing supported CUDA/torch environment after confirming workload clearance; preserve the current DSP venv.
+1. Prepare T09: confirm spark-af42 identity and workload clearance, locate the existing supported CUDA/torch environment, and preserve the DSP venv. Stop if clearance or a supported environment is absent.
+2. Capture fingerprint-only evidence (no model path), validate both artifact IDs and envelope sidecars with `ArtifactStore.get`, and copy the complete per-machine store off-host. Keep T09 evidence pending until its acceptance checks pass.
 3. Triage #62, #68, #69 and #72 with regression evidence; complete A2-PATH/EVAL-SO live wiring and GD-1 before the relevant training gates.
 4. Resolve T01 and T06 H2/H3/FLOOR prerequisites, then T07 split freeze and T08 baselines before T10. No training run is started by this plan.
 
@@ -50,7 +52,7 @@ Acceptance criteria and stop conditions: [next-step plan](docs/runbooks/spark-lo
 | T01 | v0.1 | Constitution and ADRs | none | Reviewed architectural decisions |
 | T02 | v0.1 | DONE in #34, #35: JSON schemas and immutable artifact store | T01 | Schema validation and digest tests |
 | T03 | v0.1 | DONE in #38, #40, #42, #46: Sandboxed Faust compiler harness | T02 | Reproducible compiler receipts |
-| T04 | v0.1 | DONE in #41, #45 (ARM goldens compare pending on the DGX Spark): DSP signal test harness | T03 | Known-good/known-bad fixtures |
+| T04 | v0.1 | DONE in #41, #45, #79 (`bb367c9`): DSP signal harness and finite ARM/x86 golden validation | T03 | Known-good/known-bad fixtures |
 | T05 | v0.1 | DONE in #37: Source rights inventory | T01 | Provenance and exclusion receipts |
 | T06 | v0.2 | DONE in #39 (H2, H3 and FLOOR follow-ups open): Normalization and dedup | T05,T02 | Deterministic snapshot. Dedup uses provisional TOKEN_FLOOR=40. P0 exits only if that floor is accepted by the Q3 protocol or marked provisional with a recorded leakage caveat |
 | T07 | v0.2 | Split freeze | T06 | Leakage checks and signed split manifest. A freeze on the provisional floor records a leakage caveat and a scheduled re-check. Leaked items are removed and the removal is logged. Holdout novelty is re-checked once the floor is accepted, before any P3 exit claim rests on the holdout |
@@ -87,7 +89,7 @@ Acceptance criteria and stop conditions: [next-step plan](docs/runbooks/spark-lo
 
 Proposed T06/T07 requirement (D-013, Danny yes 2026-10-17 1:04 PM PT): an n-gram or AST near-duplicate filter on generated `.dsp` against the training-only set. The threshold is not set. Impulse-test paths already cannot take `eval`.
 
-T04 follow-up (N6, Danny yes 2026-10-17): `nonlinear-suite-v1` is an eight-stimulus float32 suite at the 144000-frame floor. The signed sample check is the gate. THD+N, IMD and the Farina inverse filter are diagnostics. The suite is not in `REWARD_PROFILES`. TaskSpec `effect` is a closed enum; only `linear` and `time_invariant` are rewardable. `require_task_rewardable` is called by `dataset_reward_row` and `_rl_batch` (D5). `nonlinear-suite-fallback-v1` is the four-stimulus fallback. x86 DSP-bank goldens are committed. The ARM compare is pending on the DGX Spark.
+T04 follow-up (N6, Danny yes 2026-10-17): `nonlinear-suite-v1` is an eight-stimulus float32 suite at the 144000-frame floor. The signed sample check is the gate. THD+N, IMD and the Farina inverse filter are diagnostics. The suite is not in `REWARD_PROFILES`. TaskSpec `effect` is a closed enum; only `linear` and `time_invariant` are rewardable. `require_task_rewardable` is called by `dataset_reward_row` and `_rl_batch` (D5). `nonlinear-suite-fallback-v1` is the four-stimulus fallback. x86 DSP-bank goldens are committed. The corrected ARM/x86 comparison completed in #79: all 40 renders match exactly and are finite. This does not add the nonlinear suite to `REWARD_PROFILES`.
 
 Lane issues (ADR-0004): T17 #25, T18 #26, T19 #27, T20 #28, T21 #29, T22 #30.
 
