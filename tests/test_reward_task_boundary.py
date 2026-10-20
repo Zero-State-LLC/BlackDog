@@ -54,3 +54,4 @@ def test_correct_task_can_consume_bound_receipt() -> None:
     task = _task()
     graded = grade_receipt(allowlisted_reward_envelope(passed=True), task=task)
     assert reward_value(graded, task) == 1.0
+
