@@ -4,13 +4,13 @@ Static inspection of main cf319f376161f7c5867aed1080d86d171372a785. No test exec
 
 ## Correction to audit pass 3
 
-The existence of an unbound low-level minted receipt is **not evidence that it can be consumed as a production training reward**. faustcoder/reward/grader.py includes _require_receipt_task (approximately lines 422-432), which checks both the task binding digest and full task digest, and raises RewardProvenanceError on missing, altered, or mismatched task. faustcoder/reward/records.py also binds task data when building signed rows. The earlier wording that missing task may create an exploitable path must be treated as an audit hypothesis, not a confirmed vulnerability.
+The existence of an unbound low-level minted receipt is **not evidence that it can be consumed as a production training reward**. faustcoder/reward/grader.py includes `_require_receipt_task` (approximately lines 422-432), which checks both the task binding digest and full task digest, and raises RewardProvenanceError on missing, altered, or mismatched task. faustcoder/reward/records.py also binds task data when building signed rows. The earlier wording that missing task may create an exploitable path must be treated as an audit hypothesis, not a confirmed vulnerability.
 
 ## Verified scope
 
-- grade_receipt's task=None is an intentional compatibility boundary and _grade_signal can mint a receipt with absent task digests.
+- grade_receipt's task=None is an intentional compatibility boundary and `_grade_signal` can mint a receipt with absent task digests.
 
-- _require_receipt_task explicitly rejects a receipt whose task digest is absent or does not match the supplied task. This is an existing positive safeguard.
+- `_require_receipt_task` explicitly rejects a receipt whose task digest is absent or does not match the supplied task. This is an existing positive safeguard.
 
 - Production run_signal/run_signal_suite/commit_signal_check do not take task/native inputs; the A2-PATH/EVAL-SO live integration gap remains.
 
@@ -18,7 +18,7 @@ The existence of an unbound low-level minted receipt is **not evidence that it c
 
 ## Test-first implementation contract (A2-PATH/EVAL-SO)
 
-1. Trace actual consumer of _require_receipt_task and rl_batch_from_records; assert an unbound receipt cannot become a signed consumable reward row. If this already passes, record PASS and do not patch the grader.
+1. Trace actual consumer of `_require_receipt_task` and rl_batch_from_records; assert an unbound receipt cannot become a signed consumable reward row. If this already passes, record PASS and do not patch the grader.
 
 2. Add tests for successful linear/time_invariant task-bound receipt on all supported reward paths.
 
