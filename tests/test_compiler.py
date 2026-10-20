@@ -474,6 +474,7 @@ def test_deep_recursion_is_internal(store, tmp_path: Path) -> None:
         SignalSuite(runs=(run,), ledger=ledger),
         state=CandidateState.COMPILE_CHECKED,
         created_at="2026-10-18T00:00:00Z",
+        task=_linear_task(),
     )
     assert committed.state is CandidateState.COMPILE_CHECKED
     assert len(committed.outcomes) == 1
