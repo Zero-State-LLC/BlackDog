@@ -1008,6 +1008,7 @@ def commit_signal_check(
     producer: str = "faustcoder.signal",
     ledger: object | None = None,
     policy: str = "signal",
+    task: Mapping[str, Any] | None = None,
 ) -> SignalCommit:
     """Store each DSPTestReceipt and take the signal edge.
 
@@ -1071,6 +1072,12 @@ def commit_signal_check(
         )
         from faustcoder.reward.ledger import ledger_for_store
 
+        from faustcoder.signal_suite import require_task_rewardable
+        from faustcoder.reward.grader import RewardProvenanceError
+
+        if task is None:
+            raise RewardProvenanceError("reward commit requires a bound TaskSpec")
+        require_task_rewardable(task)
         bound = ledger if ledger is not None else suite.ledger
         if bound is None or not hasattr(bound, "queue") or not hasattr(bound, "rates"):
             bound = ledger_for_store(store)
@@ -1091,6 +1098,7 @@ def commit_signal_check(
                         policy=policy,
                         queue=bound.queue,
                         rates=bound.rates,
+                        task=task,
                     )
                 )
                 if run.receipt is None:
@@ -1120,6 +1128,7 @@ def commit_signal_check(
                         policy=policy,
                         queue=bound.queue,
                         rates=bound.rates,
+                        task=task,
                     )
                 )
                 continue
@@ -1129,6 +1138,7 @@ def commit_signal_check(
                     policy=policy,
                     queue=bound.queue,
                     rates=bound.rates,
+                    task=task,
                 )
             )
         outcomes = tuple(outcomes_list)
