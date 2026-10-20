@@ -91,7 +91,7 @@ T04 follow-up (N6, Danny yes 2026-10-17): `nonlinear-suite-v1` is an eight-stimu
 
 Lane issues (ADR-0004): T17 #25, T18 #26, T19 #27, T20 #28, T21 #29, T22 #30.
 
-Follow-ups from the 2026-10-17 7:40 PM PT amendment (Jev): L1 and L2 are done (#49, on main with #46). A2-PATH and EVAL-SO are done in code (#51) and wait on live reward-path wiring. D3-H1 and D3-H2 are done (see Done). D3-H2-C is next (see Next / To do). Still TODO: L3, A7-S, CANARY, A2-T, GD-1, H2, H3, FLOOR, and D3-H1-N9 through D3-H1-N12. A7-S and CANARY precede A2-T. GD-1, A2-PATH, EVAL-SO, D3-H1, D3-H2 and D3-H2-C precede T10. D3-H2 does not block P1 or P2. H2 and H3 precede FLOOR. Crash rows below ~0.1% keep auto-attribution off. That rate is not a reason to go live.
+Follow-ups from the 2026-10-17 7:40 PM PT amendment (Jev): L1 and L2 are done (#49, on main with #46). A2-PATH and EVAL-SO are done in code (#51) and wait on live reward-path wiring. D3-H1 and D3-H2 are done (see Done). D3-H2-C is complete in #71; its remaining review follow-ups are listed under Next / To do. Still TODO: L3, A7-S, CANARY, A2-T, GD-1, H2, H3, FLOOR, and D3-H1-N9 through D3-H1-N12. A7-S and CANARY precede A2-T. GD-1, A2-PATH, EVAL-SO, D3-H1, D3-H2 and D3-H2-C precede T10. D3-H2 does not block P1 or P2. H2 and H3 precede FLOOR. Crash rows below ~0.1% keep auto-attribution off. That rate is not a reason to go live.
 
 ## Decisions
 
