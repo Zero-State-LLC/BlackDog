@@ -1029,6 +1029,15 @@ def commit_signal_check(
         raise SignalHarnessError("signal check starts from COMPILE_CHECKED")
     if not suite.runs:
         raise SignalHarnessError("signal suite is empty")
+    # Reject invalid reward requests before persisting any receipt.
+    if any(run.receipt is None or run.receipt.get("purpose") == "reward" for run in suite.runs):
+        from faustcoder.reward.grader import RewardProvenanceError
+        from faustcoder.signal_suite import require_task_rewardable
+
+        if task is None:
+            raise RewardProvenanceError("reward commit requires a bound TaskSpec")
+        validate(dict(task), "task-spec.schema.json")
+        require_task_rewardable(task)
     artifact_ids: list[str] = []
     for run in suite.runs:
         compiler_id = store_compiler_receipt(
@@ -1072,13 +1081,6 @@ def commit_signal_check(
         )
         from faustcoder.reward.ledger import ledger_for_store
 
-        from faustcoder.signal_suite import require_task_rewardable
-        from faustcoder.reward.grader import RewardProvenanceError
-
-        if task is None:
-            raise RewardProvenanceError("reward commit requires a bound TaskSpec")
-        validate(dict(task), "task-spec.schema.json")
-        require_task_rewardable(task)
         bound = ledger if ledger is not None else suite.ledger
         if bound is None or not hasattr(bound, "queue") or not hasattr(bound, "rates"):
             bound = ledger_for_store(store)
