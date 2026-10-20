@@ -41,10 +41,12 @@ jobs:
           echo 'FAUSTCODER_UNSHARE=/opt/faustcoder/bin/fc-unshare' >> "$GITHUB_ENV"
       - name: Verify dedicated namespace support
         run: /opt/faustcoder/bin/fc-unshare --net --map-current-user -- true
-      - name: Nonlinear regressions (old goldens deliberately unchanged)
+      - name: Nonlinear regressions including regenerated goldens
         run: |
           mkdir -p evidence
-          python -m pytest tests/test_signal_nonlinear.py -o addopts="" -q -k "not test_dsp_bank_matches_committed_x86_goldens" | tee evidence/nonlinear-suite.log
+          python -m pytest tests/test_signal_nonlinear.py -o addopts="" -q | tee evidence/nonlinear-suite.log
+      - name: Compare fresh x86 render with regenerated goldens
+        run: python scripts/signal_cross_arch.py --out evidence/x86-arch.json --goldens tests/fixtures/signal/nonlinear-x86-goldens.json | tee evidence/golden-comparison.log
       - name: Capture samples and WASM
         run: python diagnostics/t04_capture.py
       - name: Upload evidence
