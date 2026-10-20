@@ -32,13 +32,29 @@ receipts are not interchangeable.
 
 ## Install
 
-Use the Python that already sees the machine's torch. A clean virtualenv
-hides that install. From a checkout of this revision:
+Use the existing supported torch/CUDA environment directly. Activate it
+using its established venv, Conda or container procedure, then set
+`T09_PYTHON` to that environment's verified Python executable. On spark-af42,
+preserve the DSP `.venv` and activation script; do not source that script
+for T09 unless it is itself the verified torch environment.
+
+Do not create a child venv with `--system-site-packages` from a torch venv
+or Conda interpreter: that does not reliably inherit the selected
+environment's packages. For a supported container, run these commands
+inside its existing execution context with the checkout available there.
+From a checkout of this revision:
 
 ```bash
-python3 -m venv --system-site-packages .venv
-source .venv/bin/activate
-python -m pip install --disable-pip-version-check -e .
+export T09_PYTHON=/path/to/supported/python
+"$T09_PYTHON" -c "import torch; print(torch.__version__, torch.version.cuda, torch.cuda.is_available())"
+```
+
+If torch cannot import or CUDA is unavailable, stop. Once that check passes,
+install BlackDog into the selected environment only if installation there
+is permitted; otherwise stop for an environment-specific setup decision:
+
+```bash
+"$T09_PYTHON" -m pip install --disable-pip-version-check -e .
 ```
 
 Do not pip-install torch, transformers wheels, or model weights as part of
@@ -50,7 +66,7 @@ supported stack. This runbook does not install that container.
 Confirm torch is the one already on the machine:
 
 ```bash
-python -c "import torch; print(torch.__version__, torch.version.cuda, torch.cuda.is_available())"
+"$T09_PYTHON" -c "import torch; print(torch.__version__, torch.version.cuda, torch.cuda.is_available())"
 ```
 
 If that import fails, stop. Installing a wheel is a separate decision and is
@@ -65,12 +81,13 @@ benchmarks in the feasibility study are the other half. They are not
 produced by this command.
 
 ```bash
-python -m faustcoder.spark_probe \
+"$T09_PYTHON" -m faustcoder.spark_probe \
   --store receipts/local/T09 \
   --actor spark-operator
 ```
 
-`faustcoder-spark-probe` is the same entry point. The default store,
+`faustcoder-spark-probe` is the same entry point when resolved from that
+selected environment. The default store,
 `receipts/local/T09`, is gitignored. A store path elsewhere inside the
 checkout is refused.
 
@@ -91,7 +108,7 @@ Omit `--memory-cap-mib` to keep the dedicated-machine default, or set a
 lower cap. The example below sets 32 GiB only as an explicit lower cap.
 
 ```bash
-python -m faustcoder.spark_probe \
+"$T09_PYTHON" -m faustcoder.spark_probe \
   --store receipts/local/T09 \
   --actor spark-operator \
   --model-path /local/models/Qwen2.5-Coder-1.5B \
@@ -157,17 +174,22 @@ Those tests mock the Spark fingerprint and skip the CUDA probes. A green run
 does not mean G10 passed, and it does not replace the fingerprint on the
 Spark.
 
-## Signal suite cross-arch digest (pending)
+## Signal suite cross-arch digest (T04 complete)
 
-The nonlinear suite asks for the same sample hashes on x86 and on this
-ARM machine. CI is x86 only, so that compare stays pending until this
-machine renders it. Install the signal harness the same way as the
+T04 completed on spark-af42 and x86 in [PR #79](https://github.com/Zero-State-LLC/BlackDog/pull/79)
+(`bb367c9`): all 40 corrected DSP-bank renders were finite and byte-identical.
+See [validation evidence](spark-local-setup.md#validation-and-evidence).
+This does not complete the separate T09 fingerprint. To rerun T04 on a
+configured machine, install the signal harness the same way as the
 compiler runbook (Node 22, the faustwasm worker, pinned faustlibraries,
 `fc-unshare`). Then:
 
 ```bash
-python3 scripts/signal_cross_arch.py --out /tmp/signal-arch-arm.json
-python3 scripts/signal_cross_arch.py --compare /tmp/signal-arch-arm.json tests/fixtures/signal/nonlinear-x86-goldens.json
+source ./activate-local.sh  # operator-local script on spark-af42
+mkdir -p .local
+result_dir=$(mktemp -d "$PWD/.local/t04-recheck-XXXXXX")
+python scripts/signal_cross_arch.py --out "$result_dir/arm.json" \
+  --goldens tests/fixtures/signal/nonlinear-x86-goldens.json
 ```
 
 The script runs from a checkout without installing the package. Copy

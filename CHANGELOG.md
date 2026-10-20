@@ -8,6 +8,8 @@ See [docs/VERSIONING.md](docs/VERSIONING.md).
 
 ## [Unreleased]
 
+- Record completed T04 ARM/x86 validation and merged-main readiness in the board and runbooks; plan T09 fingerprint evidence with workload clearance, the existing supported torch environment and off-host receipt verification. T09 remains evidence pending.
+
 - Correct the DSP-bank biquad feedback sign and delay, reject nonfinite bank output, and regenerate x86 goldens from finite renders verified byte-for-byte on ARM. Add finite-output and independent recurrence regressions without changing tolerances.
 
 - Record spark-af42 setup and validation, reconcile merged #71/#74/#77 in the board and docs index, and plan outstanding ARM comparison, T09 fingerprint and training prerequisites.
