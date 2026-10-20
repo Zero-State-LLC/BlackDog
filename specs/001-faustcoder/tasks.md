@@ -71,12 +71,13 @@ Implements the dataset machine (spec §7.1) and training machine (spec §7.3).
   - Depends on: T04, T07. Milestone: v0.2.
   - Acceptance: frozen baseline measurements (R-007); input to D-002 and D-005.
   - Workflows: production-systems.
-- [ ] T09 [P] [J-04] DGX Spark feasibility study.
-  - Status: the study and the `env_verified` harness landed in #36 (2026-10-17). Not done: acceptance needs the per-machine fingerprint receipt from the cleared dedicated Spark (and the second Spark if it will train). See `docs/dgx-spark-feasibility.md`, "Evidence still required on the machines". On-hardware throughput is deferred to T10.
+- [x] T09 [P] [J-04] DGX Spark feasibility study (spark-af42 fingerprint complete; second machine conditional).
+  - Status: the study and `env_verified` harness landed in #36. On 2026-10-20, spark-af42 on `0cd3382` produced exit 0 / `env_verified`; both artifact envelopes verified and all 17 off-host file checksums passed. See [receipt IDs and locations](../../docs/runbooks/spark-local-setup.md#t09-fingerprint-evidence). Together with the cited external benchmarks, this is the per-machine v0.2 R-001 evidence. A second Spark needs its own fingerprint if it will train; repeat after environment changes. T01 remains a dependency, and this completion does not authorize training.
   - Depends on: T01. Milestone: v0.2.
   - Acceptance: for v0.2, cited external DGX Spark benchmarks plus a per-machine environment fingerprint receipt (R-001, amended 0.3.1); implements `env_verified`. On-hardware throughput is deferred to T10 on the dedicated, cleared Spark.
   - Workflows: production-systems.
 - [ ] T10 [J-04] Training path P1 to P3 (ADR-0002).
+  - Environment blockers: the current r9venv has an Axolotl/torch compatibility conflict and the fingerprint records `stack_pin_allowed=false`. Select and validate a supported training stack, recheck workload clearance, and obtain local-model/throughput evidence. No model load, training or stack pin was established by T09.
   - Depends on: T08, T09, GD-1, A2-PATH, EVAL-SO, D3-H1. Milestone: v0.2 (P1, P2) and v0.3 (P3).
   - Acceptance: one pinned, reproducible `TrainingRun` per phase with its exit-gate result (R-008, R-009, R-015); P1 may be a recorded skip; implements `run_started` to `COMPLETED`.
   - Sub-steps: P1 continued pretraining or skip; P2 SFT on validated pairs; P3 compiler-feedback RL (R-016).
