@@ -8,6 +8,8 @@ See [docs/VERSIONING.md](docs/VERSIONING.md).
 
 ## [Unreleased]
 
+- Record the isolated spark-af42 T10 direct Hugging Face environment, passing import/dense CUDA checks, preserved setup/receipts and unresolved cuSPARSELt platform-tag dependency blocker. Synchronize the Kanban and canonical task status; no validation bypass or training readiness is claimed.
+
 - Record successful spark-af42 T09 fingerprinting on `0cd3382`, verified receipt IDs and durable off-host evidence; retain T10 blockers for Axolotl/torch compatibility, model-stack/throughput validation and training dependency gates. No training or stack pin is claimed.
 
 - Record completed T04 ARM/x86 validation and merged-main readiness in the board and runbooks; plan T09 fingerprint evidence with workload clearance, the existing supported torch environment and off-host receipt verification. T09 evidence was pending at that stage; the successful spark-af42 execution is recorded above.
