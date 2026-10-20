@@ -1,6 +1,6 @@
 # Docs index
 
-Index of the documents in this repository at main `bb367c9` (spec 001 version 0.3.11). `docs/adr` and `docs/decisions` have no index files of their own. The Python package name is `faustcoder`. The repository is `Zero-State-LLC/BlackDog`.
+Index of the documents in this repository at main `0cd3382` (spec 001 version 0.3.11). `docs/adr` and `docs/decisions` have no index files of their own. The Python package name is `faustcoder`. The repository is `Zero-State-LLC/BlackDog`.
 
 ## Architecture decision records
 
@@ -27,7 +27,7 @@ Index of the documents in this repository at main `bb367c9` (spec 001 version 0.
 
 | Runbook | Description |
 |---|---|
-| [spark-local-setup.md](runbooks/spark-local-setup.md) | Completed T04 ARM/x86 validation, spark-af42 evidence and T09 fingerprint next steps |
+| [spark-local-setup.md](runbooks/spark-local-setup.md) | Completed T04 validation, verified spark-af42 T09 receipt locations and remaining T10 blockers |
 | [compiler-harness.md](runbooks/compiler-harness.md) | Sandboxed faustwasm compiler (T03) and how reward grading reads its receipts |
 | [signal-harness.md](runbooks/signal-harness.md) | Offline DSP signal harness (T04), reward grading, and the D3-H2 audit gate |
 | [t06-normalize-dedup.md](runbooks/t06-normalize-dedup.md) | Normalize pinned sources and write a deterministic dedup manifest without clearing rights |

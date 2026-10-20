@@ -1,8 +1,8 @@
 # Spark DSP setup and next steps
 
 Verified 2026-10-20 PT on **spark-af42**, SSH alias `spark2`, checkout
-`~/BlackDog`, main `bb367c9` ([PR #79](https://github.com/Zero-State-LLC/BlackDog/pull/79)).
-This is DSP compiler/signal readiness, not training readiness or measured model quality.
+`~/BlackDog`, main `0cd3382` ([PR #80](https://github.com/Zero-State-LLC/BlackDog/pull/80)).
+DSP validation and the T09 fingerprint are recorded below; neither establishes training readiness or measured model quality.
 The alias did not identify spark-bf46; results apply only to spark-af42.
 
 ## Local operation
@@ -91,6 +91,55 @@ A temporary installer copy skipped APT commands because build dependencies
 were present; the APT source was not repaired. Any repair is a separate,
 operator-approved maintenance action.
 
+## T09 fingerprint evidence
+
+On 2026-10-20 at 22:45:32 UTC, spark-af42 completed fingerprint-only execution
+on main `0cd338200dc08f0a4ee8e5f41975ba1e58e979f4`: exit **0**, status
+**`env_verified`**, transition `PLANNED` → `ENV_VERIFIED`, with no guard
+rejection reasons. No model path was supplied. Inference and LoRA probes
+were skipped (`no_local_model`), and **`stack_pin_allowed=false`**.
+
+The interpreter was `~/r9venv/bin/python` (Python 3.12.3), using existing
+user-site torch `2.15.0.dev20260924+cu130`, CUDA 13.0 and driver 580.178.04
+on the NVIDIA GB10. Torch import and a tiny CUDA calculation passed.
+BlackDog was installed editable with `rfc3339-validator` 0.1.4; torch was
+unchanged. The existing Axolotl 0.19.0 requirement (`torch>=2.11.0,<=2.13.0`)
+conflicts with that torch version. `pip check` reported the same conflict
+before and after installation. This establishes functional fingerprinting,
+not a vendor-supported or training-compatible stack.
+
+Preflight listed no GPU compute jobs, running Docker containers or matching
+Python/model/training process names. This observation is not a reservation;
+recheck workloads before T10 and ask before stopping any workload or using
+sudo. No sudo, workload stop, model load or training occurred in this run.
+The separate DSP `.venv` and activation script were preserved. The preceding
+merged-main T09 CPU harness check passed 38 tests with one skip.
+
+| Artifact | SHA-256 artifact ID |
+|---|---|
+| Diagnostics | `sha256:415cfcd5d1ebd26f74ce4f314ec721e71d5bfd532b0f4acaba657ecef3a4bdb1` |
+| Transition receipt | `sha256:5c06fdcc1b181c0760b6a8351abadd8757484c7a7990287d519b36c9ab397305` |
+
+Both objects passed `ArtifactStore.get`, including envelope-sidecar checks.
+The complete evidence was copied off-host; all 17 manifest file checksums
+passed locally. Receipt locations (operator-local, outside Git and `/tmp`):
+
+- Spark: `~/blackdog-t09-20261020T224502Z/`.
+- Local workspace: `outputs/blackdog-t09/blackdog-t09-20261020T224502Z/`.
+- In both locations: `store/sha256/` contains the two JSON objects and their
+  `.envelope_digest` sidecars; `fingerprint.stdout.json`,
+  `fingerprint.exit-status.txt`, `artifact-verification.json`, `SHA256SUMS`,
+  environment/install logs and `README.md` preserve the execution evidence.
+- Spark checkout-readiness evidence:
+  `~/blackdog-update-20261020T224321Z/` (13,794 existing artifact files verified
+  unchanged through that update and its readiness checks).
+
+This completes the per-machine fingerprint evidence for **spark-af42**.
+The cited external benchmarks remain the separate R-001 evidence in the
+[feasibility study](../dgx-spark-feasibility.md). No second-Spark receipt is
+claimed; fingerprint that machine separately if it will train. T01 and all
+training dependency gates remain in force.
+
 ## Next steps
 
 This is a proposed execution order, not authorization to run training or modify
@@ -98,14 +147,14 @@ system configuration. [KANBAN](../../KANBAN.md) retains the dependency gates.
 
 | Order | Work | Acceptance / stop condition |
 |---|---|---|
-| 1 | T09 per-machine fingerprint (#12) | Follow [env_verified](dgx-spark-env-verified.md), confirm workload clearance and locate an existing supported torch/CUDA environment. Preserve the DSP venv; do not recreate it or install torch/weights as a shortcut. Stop if the supported environment is absent. Capture diagnostics and receipt digests, validate store sidecars and copy evidence off-machine. Fingerprint-only evidence does not establish throughput or a model stack pin. |
+| 1 | T10 environment and per-machine evidence | spark-af42 fingerprint is complete; retain the verified store above. Resolve the Axolotl/torch conflict through an explicitly selected supported training stack, recheck workload clearance, and validate local-model compatibility and throughput before any stack pin. Repeat fingerprinting after environment changes and on a second Spark if used. Do not replace the DSP venv or download weights implicitly. |
 | 2 | Audit and signature follow-ups (#62, #68, #69, #72) | Reconcile each issue against merged #71, add focused regression/feature-detection evidence, and document remaining risks. Merge status alone does not close follow-up issues. Keep credentials and signing configuration untouched without separate authorization. |
 | 3 | Live reward wiring and group handling | Complete A2-PATH/EVAL-SO task/native-receipt plumbing and GD-1 whole-group drop acceptance tests. Keep auto-attribution in shadow until L3, A7-S and CANARY gates are met. |
 | 4 | Data and training prerequisites | Resolve T01/ADR-0001, T06 H2/H3 and FLOOR evidence, then T07 split freeze and T08 baseline measurements. Record rights/leakage gates before T10; retain P3 audit, credential and dedicated-grader requirements. |
 
-### T09 execution checklist
+### T09 checklist for a rerun or another Spark
 
-1. Confirm `spark-af42`, merged revision, available memory/GPU state, and
+1. Confirm the target Spark identity, merged revision, available memory/GPU state, and
    operator clearance of other workloads. The earlier `nemo35` stop does not
    establish present clearance; do not stop services or use sudo implicitly.
 2. Identify an existing supported torch/CUDA environment and verify torch
@@ -128,8 +177,10 @@ system configuration. [KANBAN](../../KANBAN.md) retains the dependency gates.
    cited external-benchmark portion of R-001 is accounted for. Repeat on a
    second Spark only if it will train; do not reuse this machine's receipt.
 
-T09 remains evidence pending. No fingerprint, training throughput, production
-signing deployment or model-quality result is claimed here. Fingerprint-only
-success may leave `stack_pin_allowed` false; throughput and model-stack
-validation remain T10 work. T01 and all training dependency gates remain in
-force; this plan does not authorize training.
+The spark-af42 fingerprint above passes the per-machine evidence checks.
+T10 remains blocked on training-stack compatibility and model/throughput
+validation (`stack_pin_allowed=false`), T01 and the data/baseline gates,
+GD-1 and live A2-PATH/EVAL-SO integration. P3 additionally retains its audit,
+human-triage credential and dedicated-grader requirements. No production
+signing deployment, training throughput or model-quality result is claimed;
+this plan does not authorize training.

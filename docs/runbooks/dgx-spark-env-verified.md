@@ -13,6 +13,14 @@ yes 2026-10-17 12:54 PM PT).
 Repeat the fingerprint on the second Spark if that machine will train. The
 receipts are not interchangeable.
 
+## Recorded execution
+
+The [spark-af42 T09 record](spark-local-setup.md#t09-fingerprint-evidence)
+contains the successful 2026-10-20 fingerprint, both artifact IDs, receipt
+locations and off-host checksum results. `stack_pin_allowed` remains false;
+the existing Axolotl/torch conflict must be resolved before training. This
+receipt does not validate a training stack or another Spark.
+
 ## Safety
 
 - The process forces Hugging Face offline mode. There is no flag that turns
