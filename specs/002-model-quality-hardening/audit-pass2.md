@@ -10,7 +10,7 @@ Base: main cf319f376161f7c5867aed1080d86d171372a785. Static inspection only. Thi
 
 3. `_task_marks_unrewardable` (lines 930-944) returns False when a task cannot be parsed or task_is_unrewardable raises. The grader docstring says apply_signal refuses marked receipts. This is not by itself a demonstrated exploitable path, but it makes task validation at caller boundaries critical. Audit every call path for a valid canonical TaskSpec and require_task_rewardable before minting.
 
-4. faustcoder/signal.py run_signal (lines 810 onward) accepts no task/native evidence arguments; _hold_compiler_for_reward and _hold_crash_for_reward do not supply them. commit_signal_check (lines 1002 onward) similarly grades without those arguments. This confirms the previously documented A2-PATH/EVAL-SO live wiring gap.
+4. faustcoder/signal.py run_signal (lines 810 onward) accepts no task/native evidence arguments; `_hold_compiler_for_reward` and `_hold_crash_for_reward` do not supply them. commit_signal_check (lines 1002 onward) similarly grades without those arguments. This confirms the previously documented A2-PATH/EVAL-SO live wiring gap.
 
 5. commit_signal_check requires COMPILE_CHECKED state and nonempty suite; persists compiler receipts as parents of signal receipts. Positive lineage/state boundary; end-to-end parent integrity is not tested in this audit.
 
