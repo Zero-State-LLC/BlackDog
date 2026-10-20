@@ -21,8 +21,22 @@ jobs:
       - name: Install pinned Faust WASM
         working-directory: faust/worker
         run: npm ci --ignore-scripts
-      - name: Verify namespace support without sudo
-        run: unshare --net --map-current-user -- true
+      - name: Install dedicated namespace launcher on ephemeral runner
+        run: |
+          sudo install -d -o root -g root -m 0755 /opt/faustcoder/bin
+          sudo install -o root -g "$(id -gn)" -m 0750 /usr/bin/unshare /opt/faustcoder/bin/fc-unshare
+          cat > "$RUNNER_TEMP/faustcoder-unshare" <<'PROFILE'
+          abi <abi/4.0>,
+          include <tunables/global>
+          profile faustcoder-unshare /opt/faustcoder/bin/fc-unshare flags=(unconfined) {
+            userns,
+          }
+          PROFILE
+          sudo install -o root -g root -m 0644 "$RUNNER_TEMP/faustcoder-unshare" /etc/apparmor.d/faustcoder-unshare
+          sudo apparmor_parser -r /etc/apparmor.d/faustcoder-unshare
+          echo 'FAUSTCODER_UNSHARE=/opt/faustcoder/bin/fc-unshare' >> "$GITHUB_ENV"
+      - name: Verify dedicated namespace support
+        run: /opt/faustcoder/bin/fc-unshare --net --map-current-user -- true
       - name: Capture samples and WASM
         run: python diagnostics/t04_capture.py
       - name: Upload evidence
