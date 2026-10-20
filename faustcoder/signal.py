@@ -1077,6 +1077,7 @@ def commit_signal_check(
 
         if task is None:
             raise RewardProvenanceError("reward commit requires a bound TaskSpec")
+        validate(dict(task), "task-spec.schema.json")
         require_task_rewardable(task)
         bound = ledger if ledger is not None else suite.ledger
         if bound is None or not hasattr(bound, "queue") or not hasattr(bound, "rates"):
