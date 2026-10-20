@@ -419,3 +419,21 @@ the Python diagnostics.
 
 The candidate table is
 [the candidate machine](../state-machines/candidate.md).
+
+### Corrected biquad baseline (2026-10-20)
+
+The original DSP-bank biquad reversed the feedback subtraction and added a
+second delay despite Faust's recursive composition already supplying one.
+It overflowed on both architectures; the eight differing hashes represented
+NaN sign bits, not finite numerical drift. The corrected fixture preserves
+the coefficients and comparison tolerances. Bank rendering now refuses
+nonfinite samples before producing a baseline document.
+
+The regenerated x86 golden uses the finite receipts from
+[the corrected Node 22.14.0 run](https://github.com/Zero-State-LLC/BlackDog/actions/runs/39503349798),
+commit `e9f146a`. All 40 raw renders and five compiled WASM binaries matched
+the corrected spark-af42 ARM capture byte-for-byte. Only the eight biquad
+sample hashes changed; the other 32 remain identical. Per-render timing
+metadata comes from those receipts. Whole-run `wall_ms` is omitted from the
+golden because that capture did not record it; fresh renders still record
+and test the denormal timing cap. Timing is not part of the hash comparison.
