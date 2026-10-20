@@ -16,6 +16,14 @@ jobs:
           test -s KANBAN.md
           test -s specs/001-faustcoder/spec.md
           test -s docs/adr/0001-dag-evidence.md
+  contracts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Validate JSON Schema 2020-12 contracts
+        run: |
+          pipx run check-jsonschema==0.38.2 --check-metaschema \
+            specs/001-faustcoder/contracts/*.schema.json
   spec-kit:
     runs-on: ubuntu-latest
     steps:
