@@ -21,6 +21,10 @@ jobs:
       - name: Install pinned Faust WASM
         working-directory: faust/worker
         run: npm ci --ignore-scripts
+      - name: Fetch pinned library and example trees
+        run: |
+          ./scripts/fetch-faustlibraries.sh
+          ./scripts/fetch-faust-examples.sh
       - name: Install dedicated namespace launcher on ephemeral runner
         run: |
           sudo install -d -o root -g root -m 0755 /opt/faustcoder/bin
