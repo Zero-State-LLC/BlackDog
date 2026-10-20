@@ -41,3 +41,7 @@ QH-07 is a read-only audit and can begin now. QH-01 can proceed independently of
 - No schema change bypasses the existing immutable artifact envelope.
 
 - P3's signed triage and fc-grader checks are never weakened.
+
+## Canonical Kanban integration (pending acceptance)
+
+QH tasks are proposed extensions to existing T-series tasks, not parallel releases. On acceptance, mirror QH-01 through QH-07 into KANBAN.md and the GitHub Project with the dependencies and evidence listed above. Do not mark a QH task complete from specification text alone. PR #76 is implementation-in-progress for A2-PATH/EVAL-SO, not evidence that the full task is done. PR #74 merged contract CI; PRs #73 and #75 remain pending their required checks at the time of this note.
