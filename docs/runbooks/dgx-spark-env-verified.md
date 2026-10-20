@@ -32,18 +32,29 @@ receipts are not interchangeable.
 
 ## Install
 
-Use the Python that already sees the machine's supported torch/CUDA stack.
-A clean virtualenv hides that install. On spark-af42 preserve the existing
-DSP `.venv` and activation script. Replace the placeholder below with the
-verified interpreter; create a separate `~/.venvs/blackdog-t09` outside the
-checkout only if needed and not already present. If the supported environment is container-based, follow
-that environment's existing execution path instead of creating a host venv.
+Use the existing supported torch/CUDA environment directly. Activate it
+using its established venv, Conda or container procedure, then set
+`T09_PYTHON` to that environment's verified Python executable. On spark-af42,
+preserve the DSP `.venv` and activation script; do not source that script
+for T09 unless it is itself the verified torch environment.
+
+Do not create a child venv with `--system-site-packages` from a torch venv
+or Conda interpreter: that does not reliably inherit the selected
+environment's packages. For a supported container, run these commands
+inside its existing execution context with the checkout available there.
 From a checkout of this revision:
 
 ```bash
-/path/to/supported/python -m venv --system-site-packages "$HOME/.venvs/blackdog-t09"
-source "$HOME/.venvs/blackdog-t09/bin/activate"
-python -m pip install --disable-pip-version-check -e .
+export T09_PYTHON=/path/to/supported/python
+"$T09_PYTHON" -c "import torch; print(torch.__version__, torch.version.cuda, torch.cuda.is_available())"
+```
+
+If torch cannot import or CUDA is unavailable, stop. Once that check passes,
+install BlackDog into the selected environment only if installation there
+is permitted; otherwise stop for an environment-specific setup decision:
+
+```bash
+"$T09_PYTHON" -m pip install --disable-pip-version-check -e .
 ```
 
 Do not pip-install torch, transformers wheels, or model weights as part of
@@ -55,7 +66,7 @@ supported stack. This runbook does not install that container.
 Confirm torch is the one already on the machine:
 
 ```bash
-python -c "import torch; print(torch.__version__, torch.version.cuda, torch.cuda.is_available())"
+"$T09_PYTHON" -c "import torch; print(torch.__version__, torch.version.cuda, torch.cuda.is_available())"
 ```
 
 If that import fails, stop. Installing a wheel is a separate decision and is
@@ -70,12 +81,13 @@ benchmarks in the feasibility study are the other half. They are not
 produced by this command.
 
 ```bash
-python -m faustcoder.spark_probe \
+"$T09_PYTHON" -m faustcoder.spark_probe \
   --store receipts/local/T09 \
   --actor spark-operator
 ```
 
-`faustcoder-spark-probe` is the same entry point. The default store,
+`faustcoder-spark-probe` is the same entry point when resolved from that
+selected environment. The default store,
 `receipts/local/T09`, is gitignored. A store path elsewhere inside the
 checkout is refused.
 
@@ -96,7 +108,7 @@ Omit `--memory-cap-mib` to keep the dedicated-machine default, or set a
 lower cap. The example below sets 32 GiB only as an explicit lower cap.
 
 ```bash
-python -m faustcoder.spark_probe \
+"$T09_PYTHON" -m faustcoder.spark_probe \
   --store receipts/local/T09 \
   --actor spark-operator \
   --model-path /local/models/Qwen2.5-Coder-1.5B \

@@ -111,8 +111,9 @@ system configuration. [KANBAN](../../KANBAN.md) retains the dependency gates.
 2. Identify an existing supported torch/CUDA environment and verify torch
    import, CUDA version and availability there. Do not recreate `.venv`,
    install torch/transformers, download weights or repair APT as a shortcut.
-   If needed, use a separate `~/.venvs/blackdog-t09` outside the checkout,
-   based on that environment, as in the
+   Use that supported environment directly, with its verified interpreter
+   selected explicitly as `T09_PYTHON`; do not assume a child venv inherits
+   its torch packages. Follow the
    [fingerprint runbook](dgx-spark-env-verified.md#install).
 3. Run fingerprint-only with no `--model-path`, storing under the ignored
    `receipts/local/T09`. Capture exit code and JSON stdout outside `/tmp`.
