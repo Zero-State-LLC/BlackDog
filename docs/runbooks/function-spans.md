@@ -3,7 +3,7 @@
 Admitted T06 function units require an externally reviewed range manifest.
 This is extraction infrastructure, not a Faust parser, new rights clearance,
 H2/H3/FLOOR qualification or T07 freeze. `TOKEN_FLOOR=40` remains provisional.
-The existing pinned inventory has no approved span manifest supplied by this PR.
+The existing pinned inventory has no approved production span manifest from #89.
 
 ## Review boundary
 
@@ -69,3 +69,56 @@ CRLF handling, UTF-8 boundaries, missing/duplicate/overlapping ranges, stale pin
 wrong content hashes, notice binding, deterministic replay and CLI refusal before
 storage. Retain whole-blob mixed-rights quarantine and holdout exclusion tests.
 These checks do not qualify a real corpus or change `split_frozen=false`.
+
+## Merged-main verification and receipts
+
+PR [#89](https://github.com/Zero-State-LLC/BlackDog/pull/89) merged as `adee7ae`
+on 2026-10-20 PT (2026-10-21 UTC). Codex review completed with no findings;
+all eight CI checks passed. The [full CI suite](https://github.com/Zero-State-LLC/BlackDog/actions/runs/39545602844)
+reported **668 passed, 63 warnings in 181.59s** using existing authorized runner
+sudo operations. No new sudo operations were introduced.
+
+The subsequent fresh SSH session on spark-af42 activated `~/BlackDog` on merged
+main and passed **143 regressions in 16.70s**: function spans, snapshots,
+normalization, near-dedup, floor protocol, CLI, rights/policy and schemas.
+The tests check exact selection and provenance, invalid-range refusal, existing
+quarantine, sealed exclusion, provisional floor 40 and `split_frozen=false`.
+The tracked checkout stayed clean; all **92,319** existing files/symlinks in the
+preservation baseline were unchanged. No sudo, workload stops, environment
+installation or model downloads were used for that Spark verification.
+
+| Evidence | Location |
+|---|---|
+| Merged-main Spark verification | `/home/delphi/blackdog-function-spans-main-verification/` |
+| Earlier isolated Spark implementation validation (143 passed in 16.93s) | `/home/delphi/blackdog-function-spans-validation/` |
+| Backup of earlier implementation validation | `outputs/blackdog-function-spans/validation-receipts/` in the outer local workspace |
+| Full CI log | `outputs/blackdog-function-spans/pr89-ci/spec-structure.log` in the outer local workspace |
+
+Merged-main receipts include `README.md`, `environment.txt`, `tests.log`,
+`git-status.txt`, `preserve.py`, `preservation-before.json`,
+`preservation-after.json` and `SHA256SUMS`; all seven checksum entries passed.
+The earlier portable backup has 16 verified checksum entries and final source
+hashes; it is distinct from the newer merged-main verification, which is retained
+on Spark. All these artifacts remain outside Git and `/tmp`.
+
+## Remaining T06 and T07 gates
+
+1. Prepare and independently review a production span manifest against exact
+   pinned source, complete function/overload boundaries, notices and dependency
+   safety. Qualify extraction on real corpus units; no production ranges are
+   approved by #89. Preserve same-blob non-cleared quarantine and record rejected
+   or ambiguous units instead of using disjoint spans to bypass it.
+2. Complete T06 H2 canonical-stream and H3 Unicode regressions on the shipping
+   extraction/dedup path. Keep the raw stream and the documented policy boundaries;
+   see the [canonical tasks](../../specs/001-faustcoder/tasks.md).
+3. Run the §25 FLOOR protocol only after H2/H3, using fixed ground truth and the
+   same shipping streams. `TOKEN_FLOOR=40` remains provisional; extraction tests
+   do not accept a floor or close H2/H3/FLOOR.
+4. Resolve [T07 freeze blockers](t07-candidate-audit.md#freeze-blockers-and-acceptance):
+   missing pinned sources, independent development coverage, DSP/task semantics,
+   independently authored sealed holdout custody and exclusion screening, and
+   signed-freeze implementation/rejection tests. T01 remains a dependency.
+   T07 is unfrozen; no DatasetSnapshot or signed SplitManifest was created.
+   Any permitted provisional-floor freeze still needs the documented leakage
+   caveat, scheduled recheck and later removal receipts. T08 baselines follow a
+   qualified freeze; this update does not authorize training or a stack pin.

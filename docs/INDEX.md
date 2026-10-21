@@ -1,6 +1,6 @@
 # Docs index
 
-Index of the documents in this repository at main `a414dfd` (spec 001 version 0.3.11). `docs/adr` and `docs/decisions` have no index files of their own. The Python package name is `faustcoder`. The repository is `Zero-State-LLC/BlackDog`.
+Index of the documents in this repository at main `adee7ae` (spec 001 version 0.3.11). `docs/adr` and `docs/decisions` have no index files of their own. The Python package name is `faustcoder`. The repository is `Zero-State-LLC/BlackDog`.
 
 ## Architecture decision records
 
@@ -12,6 +12,7 @@ Index of the documents in this repository at main `a414dfd` (spec 001 version 0.
 | [ADR-0004](adr/0004-target-lanes-and-faust-tooling.md) | ACCEPTED. Reuse Faust tooling and add language, plugin, embedded and FPGA target lanes |
 | [ADR-0005](adr/0005-compiler-diagnostic-classes.md) | ACCEPTED. CompilerReceipt classes for an unbound name, a resource limit and an internal harness failure |
 | [ADR-0006](adr/0006-source-attributable-failures.md) | ACCEPTED. Grade source-attributable failures at `parse_error`; quarantine environment and harness errors (A1–A7) |
+| [ADR-0007](adr/0007-reviewed-function-spans.md) | IMPLEMENTED in #89. Reviewed byte-span extraction; no production manifest approval or T07 freeze |
 
 ## Decision records
 
@@ -30,7 +31,7 @@ Index of the documents in this repository at main `a414dfd` (spec 001 version 0.
 | [spark-local-setup.md](runbooks/spark-local-setup.md) | Completed T04 validation, original and repaired-candidate T09 receipts, validated cuSPARSELt repair, synthetic and Qwen training/checkpoint smokes, merged library rendering, receipt locations and remaining T10 gates |
 | [compiler-harness.md](runbooks/compiler-harness.md) | Sandboxed faustwasm compiler (T03) and how reward grading reads its receipts |
 | [signal-harness.md](runbooks/signal-harness.md) | Offline DSP signal harness (T04), reward grading, and the D3-H2 audit gate |
-| [function-spans.md](runbooks/function-spans.md) | Digest-pinned reviewed function byte spans, extraction trust boundary and regression acceptance |
+| [function-spans.md](runbooks/function-spans.md) | Verified function extraction, merged-main receipts, trust boundary and remaining T06/T07 gates |
 | [t07-candidate-audit.md](runbooks/t07-candidate-audit.md) | Offline Spark corpus audit, unsigned project/family split proposal, receipt locations and blockers before T07 freeze |
 | [t06-normalize-dedup.md](runbooks/t06-normalize-dedup.md) | Normalize pinned sources and write a deterministic dedup manifest without clearing rights |
 | [dgx-spark-env-verified.md](runbooks/dgx-spark-env-verified.md) | Record the R-001 environment fingerprint on a cleared DGX Spark |

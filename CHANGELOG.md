@@ -8,6 +8,8 @@ See [docs/VERSIONING.md](docs/VERSIONING.md).
 
 ## [Unreleased]
 
+- Record merged #89 function-span extraction and merged-main Spark verification (143 regressions; 92,319 preserved files/symlinks), full CI (668 passed), receipt locations and remaining T06/T07 qualification gates. TOKEN_FLOOR remains 40/provisional; T07 remains unfrozen.
+
 - Require independently digest-pinned, reviewed byte spans for admitted T06 function units. Bind extracted bytes and span provenance into Example and DedupManifest records; reject missing, overlapping, stale or mismatched ranges. Preserve whole-blob quarantine and comparison guards. TOKEN_FLOOR stays 40/provisional and T07 remains unfrozen.
 
 - Render pinned Faust library imports using shared compiler/renderer staging and mounted-tree hash verification. Keep the host library tree read-only, reject symlinks and remote imports, and bind the staging helper and library pin into signal harness identity. Add sandbox regressions; numerical tolerances and goldens remain unchanged.

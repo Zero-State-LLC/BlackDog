@@ -68,8 +68,13 @@ examples/libraries or reused from exposed smoke diagnostics.
 
 ## Freeze blockers and acceptance
 
-1. Qualify the real function slicer and T06 H2/H3/FLOOR. Prefer the accepted-floor
-   route. A permitted provisional-floor freeze requires an explicit leakage
+1. Qualify real function units using the reviewed-span extraction infrastructure
+   merged in #89 (`adee7ae`); [verification and receipts](function-spans.md#merged-main-verification-and-receipts)
+   cover 668 full-CI tests and 143 merged-main Spark regressions. No production
+   range manifest is approved, and this audit has not been rerun with functions
+   admitted. Review boundaries, dependency safety and rights; preserve blob-wide
+   quarantine. Complete T06 H2/H3, then FLOOR. Prefer the accepted-floor route.
+   A permitted provisional-floor freeze requires an explicit leakage
    caveat and scheduled novelty recheck; later exclusions need removal receipts.
    No P3 exit claim may rely on the holdout before the accepted-floor recheck.
 2. Resolve missing pinned sources and qualify an independent development

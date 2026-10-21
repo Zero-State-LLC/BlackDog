@@ -1,6 +1,9 @@
 # ADR-0007: Reviewed byte spans for T06 function extraction
 
-Status: IMPLEMENTED IN WORKING BRANCH; pending review.
+Status: IMPLEMENTED in [#89](https://github.com/Zero-State-LLC/BlackDog/pull/89),
+merged as `adee7ae`. Code review completed with no findings; full CI passed
+668 tests. This records implementation review, not approval of production ranges
+or closure of the corpus qualification gates.
 
 ## Decision
 

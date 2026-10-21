@@ -55,13 +55,14 @@ Implements the dataset machine (spec §7.1) and training machine (spec §7.3).
   - Acceptance: provenance and exclusion receipts; implements `rights_cleared` and `rights_rejected` transitions.
   - Workflows: production-systems, ADVERSARY review (poisoning, licensing). Evidence: `corpus/` records, receipts.
 - [x] T06 [J-04] Normalization and dedup.
-  - Done in #39 (2026-10-17). Open follow-ups: H2, H3 and FLOOR. `TOKEN_FLOOR=40` stays provisional.
+  - Done in #39 (2026-10-17). Verified function-span extraction merged in #89 (`adee7ae`): 668 full-CI tests and 143 merged-main Spark regressions passed; 92,319 existing files/symlinks unchanged. See [receipts and remaining gates](../../docs/runbooks/function-spans.md#merged-main-verification-and-receipts). No production span manifest is approved. Real-corpus qualification, H2, H3 and FLOOR remain open; `TOKEN_FLOOR=40` stays provisional.
   - Depends on: T05, T02. Milestone: v0.2.
   - Acceptance: deterministic snapshot; implements `normalized` and `dedup_passed` transitions.
   - Proposed (D-013, Danny yes 2026-10-17 1:04 PM PT): an n-gram or AST near-duplicate filter on generated `.dsp` against the training-only set, including vendored near-copies of `faust/examples`. The threshold is not set. This is a requirement to carry into the task, not an implementation in T05.
   - Amended 0.3.5 (Q3): dedup uses provisional `TOKEN_FLOOR=40`. P0 exits only if that floor is accepted by the Q3 protocol or marked provisional with a recorded leakage caveat. The protocol runs after H2 and H3.
   - Workflows: anti-slop-code, production-systems.
 - [ ] T07 [J-04] Split freeze.
+  - After #89: extraction infrastructure is verified, but real function-unit qualification and the audit rerun remain pending. The candidate assignments are unchanged; T07 remains unfrozen. No signed SplitManifest or DatasetSnapshot is created by the extraction verification.
   - Candidate audit (2026-10-20 PT, spark-af42 `a414dfd`): COMPLETE; NOT FROZEN. Of 2,259 inventory rows, 1,993 have matching local blobs and 266 were not found within scope; function rows may share blobs. Proposed training pool: 240 whole-file rows / 210 families from Faust, pending qualification; no development or sealed-holdout assignments. All 14 failed smoke examples remain excluded. Function-unit qualification, T06 H2/H3/FLOOR, independent development coverage, semantic task validation, new holdout custody and signed-freeze implementation remain open. See [audit, limitations, receipts and acceptance](../../docs/runbooks/t07-candidate-audit.md). Preservation: 90,351 existing files/symlinks unchanged; 14 off-host checksums passed. No DatasetSnapshot or signed SplitManifest was created; `stack_pin_allowed=false`.
   - Depends on: T06. Milestone: v0.2.
   - Acceptance: leakage checks and signed split manifest; implements `split_frozen` (R-003).
