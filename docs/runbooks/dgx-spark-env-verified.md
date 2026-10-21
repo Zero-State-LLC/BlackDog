@@ -27,7 +27,10 @@ on merged `1ae20ba` passed at 2026-10-21 00:29:27 UTC (2026-10-20 PT): exit 0,
 Run from `~/BlackDog` with the candidate interpreter to select merged source;
 its editable install retains an older source copy. Inference/LoRA probes were
 skipped (`no_local_model`), and `stack_pin_allowed=false`. Approved
-model/training/checkpoint and throughput evidence remain pending. Neither
+actual-model training/checkpoint and throughput evidence remain pending. The
+[offline synthetic diagnostic](spark-local-setup.md#offline-training-and-checkpoint-diagnostic)
+passed five LoRA steps and exact checkpoint/resume comparisons, but does not
+satisfy G10 or permit a stack pin. Neither
 receipt establishes a training stack or covers another Spark.
 
 ## Safety

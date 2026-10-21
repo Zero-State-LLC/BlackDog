@@ -367,6 +367,60 @@ inventoried environment/setup/receipt files and symlinks remained unchanged.
 No sudo, workload stops, model downloads, package installs or tracked edits
 occurred during fingerprinting. Keep these operator-local artifacts out of Git.
 
+## Offline training and checkpoint diagnostic
+
+On 2026-10-21 UTC (2026-10-20 PT), spark-af42 ran the repaired candidate
+against checkout `e53bf46`. **Synthetic training/checkpoint validation passed**;
+this does not complete representative T10 model qualification or G10.
+A fresh `GPT2LMHeadModel` was initialized from the local tiny-random GPT-2
+configuration (five layers, width 32, vocabulary 1024). No external model
+weights, tokenizer, benchmark or training dataset were consumed. Model seed
+was 42; generated token-ID seed was 43.
+
+The diagnostic used five AdamW steps, batch 1, sequence length 64 and learning
+rate 0.001; LoRA rank 4, alpha 8, `c_attn` targets, `fan_in_fan_out=true`,
+zero dropout and eager attention. The frozen base was BF16; PEFT adapters
+were FP32. Results in `attempt-2/result.json`:
+
+| Check | Result |
+|---|---|
+| Training | Five steps plus a resumed step; finite losses/gradients and nonzero gradient norms |
+| Updates | 2,560 trainable parameters; all 10 adapter tensors changed; frozen base unchanged |
+| Base reload | No missing, unexpected or mismatched keys, or loader errors |
+| Checkpoint fidelity | Reloaded logits and optimizer state matched exactly |
+| Resume | Adapter update occurred; loss, gradient-norm summary, parameters and optimizer state exactly matched uninterrupted continuation |
+| GPU allocation | Peak 68,704,768 bytes (~65.5 MiB), below the 2 GiB PyTorch allocator cap |
+| Bounds | 180-second alarm per attempt; final timed body after imports ~0.889 seconds, not a throughput benchmark |
+| Preservation | 90,014 baseline environment/setup/receipt files and symlinks unchanged; tracked checkout clean |
+| Backup | All 47 copied file checksums verified |
+
+Attempt 1 reached the final result-writing step but exited 1: loader metadata
+contained Python sets that JSON could not serialize. Its script, logs and
+checkpoints are retained. Attempt 2 fixed serialization and added an explicit
+resumed-parameter-update assertion; exit **0**, status **PASS**. No numerical
+assertion, tolerance or isolation check was relaxed. PEFT's dummy-config-path
+warning is retained in stderr; local checkpoint loading and equality checks
+passed without downloads.
+
+Evidence locations, outside Git and `/tmp`:
+
+- Spark: `~/blackdog-training-smoke-20261021T010653Z/`.
+- Local: `outputs/blackdog-training-smoke/blackdog-training-smoke-20261021T010653Z/`.
+- Top level retains attempt 1 and the preservation/environment records;
+  `attempt-2/` contains the successful corrected script, `result.json`, logs,
+  saved initial random base, adapters before/after resume, optimizer states,
+  generated IDs and reference logits. Config copies record provenance.
+- `README.md` explains both attempts; `SHA256SUMS` covers 47 files excluding
+  itself. Verify from the evidence directory with `sha256sum -c SHA256SUMS`.
+  Do not commit these artifacts or rerun into an existing receipt directory.
+
+No sudo, workload stops, package installs or model downloads occurred.
+This is an infrastructure diagnostic, not a production `TrainingRun`, model
+quality result or stack-pin receipt. **`stack_pin_allowed=false`** remains
+in force. Next qualify an approved local model and cleared dataset/configuration,
+repeat training/checkpoint validation on that actual model, measure inference/LoRA
+throughput and memory, and satisfy the data/baseline/reward/P3 gates below.
+
 ## Next steps
 
 This is a proposed execution order, not authorization to run training or modify
@@ -374,7 +428,7 @@ system configuration. [KANBAN](../../KANBAN.md) retains the dependency gates.
 
 | Order | Work | Acceptance / stop condition |
 |---|---|---|
-| 1 | T10 environment and per-machine evidence | spark-af42 fingerprint is complete; retain the verified store above. The separate repaired candidate passes dependency, integrity and dense/sparse CUDA checks. The fresh candidate fingerprint passes (see above). Recheck workload clearance and qualify the approved local model/dataset/configuration, a small training step and checkpoint reload, and throughput/memory before any stack pin. Repeat fingerprinting after environment changes and on a second Spark if used. Do not replace the DSP venv or download weights implicitly. |
+| 1 | T10 environment and per-machine evidence | spark-af42 fingerprint is complete; retain the verified store above. The separate repaired candidate passes dependency, integrity and dense/sparse CUDA checks. The fresh candidate fingerprint passes (see above). Recheck workload clearance and qualify the approved local model/dataset/configuration, training/checkpoint reload on the actual model, and throughput/memory before any stack pin. The synthetic diagnostic above passes but does not clear those gates. Repeat fingerprinting after environment changes and on a second Spark if used. Do not replace the DSP venv or download weights implicitly. |
 | 2 | Audit and signature follow-ups (#62, #68, #69, #72) | Reconcile each issue against merged #71, add focused regression/feature-detection evidence, and document remaining risks. Merge status alone does not close follow-up issues. Keep credentials and signing configuration untouched without separate authorization. |
 | 3 | Live reward wiring and group handling | Complete A2-PATH/EVAL-SO task/native-receipt plumbing and GD-1 whole-group drop acceptance tests. Keep auto-attribution in shadow until L3, A7-S and CANARY gates are met. |
 | 4 | Data and training prerequisites | Resolve T01/ADR-0001, T06 H2/H3 and FLOOR evidence, then T07 split freeze and T08 baseline measurements. Record rights/leakage gates before T10; retain P3 audit, credential and dedicated-grader requirements. |
@@ -407,7 +461,7 @@ system configuration. [KANBAN](../../KANBAN.md) retains the dependency gates.
 The spark-af42 fingerprint above passes the per-machine evidence checks.
 The packaging blocker is resolved only in the separate repaired candidate.
 The repaired candidate fingerprint passes. T10 still requires
-model/training/checkpoint and throughput validation (no candidate stack-pin receipt yet), T01 and the data/baseline gates,
+actual-model training/checkpoint and throughput validation (synthetic infrastructure diagnostic passed; no candidate stack-pin receipt yet), T01 and the data/baseline gates,
 GD-1 and live A2-PATH/EVAL-SO integration. P3 additionally retains its audit,
 human-triage credential and dedicated-grader requirements. No production
 signing deployment, training throughput or model-quality result is claimed;
