@@ -16,6 +16,7 @@ import re
 import shutil
 import subprocess
 import sys
+import tempfile
 
 from diagnostics import span_review as review
 from faustcoder.canonical import sha256_prefixed
@@ -207,6 +208,20 @@ def receipt_hashes(directory):
             if p.is_file() and p.name != 'complete.json'}
 
 
+def atomic_json(path, value):
+    """Publish a checkpoint only after its complete JSON reaches disk."""
+    fd, name = tempfile.mkstemp(prefix='.checkpoint-', dir=path.parent)
+    os.close(fd)
+    temporary = Path(name)
+    try:
+        review.write_json(temporary, value)
+        with temporary.open('rb') as stream:
+            os.fsync(stream.fileno())
+        os.replace(temporary, path)
+    finally:
+        temporary.unlink(missing_ok=True)
+
+
 def run_queue(plan, rows, blobs, out, identity):
     """One worker, whole-case checkpoints; interrupted attempts retained, not reused."""
     review.prepare_cases(plan, rows, blobs)  # Entire plan preflight before writes.
@@ -223,7 +238,7 @@ def run_queue(plan, rows, blobs, out, identity):
         else:
             if any(p.name != 'queue.lock' for p in out.iterdir()):
                 raise ValueError('missing queue binding for existing evidence')
-            review.write_json(metadata, binding)
+            atomic_json(metadata, binding)
         results = []
         reused = 0
         for case in plan['cases']:
@@ -240,7 +255,7 @@ def run_queue(plan, rows, blobs, out, identity):
             else:
                 attempt = case_dir/f'attempt-{len(attempts)+1:06d}'
                 result = review.run_cases({'cases': [case]}, rows, blobs, attempt)
-                review.write_json(attempt/'complete.json', {'hashes': receipt_hashes(attempt)})
+                atomic_json(attempt/'complete.json', {'hashes': receipt_hashes(attempt)})
             results.extend(result)
         summary = dict(runs=len(results), passed=sum(r['passed'] for r in results),
                        cases=len(plan['cases']), reused_cases=reused, production_approved=False)

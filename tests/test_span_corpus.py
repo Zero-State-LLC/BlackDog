@@ -189,3 +189,23 @@ def test_partial_trailing_construct_is_blocked(sample):
     row['sha256'] = review.sha256_prefixed(blobs[row['blob_sha']][row['start_byte']:row['end_byte']])
     _, report = bulk.propose(corpus, candidate, blobs)
     assert report['blocked_by_reason'] == {'existing_boundary_disagreement': 1}
+
+
+def test_interrupted_checkpoint_publication_can_resume(sample, tmp_path, monkeypatch):
+    rows, blobs, out, calls = setup_queue(sample, tmp_path, monkeypatch)
+    original = bulk.os.replace
+    def interrupt(source, destination):
+        if destination.name == 'complete.json':
+            raise OSError('interrupted checkpoint')
+        return original(source, destination)
+    monkeypatch.setattr(bulk.os, 'replace', interrupt)
+    with pytest.raises(OSError, match='interrupted checkpoint'):
+        bulk.run_queue(plan(), rows, blobs, out, {})
+    first = out/'identity/attempt-000001'
+    assert (first/'results.json').exists()
+    assert not (first/'complete.json').exists()
+    assert not list(first.glob('.checkpoint-*'))
+    monkeypatch.setattr(bulk.os, 'replace', original)
+    assert bulk.run_queue(plan(), rows, blobs, out, {})['reused_cases'] == 0
+    assert calls[-1].name == 'attempt-000002'
+    assert bulk.run_queue(plan(), rows, blobs, out, {})['reused_cases'] == 1
