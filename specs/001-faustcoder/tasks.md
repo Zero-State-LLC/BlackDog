@@ -62,6 +62,7 @@ Implements the dataset machine (spec §7.1) and training machine (spec §7.3).
   - Amended 0.3.5 (Q3): dedup uses provisional `TOKEN_FLOOR=40`. P0 exits only if that floor is accepted by the Q3 protocol or marked provisional with a recorded leakage caveat. The protocol runs after H2 and H3.
   - Workflows: anti-slop-code, production-systems.
 - [ ] T07 [J-04] Split freeze.
+  - Candidate audit (2026-10-20 PT, spark-af42 `a414dfd`): COMPLETE; NOT FROZEN. Of 2,259 inventory rows, 1,993 have matching local blobs and 266 were not found within scope; function rows may share blobs. Proposed training pool: 240 whole-file rows / 210 families from Faust, pending qualification; no development or sealed-holdout assignments. All 14 failed smoke examples remain excluded. Function-unit qualification, T06 H2/H3/FLOOR, independent development coverage, semantic task validation, new holdout custody and signed-freeze implementation remain open. See [audit, limitations, receipts and acceptance](../../docs/runbooks/t07-candidate-audit.md). Preservation: 90,351 existing files/symlinks unchanged; 14 off-host checksums passed. No DatasetSnapshot or signed SplitManifest was created; `stack_pin_allowed=false`.
   - Depends on: T06. Milestone: v0.2.
   - Acceptance: leakage checks and signed split manifest; implements `split_frozen` (R-003).
   - Proposed (D-013): the same near-duplicate filter is a split gate, so training-only and impulse-test families cannot land in eval or the sealed holdout. The threshold is not set.

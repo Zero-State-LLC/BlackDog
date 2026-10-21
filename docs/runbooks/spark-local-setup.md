@@ -493,6 +493,19 @@ Receipts: `~/blackdog-main-update-20261021T021019Z/`; local backup:
 All **16** backup checksums passed. This verifies merged library rendering,
 not a new training run or fingerprint.
 
+## T07 candidate audit
+
+The [offline T07 qualification audit](t07-candidate-audit.md) on `a414dfd`
+completed with an unsigned proposal: 240 training-pool rows / 210 families
+from Faust, pending validation. No development or holdout set was assigned.
+The audit found matching blobs for 1,993 of 2,259 inventory rows; function rows
+may share blobs, and 266 rows were not found within scope. T07 remains NOT
+FROZEN; see [freeze blockers and acceptance](t07-candidate-audit.md#freeze-blockers-and-acceptance)
+for function-unit qualification, independent development coverage, holdout
+custody and signed-freeze work. All 90,351 existing files/symlinks were preserved,
+and 14 backup checksums passed. [Receipt locations](t07-candidate-audit.md#receipts-and-preservation)
+remain outside Git and `/tmp`. No environments or prior receipts changed.
+
 ## Next steps
 
 This is a proposed execution order, not authorization to run training or modify
