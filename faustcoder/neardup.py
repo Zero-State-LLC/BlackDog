@@ -1,5 +1,9 @@
 """Token n-gram near-duplicate comparison (task T06).
 
+H2/H3 shipping clustering and memorization compare raw OR canonical streams.
+Source normalization/digests remain byte-preserving; comparison-only H3 applies
+NFKC and drops non-whitespace Cf/Cc while preserving lexical whitespace.
+
 T07 leakage checks and the proposed output memorization gate import
 this module. Both call ``memorization_hits`` or ``is_near_duplicate``.
 The snapshot clusterer calls ``cluster_families``.
@@ -45,6 +49,7 @@ from __future__ import annotations
 
 import hashlib
 import re
+import unicodedata
 from collections.abc import Collection, Iterable, Sequence
 
 from faustcoder.canonical import canonical_bytes, sha256_prefixed
@@ -123,9 +128,55 @@ def strip_comments(source: str) -> str:
     return "".join(out)
 
 
+# Comparison-only normalization; source bytes and provenance digests never change.
+COMPARISON_VERSION = "t06-raw-or-canonical-h3.v1"
+_CANONICAL_TOKEN = re.compile(
+    r'"(?:\\.|[^"\\])*"|[A-Za-z_][A-Za-z0-9_]*(?:\.[A-Za-z_][A-Za-z0-9_]*)+'
+    r'|[A-Za-z_][A-Za-z0-9_]*|(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)(?:[eE][+-]?[0-9]+)?'
+    r'|==|!=|<=|>=|&&|\|\||[^\s]'
+)
+
+
+def comparison_source(source: str) -> str:
+    """H3: NFKC, comments removed before Cf/Cc removal.
+
+    Lexical whitespace controls retain a space boundary so removing a newline
+    cannot merge identifiers or extend a line comment into executable source.
+    All other Cf/Cc characters are dropped. This never rewrites stored source.
+    """
+    source = strip_comments(unicodedata.normalize("NFKC", source))
+    return "".join(" " if c in "\r\n\t\v\f" else c
+                   for c in source if c in "\r\n\t\v\f"
+                   or unicodedata.category(c) not in {"Cf", "Cc"})
+
+
+def canonical_tokens(source: str) -> tuple[str, ...]:
+    """H2 extra stream: ID/NUM/STR; qualified library members stay literal."""
+    result = []
+    for token in _CANONICAL_TOKEN.findall(comparison_source(source)):
+        if token.startswith('"'):
+            result.append("STR")
+        elif _IDENT.fullmatch(token):
+            result.append("ID")
+        elif re.fullmatch(r"(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)(?:[eE][+-]?[0-9]+)?", token):
+            result.append("NUM")
+        else:
+            result.append(token)
+    return tuple(result)
+
+
+def _canonical_source(source: str) -> str:
+    return " ".join(canonical_tokens(source))
+
+
+def _require_floor(floor: int) -> None:
+    if type(floor) is not int or floor not in (20, 30, 40):
+        raise ValueError("floor must be one of 40, 30, 20")
+
+
 def tokens(source: str) -> tuple[str, ...]:
     """Return the comment-stripped token sequence."""
-    return tuple(_TOKEN.findall(strip_comments(source)))
+    return tuple(_TOKEN.findall(comparison_source(source)))
 
 
 def shingles(token_list: Sequence[str], n: int = NGRAM_N) -> frozenset[str]:
@@ -147,7 +198,7 @@ def jaccard_counts(
     if not left and not right:
         return (0, 0)
     intersection = len(left & right)
-    union = len(left | right)
+    union = len(left) + len(right) - intersection
     return (intersection, union)
 
 
@@ -167,7 +218,7 @@ def jaccard_at_least(
 
 
 def _compact(source: str) -> str:
-    return "".join(strip_comments(source).split())
+    return "".join(comparison_source(source).split())
 
 
 def _skeleton(source: str) -> str:
@@ -247,11 +298,11 @@ def has_verbatim_run(
     )
 
 
-def is_excerpt(part: str, whole: str) -> bool:
+def _raw_is_excerpt(part: str, whole: str, *, floor: int = TOKEN_FLOOR) -> bool:
     """Return whether ``part`` copies ``whole`` or contains ``whole``.
 
-    Forward containment and the token run require ``TOKEN_FLOOR`` on
-    ``part``. Reverse containment requires ``TOKEN_FLOOR`` on
+    Forward containment and the token run require ``floor`` on
+    ``part``. Reverse containment requires ``floor`` on
     ``whole`` and ``|sh(whole) ∩ sh(part)| / |sh(whole)| >= 1/2``.
     Identical texts are not excerpts; the exact-hash pass owns those.
     The upstream allowlist is applied by the snapshot, not here.
@@ -263,35 +314,35 @@ def is_excerpt(part: str, whole: str) -> bool:
     # Rejected text mostly contained in the cleared file. One edited
     # literal per statement, padding, or interleaving can keep the
     # forward ratio under 1/2 and still break a 40-token run.
-    if len(whole_tokens) >= TOKEN_FLOOR and containment_at_least(
+    if len(whole_tokens) >= floor and containment_at_least(
         shingles(whole_tokens), shingles(part_tokens)
     ):
         return True
-    if len(part_tokens) < TOKEN_FLOOR:
+    if len(part_tokens) < floor:
         return False
     # A run counts in either direction. A cleared file that vendors a
     # shorter rejected file, plus its own padding, still shares that run.
-    if has_verbatim_run(part_tokens, whole_tokens):
+    if has_verbatim_run(part_tokens, whole_tokens, floor):
         return True
     return containment_at_least(shingles(part_tokens), shingles(whole_tokens))
 
 
-def is_near_duplicate(left: str, right: str) -> bool:
+def _raw_is_near_duplicate(left: str, right: str, *, floor: int = TOKEN_FLOOR) -> bool:
     """Return whether two normalized texts are near-duplicates.
 
     Identical short texts return ``False``. Exact equality is the hash
     pass in ``cluster_families``, not this predicate. A pair under
-    ``TOKEN_FLOOR`` uses :func:`short_near_duplicate`.
+    ``floor`` uses :func:`short_near_duplicate`.
     """
     left_tokens = tokens(left)
     right_tokens = tokens(right)
-    if len(left_tokens) >= TOKEN_FLOOR and len(right_tokens) >= TOKEN_FLOOR:
+    if len(left_tokens) >= floor and len(right_tokens) >= floor:
         return jaccard_at_least(shingles(left_tokens), shingles(right_tokens))
     return short_near_duplicate(left, right)
 
 
 def memorization_hits(
-    candidate: str, corpus: Sequence[tuple[str, str]]
+    candidate: str, corpus: Sequence[tuple[str, str]], *, floor: int = TOKEN_FLOOR
 ) -> tuple[tuple[str, int, int], ...]:
     """Return near-duplicate corpus hits for one candidate program.
 
@@ -302,7 +353,7 @@ def memorization_hits(
     """
     hits: list[tuple[str, int, int]] = []
     for corpus_id, text in corpus:
-        counted = _hit_counts(candidate, text)
+        counted = _hit_counts(candidate, text, floor=floor)
         if counted is None:
             continue
         intersection, union = counted
@@ -310,23 +361,23 @@ def memorization_hits(
     return tuple(hits)
 
 
-def _hit_counts(candidate: str, text: str) -> tuple[int, int] | None:
+def _raw_hit_counts(candidate: str, text: str, *, floor: int = TOKEN_FLOOR) -> tuple[int, int] | None:
     """Return the scores of the comparison that actually matched.
 
-    An exact copy is a hit, including under ``TOKEN_FLOOR``. A long
+    An exact copy is a hit, including under ``floor``. A long
     pair reports token-shingle counts. A short pair reports character
     5-gram counts. An excerpt reports ``(intersection, |part shingles|)``.
     """
     if candidate == text:
-        return _identical_counts(candidate)
+        return _identical_counts(candidate, floor=floor)
     candidate_tokens = tokens(candidate)
     text_tokens = tokens(text)
-    if len(candidate_tokens) >= TOKEN_FLOOR and len(text_tokens) >= TOKEN_FLOOR:
+    if len(candidate_tokens) >= floor and len(text_tokens) >= floor:
         left = shingles(candidate_tokens)
         right = shingles(text_tokens)
         if jaccard_at_least(left, right):
             return jaccard_counts(left, right)
-        if is_excerpt(candidate, text):
+        if _raw_is_excerpt(candidate, text, floor=floor):
             intersection = len(left & right)
             return (intersection, len(left))
         return None
@@ -335,9 +386,9 @@ def _hit_counts(candidate: str, text: str) -> tuple[int, int] | None:
     return None
 
 
-def _identical_counts(text: str) -> tuple[int, int]:
+def _identical_counts(text: str, *, floor: int = TOKEN_FLOOR) -> tuple[int, int]:
     text_tokens = tokens(text)
-    if len(text_tokens) >= TOKEN_FLOOR:
+    if len(text_tokens) >= floor:
         size = len(shingles(text_tokens))
         return (size, size)
     size = len(char_shingles(text))
@@ -354,9 +405,10 @@ def family_id(digests: Iterable[str]) -> str:
     return "sha256:" + hashlib.sha256(canonical_bytes(ordered)).hexdigest()
 
 
-def cluster_families(
+def _raw_cluster_families(
     items: Sequence[tuple[str, str]],
     comparison_ids: Collection[str] = (),
+    *, floor: int = TOKEN_FLOOR, canonical: bool = False,
 ) -> dict[str, str]:
     """Map each item id to a duplicate-family id.
 
@@ -364,11 +416,12 @@ def cluster_families(
     unioned first. Near-duplicate pairs are unioned after that. When
     ``comparison_ids`` is set, a non-comparison text joins a comparison
     text when either side's shingles are at least half contained in the
-    other, or the two share a ``TOKEN_FLOOR`` token run. Reverse
+    other, or the two share a ``floor`` token run. Reverse
     containment requires the comparison text to have at least
-    ``TOKEN_FLOOR`` tokens. The family id is :func:`family_id` of the
+    ``floor`` tokens. The family id is :func:`family_id` of the
     component's digests.
     """
+    tokenize = (lambda text: tuple(text.split())) if canonical else tokens
     if not items:
         return {}
     seen: set[str] = set()
@@ -382,10 +435,10 @@ def cluster_families(
         seen.add(item_id)
         parent[item_id] = item_id
         digest_of[item_id] = sha256_prefixed(text.encode("utf-8"))
-        item_tokens = tokens(text)
+        item_tokens = tokenize(text)
         token_count[item_id] = len(item_tokens)
         shingle_of[item_id] = (
-            shingles(item_tokens) if len(item_tokens) >= TOKEN_FLOOR else frozenset()
+            shingles(item_tokens) if len(item_tokens) >= floor else frozenset()
         )
 
     def find(item_id: str) -> str:
@@ -412,22 +465,38 @@ def cluster_families(
     for group in by_digest.values():
         anchor = min(group)
         for item_id in group:
-            union(anchor, item_id)
+            if not canonical or token_count[item_id] < 15 or token_count[item_id] >= floor:
+                union(anchor, item_id)
 
     text_of = {item_id: text for item_id, text in items}
     ordered_ids = sorted(parent)
+    # Cache comparison-only text features once per item, rather than repeatedly
+    # stripping/tokenizing large library files for every short/long pair.
+    compact_of = {key: _compact(text) for key, text in items} if not canonical else {}
+    char_of = {key: frozenset(value[i:i+CHAR_N] for i in range(max(0,len(value)-CHAR_N+1)))
+               for key,value in compact_of.items()}
+    skeleton_of = {key: _NUMBER.sub("n", _IDENT.sub("id", _STRING.sub('"s"', value)))
+                   for key,value in compact_of.items()}
+    def short_match(left, right):
+        if text_of[left] == text_of[right]:
+            return False
+        if len(compact_of[left]) >= CHAR_MIN_LENGTH and len(compact_of[right]) >= CHAR_MIN_LENGTH:
+            return jaccard_at_least(char_of[left], char_of[right], CHAR_NUMERATOR, CHAR_DENOMINATOR)
+        return (skeleton_of[left] == skeleton_of[right]
+                and jaccard_at_least(char_of[left], char_of[right],
+                                     SHORT_SKELETON_NUMERATOR, SHORT_SKELETON_DENOMINATOR))
     for index, left in enumerate(ordered_ids):
         for right in ordered_ids[index + 1 :]:
             if find(left) == find(right):
                 continue
             both_long = (
-                token_count[left] >= TOKEN_FLOOR and token_count[right] >= TOKEN_FLOOR
+                token_count[left] >= floor and token_count[right] >= floor
             )
             if both_long:
                 if jaccard_at_least(shingle_of[left], shingle_of[right]):
                     union(left, right)
                 continue
-            if short_near_duplicate(text_of[left], text_of[right]):
+            if not canonical and short_match(left, right):
                 union(left, right)
 
     comparison = set(comparison_ids)
@@ -435,30 +504,30 @@ def cluster_families(
     if unknown:
         raise ValueError(f"comparison id is not in the cluster: {min(unknown)}")
     if comparison:
-        token_of = {item_id: tokens(text) for item_id, text in text_of.items()}
+        token_of = {item_id: tokenize(text) for item_id, text in text_of.items()}
         cleared_ids = [item_id for item_id in ordered_ids if item_id not in comparison]
         compared_ids = [item_id for item_id in ordered_ids if item_id in comparison]
         whole_shingles = {
             item_id: shingles(token_of[item_id]) for item_id in compared_ids
         }
         whole_runs = {
-            item_id: shingles(token_of[item_id], TOKEN_FLOOR)
-            if len(token_of[item_id]) >= TOKEN_FLOOR
+            item_id: shingles(token_of[item_id], floor)
+            if len(token_of[item_id]) >= floor
             else frozenset()
             for item_id in compared_ids
         }
         for part_id in cleared_ids:
             part_tokens = token_of[part_id]
             part_shingles = shingles(part_tokens)
-            part_long = len(part_tokens) >= TOKEN_FLOOR
-            part_runs = shingles(part_tokens, TOKEN_FLOOR) if part_long else frozenset()
+            part_long = len(part_tokens) >= floor
+            part_runs = shingles(part_tokens, floor) if part_long else frozenset()
             for whole_id in compared_ids:
                 if find(part_id) == find(whole_id):
                     continue
                 # |sh(R) ∩ sh(C)| / |sh(R)| >= 1/2. The rejected side is
                 # the denominator, so padding and interleaving in C do
                 # not dilute it.
-                if len(token_of[whole_id]) >= TOKEN_FLOOR and containment_at_least(
+                if len(token_of[whole_id]) >= floor and containment_at_least(
                     whole_shingles[whole_id], part_shingles
                 ):
                     union(part_id, whole_id)
@@ -469,6 +538,19 @@ def cluster_families(
                 if run or containment_at_least(part_shingles, whole_shingles[whole_id]):
                     union(part_id, whole_id)
 
+    if comparison:
+        for whole_id in sorted(comparison):
+            whole = shingle_of[whole_id]
+            if not whole:
+                continue
+            overlaps = {key: shingles(tokenize(text_of[key])) & whole
+                        for key in ordered_ids if key not in comparison}
+            contributors = [key for key, overlap in overlaps.items() if overlap]
+            covered = frozenset().union(*(overlaps[key] for key in contributors))
+            if len(contributors) >= 3 and containment_at_least(whole, covered):
+                for key in contributors:
+                    union(key, whole_id)
+
     components: dict[str, list[str]] = {}
     for item_id in ordered_ids:
         components.setdefault(find(item_id), []).append(item_id)
@@ -478,3 +560,64 @@ def cluster_families(
         for item_id in members:
             families[item_id] = identifier
     return families
+
+
+# Raw predicates remain available for measuring each stream separately.
+def is_excerpt(part: str, whole: str, *, floor: int = TOKEN_FLOOR) -> bool:
+    _require_floor(floor)
+    return _raw_is_excerpt(part, whole, floor=floor)
+
+
+def is_near_duplicate(left: str, right: str, *, floor: int = TOKEN_FLOOR) -> bool:
+    _require_floor(floor)
+    return _raw_is_near_duplicate(left, right, floor=floor)
+
+
+def _hit_counts(candidate: str, text: str, *, floor: int = TOKEN_FLOOR):
+    _require_floor(floor)
+    raw = _raw_hit_counts(candidate, text, floor=floor)
+    if raw is not None:
+        return raw
+    a, b = canonical_tokens(candidate), canonical_tokens(text)
+    if not a or not b:
+        return None
+    left, right = shingles(a), shingles(b)
+    if a == b and (len(a) < 15 or len(a) >= floor):
+        return (len(left) or 1, len(left) or 1)
+    if len(a) >= floor and len(b) >= floor and jaccard_at_least(left, right):
+        return jaccard_counts(left, right)
+    if len(b) >= floor and containment_at_least(right, left):
+        return (len(left & right), len(right))
+    if len(a) >= floor and (has_verbatim_run(a,b,floor) or containment_at_least(left,right)):
+        return (len(left & right), len(left))
+    return None
+
+
+def cluster_families(items, comparison_ids=(), *, floor: int = TOKEN_FLOOR):
+    """OR raw and canonical components; ids remain bound to original text.
+
+    Canonical short exact matches are fail-closed pending reviewed idiom pairs.
+    No automatic boilerplate exemption or rights override is introduced.
+    """
+    _require_floor(floor)
+    raw = _raw_cluster_families(items, comparison_ids, floor=floor)
+    canonical = _raw_cluster_families(
+        [(key, _canonical_source(text)) for key, text in items], comparison_ids, floor=floor, canonical=True)
+    parent = {key: key for key, _ in items}
+    def find(key):
+        while parent[key] != key:
+            parent[key] = parent[parent[key]]
+            key = parent[key]
+        return key
+    for mapping in (raw, canonical):
+        groups = {}
+        for key, family in sorted(mapping.items()):
+            if family in groups:
+                a, b = find(key), find(groups[family])
+                parent[max(a, b)] = min(a, b)
+            else:
+                groups[family] = key
+    groups = {}
+    for key, text in items:
+        groups.setdefault(find(key), []).append(sha256_prefixed(text.encode("utf-8")))
+    return {key: family_id(groups[find(key)]) for key, _ in items}

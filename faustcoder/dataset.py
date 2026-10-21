@@ -6,7 +6,9 @@ this module does not execute them. Those edges belong to
 ``TransitionNotImplemented`` and writes nothing.
 
 T06 executes ``normalized``, ``normalize_failed``, ``dedup_passed`` and
-``duplicate_or_leak_found``. ``split_frozen`` stays unimplemented.
+``duplicate_or_leak_found``. This generic API does not execute ``split_frozen``;
+T07 uses the separately guarded ``faustcoder.split.freeze_signed_split`` API,
+which requires an out-of-band trusted custodian signature and reviewed gates.
 ``normalized`` requires a RightsRecord and a ``rights_cleared`` receipt
 whose envelope producer is ``faustcoder.rights``.
 

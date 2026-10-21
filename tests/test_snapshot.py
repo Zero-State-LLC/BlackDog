@@ -390,7 +390,7 @@ def test_half_excerpt_of_a_rejected_unit_is_needs_human(tmp_path: Path) -> None:
     root = tmp_path / "fixtures"
     whole = long_text("lib", count=80).encode()
     excerpt = (" ".join(whole.decode().split()[:40]) + "\n").encode()
-    other = long_text("gamma").encode()
+    other = long_text("gamma").replace(" ", " + ").encode()
     assert is_near_duplicate(excerpt.decode(), whole.decode()) is False
     assert is_excerpt(excerpt.decode(), whole.decode()) is True
     stage(root, REPO, PIN, "gpl.dsp", whole)
@@ -427,7 +427,7 @@ def test_half_excerpt_of_a_holdout_is_a_leak(tmp_path: Path) -> None:
     root = tmp_path / "fixtures"
     whole = long_text("hold", count=80).encode()
     excerpt = (" ".join(whole.decode().split()[:40]) + "\n").encode()
-    other = long_text("gamma").encode()
+    other = long_text("gamma").replace(" ", " + ").encode()
     assert is_near_duplicate(excerpt.decode(), whole.decode()) is False
     stage(root, REPO, PIN, "sealed.dsp", whole)
     stage(root, REPO, PIN, "excerpt.dsp", excerpt)
@@ -455,7 +455,7 @@ def test_upstream_original_stays_cleared_when_the_copy_is_rejected(
     original = long_text("birds", count=80).encode()
     copied = long_text("birds", count=80, replacement="copied").encode()
     laundered = long_text("birds", count=80, replacement="laundered").encode()
-    other = long_text("gamma").encode()
+    other = long_text("gamma").replace(" ", " + ").encode()
     assert is_near_duplicate(original.decode(), copied.decode()) is True
     stage(root, REPO, PIN, "Birds.dsp", original)
     stage(root, REPO, PIN, "birds.dsp", copied)
@@ -511,7 +511,7 @@ def test_vendored_rejected_file_plus_padding_is_needs_human(tmp_path: Path) -> N
     root = tmp_path / "fixtures"
     rejected_text = long_text("rejected", count=80)
     cleared_text = rejected_text.strip() + " " + long_text("pad", count=160)
-    other = long_text("gamma")
+    other = long_text("gamma").replace(" ", " + ")
     assert is_near_duplicate(cleared_text, rejected_text) is False
     assert is_excerpt(cleared_text, rejected_text) is True
     rejected_bytes = rejected_text.encode()
@@ -584,7 +584,7 @@ def test_reverse_containment_of_a_rejected_file_is_needs_human(tmp_path: Path) -
     padded = edited.strip() + " " + " ".join(_words(347, "pad"))
     wider = edited.strip() + " " + " ".join(_words((347 * 8) // 5, "wide"))
     interleaved = _interleave_statements(rejected)
-    other = long_text("gamma")
+    other = long_text("gamma").replace(" ", " + ")
     assert len(tokens(rejected)) == 347
     assert has_verbatim_run(tokens(padded), tokens(rejected)) is False
     assert has_verbatim_run(tokens(wider), tokens(rejected)) is False
@@ -651,7 +651,7 @@ def test_allowlist_keeps_reverse_containment_of_the_recorded_copy(
     edited = _rejected_347(edit=True)
     original = (edited.strip() + " " + " ".join(_words(347, "pad"))).encode()
     copied = rejected.encode()
-    other = long_text("gamma").encode()
+    other = long_text("gamma").replace(" ", " + ").encode()
     assert has_verbatim_run(tokens(original.decode()), tokens(rejected)) is False
     assert containment_at_least(
         shingles(tokens(original.decode())), shingles(tokens(rejected))
@@ -707,7 +707,7 @@ def test_allowlisted_original_near_another_repo_is_needs_human(
     original = long_text("birds", count=80).encode()
     foreign = long_text("birds", count=80, replacement="foreign").encode()
     copied = long_text("birds", count=80, replacement="copied").encode()
-    other = long_text("gamma").encode()
+    other = long_text("gamma").replace(" ", " + ").encode()
     assert is_near_duplicate(original.decode(), foreign.decode()) is True
     syfala = "inria-emeraude/syfala"
     stage(root, REPO, PIN, "Birds.dsp", original)
@@ -816,7 +816,7 @@ def test_instr_reverb_excerpt_is_needs_human(tmp_path: Path) -> None:
     play_pin = "abf9af4ce9f12fba64fdb2237343bd5d5c8a8047"
     stage(root, lib_repo, lib_pin, "instruments.lib", lib)
     stage(root, play_repo, play_pin, "public/faust-modules/effects/InstrReverb.dsp", dsp)
-    other = long_text("gamma").encode()
+    other = long_text("gamma").replace(" ", " + ").encode()
     stage(root, REPO, PIN, "other.dsp", other)
     refused = entry(
         "faustlibraries-undeclared",
@@ -1165,7 +1165,7 @@ def _assert_uncleared_near_copy_is_not_admitted(tmp_path: Path, *, decision: str
     root = tmp_path / "fixtures"
     original = long_text("alpha").encode()
     edited = long_text("alpha", replacement="renamed").encode()
-    other = long_text("gamma").encode()
+    other = long_text("gamma").replace(" ", " + ").encode()
     assert is_near_duplicate(original.decode(), edited.decode()) is True
     assert is_near_duplicate(original.decode(), other.decode()) is False
     stage(root, REPO, PIN, "gpl.dsp", original)

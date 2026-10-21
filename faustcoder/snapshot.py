@@ -46,6 +46,7 @@ from faustcoder.inventory import (
     source_uri,
 )
 from faustcoder.neardup import (
+    COMPARISON_VERSION,
     CHAR_DENOMINATOR,
     CHAR_MIN_LENGTH,
     CHAR_N,
@@ -115,6 +116,7 @@ def compile_snapshot(
     sealed: Sequence[Mapping[str, str]] = (),
     function_spans: Mapping[str, Any] | None = None,
     function_spans_digest: str | None = None,
+    measurement_floor: int = TOKEN_FLOOR,
 ) -> CompiledSnapshot:
     """Build the manifest. Does not write a rights transition.
 
@@ -154,7 +156,7 @@ def compile_snapshot(
             for item in comparable + compared
             if item.text
         ],
-        excerpt_ids,
+        excerpt_ids, floor=measurement_floor,
     )
     sealed_ids = {item.unit.unit_id for item in comparable if item.unit.holdout}
     tainted = {families[item_id] for item_id in sealed_ids}
@@ -172,6 +174,7 @@ def compile_snapshot(
         actor,
         created_at,
         function_spans_digest,
+        measurement_floor,
     )
 
 
@@ -361,6 +364,7 @@ def _assemble(
     actor: str,
     created_at: str,
     function_spans_digest: str | None,
+    measurement_floor: int,
 ) -> CompiledSnapshot:
     envelopes: list[dict[str, Any]] = []
     example_digests: list[str] = []
@@ -393,20 +397,23 @@ def _assemble(
         "inventory_digest": corpus.inventory_digest,
         "lifecycle": "DEDUPED",
         "near_duplicate": {
-            "algorithm": "token-shingle-jaccard",
+            "algorithm": COMPARISON_VERSION,
+            "streams": ["raw", "ID/NUM/STR-qualified"],
+            "comparison_unicode": "NFKC-drop-Cf-Cc-preserve-whitespace-boundaries",
+            "measurement_only": measurement_floor != TOKEN_FLOOR,
             "char_min_length": CHAR_MIN_LENGTH,
             "char_n": CHAR_N,
             "char_threshold": f"{CHAR_NUMERATOR}/{CHAR_DENOMINATOR}",
             "containment": f"{CONTAINMENT_NUMERATOR}/{CONTAINMENT_DENOMINATOR}",
-            "min_tokens": TOKEN_FLOOR,
+            "min_tokens": measurement_floor,
             "n": NGRAM_N,
             "short_skeleton_threshold": (
                 f"{SHORT_SKELETON_NUMERATOR}/{SHORT_SKELETON_DENOMINATOR}"
             ),
             "threshold": f"{THRESHOLD_NUMERATOR}/{THRESHOLD_DENOMINATOR}",
-            "token_floor": TOKEN_FLOOR,
+            "token_floor": measurement_floor,
             "token_floor_status": TOKEN_FLOOR_STATUS,
-            "verbatim_run": TOKEN_FLOOR,
+            "verbatim_run": measurement_floor,
         },
         "normalization": {
             "encoding": "utf-8",
