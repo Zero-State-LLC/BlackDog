@@ -101,9 +101,67 @@ The earlier portable backup has 16 verified checksum entries and final source
 hashes; it is distinct from the newer merged-main verification, which is retained
 on Spark. All these artifacts remain outside Git and `/tmp`.
 
+## Partial production candidate (unapproved)
+
+On spark-af42 at main `84c51a3`, an initial candidate was prepared from directly
+inspected pinned source definitions. **It is incomplete and unapproved; it cannot
+be used for a production snapshot.** No independent reviewer or trusted digest
+approval is claimed, and no inventory rights or exclusions were changed.
+
+| Measure | Result |
+|---|---|
+| Inventory function rows | 1,784 |
+| Function units admitted by existing inventory checks | 965 across 27 blobs |
+| Local source verification | All 27 blobs match their pinned Git hashes |
+| Proposed ranges | 7; 958 admitted-unit spans still missing |
+| JSON schema and selected identity/range/hash/UTF-8 checks | Pass for the diagnostic subset only |
+| Full-inventory manifest validation | Expected refusal: `missing function spans` |
+| Preservation | 93,754 existing files/symlinks unchanged; 13 receipt checksums passed |
+
+The seven proposals are `routes.lib` functions `cross`, `cross2`, `crossNM`,
+`crossnn`, `crossn1`, `cross1n`, and the `version.lib` constant `version`.
+Existing eligibility is **LGPL-2.1-or-later, train-only** for all seven; no
+evaluation or redistribution rights are added. `cross2` depends on `cross`;
+`crossnn`, `crossn1` and `cross1n` depend on `crossNM`. These definitions have
+separate spans, not implicit dependency expansion. Other selected expressions
+use Faust built-ins/constants; dependency and parameter-domain qualification
+still require independent review.
+
+Ranges use explicit inspected definition literals, not automatic parsing or
+rights-metadata slice hashes. An initial uniqueness check caught `cross2` in a
+documentation example; the actual definition and its trailing comment resolve
+that ambiguity. A notice serialization error was corrected before final receipt
+generation. Neither failure changed admission rules or repository files.
+
+No compilation, rendering, semantic task validation, family/leakage audit rerun,
+DatasetSnapshot or signed SplitManifest was produced. These small routing and
+constant definitions do not qualify complex bodies or overload groups, and their
+representativeness for training remains a separate question. Full manifest
+coverage cannot be bypassed by treating the subset diagnostic as admission or
+trimming the pinned inventory to make this candidate pass.
+
+### Candidate receipts
+
+Spark directory: `/home/delphi/blackdog-function-span-candidate-20261021/`.
+This directory is outside Git and `/tmp`; no off-host backup is claimed here.
+
+- `function-spans.candidate.json`: seven unapproved ranges.
+- `candidate-digest.UNAPPROVED.json`: canonical integrity digest, explicitly not an approved production pin.
+- `coverage-ledger.json`: all 965 admitted function units, notice/rights metadata and review gaps.
+- `source-verification.json`: 27 source-blob checks; `inventory-exclusions.json`: retained exclusion dispositions.
+- `summary.json`, `REPORT.md`, `prepare.py`, `prepare.log`: result, limitations and reproduction procedure.
+- `preserve.py`, `preservation-before.json`, `preservation-after.json`, `git-status.txt`: preservation evidence.
+- `SHA256SUMS`: all 13 listed receipt files verified.
+
+The preparation script contains the small explicit source selections; keep it
+with the private receipts, not in Git or published documentation. No sudo,
+workload stops, environment changes, model downloads or GPU work were used.
+`TOKEN_FLOOR=40` remains provisional and T07 remains unfrozen.
+
 ## Remaining T06 and T07 gates
 
-1. Prepare and independently review a production span manifest against exact
+1. Independently review the seven proposals and prepare the remaining 958 ranges
+   before seeking approval of a complete production manifest against exact
    pinned source, complete function/overload boundaries, notices and dependency
    safety. Qualify extraction on real corpus units; no production ranges are
    approved by #89. Preserve same-blob non-cleared quarantine and record rejected

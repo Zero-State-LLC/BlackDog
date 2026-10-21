@@ -71,7 +71,9 @@ examples/libraries or reused from exposed smoke diagnostics.
 1. Qualify real function units using the reviewed-span extraction infrastructure
    merged in #89 (`adee7ae`); [verification and receipts](function-spans.md#merged-main-verification-and-receipts)
    cover 668 full-CI tests and 143 merged-main Spark regressions. No production
-   range manifest is approved, and this audit has not been rerun with functions
+   range manifest is approved. The [partial candidate](function-spans.md#partial-production-candidate-unapproved)
+   proposes seven train-only spans, with 958 still missing; full-inventory
+   validation refuses incomplete coverage. This audit has not been rerun with functions
    admitted. Review boundaries, dependency safety and rights; preserve blob-wide
    quarantine. Complete T06 H2/H3, then FLOOR. Prefer the accepted-floor route.
    A permitted provisional-floor freeze requires an explicit leakage
