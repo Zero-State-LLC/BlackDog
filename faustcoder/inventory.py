@@ -36,10 +36,10 @@ NOTICE_VERSION = "notice-manifest.v1"
 # Content digests of the T05 corpus files. ``generated_at`` is omitted
 # and entries are sorted, so a re-sign does not move the pin.
 PINNED_INVENTORY_DIGEST = (
-    "sha256:e3938dd19b9456e94f563d446e4994fdd2d3d7f785e9599e02aabad6641c4f26"
+    "sha256:24456833b059f2b6b54923206a74652b49ca7e5c251668d60f02294765d7e8a1"
 )
 PINNED_NOTICE_DIGEST = (
-    "sha256:bbda20fdef13092d010805aa2bc3df65f84250a9241de89292148fdb21b5f4ec"
+    "sha256:79f90f61b496afd13c04f0522fd1fd35f57c7a728d966cdf057419ce5080b4f8"
 )
 FFUNCTION_REASON = "ffunction"
 NEEDS_HUMAN_REASON = "needs-human"
