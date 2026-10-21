@@ -2,7 +2,7 @@
 
 Formerly FaustCoder; renamed 2026-10-17 PT.
 
-Status as of 2026-10-20 PT, main `a414dfd` (spec 0.3.11). T04's corrected ARM/x86 DSP-bank validation completed in [#79](https://github.com/Zero-State-LLC/BlackDog/pull/79): all 40 renders were finite and byte-identical, as were the five compiled WASM binaries. Full suites: ARM 635 passed, 2 skipped; x86 637 passed. All nine PR checks passed, and merged-main activation, smoke test and golden comparison passed on spark-af42. See [Spark setup, evidence and next steps](docs/runbooks/spark-local-setup.md).
+Status as of 2026-10-20 PT, main `adee7ae` (spec 0.3.11). T04's corrected ARM/x86 DSP-bank validation completed in [#79](https://github.com/Zero-State-LLC/BlackDog/pull/79): all 40 renders were finite and byte-identical, as were the five compiled WASM binaries. Full suites: ARM 635 passed, 2 skipped; x86 637 passed. All nine PR checks passed, and merged-main activation, smoke test and golden comparison passed on spark-af42. See [Spark setup, evidence and next steps](docs/runbooks/spark-local-setup.md).
 
 T09 fingerprint evidence is COMPLETE for the repaired candidate on spark-af42 at `1ae20ba` (2026-10-21 00:29:27 UTC / 2026-10-20 PT): exit 0, `env_verified`, both artifact envelopes verified and all 20 off-host file checksums passed. See [candidate receipt IDs and locations](docs/runbooks/spark-local-setup.md#repaired-candidate-t09-fingerprint). The earlier r9venv fingerprint on `0cd3382` remains preserved. This is separate from T04; `stack_pin_allowed=false`, the existing Axolotl/torch conflict remains, and that fingerprint provides no training-throughput or second-Spark receipt. A2-PATH and EVAL-SO remain CODE DONE, LIVE WIRING PENDING; their grader implementation is not proof of production reward-path integration. T01 still waits on proposed ADR-0001. T06 H2, H3 and FLOOR, and D3-H1-N9 through N12 remain separate follow-ups. Existing dependency arrows remain promotion gates; this setup does not authorize training or promotion.
 
@@ -12,12 +12,15 @@ The [Qwen T10 smoke and merged library-rendering fix](docs/runbooks/spark-local-
 
 The [T07 candidate audit](docs/runbooks/t07-candidate-audit.md) is COMPLETE on `a414dfd`: 2,259 inventory rows audited, 1,993 matching local blob rows and 266 not found within scope. The unsigned proposal reserves 240 whole-file rows / 210 families from Faust for training qualification; development and sealed holdout remain unassigned. T07 is NOT FROZEN. All 90,351 baseline files/symlinks were preserved and 14 backup checksums passed.
 
+Verified function-span extraction is merged in [#89](https://github.com/Zero-State-LLC/BlackDog/pull/89) (`adee7ae`): 668 full-CI tests passed, review found no issues, and merged-main Spark verification passed 143 regressions. All 92,319 existing files/symlinks were unchanged. See [receipts and remaining T06/T07 gates](docs/runbooks/function-spans.md#merged-main-verification-and-receipts). This verifies extraction infrastructure; no production span manifest or new rights clearance is approved. `TOKEN_FLOOR=40` stays provisional and T07 stays unfrozen.
+
 ## Done
 
 These merges are on main. The commit is the merge commit.
 
 | Item | PR | Commit | What landed |
 |---|---|---|---|
+| Verified function-span extraction | [#89](https://github.com/Zero-State-LLC/BlackDog/pull/89) | `adee7ae` | Independently digest-pinned reviewed byte ranges; fail-closed extraction and provenance; rights quarantine preserved; real-corpus qualification remains open |
 | Pinned library rendering | [#86](https://github.com/Zero-State-LLC/BlackDog/pull/86) | `e3c9542` | Shared pinned staging, mounted-tree hash verification and read-only library access; sandbox regressions pass |
 | T04 finite ARM/x86 DSP-bank validation | [#79](https://github.com/Zero-State-LLC/BlackDog/pull/79) | `bb367c9` | Correct biquad feedback sign/delay, refuse nonfinite bank output, add recurrence/finite regressions, and regenerate verified goldens without widening tolerances; 40/40 exact matches |
 | D3-H2-C human triage signatures | [#71](https://github.com/Zero-State-LLC/BlackDog/pull/71) | `cf319f3` | Spec 0.3.11 signature verification and dedicated grader check; follow-ups #68 and #72 remain open |
@@ -36,6 +39,7 @@ These merges are on main. The commit is the merge commit.
 
 | ID | Issues | Task |
 |---|---|---|
+| T06 qualification | H2 / H3 / FLOOR | Extraction infrastructure merged in #89; prepare independently reviewed production ranges and qualify rights/dependencies on the shipping path. Complete H2/H3 regressions, then the §25 FLOOR protocol; keep 40 provisional until accepted |
 | T07 qualification | R-003 / T07 | [Audit and freeze blockers](docs/runbooks/t07-candidate-audit.md#freeze-blockers-and-acceptance): qualify function units and T06 H2/H3/FLOOR, resolve missing source and independent development coverage, validate DSP tasks, arrange newly authored sealed holdout custody, then implement and verify the signed freeze. No split is frozen |
 | T09 / T10 environment follow-up | [#12](https://github.com/Zero-State-LLC/BlackDog/issues/12) | spark-af42 fingerprint complete. The separate repaired direct HF candidate passes dependency and dense/sparse CUDA validation. Candidate fingerprint is complete with `stack_pin_allowed=false`. Qwen actual-model training/checkpoint smoke passed. Recheck workload clearance; complete formal data/split/baseline qualification, repeated representative throughput/memory measurements and stack-pin review. Repeat fingerprinting if the environment changes or a second Spark will train; preserve DSP setup and receipts |
 | D3-H2-C follow-ups | [#68](https://github.com/Zero-State-LLC/BlackDog/issues/68), [#72](https://github.com/Zero-State-LLC/BlackDog/issues/72) | Implementation merged in #71; reconcile remaining review items, including OpenSSH feature detection and key-path guard coverage. Do not close issues from merge status alone |
@@ -62,7 +66,7 @@ Acceptance criteria and stop conditions: [next-step plan](docs/runbooks/spark-lo
 | T03 | v0.1 | DONE in #38, #40, #42, #46: Sandboxed Faust compiler harness | T02 | Reproducible compiler receipts |
 | T04 | v0.1 | DONE in #41, #45, #79 (`bb367c9`): DSP signal harness and finite ARM/x86 golden validation | T03 | Known-good/known-bad fixtures |
 | T05 | v0.1 | DONE in #37: Source rights inventory | T01 | Provenance and exclusion receipts |
-| T06 | v0.2 | DONE in #39 (H2, H3 and FLOOR follow-ups open): Normalization and dedup | T05,T02 | Deterministic snapshot. Dedup uses provisional TOKEN_FLOOR=40. P0 exits only if that floor is accepted by the Q3 protocol or marked provisional with a recorded leakage caveat |
+| T06 | v0.2 | DONE in #39; extraction infrastructure in #89 (real-corpus qualification, H2, H3 and FLOOR open): Normalization and dedup | T05,T02 | Deterministic snapshot. Dedup uses provisional TOKEN_FLOOR=40. P0 exits only if that floor is accepted by the Q3 protocol or marked provisional with a recorded leakage caveat |
 | T07 | v0.2 | CANDIDATE AUDITED; split freeze PENDING | T06 | Leakage checks and signed split manifest. A freeze on the provisional floor records a leakage caveat and a scheduled re-check. Leaked items are removed and the removal is logged. Holdout novelty is re-checked once the floor is accepted, before any P3 exit claim rests on the holdout |
 | T08 | v0.2 | Baseline models | T04,T07 | Frozen baseline measurements |
 | T09 | v0.2 | HARNESS DONE in #36; spark-af42 repaired-candidate fingerprint COMPLETE on `1ae20ba` (2026-10-20 PT); second machine conditional | T01 | Fingerprint receipt per machine (R-001, amended 0.3.1); throughput at T10. The P0 Spark throughput smoke test is replaced by that fingerprint (Q4) |
