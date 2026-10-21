@@ -133,7 +133,8 @@ documentation example; the actual definition and its trailing comment resolve
 that ambiguity. A notice serialization error was corrected before final receipt
 generation. Neither failure changed admission rules or repository files.
 
-No compilation, rendering, semantic task validation, family/leakage audit rerun,
+During initial candidate preparation, no compilation, rendering, semantic task
+validation, family/leakage audit rerun,
 DatasetSnapshot or signed SplitManifest was produced. These small routing and
 constant definitions do not qualify complex bodies or overload groups, and their
 representativeness for training remains a separate question. Full manifest
@@ -157,6 +158,62 @@ The preparation script contains the small explicit source selections; keep it
 with the private receipts, not in Git or published documentation. No sudo,
 workload stops, environment changes, model downloads or GPU work were used.
 `TOKEN_FLOOR=40` remains provisional and T07 remains unfrozen.
+
+## Seven-span compiler and signal validation
+
+A subsequent bounded review on spark-af42 at main `fc1990e` confirmed the seven
+selected definitions and tested explicit dependency closure. **28 positive
+compiler/signal runs and five negative controls passed.** This does not approve
+the candidate manifest or change its seven-of-965 coverage; 958 spans remain
+missing and full-inventory validation still refuses incomplete coverage.
+
+| Check | Result and scope |
+|---|---|
+| Boundaries and hashes | All seven contain complete definitions with no neighboring definition; pinned blob and selected-byte hashes match |
+| Dependencies | `cross2` requires `cross`; `crossnn`, `crossn1`, `cross1n` require `crossNM`; other selected expressions use Faust built-ins/constants |
+| Positive runs | 14 cases at each of 44.1/48 kHz, 144,000 frames, block size 64; all 28 passed |
+| Routing oracle | Distinct impulse weights `(i+1)/16` and explicit expected channel permutations, followed by zeros |
+| Version oracle | Constant tuple `(2, 80, 0)` |
+| Negative controls | Four omitted-dependency compiler refusals; one wrong-permutation reference rejection |
+| Preservation | 94,487 existing files/symlinks unchanged; original candidate receipts unchanged; 146 new receipt checksum entries verified |
+
+Tested cases: `cross(1)`, `cross(3)`, `cross(5)`, `cross2`, `crossNM(2,3)`,
+`crossNM(3,2)`, `crossNM(1,1)`, `crossnn(1)`, `crossnn(2)`, `crossn1(1)`,
+`crossn1(3)`, `cross1n(1)`, `cross1n(3)` and `version`. Wrappers contain the exact
+selected definitions, explicitly supplied dependencies and diagnostic scaffolding;
+there is no fallback to full-library imports. `cross2` includes its inline
+comment; the version range excludes only its trailing PATCH explanation.
+
+The version tuple is not audio. Its diagnostic profile explicitly sets
+`reject_dc`, `reject_clipping` and `reject_silence` to false to permit the expected
+constants and zero channel. Reference and finite-output checks remain enabled;
+routing cases retain default checks. Numeric tolerances, goldens and sandbox
+controls are unchanged. These are CPU sandboxed WASM diagnostics, not reward or
+promotion acceptance, native C++ validation or cross-architecture qualification.
+
+### Validation receipts and limits
+
+New receipts: `/home/delphi/blackdog-seven-span-review-20261021/`, outside Git and
+`/tmp`. `REPORT.md`, `summary.json`, `boundary-dependency-review.json`,
+`validate.py`, `validation.log`, per-case DSP/compiler/diagnostic/signal/reference
+specifications, negative controls, preservation records, `candidate-checksums.txt`
+and `SHA256SUMS` record the run. Reference arrays are reproducible from compact
+specifications. Private source wrappers remain with the receipts; no off-host
+backup is claimed. The original candidate directory above was not rewritten.
+
+This is Codex direct source review and execution, not independent production
+review or trusted-digest approval. Positive compile-time integer channel counts
+listed above are tested; zero, negative, fractional, dynamic and very large
+counts are unqualified. The sample does not qualify complex bodies, overloads,
+broader dependencies, general DSP task coverage or training representativeness.
+Existing train-only rights and whole-blob quarantine remain unchanged.
+
+Next: obtain independent boundary/dependency/rights review, prepare the remaining
+958 ranges, and extend real-corpus/task qualification and family/leakage checks.
+H2/H3/FLOOR, independent development and holdout coverage, and signed T07 freeze
+remain open. `TOKEN_FLOOR=40` stays provisional; T07 stays unfrozen. No dataset
+snapshot, training run or stack pin was created. No sudo, workload stops,
+package changes, downloads or GPU work occurred.
 
 ## Remaining T06 and T07 gates
 
