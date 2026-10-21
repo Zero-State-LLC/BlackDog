@@ -221,12 +221,13 @@ def test_floor_fixed_denominators_and_fail_closed():
     assert not assess_plants(p, outcomes)["floors"]["20"]["recall_pass"]
 
 
-def test_signed_freeze_runs_only_in_disposable_fixture_store(tmp_path):
-    from faustcoder.split import freeze_signed_split, verify_frozen_snapshot
-    from faustcoder.snapshot import commit_snapshot
-    from faustcoder.store import ArtifactStore
-    from faustcoder.dataset import current_state
+@pytest.fixture
+def signed_fixture(tmp_path, monkeypatch):
+    from datetime import datetime, timezone
 
+    monkeypatch.setattr(
+        "faustcoder.split._utc_now", lambda: datetime(2026, 10, 21, tzinfo=timezone.utc)
+    )
     roots = tmp_path / "sources"
     entries = []
     notices = []
@@ -281,6 +282,16 @@ def test_signed_freeze_runs_only_in_disposable_fixture_store(tmp_path):
         capture_output=True,
     )
     signature = Path(str(message) + ".sig").read_bytes()
+    return compiled, c, signature, public
+
+
+def test_signed_freeze_runs_only_in_disposable_fixture_store(tmp_path, signed_fixture):
+    from faustcoder.split import freeze_signed_split, verify_frozen_snapshot
+    from faustcoder.snapshot import commit_snapshot
+    from faustcoder.store import ArtifactStore
+    from faustcoder.dataset import current_state
+
+    compiled, c, signature, public = signed_fixture
     results = []
     for index in range(2):
         store = ArtifactStore(tmp_path / f"store{index}")
@@ -392,3 +403,107 @@ def test_canonical_qualified_names_are_one_token_at_floor_boundary():
 
     f = _raw_cluster_families([("a", a), ("b", b)], ["a"], floor=40, canonical=True)
     assert f["a"] != f["b"]
+
+
+def test_signed_freeze_rejects_backdating_and_expired_reads(
+    tmp_path, monkeypatch, signed_fixture
+):
+    from datetime import datetime, timezone
+    from faustcoder.split import freeze_signed_split, verify_frozen_snapshot
+    from faustcoder.snapshot import commit_snapshot
+    from faustcoder.store import ArtifactStore
+
+    compiled, c, sig, pub = signed_fixture
+    store = ArtifactStore(tmp_path / "expired")
+    digest = commit_snapshot(store, compiled)
+    before = store.list()
+    monkeypatch.setattr(
+        "faustcoder.split._utc_now", lambda: datetime(2027, 1, 1, tzinfo=timezone.utc)
+    )
+    with pytest.raises(ValueError, match="overdue"):
+        freeze_signed_split(
+            store, digest, c, sig, pub, created_at="2026-10-21T00:00:00Z"
+        )
+    assert store.list() == before
+    monkeypatch.setattr(
+        "faustcoder.split._utc_now", lambda: datetime(2026, 10, 21, tzinfo=timezone.utc)
+    )
+    snapshot = freeze_signed_split(
+        store, digest, c, sig, pub, created_at="2026-10-21T00:00:00Z"
+    )
+    monkeypatch.setattr(
+        "faustcoder.split._utc_now", lambda: datetime(2027, 1, 1, tzinfo=timezone.utc)
+    )
+    with pytest.raises(ValueError, match="overdue"):
+        verify_frozen_snapshot(store, snapshot, pub)
+
+
+@pytest.mark.parametrize("written_receipts", [0, 1, 2])
+def test_snapshot_rejects_interrupted_freeze(
+    tmp_path, monkeypatch, signed_fixture, written_receipts
+):
+    from faustcoder.split import freeze_signed_split, verify_frozen_snapshot
+    from faustcoder.snapshot import commit_snapshot
+    from faustcoder.store import ArtifactStore
+
+    compiled, c, sig, pub = signed_fixture
+    store = ArtifactStore(tmp_path / "interrupted")
+    digest = commit_snapshot(store, compiled)
+    put = store.put
+    written = 0
+
+    def interrupted(envelope):
+        nonlocal written
+        if envelope["payload"].get("event") == "split_frozen":
+            if written == written_receipts:
+                raise OSError("simulated interruption")
+            written += 1
+        return put(envelope)
+
+    monkeypatch.setattr(store, "put", interrupted)
+    with pytest.raises(OSError, match="simulated"):
+        freeze_signed_split(
+            store, digest, c, sig, pub, created_at="2026-10-21T00:00:00Z"
+        )
+    snapshots = [
+        d
+        for d in store.list()
+        if store.get(d)["payload"].get("record_type") == "DatasetSnapshot"
+    ]
+    assert len(snapshots) == 1
+    with pytest.raises(ValueError, match="incomplete freeze"):
+        verify_frozen_snapshot(store, snapshots[0], pub)
+
+
+def test_snapshot_rejects_wrong_linked_receipt(tmp_path, monkeypatch, signed_fixture):
+    from faustcoder.split import freeze_signed_split, verify_frozen_snapshot
+    from faustcoder.snapshot import commit_snapshot
+    from faustcoder.store import ArtifactStore
+    from faustcoder.canonical import build_envelope
+    from faustcoder.dataset import current_state
+
+    compiled, c, sig, pub = signed_fixture
+    store = ArtifactStore(tmp_path / "wrong-receipt")
+    digest = commit_snapshot(store, compiled)
+    put = store.put
+
+    def altered_receipt(envelope):
+        if envelope["payload"].get("event") == "split_frozen":
+            envelope = build_envelope(
+                schema_version=envelope["schema_version"],
+                created_at=envelope["created_at"],
+                producer=envelope["producer"],
+                parents=envelope["parents"],
+                payload=dict(envelope["payload"], actor="unapproved reviewer"),
+            )
+        return put(envelope)
+
+    monkeypatch.setattr(store, "put", altered_receipt)
+    snapshot = freeze_signed_split(
+        store, digest, c, sig, pub, created_at="2026-10-21T00:00:00Z"
+    )
+    for e in compiled.envelopes:
+        if e["payload"].get("record_type") == "SourceRecord":
+            assert current_state(store, e["content_digest"]) == "FROZEN"
+    with pytest.raises(ValueError, match="incomplete freeze"):
+        verify_frozen_snapshot(store, snapshot, pub)

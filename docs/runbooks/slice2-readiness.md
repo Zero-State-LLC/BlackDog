@@ -88,6 +88,10 @@ independent review commitments, a newly authored holdout attestation and explici
 provisional-floor authorization with a leakage caveat and future novelty recheck.
 It writes a signed SplitManifest, DatasetSnapshot and linked transition receipts.
 `verify_frozen_snapshot` rechecks the stored signature and bindings before use.
+Both freeze and verification enforce the recheck deadline against the evaluator
+host clock, independently of caller-supplied receipt timestamps. Verification
+also requires every source to have its exact linked freeze receipt; interrupted
+writes cannot turn a partial snapshot into a usable frozen dataset.
 The generic dataset transition API still refuses unsigned `split_frozen` calls.
 P3 holdout exit remains forbidden under this provisional route.
 

@@ -12,7 +12,7 @@ from __future__ import annotations
 import subprocess
 import tempfile
 import base64
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from collections.abc import Mapping
 
@@ -218,6 +218,19 @@ def require_freeze_ready(candidate: dict) -> None:
         raise ValueError("T07 remains unfrozen: unresolved signed qualification gates")
 
 
+def _utc_now() -> datetime:
+    """Read the evaluator host clock; never accept caller-supplied freshness."""
+    return datetime.now(timezone.utc)
+
+
+def _require_current_recheck(candidate: dict) -> None:
+    due = datetime.fromisoformat(
+        candidate["readiness"]["recheck_due"].replace("Z", "+00:00")
+    )
+    if due <= _utc_now():
+        raise ValueError("novelty recheck is overdue")
+
+
 def freeze_signed_split(
     store,
     dedup_digest: str,
@@ -242,6 +255,7 @@ def freeze_signed_split(
     dedup = dedup_envelope["payload"]
     verify_signed_candidate(candidate, signature, trusted_public_key, dedup=dedup)
     require_freeze_ready(candidate)
+    _require_current_recheck(candidate)
     now = datetime.fromisoformat(created_at.replace("Z", "+00:00"))
     due = datetime.fromisoformat(
         candidate["readiness"]["recheck_due"].replace("Z", "+00:00")
@@ -362,6 +376,7 @@ def verify_frozen_snapshot(
         dedup=dedup["payload"],
     )
     require_freeze_ready(statement["candidate"])
+    _require_current_recheck(statement["candidate"])
     expected = {
         "record_type": "DatasetSnapshot",
         "dedup_digest": dedup["content_digest"],
@@ -377,4 +392,50 @@ def verify_frozen_snapshot(
         raise ValueError("snapshot binding mismatch")
     if signed["parents"] != [dedup["content_digest"]]:
         raise ValueError("split parent mismatch")
+    # The snapshot is written before its transition receipts. A crash can leave
+    # a valid content-addressed snapshot that is not yet a completed freeze.
+    from faustcoder.dataset import current_state, receipt_payload
+
+    sources = {}
+    for digest in dedup["payload"]["example_digests"]:
+        example = store.get(digest)["payload"]
+        if example.get("record_type") != "Example" or example["unit_id"] in sources:
+            raise ValueError("invalid snapshot examples")
+        sources[example["unit_id"]] = example["source_digest"]
+    if set(sources) != set(statement["candidate"]["assignments"]):
+        raise ValueError("snapshot example coverage mismatch")
+    envelopes = [store.get(digest) for digest in store.list()]
+    for source in sorted(set(sources.values())):
+        previous = [
+            e["content_digest"]
+            for e in envelopes
+            if e["payload"].get("event") == "dedup_passed"
+            and source in e["payload"].get("input_hashes", [])
+        ]
+        if len(previous) != 1:
+            raise ValueError("missing or ambiguous dedup receipt")
+        parents = sorted(
+            {source, previous[0], signed["content_digest"], snapshot["content_digest"]}
+        )
+        expected_receipt = receipt_payload(
+            actor=statement["candidate"]["readiness"]["reviewer"],
+            timestamp=snapshot["created_at"],
+            input_hashes=parents,
+            from_state="DEDUPED",
+            event="split_frozen",
+            to_state="FROZEN",
+            disposition="signed provisional split; novelty recheck required",
+        )
+        matches = [
+            e
+            for e in envelopes
+            if e["producer"] == "faustcoder.split"
+            and e["created_at"] == snapshot["created_at"]
+            and e["parents"] == parents
+            and e["payload"] == expected_receipt
+        ]
+        if len(matches) != 1 or current_state(store, source) != "FROZEN":
+            raise ValueError(
+                "incomplete freeze: missing exact linked transition receipt"
+            )
     return payload
