@@ -19,10 +19,12 @@ The [spark-af42 T09 record](spark-local-setup.md#t09-fingerprint-evidence)
 contains the successful 2026-10-20 fingerprint, both artifact IDs, receipt
 locations and off-host checksum results. `stack_pin_allowed` remains false;
 the original r9venv still has the Axolotl/torch conflict. A separate
-[T10 candidate](spark-local-setup.md#isolated-t10-environment-and-dependency-blocker)
-passes import/dense CUDA checks but remains blocked on cuSPARSELt dependency
-validation. This receipt does not validate that new environment, a training
-stack or another Spark.
+[repaired T10 candidate](spark-local-setup.md#validated-cusparselt-repair-candidate)
+passes dependency/integrity and dense/sparse CUDA checks; the original T10
+venv remains unchanged and blocked. A fresh candidate fingerprint, approved
+model/training/checkpoint and throughput evidence are still pending. The
+r9venv receipt does not validate that candidate, a training stack or another
+Spark, and no candidate stack pin is claimed.
 
 ## Safety
 
