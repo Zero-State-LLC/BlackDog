@@ -3,24 +3,48 @@
 ## Current milestone: qualification sprint
 
 [Ten-working-day sprint](docs/runbooks/qualification-sprint.md): one consolidated
-delivery covering the full 110-packet queue, deep review of the 172-unit cohort
-and helpers, semantic validation, two-project FLOOR evidence, development
-qualification and custody preparation. Day 3 is the host/rights go-or-block
+delivery covering the full 110-packet queue, deep review of the 174-unit scope
+(172 initial candidates plus two helpers), semantic validation, two-project
+FLOOR evidence, development qualification and custody preparation. Day 3 is the host/rights go-or-block
 checkpoint; days 9–10 deliver the reviewed dossier. Missing human approvals or
 hosts block milestone completion. No production freeze or training is scheduled.
 Hosted [project 29](https://github.com/orgs/Zero-State-LLC/projects/29) mirrors
-S1–S7: S1 Ready; dependent packages Backlog with blockers in their descriptions.
+S1–S7. Its plan-time S1 Ready status is superseded here by verified technical
+preparation with human confirmations pending; S1 is not Done. Dependent packages
+remain blocked on their stated inputs.
 PR #99 is Done. T06 implementation remains Done; qualification is tracked
 separately, and T07/T10 remain Backlog.
 
 | Sprint card | Status | Exit |
 | --- | --- | --- |
 | Batch 1 evidence and hash-format review | Done: #99, `ce8087a` | Eight CI checks; 771 tests passed |
-| S1 scope and owner assignment | Ready | Bound inputs, all 1,430 units accounted for, named reviewers |
+| S1 scope and owner assignment | Technical preparation complete; confirmations pending | 1,430 units / 110 packets / 510 blobs verified; Prabu assigned; acceptance, availability, coverage and independence/custody pending |
 | S2 source/leakage and S3 closure/behavior | Planned; human review required | Per-unit decisions and reproducible positive/negative receipts |
 | S4 two-project hosts and S5 FLOOR | Blocked on approved inputs | Ratified gold/label protocol and complete measurement result |
-| S6 development/custody | Blocked on independent evaluator | Disjoint reviewed tasks and separate custody commitments |
+| S6 development/custody | Prabu assigned; acceptance and custody arrangements pending | Disjoint reviewed tasks and separate custody commitments |
 | S7 qualification dossier | Planned after S2–S6 | One reviewed delivery; explicit pass or blocked milestone decision |
+
+## S1 scope verification and reviewer handoff
+
+[S1 evidence and pending confirmations](docs/runbooks/qualification-sprint.md#s1-verified-scope-and-assignments)
+come from execution at main `c7977ce`. Deep review covers 174 units across 21 packets,
+including two additional helper candidates; 1,256 units remain explicitly
+deferred. All 174 retain dependency review gates and 172 remain quarantine
+candidates. Every one of the 1,430 units appears in exactly one assigned packet.
+
+Prabu is user-assigned to source/leakage review, independent contract review and
+separate evaluator/holdout custody. All 110 packets have role assignments.
+Acceptance, availability, kickoff, useful behavior coverage and artifact-level
+independence/custody remain unconfirmed. Codex prepared the scope and tooling;
+no independent approval is implied. S1 stays open until those confirmations.
+
+Receipts: `/home/delphi/blackdog-qualification-sprint-20261021T194809Z/`;
+start with `REPORT.md` and `REVIEW-INDEX.md`. The local backup is under
+`/Users/appliedalchemylabs/Documents/Codex/blackdog-s1-backups/` with the same
+receipt directory name. All 1,680 backup file checks passed; 106,957 pre-existing
+Spark entries remained unchanged and 1,659 replay payload files reproduced
+exactly. No artifacts enter Git. `TOKEN_FLOOR=40` stays provisional and T07
+stays unfrozen; no production qualification gate closed during S1 preparation.
 
 ## Slice 2 Batch 1 merged result
 
@@ -52,7 +76,7 @@ Receipts: `/home/delphi/blackdog-slice2-20261021/`. No setup artifacts enter Git
 
 Formerly FaustCoder; renamed 2026-10-17 PT.
 
-Status as of 2026-10-21 PT, main `ce8087a` (spec 0.3.11). T04's corrected ARM/x86 DSP-bank validation completed in [#79](https://github.com/Zero-State-LLC/BlackDog/pull/79): all 40 renders were finite and byte-identical, as were the five compiled WASM binaries. Full suites: ARM 635 passed, 2 skipped; x86 637 passed. All nine PR checks passed, and merged-main activation, smoke test and golden comparison passed on spark-af42. See [Spark setup, evidence and next steps](docs/runbooks/spark-local-setup.md).
+Status as of 2026-10-21 PT, main `c7977ce` (spec 0.3.11). T04's corrected ARM/x86 DSP-bank validation completed in [#79](https://github.com/Zero-State-LLC/BlackDog/pull/79): all 40 renders were finite and byte-identical, as were the five compiled WASM binaries. Full suites: ARM 635 passed, 2 skipped; x86 637 passed. All nine PR checks passed, and merged-main activation, smoke test and golden comparison passed on spark-af42. See [Spark setup, evidence and next steps](docs/runbooks/spark-local-setup.md).
 
 T09 fingerprint evidence is COMPLETE for the repaired candidate on spark-af42 at `1ae20ba` (2026-10-21 00:29:27 UTC / 2026-10-20 PT): exit 0, `env_verified`, both artifact envelopes verified and all 20 off-host file checksums passed. See [candidate receipt IDs and locations](docs/runbooks/spark-local-setup.md#repaired-candidate-t09-fingerprint). The earlier r9venv fingerprint on `0cd3382` remains preserved. This is separate from T04; `stack_pin_allowed=false`, the existing Axolotl/torch conflict remains, and that fingerprint provides no training-throughput or second-Spark receipt. A2-PATH and EVAL-SO remain CODE DONE, LIVE WIRING PENDING; their grader implementation is not proof of production reward-path integration. T01 still waits on proposed ADR-0001. T06 H2, H3 and FLOOR, and D3-H1-N9 through N12 remain separate follow-ups. Existing dependency arrows remain promotion gates; this setup does not authorize training or promotion.
 
@@ -115,8 +139,10 @@ Issue #68: the D3-H2-C change reads the drop-file owner with `fstat` on an `O_NO
 
 ## Immediate execution order
 
-1. Execute [S1–S7 as one qualification sprint](docs/runbooks/qualification-sprint.md),
-   with all 1,430 identities accounted for and a day-3 two-project checkpoint.
+1. Close S1’s pending human confirmations using the verified scope and Prabu’s
+   assignments, then execute [S2–S7 as one delivery](docs/runbooks/qualification-sprint.md).
+   Account for all 1,430 identities; review the 174-unit scope and any additional
+   required helpers, with the day-3 two-project checkpoint unchanged.
 2. Complete the human review and measurement gates before a separate T07 freeze
    decision. Keep `TOKEN_FLOOR=40` provisional and production T07 unfrozen.
 3. After an authorized freeze, measure T08 baselines and close the remaining T10
