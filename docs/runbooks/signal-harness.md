@@ -123,9 +123,11 @@ present.
 
 ## Libraries and fixtures
 
-A source that imports a library raises `SignalLibrariesUnavailable`.
-Pinned faustlibraries staging is T03b. This harness does not copy that
-tree into the compiler filesystem.
+Both compiler and renderer stage the pinned T03b library share into their
+Emscripten filesystems, replacing bundled library bytes. The host share is
+read-only under Node permissions. Each worker hashes the mounted bytes; Python
+rejects a hash that differs from the pinned share. Remote imports, library
+symlinks and network access remain refused. Signal tolerances are unchanged.
 
 Fixtures under `tests/fixtures/dsp/signal` are harness fixtures. They
 are not Faust `tests/impulse-tests` sources, not the development suite,
