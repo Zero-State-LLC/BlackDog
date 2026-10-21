@@ -164,8 +164,8 @@ workload stops, environment changes, model downloads or GPU work were used.
 A subsequent bounded review on spark-af42 at main `fc1990e` confirmed the seven
 selected definitions and tested explicit dependency closure. **28 positive
 compiler/signal runs and five negative controls passed.** This does not approve
-the candidate manifest or change its seven-of-965 coverage; 958 spans remain
-missing and full-inventory validation still refuses incomplete coverage.
+the candidate manifest or change its then seven-of-965 coverage; 958 spans were
+missing and full-inventory validation refused incomplete coverage.
 
 | Check | Result and scope |
 |---|---|
@@ -208,16 +208,68 @@ counts are unqualified. The sample does not qualify complex bodies, overloads,
 broader dependencies, general DSP task coverage or training representativeness.
 Existing train-only rights and whole-blob quarantine remain unchanged.
 
-Next: obtain independent boundary/dependency/rights review, prepare the remaining
-958 ranges, and extend real-corpus/task qualification and family/leakage checks.
+At this stage, the next steps were independent boundary/dependency/rights review,
+preparing the remaining 958 ranges, and extending real-corpus/task qualification
+and family/leakage checks.
 H2/H3/FLOOR, independent development and holdout coverage, and signed T07 freeze
 remain open. `TOKEN_FLOOR=40` stays provisional; T07 stays unfrozen. No dataset
 snapshot, training run or stack pin was created. No sudo, workload stops,
 package changes, downloads or GPU work occurred.
 
+## Expanded 13-span candidate and batch-two validation
+
+On spark-af42 at main `84dd8413e8e988038569295cf3083942584e3d2c`
+(2026-10-21 UTC), a separate candidate added six `routes.lib` definitions:
+`interleave@232`, `interleave@233`, `_comparatorAsc`, `_comparatorDes`,
+`_comparator@430` and `_comparator@431`. **13 of 965 admitted function units
+now have proposed spans; 952 remain missing.** The original seven rows are
+unchanged. All 13 retain existing **LGPL-2.1-or-later, train-only** eligibility;
+none has independent production approval.
+
+| Check | Result and scope |
+|---|---|
+| Boundaries and identity | Exact complete clauses inspected against pinned source; blob and selected-byte hashes, schema, selected-unit identities, nonoverlap and UTF-8 checks pass |
+| Overloads and dependencies | Both interleave clauses compile together in source order using built-ins; comparator dispatch clauses compile together with explicit ascending/descending helpers using min/max |
+| Positive runs | 13 cases at each of 44.1/48 kHz: all 26 sandboxed WASM compiler/signal runs passed, with 144,000 frames and block size 64 |
+| Negative controls | Two omitted-helper compiler refusals and two incorrect-output reference rejections passed |
+| Full inventory | Correctly refuses `missing function spans`; the subset is not production admission |
+| Preservation | 95,355 existing files/symlinks unchanged; prior candidate and seven-span receipt checksums pass; all 139 new receipt checksum entries verified |
+
+Interleave cases cover `(1,2)`, `(2,2)`, `(2,3)`, `(3,2)` and `(3,1)`, with
+independently specified transpose permutations and distinct impulse weights.
+Ascending/descending helpers and dispatch modes 0/1 each cover mixed-sign and
+equal inputs against sorted references. Wrappers use exact extracted clauses
+and explicit dependencies, without whole-library import fallback. Individual
+clauses are not claimed to be complete standalone overload groups. All default
+signal checks, numeric tolerances, goldens and sandbox controls were retained.
+The earlier seven-span compiler/signal tests were preserved, not rerun; their
+bytes were revalidated in the combined manifest.
+
+### Batch-two receipts and qualification limits
+
+Receipts: `/home/delphi/blackdog-span-batch2-20261021/`, outside Git and `/tmp`.
+
+- `function-spans.candidate.json` and `candidate-digest.UNAPPROVED.json`: combined candidate and integrity digest, not a trusted production pin.
+- `batch-review.json`, `coverage-ledger.json`: boundaries, dependencies, rights and all 965 units' coverage status.
+- `REPORT.md`, `summary.json`, `validate.py`, `validation.log`: results and reproducible procedure.
+- Per-case DSP/compiler/diagnostic/signal/reference files and negative controls: bounded execution evidence.
+- `preservation-before.json`, `preservation-after.json`, `preserve.py`, `git-status.txt`: preservation evidence.
+- `original-candidate-checksums.txt`, `seven-span-checksums.txt`, `SHA256SUMS`, `checksum-verification.txt`: prior and new receipt verification.
+
+Private source wrappers stay with receipts; no off-host backup is claimed.
+These finite impulse diagnostics do not qualify all streams or dimensions,
+zero/negative/fractional/dynamic/very large dimensions, dispatch modes outside
+0/1, NaN/infinity sorting, full bitonic networks, native C++ or cross-architecture
+behavior. Codex direct review is not independent production approval. Broader
+real-corpus/task representativeness and family/leakage qualification remain open.
+
+No production snapshot, signed split, training run or stack pin was created.
+No sudo, workload stops, environment changes, downloads or GPU work occurred.
+`TOKEN_FLOOR=40` remains provisional and T07 remains unfrozen.
+
 ## Remaining T06 and T07 gates
 
-1. Independently review the seven proposals and prepare the remaining 958 ranges
+1. Independently review the 13 proposals and prepare the remaining 952 ranges
    before seeking approval of a complete production manifest against exact
    pinned source, complete function/overload boundaries, notices and dependency
    safety. Qualify extraction on real corpus units; no production ranges are

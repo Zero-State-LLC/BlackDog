@@ -71,11 +71,14 @@ examples/libraries or reused from exposed smoke diagnostics.
 1. Qualify real function units using the reviewed-span extraction infrastructure
    merged in #89 (`adee7ae`); [verification and receipts](function-spans.md#merged-main-verification-and-receipts)
    cover 668 full-CI tests and 143 merged-main Spark regressions. No production
-   range manifest is approved. The [partial candidate](function-spans.md#partial-production-candidate-unapproved)
-   proposes seven train-only spans, with 958 still missing; full-inventory
-   validation refuses incomplete coverage. Subsequent [seven-span diagnostics](function-spans.md#seven-span-compiler-and-signal-validation)
-   passed 28 compiler/signal runs and five negative controls, without independent
-   production approval or broader corpus/task qualification. This audit has not been rerun with functions
+   range manifest is approved. The [expanded candidate](function-spans.md#expanded-13-span-candidate-and-batch-two-validation)
+   proposes 13 train-only spans, with 952 still missing; full-inventory validation
+   refuses incomplete coverage. Batch two passed 26 compiler/signal runs and four
+   negative controls for six additions. Earlier seven-span diagnostics (28 runs,
+   five controls) remain separate and were not rerun. Receipts are preserved at
+   `/home/delphi/blackdog-span-batch2-20261021/`, outside Git and `/tmp`.
+   Neither run grants independent production approval or broader corpus/task
+   qualification. This audit has not been rerun with functions
    admitted. Review boundaries, dependency safety and rights; preserve blob-wide
    quarantine. Complete T06 H2/H3, then FLOOR. Prefer the accepted-floor route.
    A permitted provisional-floor freeze requires an explicit leakage
