@@ -9,7 +9,7 @@ extractor are unchanged. `TOKEN_FLOOR=40` stays provisional and T07 unfrozen.
 
 Use the pinned inventory and notices, an existing unapproved span candidate,
 and a JSON object mapping each admitted function's Git blob SHA to its local
-source file. Every source is verified against its Git blob hash before use.
+source file. Duplicate JSON object keys are rejected in every input. Every source is verified against its Git blob hash before use.
 No fetcher or network download runs. Sources and generated wrappers must remain
 outside Git; select a new receipt directory outside `/tmp`. Existing output
 folders are refused. Case names that collide at generated receipt paths are
@@ -44,7 +44,7 @@ The plan has a nonempty `cases` array. Each case has exactly these fields:
 - `process`: Faust process expression; the runner supplies the definition and semicolon.
 - `expected`: `pass`, `compile_refusal` or `reference_refusal`.
 - `reference`: array of sparse channel objects mapping frame numbers to finite sample values; all other frames are zero. Null for compiler refusals.
-- `missing_dependency`: expected compiler diagnostic substring for compiler refusals; otherwise null.
+- `missing_dependency`: expected nonblank compiler diagnostic substring for compiler refusals; otherwise null.
 
 Only exact verified source spans are assembled before the process wrapper.
 The wrapper and declared dependencies require review: this runner does not prove

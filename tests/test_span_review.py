@@ -8,7 +8,7 @@ import pytest
 
 from diagnostics import span_review as review
 from faustcoder.canonical import canonical_bytes, sha256_prefixed
-from faustcoder.errors import InventoryError
+from faustcoder.errors import CanonicalError, InventoryError
 from faustcoder.function_spans import VERSION, verify_manifest
 from faustcoder.inventory import parse_corpus
 
@@ -162,3 +162,27 @@ def test_preflight_retains_sparse_references(sample):
     rows = review.candidate_rows(corpus, candidate, blobs)
     prepared = review.prepare_cases(plan(), rows, blobs)
     assert prepared[0][2] == [{'0': 0.25}]
+
+
+@pytest.mark.parametrize('text', [
+    '{"spans": [], "spans": [{"start_byte": 5}]}',
+    '{"cases": [{"reference": [{"0": 0.25, "0": 0.5}]}]}',
+    '{"entries": [], "entries": [1]}',
+    '{"blob": "first.lib", "blob": "second.lib"}',
+])
+def test_json_inputs_reject_duplicate_keys(tmp_path, text):
+    path = tmp_path/'input.json'
+    path.write_text(text)
+    with pytest.raises(CanonicalError):
+        review.read_json(path)
+
+
+@pytest.mark.parametrize('diagnostic', [' ', '\t', '\n  \t'])
+def test_blank_dependency_refused_before_output(sample, tmp_path, diagnostic):
+    corpus, candidate, blobs, _ = sample
+    rows = review.candidate_rows(corpus, candidate, blobs)
+    p = plan()
+    p['cases'][0].update(expected='compile_refusal', reference=None, missing_dependency=diagnostic)
+    with pytest.raises(ValueError, match='dependency diagnostic'):
+        review.run_cases(p, rows, blobs, tmp_path/'results')
+    assert not (tmp_path/'results').exists()

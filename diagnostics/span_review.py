@@ -14,7 +14,7 @@ import math
 from pathlib import Path
 import re
 
-from faustcoder.canonical import canonical_bytes, sha256_prefixed
+from faustcoder.canonical import canonical_bytes, loads_strict, sha256_prefixed
 from faustcoder.compiler import ResourceLimits, compile_source
 from faustcoder.errors import InventoryError
 from faustcoder.function_spans import extract_span, verify_manifest
@@ -26,7 +26,7 @@ RATES = (44100, 48000)
 
 
 def read_json(path):
-    return json.loads(Path(path).read_text())
+    return loads_strict(Path(path).read_text())
 
 
 def write_json(path, value):
@@ -127,7 +127,7 @@ def prepare_cases(plan, rows, blobs):
             raise ValueError('colliding receipt names')
         stems.update(case_stems)
         if expected == 'compile_refusal':
-            if case['reference'] is not None or not isinstance(case['missing_dependency'], str) or not case['missing_dependency']:
+            if case['reference'] is not None or not isinstance(case['missing_dependency'], str) or not case['missing_dependency'].strip():
                 raise ValueError('compiler refusal requires dependency diagnostic and no reference')
             samples = None
         else:
