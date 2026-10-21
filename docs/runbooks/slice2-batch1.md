@@ -5,6 +5,23 @@ Batch 1 on `spark-af42` starts from merged main `585b188` on
 not independent source approval, dataset qualification or a production freeze.
 `TOKEN_FLOOR=40` remains provisional and T07 remains unfrozen.
 
+## Merge and review outcome
+
+[PR #99](https://github.com/Zero-State-LLC/BlackDog/pull/99) merged as
+`ce8087a` on 2026-10-21. All eight CI checks passed; the full suite passed
+771 tests with 63 warnings. Review corrected both diagnostic tools to select
+SHA-1 or SHA-256 from the declared inventory blob ID. All 10 Batch 1 regression
+cases passed on Spark, including valid acquisition, mismatch rejection and
+packet generation for both formats. No qualification gate was relaxed.
+
+Review verified all 3,505 original evidence checksums. Fresh review logs are at
+`/home/delphi/blackdog-batch1-review-20261021/`; hash-format regression results
+are at `/home/delphi/blackdog-pr99-hash-review-20261021/regression.log`. These
+receipts supplement, rather than overwrite, the original execution evidence.
+Existing CI sudo was separately authorized; no new sudo use was introduced.
+
+Next: [one-sprint qualification plan](qualification-sprint.md).
+
 ## Results
 
 - All 191 previously missing source blobs were retrieved at immutable inventory
@@ -61,8 +78,9 @@ excluded, so this is not a full-suite claim. Focused tracing/qualification tests
 passed 68 tests, and the added end-to-end packet serialization regression passed
 in the six-case Batch 1 test module. Ruff F checks, Markdown lint, Spec Kit and
 `git diff --check` passed. All 104,013 pre-existing baseline entries were unchanged.
-No commits, pushes, sudo, workload stops, environment installs or model downloads
-were performed. Only the pinned source downloads described above were added.
+During the initial evidence run, no commits, pushes, sudo, workload stops,
+environment installs or model downloads were performed. Only the pinned source
+downloads described above were added.
 
 ## Human checkpoint and Batch 2
 
