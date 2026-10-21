@@ -21,10 +21,14 @@ locations and off-host checksum results. `stack_pin_allowed` remains false;
 the original r9venv still has the Axolotl/torch conflict. A separate
 [repaired T10 candidate](spark-local-setup.md#validated-cusparselt-repair-candidate)
 passes dependency/integrity and dense/sparse CUDA checks; the original T10
-venv remains unchanged and blocked. A fresh candidate fingerprint, approved
-model/training/checkpoint and throughput evidence are still pending. The
-r9venv receipt does not validate that candidate, a training stack or another
-Spark, and no candidate stack pin is claimed.
+venv remains unchanged and blocked. The [fresh candidate fingerprint](spark-local-setup.md#repaired-candidate-t09-fingerprint)
+on merged `1ae20ba` passed at 2026-10-21 00:29:27 UTC (2026-10-20 PT): exit 0,
+`env_verified`, both envelopes verified and 20 off-host checksums passed.
+Run from `~/BlackDog` with the candidate interpreter to select merged source;
+its editable install retains an older source copy. Inference/LoRA probes were
+skipped (`no_local_model`), and `stack_pin_allowed=false`. Approved
+model/training/checkpoint and throughput evidence remain pending. Neither
+receipt establishes a training stack or covers another Spark.
 
 ## Safety
 

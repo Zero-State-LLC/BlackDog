@@ -301,15 +301,71 @@ python ~/blackdog-wheel-repair-20261020T234819Z/validate_sparse.py
 
 Do not use the DSP activation script for this candidate or replace the
 original T10 venv yet. Before further GPU work, recheck workload clearance.
-Obtain a fresh candidate fingerprint and retain its verified artifact
-envelopes off-host; repeat after stack changes and on each additional Spark.
-Then qualify the approved local model and actual T10 dataset/configuration,
-run a small training step and checkpoint-save/reload check, and record
-inference/LoRA throughput and memory within the existing probe gates before
-any stack-pin decision. Model downloads, sudo and workload stops require
-separate authorization. The earlier r9venv fingerprint remains historical
-and `stack_pin_allowed=false`; the candidate has no fingerprint or stack-pin
-receipt yet. The project dependency gates below remain in force.
+The [fresh candidate fingerprint](#repaired-candidate-t09-fingerprint) below
+now passes. Retain its verified artifacts and repeat after stack changes or
+on another Spark. Next qualify the approved local model and actual T10
+dataset/configuration, run a small training step and checkpoint-save/reload
+check, and record inference/LoRA throughput and memory within the existing
+probe gates before any stack-pin decision. Model downloads, sudo and workload
+stops require separate authorization. Both fingerprints have
+`stack_pin_allowed=false`; the project dependency gates remain in force.
+
+## Repaired candidate T09 fingerprint
+
+At **2026-10-21 00:29:27 UTC (2026-10-20 PT)**, spark-af42 completed a fresh
+fingerprint using `~/blackdog-t10-candidate/bin/python` from `~/BlackDog`
+at merged main **`1ae20bad7dffcbd7e387fd00cb3970de750befb7`** (PR #83).
+Exit **0**, status **`env_verified`**, transition `PLANNED` → `ENV_VERIFIED`,
+with no guard rejection reasons. `pip check` passed. Python 3.12.3,
+torch `2.13.0+cu130`, CUDA 13.0, NVIDIA GB10 and driver 580.178.04 were
+recorded. This receipt covers the repaired candidate; the earlier r9venv
+receipt remains preserved as historical evidence.
+
+Source selection matters: the candidate's editable install still points to
+`~/blackdog-t10-candidate/src/faustcoder` at `de82d32`. Running `python -m`
+from `~/BlackDog` selected merged source without reinstalling or altering
+that environment; `source.json` records the verified import path.
+The recorded invocation was:
+
+```bash
+cd ~/BlackDog
+export PYTHONNOUSERSITE=1 PYTHONDONTWRITEBYTECODE=1
+export HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1
+~/blackdog-t10-candidate/bin/python -m faustcoder.spark_probe \
+  --store ~/blackdog-t09-candidate-20261021T002919Z/store \
+  --actor spark-operator
+```
+
+This is the historical command; use a new evidence directory for a rerun.
+No model path was supplied. Inference and LoRA were skipped with
+`no_local_model`, and **`stack_pin_allowed=false`**. Fingerprint success
+does not establish training throughput, model quality or a pinned stack.
+
+| Artifact | SHA-256 artifact ID |
+|---|---|
+| Diagnostics | `sha256:693cd6a7d20e9ac6bd01b13f166fc7ea7147b5670d15bb347da18598c1ae510f` |
+| Transition receipt | `sha256:5becf23d32e4b864225b7ff80c267da2cca7c93c8bd183739a9f9f73dd96098b` |
+
+Both objects passed `ArtifactStore.get`, including envelope-sidecar checks;
+the transition's parent and input hashes reference the new diagnostics.
+The off-host copies matched the verified objects and **all 20 file checksums
+passed**, including both envelope sidecars. Locations outside Git and `/tmp`:
+
+- Spark: `~/blackdog-t09-candidate-20261021T002919Z/`.
+- Local workspace: `outputs/blackdog-t09-candidate/blackdog-t09-candidate-20261021T002919Z/`.
+- Both contain `store/sha256/`, `fingerprint.stdout.json`,
+  `fingerprint.exit-status.txt`, `artifact-verification.json`, source/revision,
+  preflight, dependency and preservation records, `README.md` and `SHA256SUMS`.
+- Preceding merged-main readiness receipts:
+  `~/blackdog-main-update-20261021T002048Z/` and local
+  `outputs/blackdog-main-update/blackdog-main-update-20261021T002048Z/`
+  (18 backup checksums verified).
+
+Preflight listed no GPU compute processes or running Docker containers;
+recheck current workloads before subsequent GPU work. All **89,975**
+inventoried environment/setup/receipt files and symlinks remained unchanged.
+No sudo, workload stops, model downloads, package installs or tracked edits
+occurred during fingerprinting. Keep these operator-local artifacts out of Git.
 
 ## Next steps
 
@@ -318,7 +374,7 @@ system configuration. [KANBAN](../../KANBAN.md) retains the dependency gates.
 
 | Order | Work | Acceptance / stop condition |
 |---|---|---|
-| 1 | T10 environment and per-machine evidence | spark-af42 fingerprint is complete; retain the verified store above. The separate repaired candidate passes dependency, integrity and dense/sparse CUDA checks. Recheck workload clearance, obtain a fresh candidate fingerprint, and qualify the approved local model/dataset/configuration, a small training step and checkpoint reload, and throughput/memory before any stack pin. Repeat fingerprinting after environment changes and on a second Spark if used. Do not replace the DSP venv or download weights implicitly. |
+| 1 | T10 environment and per-machine evidence | spark-af42 fingerprint is complete; retain the verified store above. The separate repaired candidate passes dependency, integrity and dense/sparse CUDA checks. The fresh candidate fingerprint passes (see above). Recheck workload clearance and qualify the approved local model/dataset/configuration, a small training step and checkpoint reload, and throughput/memory before any stack pin. Repeat fingerprinting after environment changes and on a second Spark if used. Do not replace the DSP venv or download weights implicitly. |
 | 2 | Audit and signature follow-ups (#62, #68, #69, #72) | Reconcile each issue against merged #71, add focused regression/feature-detection evidence, and document remaining risks. Merge status alone does not close follow-up issues. Keep credentials and signing configuration untouched without separate authorization. |
 | 3 | Live reward wiring and group handling | Complete A2-PATH/EVAL-SO task/native-receipt plumbing and GD-1 whole-group drop acceptance tests. Keep auto-attribution in shadow until L3, A7-S and CANARY gates are met. |
 | 4 | Data and training prerequisites | Resolve T01/ADR-0001, T06 H2/H3 and FLOOR evidence, then T07 split freeze and T08 baseline measurements. Record rights/leakage gates before T10; retain P3 audit, credential and dedicated-grader requirements. |
@@ -350,8 +406,8 @@ system configuration. [KANBAN](../../KANBAN.md) retains the dependency gates.
 
 The spark-af42 fingerprint above passes the per-machine evidence checks.
 The packaging blocker is resolved only in the separate repaired candidate.
-T10 still requires a fresh candidate fingerprint, model/training/checkpoint
-and throughput validation (no candidate stack-pin receipt yet), T01 and the data/baseline gates,
+The repaired candidate fingerprint passes. T10 still requires
+model/training/checkpoint and throughput validation (no candidate stack-pin receipt yet), T01 and the data/baseline gates,
 GD-1 and live A2-PATH/EVAL-SO integration. P3 additionally retains its audit,
 human-triage credential and dedicated-grader requirements. No production
 signing deployment, training throughput or model-quality result is claimed;
