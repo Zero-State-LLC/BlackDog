@@ -4,8 +4,10 @@
 
 Proposed duration: ten working days from an agreed kickoff, with an implementation
 owner, a human source/leakage reviewer and a separate evaluator/custodian named
-on day 1. Roles are required, not assumed assigned. Base: merged PR #99,
-`ce8087a`; eight CI checks and 771 tests passed. See [Batch 1](slice2-batch1.md).
+on day 1. Prabu is now user-assigned to the three human roles; acceptance,
+availability and independence confirmations remain pending (see S1 below).
+Plan merged in PR #100 as `c7977ce`; eight CI checks and 771 tests passed.
+S1 ran on that commit. See [Batch 1](slice2-batch1.md) for the input evidence.
 
 The next milestone is a reviewed qualification dossier: a useful bounded cohort
 with approved source/dependency/behavior evidence, a project-disjoint development
@@ -16,14 +18,90 @@ Production T07 stays unfrozen and `TOKEN_FLOOR=40` stays provisional throughout.
 Floor selection, signing/freezing, T08 baselines and T10 training require a later
 explicit decision. This sprint does not claim all 960 functions are qualified.
 
-Use the whole 110-packet / 1,430-unit queue as the accounting scope. Deep-review
-the proposed 172-unit cohort and every dependency it needs as one delivery,
+Use the whole 110-packet / 1,430-unit queue as the accounting scope. The original
+plan selected 172 units; S1 expanded that scope to 174 with known helpers, as
+recorded below. Deep-review the cohort and every dependency as one delivery,
 with individual dispositions and exceptions. Do not restart small manual
 batches. The existing 44 bounded passes are evidence inputs, not approvals;
-170 of the 172 proposed units remain quarantine candidates. The remaining
-1,258 candidates retain explicit deferred or blocked dispositions, with reasons,
-except helpers pulled into deep review. Report those scope additions separately;
+170 of the original 172 units were quarantine candidates. S1 now records 172
+quarantine candidates within the expanded 174-unit review scope and 1,256
+explicitly deferred candidates. Report further scope additions separately;
 no required helper may remain deferred for an accepted unit.
+
+## S1 verified scope and assignments
+
+On 2026-10-21 PT, S1 technical preparation completed on `spark-af42` at
+`c7977ce`. **S1 remains open for human confirmations.** No source, contract,
+dependency closure or production split was approved by this preparation.
+
+| Verified item | Result |
+| --- | --- |
+| Full accounting scope | 1,430 unique candidates, each in exactly one of 110 packets |
+| Pinned source inputs | 510 verified blobs; no missing inputs in the replay |
+| Initial cohort and helper expansion | 172 initial candidates plus two known transitive helper candidates |
+| Deep-review scope | 174 units across 21 packets; 172 are quarantine candidates |
+| Deferred scope | 1,256 units, each with an explicit deferred disposition |
+| Dependency gates | All 174 deep-review units still need scope/closure review; zero referenced helper IDs missing from the ledger |
+| Current-main replay | 1,659 payload files exactly match historical Batch 1 outputs |
+| Preservation and backup | 106,957 pre-existing files/symlinks unchanged; 1,680 off-host backup file checksums verified, zero failures |
+
+The two helpers extend the proposed review scope; they do not constitute an
+approved closure. Whole-file imports, external members, local scope and
+unadmitted helpers may require further explicit additions. The full 1,430-unit
+ledger remains intact. No required helper can remain deferred for an accepted
+unit, and a bounded behavioral pass does not replace dependency review.
+
+All 110 packets have **Prabu** assigned for human source/leakage and independent
+contract review. The user also assigned Prabu as the separate evaluator/holdout
+custodian. Codex owns S1 preparation and proposed tooling, with no human
+adjudication authority. These are user-confirmed role assignments, not recorded
+acceptance by Prabu or evidence that the reviews have occurred.
+
+Pending before S1 closes: Prabu's acceptance and available review capacity,
+an agreed kickoff, confirmation of useful behavior coverage, and artifact-level
+independence/custody arrangements. Record authorship and conflicts: Prabu cannot
+independently approve contracts he authored; assign another independent
+reviewer where needed. Keep private holdout tasks and signing keys outside
+agent/training access. One person's assignment to multiple roles does not
+establish those boundaries. No messages were sent to Prabu by S1 preparation.
+
+### S1 receipts and verification
+
+Spark receipt root, outside Git and `/tmp`:
+`/home/delphi/blackdog-qualification-sprint-20261021T194809Z/`.
+Start with `REPORT.md` and `REVIEW-INDEX.md`.
+
+- `input-bindings.json` binds code, inventory/notice, span candidate, prior
+  qualification, group plans, baseline and resolved source mappings.
+- `scope-ledger.UNAPPROVED.json`, `packet-assignments.PROPOSED.json` and
+  `reviewer-roles.PROPOSED.json` record scope, assignments and pending decisions.
+- `dependency-gaps.json` and `behavior-coverage.PROPOSED.json` retain unresolved
+  closure questions and proposed coverage for human review before S3 execution.
+- `current-main-replay/` holds the regenerated packet evidence.
+- `preservation-result.json`, `summary.json`, validation logs and `SHA256SUMS`
+  record the checks. Earlier scripts and failed diagnostic logs are retained.
+
+Batch 1's original code binding predates PR #99's SHA-256 blob-format fix.
+S1 recorded both bindings and verified identical replay payloads on current
+main. The first S1 validator stopped because it compared the base source map
+with a receipt bound to the map after discovery fallback. The retained v2
+validator uses the driver's same resolution rule and verifies the resulting
+digest; no upstream receipt was changed to make it pass.
+
+Verified local backup:
+`/Users/appliedalchemylabs/Documents/Codex/blackdog-s1-backups/blackdog-qualification-sprint-20261021T194809Z/`.
+The adjacent `backup-verification-20261021T194809Z.json` records all 1,680 file
+checks and the SHA-256 manifest digest
+`cbdbb519508adf1ee9e9f024ef527e2b11e6509364ca991fd6ca61590208e387`.
+These are evidence checks, not a new full test-suite run. The preceding
+merged-main check passed 150 focused tests; its receipts remain separately at
+`/home/delphi/blackdog-main-pr100-20261021/`.
+
+Next: resolve the pending confirmations, then use the 21 prioritized packets
+for S2 review of 174 units and required helpers. Keep the other 89 packets
+accounted for; retain the complete natural-copy pool for later FLOOR work.
+`TOKEN_FLOOR=40` remains provisional and T07 remains unfrozen. S1 used no sudo,
+workload stops, environment installations or tracked-file changes.
 
 ## Schedule, owners and acceptance
 
