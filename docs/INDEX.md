@@ -1,6 +1,6 @@
 # Docs index
 
-Index of the documents in this repository at main `e3c9542` (spec 001 version 0.3.11). `docs/adr` and `docs/decisions` have no index files of their own. The Python package name is `faustcoder`. The repository is `Zero-State-LLC/BlackDog`.
+Index of the documents in this repository at main `a414dfd` (spec 001 version 0.3.11). `docs/adr` and `docs/decisions` have no index files of their own. The Python package name is `faustcoder`. The repository is `Zero-State-LLC/BlackDog`.
 
 ## Architecture decision records
 
@@ -30,6 +30,7 @@ Index of the documents in this repository at main `e3c9542` (spec 001 version 0.
 | [spark-local-setup.md](runbooks/spark-local-setup.md) | Completed T04 validation, original and repaired-candidate T09 receipts, validated cuSPARSELt repair, synthetic and Qwen training/checkpoint smokes, merged library rendering, receipt locations and remaining T10 gates |
 | [compiler-harness.md](runbooks/compiler-harness.md) | Sandboxed faustwasm compiler (T03) and how reward grading reads its receipts |
 | [signal-harness.md](runbooks/signal-harness.md) | Offline DSP signal harness (T04), reward grading, and the D3-H2 audit gate |
+| [t07-candidate-audit.md](runbooks/t07-candidate-audit.md) | Offline Spark corpus audit, unsigned project/family split proposal, receipt locations and blockers before T07 freeze |
 | [t06-normalize-dedup.md](runbooks/t06-normalize-dedup.md) | Normalize pinned sources and write a deterministic dedup manifest without clearing rights |
 | [dgx-spark-env-verified.md](runbooks/dgx-spark-env-verified.md) | Record the R-001 environment fingerprint on a cleared DGX Spark |
 
