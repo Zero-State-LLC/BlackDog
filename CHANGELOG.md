@@ -8,6 +8,8 @@ See [docs/VERSIONING.md](docs/VERSIONING.md).
 
 ## [Unreleased]
 
+- Document the unapproved seven-span production candidate, 958 missing spans, verified source blobs, receipt locations and remaining qualification gaps. Full-inventory validation still refuses incomplete coverage; TOKEN_FLOOR stays 40/provisional and T07 remains unfrozen.
+
 - Record merged #89 function-span extraction and merged-main Spark verification (143 regressions; 92,319 preserved files/symlinks), full CI (668 passed), receipt locations and remaining T06/T07 qualification gates. TOKEN_FLOOR remains 40/provisional; T07 remains unfrozen.
 
 - Require independently digest-pinned, reviewed byte spans for admitted T06 function units. Bind extracted bytes and span provenance into Example and DedupManifest records; reject missing, overlapping, stale or mismatched ranges. Preserve whole-blob quarantine and comparison guards. TOKEN_FLOOR stays 40/provisional and T07 remains unfrozen.
