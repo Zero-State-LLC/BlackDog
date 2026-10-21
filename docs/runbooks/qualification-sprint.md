@@ -67,7 +67,8 @@ independence/custody arrangements. Record authorship and conflicts: Prabu cannot
 independently approve contracts he authored; assign another independent
 reviewer where needed. Keep private holdout tasks and signing keys outside
 agent/training access. One person's assignment to multiple roles does not
-establish those boundaries. No messages were sent to Prabu by S1 preparation.
+establish those boundaries. S1 preparation itself sent no messages; the later
+reviewer handoff below was sent with user authorization.
 
 ### S1 receipts and verification
 
@@ -107,12 +108,94 @@ accounted for; retain the complete natural-copy pool for later FLOOR work.
 `TOKEN_FLOOR=40` remains provisional and T07 remains unfrozen. S1 used no sudo,
 workload stops, environment installations or tracked-file changes.
 
+## Slice 2 reviewer handoff and verified evidence
+
+On 2026-10-21 PT, the user-authorized S1/S2 handoff and evidence follow-up were
+emailed to Prabu. They request role acceptance, availability/kickoff, receipt
+access, individual source/leakage and dependency decisions, authorship conflicts,
+and separate holdout custody arrangements. At the latest reply check that day,
+the handoff thread had no reply and a separate sender search found no recent
+message. All 174 return rows remain `UNREVIEWED`; no reviewer identity or decision
+has been supplied. The user requested a 15-minute reply monitor; monitoring is
+operational coordination, not gate evidence. Private correspondence and contact
+details remain outside Git.
+
+### Direct-comparison supplement
+
+The diagnostic on merged main `2dd588a` evaluated 174 scoped units against 19
+comparison blobs at measurement floors 40/30/20: **9,918 pair evaluations**.
+It uses the shipping clustering implementation on isolated pairs, with in-process
+feature caching; 12 uncached parity checks passed. It does not exercise
+collective-support joins in isolation or replace the full-corpus family audit.
+
+| Measurement floor | Units with direct triggers | Triggering pairs |
+| --- | --- | --- |
+| 40 (provisional operating floor) | 103 | 596 |
+| 30 (measurement only) | 142 | 1,083 |
+| 20 (measurement only) | 156 | 1,531 |
+
+At floor 40 the remaining routes are 69 indirect-family-only units and two
+unflagged candidates. These routes are not human COPY/NOT_COPY labels. An absent
+direct trigger is not proof of NOT_COPY. No quarantine was removed and no source
+or dependency closure was approved. Keep the complete 1,430-unit natural-copy
+pool, including relevant short collisions and collective-support evidence.
+
+### Receipt locations and verification
+
+Both Spark roots are outside Git and `/tmp`:
+
+- `/home/delphi/blackdog-s2-direct-review-20261021/`: `REPORT.md`,
+  `REVIEW-INDEX.md`, `summary.json`, `bindings.json`, 174 unit dossiers,
+  `verification.json` and `SHA256SUMS`. All 182 payload checksums passed.
+- `/home/delphi/blackdog-s2-review-return-20261021T215913Z/`: `README.md`,
+  `unit-decisions.UNREVIEWED.csv`, `gate-decisions.PENDING.json`,
+  `verification.json` and `SHA256SUMS`. All four payload checksums passed;
+  174 unique rows bind exact source and dossier hashes. All decisions are blank
+  or explicitly unreviewed; this is a proposed return format, not automatic
+  production approval input.
+
+Verified off-host archives and adjacent `.tar.gz.sha256` files reside in
+`/Users/appliedalchemylabs/Documents/Codex/blackdog-s2-backups/`:
+
+| Archive | SHA-256 |
+| --- | --- |
+| `blackdog-s2-direct-review-20261021.tar.gz` | `09d29ede8d8408a0583cf96344c5b2e977a8b564301894ae64045dd6101d54b8` |
+| `blackdog-s2-review-return-20261021T215913Z.tar.gz` | `8b342f01053fb97076af81d5f17fdf438c736f03de3fc68b792d9a5df3af8d69` |
+
+Archive digests and every archived payload were reverified for this documentation
+update: 182 + 4 checks passed. The prior S1 manifest also passed during supplement
+verification. These are evidence-integrity and diagnostic checks, not a new
+full-suite result or a new whole-environment preservation inventory. Tracked
+Spark files remained unchanged; no sudo, workload stops or environment changes
+were used. Existing receipts are retained; returned decisions should be saved
+as new evidence, never written over the original unreviewed packet.
+
+### Pending gates and next actions
+
+| Gate | Owner | Evidence required before advancing |
+| --- | --- | --- |
+| S1 confirmations | Prabu | Acceptance, capacity, kickoff, useful behavior coverage and independence/custody arrangements |
+| S2 source/leakage | Prabu | Per-unit source/notice and COPY/NOT_COPY/unresolved decisions with exact evidence; relevant short-collision and collective-support adjudication |
+| S3 closure/behavior | Implementation owner + independent contract reviewer | Pinned complete closures including external members, independent contracts, semantic references and positive/negative receipts |
+| S4/S5 FLOOR | Human reviewer + evaluator | Two cleared host repositories, real rejected windows, fixed gold/labels and the complete ratified measurement protocol |
+| S6 development/custody | Independent reviewer + Prabu as custodian | Reviewed disjoint development tasks and new private holdout authorship under separate custody; only approved exclusion metadata/public verification reaches Spark |
+| S7 integration | Implementation owner + reviewers | Bound reproducible dossier, exception review and an explicit milestone decision after prerequisite gates |
+
+On receipt of decisions, verify identity, source/dossier bindings, completeness,
+evidence and authorship conflicts before accepting them. A contract author cannot
+provide their own independent approval. Do not import private holdout contents or
+signing keys into agent/training access. Production compiler runs wait for reviewed
+source/closures/contracts; FLOOR execution waits for approved hosts/windows/labels.
+Further diagnostic runs alone cannot close these human gates. Slice 2 remains
+blocked on independent inputs, `TOKEN_FLOOR=40` remains provisional and T07 remains
+unfrozen. Production signing/freezing still requires a later explicit decision.
+
 ## Schedule, owners and acceptance
 
 | Days | Work package | Accountable role | Required output and exit |
 | --- | --- | --- | --- |
 | 1 | S1: Bind scope and decisions | Implementation owner + human reviewer | Verify receipt hashes, source pins and all 1,430 identities; assign all 110 packets; record reviewer/custodian identities and required availability. Select useful behavior coverage before running tests. |
-| 1–3 | S2: Source and leakage adjudication | Human source/leakage reviewer | Review all 172 proposed units and their helper closure; record individual source/notice, COPY/NOT_COPY or unresolved decisions with exact evidence. Account for all 23 short collision groups and 19 collective support sets relevant to the cohort; retain the complete corpus-wide queue. |
+| 1–3 | S2: Source and leakage adjudication | Human source/leakage reviewer | Review all 174 scoped units and any further required helper closure; record individual source/notice, COPY/NOT_COPY or unresolved decisions with exact evidence. Account for all 23 short collision groups and 19 collective support sets relevant to the cohort; retain the complete corpus-wide queue. |
 | 2–5 | S3: Closure and semantic qualification | Implementation owner; independent contract reviewer | Build a pinned, explicit dependency closure for every retained unit, including external members. Validate all approved contracts at 44.1/48 kHz with independent references and negative controls. Each attempted unit ends passed, failed or blocked with receipts. |
 | 3–4 | S4: Two-project and gold-set checkpoint | Human reviewer + evaluator | Establish genuinely cleared host repositories and real reject-class windows. By end of day 3, decide whether current sources can meet the two-repository requirement; if not, propose a bounded additional source scope with rights review before acquisition. Do not replace hosts with synthetic fixtures. |
 | 5–8 | S5: T06 qualification evidence | Implementation owner + human adjudicator | After S2–S4 gates, run H2/H3 regressions, fixed-ground-truth FLOOR plants and natural/FP review on the shipping pipeline. Report all floors without changing the operating constant. Any incomplete inputs produce a blocked result, not a partial pass. |
@@ -145,7 +228,7 @@ as the controlling FLOOR protocol:
 - Each cell requires a 95% Wilson lower bound of at least 0.90; inspect every
   miss and block recurring mechanisms. Include H1 split-file coverage probes.
 - Fix natural COPY/NOT_COPY ground truth before scoring across the union of
-  all floors, sub-15 and H1 detections. The 172-unit cohort is not a substitute
+  all floors, sub-15 and H1 detections. The 174-unit cohort is not a substitute
   for this complete measurement pool. Unadjudicated candidates left cleared
   count against the gate. Collective joins are not individual COPY proof.
 - Apply the ratified FP budget `ceil(0.05 * N_cleared)` and its full-label or

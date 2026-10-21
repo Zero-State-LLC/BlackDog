@@ -135,6 +135,15 @@ Activate with `source ~/BlackDog/activate-local.sh`. The diagnostic commands are
 directory; the drivers refuse existing evidence. Audit locations must come from
 the pinned discovery manifests, never an unverified source directory.
 
+## Subsequent reviewer handoff
+
+The [qualification sprint handoff](qualification-sprint.md#slice-2-reviewer-handoff-and-verified-evidence)
+records later evidence on merged main `2dd588a`: 174 hash-bound reviewer rows,
+9,918 isolated-pair comparisons, verified Spark/off-host receipts and emails to
+Prabu. These supplement the historical audit above and Batch 1's expanded
+1,430-unit scope. All 174 decisions remain UNREVIEWED; no gate below was closed.
+See that handoff for current receipt locations, limitations and pending owners.
+
 ## Remaining exit gates
 
 1. Independently approve a useful source/task/dependency subset; adjudicate the
