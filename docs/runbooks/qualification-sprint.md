@@ -6,8 +6,12 @@ Proposed duration: ten working days from an agreed kickoff, with an implementati
 owner, a human source/leakage reviewer and a separate evaluator/custodian named
 on day 1. Prabu is now user-assigned to the three human roles; acceptance,
 availability and independence confirmations remain pending (see S1 below).
-Plan merged in PR #100 as `c7977ce`; eight CI checks and 771 tests passed.
-S1 ran on that commit. See [Batch 1](slice2-batch1.md) for the input evidence.
+Plan merged in PR #100 as `c7977ce` after eight CI checks passed. Its own
+[full-suite CI run](https://github.com/Zero-State-LLC/BlackDog/actions/runs/39662227221)
+on PR head `1cb975a` passed 771 tests with 63 warnings. This is separate from
+PR #99's earlier 771-test result recorded in [Batch 1](slice2-batch1.md), and
+from the later 150-test focused Spark check cited below. S1 ran on `c7977ce`;
+its evidence verification is not another runtime test-suite run.
 
 The next milestone is a reviewed qualification dossier: a useful bounded cohort
 with approved source/dependency/behavior evidence, a project-disjoint development
