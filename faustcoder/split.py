@@ -264,13 +264,16 @@ def freeze_signed_split(
         raise ValueError("novelty recheck must be scheduled in the future")
     # Preflight all source states before writing anything.
     sources = {}
+    source_states = {}
     for digest in dedup["example_digests"]:
         e = store.get(digest)["payload"]
         if e.get("record_type") != "Example" or e["unit_id"] in sources:
             raise ValueError("invalid snapshot examples")
         source = e["source_digest"]
-        if current_state(store, source) != "DEDUPED":
-            raise ValueError("split source must be DEDUPED")
+        state = current_state(store, source)
+        if state not in {"DEDUPED", "FROZEN"}:
+            raise ValueError("split source must be DEDUPED or exactly resumable")
+        source_states[source] = state
         sources[e["unit_id"]] = source
     if set(sources) != set(candidate["assignments"]):
         raise ValueError("snapshot example coverage mismatch")
@@ -333,7 +336,16 @@ def freeze_signed_split(
             to_state="FROZEN",
             disposition="signed provisional split; novelty recheck required",
         )
-        envelopes.append(envelope(payload, parents))
+        receipt = envelope(payload, parents)
+        if source_states[source] == "FROZEN":
+            # Resume only our exact interrupted operation, never an unrelated
+            # freeze. Check every source before publishing any missing writes.
+            if (
+                not store.exists(receipt["content_digest"])
+                or store.get(receipt["content_digest"]) != receipt
+            ):
+                raise ValueError("FROZEN source does not match this signed freeze")
+        envelopes.append(receipt)
     # ArtifactStore validates schemas before put. Preflight these too, to avoid
     # validation errors after the first write. Store I/O errors remain recoverable.
     from faustcoder.schemas import validate

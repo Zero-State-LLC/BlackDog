@@ -333,9 +333,16 @@ def test_signed_freeze_runs_only_in_disposable_fixture_store(tmp_path, signed_fi
             if e["payload"].get("record_type") == "SourceRecord":
                 assert current_state(store, e["content_digest"]) == "FROZEN"
         before = store.list()
-        with pytest.raises(ValueError, match="DEDUPED"):
+        assert (
             freeze_signed_split(
                 store, digest, c, signature, public, created_at="2026-10-21T00:00:00Z"
+            )
+            == result
+        )
+        assert store.list() == before
+        with pytest.raises(ValueError, match="does not match"):
+            freeze_signed_split(
+                store, digest, c, signature, public, created_at="2026-10-22T00:00:00Z"
             )
         assert store.list() == before
     assert results[0] == results[1]
@@ -473,6 +480,20 @@ def test_snapshot_rejects_interrupted_freeze(
     assert len(snapshots) == 1
     with pytest.raises(ValueError, match="incomplete freeze"):
         verify_frozen_snapshot(store, snapshots[0], pub)
+    monkeypatch.setattr(store, "put", put)
+    recovered = freeze_signed_split(
+        store, digest, c, sig, pub, created_at="2026-10-21T00:00:00Z"
+    )
+    assert recovered == store.get(snapshots[0])["content_digest"]
+    assert verify_frozen_snapshot(store, recovered, pub)["split_frozen"] is True
+    before = store.list()
+    assert (
+        freeze_signed_split(
+            store, digest, c, sig, pub, created_at="2026-10-21T00:00:00Z"
+        )
+        == recovered
+    )
+    assert store.list() == before
 
 
 def test_snapshot_rejects_wrong_linked_receipt(tmp_path, monkeypatch, signed_fixture):
@@ -507,3 +528,10 @@ def test_snapshot_rejects_wrong_linked_receipt(tmp_path, monkeypatch, signed_fix
             assert current_state(store, e["content_digest"]) == "FROZEN"
     with pytest.raises(ValueError, match="incomplete freeze"):
         verify_frozen_snapshot(store, snapshot, pub)
+    monkeypatch.setattr(store, "put", put)
+    before = store.list()
+    with pytest.raises(ValueError, match="does not match"):
+        freeze_signed_split(
+            store, digest, c, sig, pub, created_at="2026-10-21T00:00:00Z"
+        )
+    assert store.list() == before

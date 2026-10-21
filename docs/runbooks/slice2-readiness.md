@@ -91,7 +91,10 @@ It writes a signed SplitManifest, DatasetSnapshot and linked transition receipts
 Both freeze and verification enforce the recheck deadline against the evaluator
 host clock, independently of caller-supplied receipt timestamps. Verification
 also requires every source to have its exact linked freeze receipt; interrupted
-writes cannot turn a partial snapshot into a usable frozen dataset.
+writes cannot turn a partial snapshot into a usable frozen dataset. A retry
+may complete missing receipts only when every already-frozen source has the
+exact receipt for that candidate, snapshot and timestamp; unrelated freezes
+and mismatched receipts are rejected before any writes.
 The generic dataset transition API still refuses unsigned `split_frozen` calls.
 P3 holdout exit remains forbidden under this provisional route.
 
