@@ -8,6 +8,8 @@ See [docs/VERSIONING.md](docs/VERSIONING.md).
 
 ## [Unreleased]
 
+- Record seven-span bounded compiler/signal validation: 28 positive runs, five negative controls, receipt locations and preservation results. Independent production approval, 958 missing ranges and T06/T07 qualification gates remain open; TOKEN_FLOOR stays 40/provisional and T07 unfrozen.
+
 - Document the unapproved seven-span production candidate, 958 missing spans, verified source blobs, receipt locations and remaining qualification gaps. Full-inventory validation still refuses incomplete coverage; TOKEN_FLOOR stays 40/provisional and T07 remains unfrozen.
 
 - Record merged #89 function-span extraction and merged-main Spark verification (143 regressions; 92,319 preserved files/symlinks), full CI (668 passed), receipt locations and remaining T06/T07 qualification gates. TOKEN_FLOOR remains 40/provisional; T07 remains unfrozen.
