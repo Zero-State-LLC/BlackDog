@@ -421,6 +421,78 @@ in force. Next qualify an approved local model and cleared dataset/configuration
 repeat training/checkpoint validation on that actual model, measure inference/LoRA
 throughput and memory, and satisfy the data/baseline/reward/P3 gates below.
 
+## Qwen T10 smoke and merged library rendering
+
+On 2026-10-20 PT (2026-10-21 UTC), spark-af42 completed a representative
+**Qwen training/checkpoint smoke test** in `~/blackdog-t10-candidate`.
+The approved download pinned `Qwen/Qwen2.5-Coder-1.5B` base to
+`df3ce67c0e24480f20468b6ef2894622d69eb73b`; all nine model/tokenizer/license
+files matched upstream Git/LFS hashes and were reverified after execution.
+
+Initial admission was blocked: all 49 MIT examples compiled, but the signal
+harness refused library imports. The authorized fix subsequently merged in
+[PR #86](https://github.com/Zero-State-LLC/BlackDog/pull/86), commit `e3c9542`.
+Compiler and renderer now share pinned-library staging, replace bundled bytes,
+verify mounted-tree hashes and reject symlinks. Node grants read-only access
+to the host share; namespace canaries, remote-import refusal, resource bounds,
+compiler flags, numerical tolerances and goldens remain intact. The helper
+and library pin participate in signal harness identity.
+
+The smoke ran on `f8b8a16` plus the preserved fix patch, before merge; its
+receipts are not relabeled as merged-main runs. Review cleanup was formatting
+and changelog text. Final regressions passed **126 tests**. PR #86 passed all
+eight CI checks: **642 tests passed, 63 warnings**, with no review findings.
+
+| Check | Result |
+|---|---|
+| Provenance and leakage | All 49 MIT source blob hashes and notices verified; 27 local fixture/rejected comparison sources screened with existing family clustering |
+| Admission | 35 examples passed compiler and signal sanity at 44.1/48 kHz; 14 failing examples excluded |
+| Split | 28 training / 7 diagnostic examples, with separate near-duplicate families |
+| Configuration | BF16 base; FP32 LoRA rank 64, alpha 128, dropout 0 on Q/K/V/O projections; eager attention |
+| Optimization | AdamW lr 1e-4, clipping 1, microbatch 1, accumulation 4, 20 steps, seed 42; unpadded sequences capped at 512 tokens; loss on completion half |
+| Training | Finite losses/gradients, nonzero gradients, all 224 adapter tensors changed, frozen base unchanged |
+| Reload and resume | Fresh-process parameters, logits and optimizer state exact; resumed loss, gradient norm, parameters, optimizer and scheduler matched uninterrupted continuation exactly |
+| Training memory and bounds | Peak allocated 6,369,700,352 bytes (~5.93 GiB); reserved 6,809,452,544 bytes; 16 GiB allocation cap and 30-minute alarm per process |
+| Short-run timing | ~2,373 input tokens/sec training after two warmup steps; ~2,224 prefill and 37.34 decode tokens/sec |
+| Preservation | 90,081 original environment/setup/receipt files and symlinks unchanged; 156 final backup file checksums verified |
+
+The owner confirmed no sealed holdout had been created. This single-project
+diagnostic split is **not a formal T07 split or project-disjoint evaluation**.
+Signal sanity has no waveform reference and is not semantic/reward acceptance.
+Diagnostic loss decreased from 3.404037 to 1.280824, but this small test does not
+establish model-quality improvement. Timing includes prefix tokens and variable
+sequence lengths; it is not production throughput qualification. No equality
+checks were relaxed. **`stack_pin_allowed=false`; G10 and production T10 remain
+open.** No sudo, workload stops or package installs occurred during the smoke.
+
+Evidence, outside Git and `/tmp`:
+
+- Spark root: `~/blackdog-t10-qwen-smoke-20261021T013750Z/`.
+- Local backup: `outputs/blackdog-t10-qwen-smoke/blackdog-t10-qwen-smoke-20261021T013750Z/`.
+- `library-attempt-2/` holds `completion.json`, configuration, admission and
+  leakage records, compiler/signal receipts, token IDs/masks, logs, checkpoints,
+  exact-resume evidence and the source patch/helper. Initial blocked admission
+  remains at the root.
+- `FINAL-SHA256SUMS` covers 156 evidence/checkpoint files. The original
+  `SHA256SUMS` covers 69 preparation files. Model weights remain on Spark in
+  `model/`; `model-download.json` records their hashes. Local backup excludes
+  weights and caches. Keep all these artifacts out of Git.
+- Final pre-PR regressions: `~/blackdog-library-pr-review-20261021T015212Z/`,
+  backed up under local `outputs/blackdog-library-pr-review/`.
+- Full CI log: local `outputs/blackdog-pr86-ci/pytest.log`.
+
+Merged-main follow-up on `e3c9542` passed all **46 signal tests**, including
+library rendering and sandbox rejection checks; candidate `pip check` passed.
+All **90,272** inventoried environment/model/checkpoint/receipt/setup files and
+symlinks remained unchanged. Prior source edits were preserved in a patch and
+path-limited Git stash; the new helper's original bytes were separately retained
+when it became tracked (only trailing whitespace differed). Tracked checkout
+is clean. No sudo, workload stops, downloads or training reruns occurred.
+Receipts: `~/blackdog-main-update-20261021T021019Z/`; local backup:
+`outputs/blackdog-main-update/blackdog-main-update-20261021T021019Z/`.
+All **16** backup checksums passed. This verifies merged library rendering,
+not a new training run or fingerprint.
+
 ## Next steps
 
 This is a proposed execution order, not authorization to run training or modify
@@ -428,7 +500,7 @@ system configuration. [KANBAN](../../KANBAN.md) retains the dependency gates.
 
 | Order | Work | Acceptance / stop condition |
 |---|---|---|
-| 1 | T10 environment and per-machine evidence | spark-af42 fingerprint is complete; retain the verified store above. The separate repaired candidate passes dependency, integrity and dense/sparse CUDA checks. The fresh candidate fingerprint passes (see above). Recheck workload clearance and qualify the approved local model/dataset/configuration, training/checkpoint reload on the actual model, and throughput/memory before any stack pin. The synthetic diagnostic above passes but does not clear those gates. Repeat fingerprinting after environment changes and on a second Spark if used. Do not replace the DSP venv or download weights implicitly. |
+| 1 | T10 environment and per-machine evidence | spark-af42 fingerprint is complete; retain the verified store above. The separate repaired candidate passes dependency, integrity and dense/sparse CUDA checks. The fresh candidate fingerprint passes (see above). The Qwen smoke above validates actual-model training/checkpoint operation and records bounded timings. Recheck workload clearance, complete formal dataset/split/baseline qualification and repeated representative throughput/memory measurements, then review the stack pin. Neither smoke clears the project training gates. Repeat fingerprinting after environment changes and on a second Spark if used. Do not replace the DSP venv or download weights implicitly. |
 | 2 | Audit and signature follow-ups (#62, #68, #69, #72) | Reconcile each issue against merged #71, add focused regression/feature-detection evidence, and document remaining risks. Merge status alone does not close follow-up issues. Keep credentials and signing configuration untouched without separate authorization. |
 | 3 | Live reward wiring and group handling | Complete A2-PATH/EVAL-SO task/native-receipt plumbing and GD-1 whole-group drop acceptance tests. Keep auto-attribution in shadow until L3, A7-S and CANARY gates are met. |
 | 4 | Data and training prerequisites | Resolve T01/ADR-0001, T06 H2/H3 and FLOOR evidence, then T07 split freeze and T08 baseline measurements. Record rights/leakage gates before T10; retain P3 audit, credential and dedicated-grader requirements. |
@@ -461,8 +533,8 @@ system configuration. [KANBAN](../../KANBAN.md) retains the dependency gates.
 The spark-af42 fingerprint above passes the per-machine evidence checks.
 The packaging blocker is resolved only in the separate repaired candidate.
 The repaired candidate fingerprint passes. T10 still requires
-actual-model training/checkpoint and throughput validation (synthetic infrastructure diagnostic passed; no candidate stack-pin receipt yet), T01 and the data/baseline gates,
+formal data/split/baseline qualification and repeated representative throughput/memory validation (Qwen training/checkpoint smoke passed; no candidate stack-pin receipt yet), T01 and the data/baseline gates,
 GD-1 and live A2-PATH/EVAL-SO integration. P3 additionally retains its audit,
 human-triage credential and dedicated-grader requirements. No production
-signing deployment, training throughput or model-quality result is claimed;
+signing deployment, sustained production-throughput qualification or model-quality improvement is claimed;
 this plan does not authorize training.

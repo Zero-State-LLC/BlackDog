@@ -4,7 +4,7 @@ Formerly FaustCoder. Renamed 2026-10-17 PT.
 
 Compiler-verified Faust DSP coding model, developed on NVIDIA DGX Spark.
 
-**Status:** specification-first. The V0.1 content-addressed artifact store (T02), sandboxed Faust compiler harness (T03, faustwasm 0.19.0), dataset rights transitions (T05), and the T06 normalization and dedup snapshot are implemented. T06 admits units from the pinned T05 rights inventory through T05's guard and does not clear rights itself. Corpus compile checks stay off until T03b stages the pinned faustlibraries into the harness. No model-quality claim is established. For v0.2, R-001 (amended 0.3.1) uses cited external DGX Spark benchmarks plus a per-machine fingerprint; BlackDog throughput on the Spark is not measured yet.
+**Status:** specification-first. The V0.1 content-addressed artifact store (T02), sandboxed Faust compiler harness (T03, faustwasm 0.19.0), dataset rights transitions (T05), and the T06 normalization and dedup snapshot are implemented. T06 admits units from the pinned T05 rights inventory through T05's guard and does not clear rights itself. Compiler and signal rendering share pinned-library staging after PR #86. No model-quality claim is established. For v0.2, R-001 (amended 0.3.1) uses cited external DGX Spark benchmarks plus a per-machine fingerprint; the [Qwen T10 smoke](docs/runbooks/spark-local-setup.md#qwen-t10-smoke-and-merged-library-rendering) records bounded training, prefill and decode throughput on spark-af42, with exact checkpoint/resume checks. Repeated representative throughput/memory qualification, formal data/split/baseline gates and stack-pin review remain pending.
 
 ## Start here
 

@@ -26,8 +26,12 @@ on merged `1ae20ba` passed at 2026-10-21 00:29:27 UTC (2026-10-20 PT): exit 0,
 `env_verified`, both envelopes verified and 20 off-host checksums passed.
 Run from `~/BlackDog` with the candidate interpreter to select merged source;
 its editable install retains an older source copy. Inference/LoRA probes were
-skipped (`no_local_model`), and `stack_pin_allowed=false`. Approved
-actual-model training/checkpoint and throughput evidence remain pending. The
+skipped (`no_local_model`), and `stack_pin_allowed=false`. The later
+[Qwen smoke](spark-local-setup.md#qwen-t10-smoke-and-merged-library-rendering)
+passed actual-model training and exact fresh-process checkpoint/resume checks,
+with bounded throughput/memory measurements. Library rendering merged in #86;
+46 signal tests passed on merged `e3c9542`. Formal dataset/split/baseline and
+representative repeated throughput qualification remain pending. The
 [offline synthetic diagnostic](spark-local-setup.md#offline-training-and-checkpoint-diagnostic)
 passed five LoRA steps and exact checkpoint/resume comparisons, but does not
 satisfy G10 or permit a stack pin. Neither
