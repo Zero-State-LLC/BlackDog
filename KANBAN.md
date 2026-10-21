@@ -1,6 +1,28 @@
 # BlackDog implementation backlog
 
-## Slice 2 Batch 1 working result
+## Current milestone: qualification sprint
+
+[Ten-working-day sprint](docs/runbooks/qualification-sprint.md): one consolidated
+delivery covering the full 110-packet queue, deep review of the 172-unit cohort
+and helpers, semantic validation, two-project FLOOR evidence, development
+qualification and custody preparation. Day 3 is the host/rights go-or-block
+checkpoint; days 9–10 deliver the reviewed dossier. Missing human approvals or
+hosts block milestone completion. No production freeze or training is scheduled.
+Hosted [project 29](https://github.com/orgs/Zero-State-LLC/projects/29) mirrors
+S1–S7: S1 Ready; dependent packages Backlog with blockers in their descriptions.
+PR #99 is Done. T06 implementation remains Done; qualification is tracked
+separately, and T07/T10 remain Backlog.
+
+| Sprint card | Status | Exit |
+| --- | --- | --- |
+| Batch 1 evidence and hash-format review | Done: #99, `ce8087a` | Eight CI checks; 771 tests passed |
+| S1 scope and owner assignment | Ready | Bound inputs, all 1,430 units accounted for, named reviewers |
+| S2 source/leakage and S3 closure/behavior | Planned; human review required | Per-unit decisions and reproducible positive/negative receipts |
+| S4 two-project hosts and S5 FLOOR | Blocked on approved inputs | Ratified gold/label protocol and complete measurement result |
+| S6 development/custody | Blocked on independent evaluator | Disjoint reviewed tasks and separate custody commitments |
+| S7 qualification dossier | Planned after S2–S6 | One reviewed delivery; explicit pass or blocked milestone decision |
+
+## Slice 2 Batch 1 merged result
 
 [Batch 1 evidence completion](docs/runbooks/slice2-batch1.md) recovered all 191
 missing pinned blobs and assembled 110 review packets for 1,430 candidates.
@@ -30,7 +52,7 @@ Receipts: `/home/delphi/blackdog-slice2-20261021/`. No setup artifacts enter Git
 
 Formerly FaustCoder; renamed 2026-10-17 PT.
 
-Status as of 2026-10-21 UTC, main `0542321` (spec 0.3.11). T04's corrected ARM/x86 DSP-bank validation completed in [#79](https://github.com/Zero-State-LLC/BlackDog/pull/79): all 40 renders were finite and byte-identical, as were the five compiled WASM binaries. Full suites: ARM 635 passed, 2 skipped; x86 637 passed. All nine PR checks passed, and merged-main activation, smoke test and golden comparison passed on spark-af42. See [Spark setup, evidence and next steps](docs/runbooks/spark-local-setup.md).
+Status as of 2026-10-21 PT, main `ce8087a` (spec 0.3.11). T04's corrected ARM/x86 DSP-bank validation completed in [#79](https://github.com/Zero-State-LLC/BlackDog/pull/79): all 40 renders were finite and byte-identical, as were the five compiled WASM binaries. Full suites: ARM 635 passed, 2 skipped; x86 637 passed. All nine PR checks passed, and merged-main activation, smoke test and golden comparison passed on spark-af42. See [Spark setup, evidence and next steps](docs/runbooks/spark-local-setup.md).
 
 T09 fingerprint evidence is COMPLETE for the repaired candidate on spark-af42 at `1ae20ba` (2026-10-21 00:29:27 UTC / 2026-10-20 PT): exit 0, `env_verified`, both artifact envelopes verified and all 20 off-host file checksums passed. See [candidate receipt IDs and locations](docs/runbooks/spark-local-setup.md#repaired-candidate-t09-fingerprint). The earlier r9venv fingerprint on `0cd3382` remains preserved. This is separate from T04; `stack_pin_allowed=false`, the existing Axolotl/torch conflict remains, and that fingerprint provides no training-throughput or second-Spark receipt. A2-PATH and EVAL-SO remain CODE DONE, LIVE WIRING PENDING; their grader implementation is not proof of production reward-path integration. T01 still waits on proposed ADR-0001. T06 H2, H3 and FLOOR, and D3-H1-N9 through N12 remain separate follow-ups. Existing dependency arrows remain promotion gates; this setup does not authorize training or promotion.
 
@@ -48,9 +70,9 @@ The [seven-span validation](docs/runbooks/function-spans.md#seven-span-compiler-
 
 The [expanded 13-span candidate](docs/runbooks/function-spans.md#expanded-13-span-candidate-and-batch-two-validation) on `84dd841` adds six interleave/comparator clauses and helpers. All 26 new compiler/signal runs and four negative controls passed; original seven rows and prior receipts are unchanged. All 95,355 baseline files/symlinks were preserved and 139 new receipt checksums verified. Receipts: `/home/delphi/blackdog-span-batch2-20261021/` (outside Git and `/tmp`). At that stage all 13 spans were train-only and unapproved; 952 spans were missing, and full-inventory validation refused incomplete coverage. Independent review, broader task/leakage qualification and H2/H3/FLOOR remain open; `TOKEN_FLOOR=40` stays provisional and T07 stays unfrozen.
 
-The [93-group static review](docs/runbooks/span-corpus-review.md#93-group-review-and-inventory-corrections) is COMPLETE on `0542321`: 960 unapproved proposals, five inventory correction dispositions and 1,318 proposed dependency links. All 960 span hashes verified; no dependency closure was certified and no behavioral test was run in this review. Four commented examples and the ambiguous bare `play` identity have receipt-only inventory/notice corrections; adoption and coordinated T05 repinning are PENDING. Review waves: 31 deterministic, 34 scoped/stateful and 28 specialized groups. Receipts: `/home/delphi/blackdog-span-group-review-20261021/`; 100,876 baseline files/symlinks unchanged and 46 new receipt hashes verified. `TOKEN_FLOOR=40` stays provisional; T07 is unfrozen.
+The [93-group static review](docs/runbooks/span-corpus-review.md#93-group-review-and-inventory-corrections) is COMPLETE on `0542321`: 960 unapproved proposals, five inventory correction dispositions and 1,318 proposed dependency links. All 960 span hashes verified; no dependency closure was certified and no behavioral test was run in this review. Four commented examples and the ambiguous bare `play` identity have receipt-only inventory/notice corrections; adoption and coordinated T05 repinning subsequently merged in #97; independent qualification remains pending. Review waves: 31 deterministic, 34 scoped/stateful and 28 specialized groups. Receipts: `/home/delphi/blackdog-span-group-review-20261021/`; 100,876 baseline files/symlinks unchanged and 46 new receipt hashes verified. `TOKEN_FLOOR=40` stays provisional; T07 is unfrozen.
 
-Initial Slice 1 diagnostics completed on `feat/slice1-corpus-qualification`: five inventory/notice corrections and admission repinning, 960 proposals across 93 groups, 117 domain contracts, 122/122 initial compiler/signal runs passed, and 567 regressions passed (2 skipped; sudo-bearing modules excluded). The current ledger records 44 bounded-contract passes and 916 specific blocked dispositions; the production-readiness exit remains blocked. See [Slice 1 qualification](docs/runbooks/slice1-qualification.md). PR #97 corrects cross-contract dependency leakage by batching only identical ordered closures; its fresh 210-run validation supersedes the initial run for isolated-closure evidence. Merge is pending; production approval, T06 H2/H3/FLOOR and T07 freeze remain open.
+Initial Slice 1 diagnostics completed on `feat/slice1-corpus-qualification`: five inventory/notice corrections and admission repinning, 960 proposals across 93 groups, 117 domain contracts, 122/122 initial compiler/signal runs passed, and 567 regressions passed (2 skipped; sudo-bearing modules excluded). The current ledger records 44 bounded-contract passes and 916 specific blocked dispositions; the production-readiness exit remains blocked. See [Slice 1 qualification](docs/runbooks/slice1-qualification.md). PR #97 corrects cross-contract dependency leakage by batching only identical ordered closures; its fresh 210-run validation supersedes the initial run for isolated-closure evidence. Merged in #97 as `7f16258`; production approval, T06 H2/H3/FLOOR and T07 freeze remain open.
 
 ## Done
 
@@ -58,6 +80,9 @@ These merges are on main. The commit is the merge commit.
 
 | Item | PR | Commit | What landed |
 |---|---|---|---|
+| Batch 1 evidence assembly | [#99](https://github.com/Zero-State-LLC/BlackDog/pull/99) | `ce8087a` | 191 blobs recovered; 110 packets / 1,430 candidates; SHA-1/SHA-256 verification; 771 full-CI tests; no qualification approval |
+| Slice 2 leakage and split mechanisms | [#98](https://github.com/Zero-State-LLC/BlackDog/pull/98) | `585b188` | H2/H3 comparison streams and signed-split guards; production gates remain open |
+| Slice 1 corpus qualification | [#97](https://github.com/Zero-State-LLC/BlackDog/pull/97) | `7f16258` | Five inventory corrections, repinning and isolated closure validation; 44 bounded passes / 916 blocked |
 | Corpus-wide span proposals and resumable queue | [#95](https://github.com/Zero-State-LLC/BlackDog/pull/95) | `0542321` | Atomic checkpoints and integrity-bound reuse; 722 full-CI tests passed. Merged-main Spark: 124 tests, 79/79 pilot checks and 41-case reuse; new proposals remain unqualified |
 | Verified function-span extraction | [#89](https://github.com/Zero-State-LLC/BlackDog/pull/89) | `adee7ae` | Independently digest-pinned reviewed byte ranges; fail-closed extraction and provenance; rights quarantine preserved; real-corpus qualification remains open |
 | Pinned library rendering | [#86](https://github.com/Zero-State-LLC/BlackDog/pull/86) | `e3c9542` | Shared pinned staging, mounted-tree hash verification and read-only library access; sandbox regressions pass |
@@ -78,9 +103,9 @@ These merges are on main. The commit is the merge commit.
 
 | ID | Issues | Task |
 |---|---|---|
-| T05 inventory correction | Five soundfiles identities | Review the [five corrections](docs/runbooks/span-corpus-review.md#five-proposed-inventory-corrections), coordinate inventory/notice repinning and rebuild/review dependent span manifests. Receipt-only candidates are unapplied and correctly fail the current T05 pin; no bypass or new rights approval |
-| T06 qualification | H2 / H3 / FLOOR | [93-group review](docs/runbooks/span-corpus-review.md#next-validation-steps) covers 960 unapproved proposals; qualify the 1,318 lexical dependency links, local scopes, external rights and independent behavioral references. Execute the six first-wave designs only after closure/wrapper review. Keep current tolerances and sandbox checks. Complete H2/H3 then §25 FLOOR; TOKEN_FLOOR=40 remains provisional |
-| T07 qualification | R-003 / T07 | [Audit and freeze blockers](docs/runbooks/t07-candidate-audit.md#freeze-blockers-and-acceptance): qualify function units and T06 H2/H3/FLOOR, resolve missing source and independent development coverage, validate DSP tasks, arrange newly authored sealed holdout custody, then implement and verify the signed freeze. No split is frozen |
+| T05 inventory correction | Five soundfiles identities | Corrections and repinning merged in #97. Verify these pins in sprint S1; independent source/dependency approval remains required, with no new rights grant |
+| T06 qualification | H2 / H3 / FLOOR | [Sprint S2–S5](docs/runbooks/qualification-sprint.md) reviews the 172-unit cohort plus helpers within the complete 1,430-unit ledger. H2/H3 implementation is merged in #98; independent rights, closure/behavior qualification and real §25 FLOOR evidence remain open. Keep tolerances and sandbox checks; TOKEN_FLOOR=40 stays provisional |
+| T07 qualification | R-003 / T07 | [Audit and freeze blockers](docs/runbooks/t07-candidate-audit.md#freeze-blockers-and-acceptance): qualify function units and T06 H2/H3/FLOOR, use the completed Batch 1 source scope and resolve independent development coverage, validate DSP tasks, arrange newly authored sealed holdout custody, then separately authorize and verify a production freeze using the mechanism merged in #98. No split is frozen |
 | T09 / T10 environment follow-up | [#12](https://github.com/Zero-State-LLC/BlackDog/issues/12) | spark-af42 fingerprint complete. The separate repaired direct HF candidate passes dependency and dense/sparse CUDA validation. Candidate fingerprint is complete with `stack_pin_allowed=false`. Qwen actual-model training/checkpoint smoke passed. Recheck workload clearance; complete formal data/split/baseline qualification, repeated representative throughput/memory measurements and stack-pin review. Repeat fingerprinting if the environment changes or a second Spark will train; preserve DSP setup and receipts |
 | D3-H2-C follow-ups | [#68](https://github.com/Zero-State-LLC/BlackDog/issues/68), [#72](https://github.com/Zero-State-LLC/BlackDog/issues/72) | Implementation merged in #71; reconcile remaining review items, including OpenSSH feature detection and key-path guard coverage. Do not close issues from merge status alone |
 | D3-H2 fail-closed | [#62](https://github.com/Zero-State-LLC/BlackDog/issues/62) | Fail-closed follow-ups from the #61 review (I1–I4). A refused refresh leaves the injected line. An unreadable report is skipped by the no-anchor check. That check reads every sibling file. An unMAC'd or foreign-log report must not block a first claim |
@@ -90,12 +115,15 @@ Issue #68: the D3-H2-C change reads the drop-file owner with `fstat` on an `O_NO
 
 ## Immediate execution order
 
-1. Preserve completed spark-af42 T09 evidence and its off-host backup; account for the separate cited R-001 benchmarks. Obtain a separate fingerprint if a second Spark will train.
-2. Preserve both T10 environments and the audited repair receipts; the packaging blocker is resolved only in `~/blackdog-t10-candidate`, with unchanged vendor payload and dependency pins. The original r9venv remains unchanged with its Axolotl/torch conflict; its historical T09 receipt does not cover the new candidate. The new candidate receipt is verified and also has `stack_pin_allowed=false`. Synthetic and Qwen actual-model training/checkpoint smokes passed; preserve their distinct evidence and keep formal T07/G10 gates open. Recheck workload clearance, repeat fingerprinting after stack changes, and complete formal dataset/configuration qualification and repeated representative throughput/memory validation before any stack pin, without implicitly downloading weights, using sudo or stopping workloads.
-3. Triage #62, #68, #69 and #72 with regression evidence; complete A2-PATH/EVAL-SO live wiring and GD-1 before the relevant training gates.
-4. Review the Slice 1 inventory corrections, qualification tooling and receipts as one delivery. The run covers 117 bounded contracts and accounts for all 960 identities in 93 groups; resolve the 916 blocked dispositions by shared dependency and oracle families. Independently review the bounded cohort before selecting training tasks. Keep source/rights, closure, compile and behavioral gates separate. Resolve T01 and T06 H2/H3/FLOOR prerequisites, then resolve the [T07 candidate freeze blockers](docs/runbooks/t07-candidate-audit.md#freeze-blockers-and-acceptance), freeze the split and measure T08 baselines before T10. No training run is started by this plan.
-
-Acceptance criteria and stop conditions: [next-step plan](docs/runbooks/spark-local-setup.md#next-steps).
+1. Execute [S1–S7 as one qualification sprint](docs/runbooks/qualification-sprint.md),
+   with all 1,430 identities accounted for and a day-3 two-project checkpoint.
+2. Complete the human review and measurement gates before a separate T07 freeze
+   decision. Keep `TOKEN_FLOOR=40` provisional and production T07 unfrozen.
+3. After an authorized freeze, measure T08 baselines and close the remaining T10
+   live-wiring, stack-pin and representative throughput gates. Existing T09 and
+   Qwen smoke receipts do not substitute for these gates.
+4. Preserve environments, models, checkpoints and receipts. Do not implicitly
+   authorize sudo, workload stops, downloads, signing or training through a plan.
 
 ## Backlog
 
@@ -105,8 +133,8 @@ Acceptance criteria and stop conditions: [next-step plan](docs/runbooks/spark-lo
 | T02 | v0.1 | DONE in #34, #35: JSON schemas and immutable artifact store | T01 | Schema validation and digest tests |
 | T03 | v0.1 | DONE in #38, #40, #42, #46: Sandboxed Faust compiler harness | T02 | Reproducible compiler receipts |
 | T04 | v0.1 | DONE in #41, #45, #79 (`bb367c9`): DSP signal harness and finite ARM/x86 golden validation | T03 | Known-good/known-bad fixtures |
-| T05 | v0.1 | DONE in #37: Source rights inventory; five identity corrections and coordinated repinning implemented on Slice 1 branch; merge pending | T01 | Provenance and exclusion receipts |
-| T06 | v0.2 | DONE in #39; extraction infrastructure in #89 (real-corpus qualification, H2, H3 and FLOOR open): Normalization and dedup | T05,T02 | Deterministic snapshot. Dedup uses provisional TOKEN_FLOOR=40. P0 exits only if that floor is accepted by the Q3 protocol or marked provisional with a recorded leakage caveat |
+| T05 | v0.1 | DONE in #37: Source rights inventory; five identity corrections and coordinated repinning merged in #97 | T01 | Provenance and exclusion receipts |
+| T06 | v0.2 | DONE in #39; extraction infrastructure in #89 and H2/H3 implementation in #98 (real-corpus qualification and FLOOR open): Normalization and dedup | T05,T02 | Deterministic snapshot. Dedup uses provisional TOKEN_FLOOR=40. P0 exits only if that floor is accepted by the Q3 protocol or marked provisional with a recorded leakage caveat |
 | T07 | v0.2 | CANDIDATE AUDITED; split freeze PENDING | T06 | Leakage checks and signed split manifest. A freeze on the provisional floor records a leakage caveat and a scheduled re-check. Leaked items are removed and the removal is logged. Holdout novelty is re-checked once the floor is accepted, before any P3 exit claim rests on the holdout |
 | T08 | v0.2 | Baseline models | T04,T07 | Frozen baseline measurements |
 | T09 | v0.2 | HARNESS DONE in #36; spark-af42 repaired-candidate fingerprint COMPLETE on `1ae20ba` (2026-10-20 PT); second machine conditional | T01 | Fingerprint receipt per machine (R-001, amended 0.3.1); throughput at T10. The P0 Spark throughput smoke test is replaced by that fingerprint (Q4) |
