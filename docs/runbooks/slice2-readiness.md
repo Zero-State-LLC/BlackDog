@@ -142,7 +142,11 @@ records later evidence on merged main `2dd588a`: 174 hash-bound reviewer rows,
 9,918 isolated-pair comparisons, verified Spark/off-host receipts and emails to
 Prabu. These supplement the historical audit above and Batch 1's expanded
 1,430-unit scope. All 174 decisions remain UNREVIEWED; no gate below was closed.
-See that handoff for current receipt locations, limitations and pending owners.
+Prabu subsequently conditionally accepted the roles; the owner assigned him
+private holdout authorship and Danny independent review of his tasks/contracts.
+The verified email bundle was sent, but recipient verification, completed unit
+decisions and documented custody remain pending. See that handoff for current
+receipt locations, limitations and gate owners.
 
 ## Remaining exit gates
 
@@ -153,8 +157,10 @@ See that handoff for current receipt locations, limitations and pending owners.
    fixed ground truth; obtain an explicit floor decision or provisional route.
 3. Qualify project-disjoint development tasks with semantic references and no
    unresolved family conflicts. The recovered files are candidates only.
-4. Assign a human holdout author/custodian, create independent tasks under separate
-   custody, and bind their exclusion manifest and independent reviews.
+4. Prabu is assigned as private holdout author/custodian and Danny as independent
+   reviewer of his tasks/contracts. Document separate custody and the private
+   review channel, create independent tasks, and bind exclusion metadata and
+   completed independent reviews; assignments alone do not close this gate.
 5. Review the signing implementation and configure trusted public verification
    only after these gates close. Production T07 must remain unfrozen meanwhile.
 
