@@ -54,6 +54,8 @@ def _compile(
     inventory_at: str | None = None,
     notice_at: str | None = None,
     sealed: list[dict[str, str]] | None = None,
+    function_spans=None,
+    function_spans_digest=None,
 ):
     from faustcoder.acquire import DirectoryFetcher
 
@@ -67,6 +69,8 @@ def _compile(
             actor=actor,
             created_at=created_at,
             sealed=sealed or (),
+            function_spans=function_spans,
+            function_spans_digest=function_spans_digest,
         )
 
 
@@ -946,11 +950,26 @@ def test_function_units_stay_separate(tmp_path: Path) -> None:
         notice_row(data, path="vaeffects.lib", function="gain"),
         notice_row(data, path="vaeffects.lib", function="clip"),
     ]
-    compiled = _compile(root, [gain, clip], notices)
+    from tests.t06support import span_manifest
+
+    spans, digest = span_manifest(
+        inventory_doc([gain, clip]),
+        notice_doc(notices),
+        {"gain": (data, 0, 10), "clip": (data, 10, len(data))},
+    )
+    compiled = _compile(
+        root, [gain, clip], notices, function_spans=spans, function_spans_digest=digest
+    )
     payload = _manifest(compiled)
     assert compiled.unit_count == 2
     functions = sorted(row["function"] for row in payload["units"])  # type: ignore[index]
     assert functions == ["clip", "gain"]
+    examples = {
+        e["payload"]["function"]: e["payload"]["faust_source"]
+        for e in compiled.envelopes
+        if e["payload"].get("record_type") == "Example"
+    }
+    assert examples == {"gain": "gain = 1;\n", "clip": "clip = 2;\n"}
     assert "gain = 1" not in canonical_bytes(payload).decode()
 
 

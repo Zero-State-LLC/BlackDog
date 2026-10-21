@@ -8,6 +8,8 @@ See [docs/VERSIONING.md](docs/VERSIONING.md).
 
 ## [Unreleased]
 
+- Require independently digest-pinned, reviewed byte spans for admitted T06 function units. Bind extracted bytes and span provenance into Example and DedupManifest records; reject missing, overlapping, stale or mismatched ranges. Preserve whole-blob quarantine and comparison guards. TOKEN_FLOOR stays 40/provisional and T07 remains unfrozen.
+
 - Render pinned Faust library imports using shared compiler/renderer staging and mounted-tree hash verification. Keep the host library tree read-only, reject symlinks and remote imports, and bind the staging helper and library pin into signal harness identity. Add sandbox regressions; numerical tolerances and goldens remain unchanged.
 
 - Record the isolated spark-af42 T10 direct Hugging Face environment, passing import/dense CUDA checks, preserved setup/receipts and unresolved cuSPARSELt platform-tag dependency blocker. Synchronize the Kanban and canonical task status; no validation bypass or training readiness is claimed.

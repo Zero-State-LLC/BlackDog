@@ -30,7 +30,8 @@ from dataclasses import dataclass, replace
 from typing import Any
 
 from faustcoder.acquire import BlobFetcher, fetch_verified, git_blob_id
-from faustcoder.canonical import build_envelope
+from faustcoder.canonical import build_envelope, sha256_prefixed
+from faustcoder.function_spans import verify_manifest, extract_span
 from faustcoder.compiler_gate import assert_corpus_compile_disabled
 from faustcoder.dataset import PRODUCER, SCHEMA_VERSION, receipt_payload
 from faustcoder.errors import AcquireError, InventoryError, NormalizeError
@@ -78,6 +79,7 @@ class _Norm:
     normalized_sha256: str | None
     failure: str | None
     exclusion: str | None
+    function_span: dict[str, Any] | None = None
 
 
 @dataclass
@@ -111,6 +113,8 @@ def compile_snapshot(
     created_at: str,
     compile_check: bool = False,
     sealed: Sequence[Mapping[str, str]] = (),
+    function_spans: Mapping[str, Any] | None = None,
+    function_spans_digest: str | None = None,
 ) -> CompiledSnapshot:
     """Build the manifest. Does not write a rights transition.
 
@@ -122,8 +126,15 @@ def compile_snapshot(
     corpus = parse_corpus(inventory, notice)
     sealed_keys = _sealed_keys(sealed)
     units = tuple(_mark_sealed(unit, sealed_keys) for unit in corpus.units)
+    spans = verify_manifest(
+        function_spans,
+        function_spans_digest,
+        units,
+        corpus.inventory_digest,
+        corpus.notice_digest,
+    )
     blobs = _fetch(units + corpus.comparisons, fetcher)
-    prepared = [_prepare(unit, blobs) for unit in units]
+    prepared = [_prepare(unit, blobs, spans.get(unit.unit_id)) for unit in units]
     comparable = [
         item
         for item in prepared
@@ -152,7 +163,15 @@ def compile_snapshot(
     _quarantine_uncleared_families(members, compared, families)
     excluded = _excluded(corpus, prepared, members, compared, families)
     return _assemble(
-        members, excluded, comparable, prepared, families, corpus, actor, created_at
+        members,
+        excluded,
+        comparable,
+        prepared,
+        families,
+        corpus,
+        actor,
+        created_at,
+        function_spans_digest,
     )
 
 
@@ -186,24 +205,34 @@ def _sealed_keys(sealed: Sequence[Mapping[str, str]]) -> set[tuple[str, str, str
     return keys
 
 
-def _prepare(unit: Unit, blobs: dict[tuple[str, str, str, str], bytes]) -> _Norm:
+def _prepare(
+    unit: Unit,
+    blobs: dict[tuple[str, str, str, str], bytes],
+    span: dict[str, Any] | None = None,
+    *,
+    comparison: bool = False,
+) -> _Norm:
     raw = blobs[(unit.repo, unit.pin, unit.path, unit.blob_sha)]
     # Hash the ingested bytes before any transform. T05 binds the claimed
     # blob id, not the text, so a tampered body with the same claim is refused.
     if git_blob_id(raw, unit.blob_sha) != unit.blob_sha:
         raise AcquireError("ingested bytes do not match blob_sha")
+    if unit.function and not comparison and span is None:
+        raise InventoryError("missing verified function span")
+    selected = extract_span(raw, span) if span is not None else raw
     try:
-        normalized = normalize_bytes(raw, None)
+        normalized = normalize_bytes(selected, None)
     except NormalizeError as exc:
         return _Norm(unit, None, None, None, exc.reason, None)
     exclusion = FFUNCTION_REASON if FFUNCTION_REASON in tokens(normalized.text) else None
     return _Norm(
         unit,
         normalized.text,
-        normalized.original_sha256,
+        sha256_prefixed(raw),
         normalized.normalized_sha256,
         None,
         exclusion,
+        span,
     )
 
 
@@ -217,7 +246,7 @@ def _comparison_norms(
     """
     prepared: list[_Norm] = []
     for unit in comparisons:
-        item = _prepare(unit, blobs)
+        item = _prepare(unit, blobs, comparison=True)
         if item.failure is not None or item.text is None:
             raise NormalizeError(item.failure or "comparison unit did not normalize")
         prepared.append(replace(item, exclusion=None))
@@ -331,6 +360,7 @@ def _assemble(
     corpus: Corpus,
     actor: str,
     created_at: str,
+    function_spans_digest: str | None,
 ) -> CompiledSnapshot:
     envelopes: list[dict[str, Any]] = []
     example_digests: list[str] = []
@@ -353,6 +383,11 @@ def _assemble(
         manifest_units.append(_manifest_unit(member))
     excluded_rows = sorted(excluded, key=lambda row: row["unit_id"])
     manifest_payload = {
+        **(
+            {"function_spans_digest": function_spans_digest}
+            if function_spans_digest
+            else {}
+        ),
         "example_digests": sorted(example_digests),
         "excluded": excluded_rows,
         "inventory_digest": corpus.inventory_digest,
@@ -416,6 +451,11 @@ def _unit_envelopes(
         "blob_sha": unit.blob_sha,
         "duplicate_family": member.family,
         "faust_source": member.norm.text,
+        **(
+            {"function_span": member.norm.function_span}
+            if member.norm.function_span
+            else {}
+        ),
         "function": unit.function,
         "normalized_sha256": member.norm.normalized_sha256,
         "original_sha256": member.norm.original_sha256,
@@ -478,6 +518,11 @@ def _failure_envelopes(item: _Norm, actor: str, created_at: str) -> list[dict[st
 def _manifest_unit(member: _Member) -> dict[str, Any]:
     unit = member.norm.unit
     return {
+        **(
+            {"function_span": member.norm.function_span}
+            if member.norm.function_span
+            else {}
+        ),
         "admitted_eligible_for": list(member.admitted),
         "attribution": unit.attribution,
         "blob_sha": unit.blob_sha,
