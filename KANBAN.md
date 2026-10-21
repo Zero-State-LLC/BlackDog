@@ -1,5 +1,21 @@
 # BlackDog implementation backlog
 
+## Slice 2 candidate result
+
+Merged Slice 1 (#97, `7f16258`) is the base. The [Slice 2 readiness runbook](docs/runbooks/slice2-readiness.md)
+records H2/H3 comparison streams, explicit floor measurement, conservative union
+screening, signed-split guard tests and a 1,240-row corpus audit. All three floors
+flag 1,123 quarantine candidates; the 117 survivors occupy one project. Seven
+pinned independent-project source candidates were recovered, but all retain
+family conflicts. Eight bounded positive renders and eight corrupted-reference
+controls passed; six renders correctly retain silence/clipping failures.
+
+**Exit blocked:** real two-project FLOOR hosts/gold windows, human natural/FP
+adjudication, independently approved closures/development data and sealed holdout
+custody are missing. The signed-freeze API runs only in disposable regression
+stores. Production T07 remains unfrozen; `TOKEN_FLOOR=40` remains provisional.
+Receipts: `/home/delphi/blackdog-slice2-20261021/`. No setup artifacts enter Git.
+
 Formerly FaustCoder; renamed 2026-10-17 PT.
 
 Status as of 2026-10-21 UTC, main `0542321` (spec 0.3.11). T04's corrected ARM/x86 DSP-bank validation completed in [#79](https://github.com/Zero-State-LLC/BlackDog/pull/79): all 40 renders were finite and byte-identical, as were the five compiled WASM binaries. Full suites: ARM 635 passed, 2 skipped; x86 637 passed. All nine PR checks passed, and merged-main activation, smoke test and golden comparison passed on spark-af42. See [Spark setup, evidence and next steps](docs/runbooks/spark-local-setup.md).
