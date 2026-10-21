@@ -4,8 +4,10 @@
 
 Proposed duration: ten working days from an agreed kickoff, with an implementation
 owner, a human source/leakage reviewer and a separate evaluator/custodian named
-on day 1. Prabu is now user-assigned to the three human roles; acceptance,
-availability and independence confirmations remain pending (see S1 below).
+on day 1. Prabu conditionally accepts the three human roles and offers S2
+days 1–3 for the 174 priority units once the evidence is usable. Danny is assigned
+to independently review Prabu-authored private tasks/contracts. Working access,
+kickoff, coverage and artifact-level independence/custody remain pending.
 Plan merged in PR #100 as `c7977ce` after eight CI checks passed. Its own
 [full-suite CI run](https://github.com/Zero-State-LLC/BlackDog/actions/runs/39662227221)
 on PR head `1cb975a` passed 771 tests with 63 warnings. This is separate from
@@ -58,11 +60,12 @@ unit, and a bounded behavioral pass does not replace dependency review.
 All 110 packets have **Prabu** assigned for human source/leakage and independent
 contract review. The user also assigned Prabu as the separate evaluator/holdout
 custodian. Codex owns S1 preparation and proposed tooling, with no human
-adjudication authority. These are user-confirmed role assignments, not recorded
-acceptance by Prabu or evidence that the reviews have occurred.
+adjudication authority. Prabu subsequently conditionally accepted these roles;
+this is not evidence that any unit review has occurred. The owner assigned Prabu
+as private holdout author and Danny as independent reviewer of his tasks/contracts.
 
-Pending before S1 closes: Prabu's acceptance and available review capacity,
-an agreed kickoff, confirmation of useful behavior coverage, and artifact-level
+Pending before S1 closes: confirmed usable evidence and agreed kickoff,
+confirmation of useful behavior coverage, and artifact-level
 independence/custody arrangements. Record authorship and conflicts: Prabu cannot
 independently approve contracts he authored; assign another independent
 reviewer where needed. Keep private holdout tasks and signing keys outside
@@ -110,15 +113,63 @@ workload stops, environment installations or tracked-file changes.
 
 ## Slice 2 reviewer handoff and verified evidence
 
-On 2026-10-21 PT, the user-authorized S1/S2 handoff and evidence follow-up were
-emailed to Prabu. They request role acceptance, availability/kickoff, receipt
-access, individual source/leakage and dependency decisions, authorship conflicts,
-and separate holdout custody arrangements. At the latest reply check that day,
-the handoff thread had no reply and a separate sender search found no recent
-message. All 174 return rows remain `UNREVIEWED`; no reviewer identity or decision
-has been supplied. The user requested a 15-minute reply monitor; monitoring is
-operational coordination, not gate evidence. Private correspondence and contact
-details remain outside Git.
+On 2026-10-21 PT, Prabu replied to the user-authorized handoff with conditional
+acceptance of source/leakage review, independent contract review and separate
+evaluator/holdout custody. He can cover S2 days 1–3 for the 174 priority units
+if the evidence arrives pre-digested. He explicitly approved no units and will
+flag authorship conflicts rather than approve his own contracts. All 174 return
+rows remain `UNREVIEWED`; no completed decision packet has been received.
+
+Prabu reported that his `spark` alias reached the other Spark and that access
+to `spark-af42` failed host-key verification. No SSH trust bypass or key change
+was made. The owner subsequently authorized email attachment delivery. The
+verified bundle below was sent, but recipient verification and usable evidence
+confirmation remain pending; SENT is not proof of recipient access. Day 1 is
+not set until access, complete evidence and coverage are confirmed and kickoff
+is agreed. A 15-minute reply monitor remains configured.
+
+The owner chose **Prabu as private holdout author and Danny as independent
+reviewer of Prabu-authored tasks/contracts**. These assignments were communicated
+to Prabu. Separate custody, a private reviewer channel, conflict declarations and
+a documented authorship plan must precede private task creation. The plan keeps
+task contents and signing keys outside Spark and agent/training access; only
+approved exclusion metadata, review commitments and public verification may
+reach that side. Assignment alone does not establish custody or completed review.
+Private correspondence and contact details remain outside Git.
+
+### Verified email bundle and decision receipts
+
+The owner-authorized attachment is
+`blackdog-s2-review-bundle-20261021T2240Z.tar.xz` (4,741,632 bytes). Gmail's sent
+message metadata confirms that filename and size. Its **2,391 payload checksums**
+were verified, including **510 original Git-blob-verified source files**. It
+contains the S1 evidence, direct-comparison dossiers, original return template,
+authorship assignment, bound inputs and `path-map.json`. Historical absolute
+paths and original hashes remain intact; the map locates bundled copies.
+This is reviewer evidence, not a complete historical runtime environment.
+Rights-rejected comparison material remains private and receives no new rights
+clearance through packaging or delivery. No private holdout tasks, keys, models
+or environments are included.
+
+- Archive SHA-256: `1df7318302ef7dc3e8c75658fcae3b400351648deb83a2ba601f090c5ed28a30`.
+- Top-level `SHA256SUMS` digest: `52251c4b72f5daa8bfd2da1d123762b13a36b68a4837dc8eb90d0fc12ff1210f`.
+- Spark bundle directory: `/home/delphi/blackdog-s2-review-bundle-20261021T2240Z/`;
+  its `.tar.xz` archive is adjacent.
+- Verified local archive and adjacent checksum:
+  `/Users/appliedalchemylabs/Documents/Codex/blackdog-s2-backups/`.
+- Reply/assessment: `/home/delphi/blackdog-s2-reviewer-reply-1a16087a36cb7dc4/`;
+  local backup subdirectory `reviewer-reply-1a16087a36cb7dc4/` under the same
+  local backup root. Both receipt checksums passed.
+- Owner assignment: `/home/delphi/blackdog-s2-authorship-decision-20261021T223523Z/`;
+  also preserved inside the verified bundle.
+- Delivery receipt: `/home/delphi/review-bundle-email-1a1609e120e8d85f.json` and
+  adjacent `.json.sha256`; matching local files reside in the backup root.
+
+Return decisions as a **new timestamped packet outside Git**, with a checksum
+manifest, exact source/dossier bindings, evidence references and unresolved rows.
+Do not overwrite the original UNREVIEWED packet or submit raw decisions/receipts
+to the public repository. Document summaries may follow verified review results.
+Bundle/receipt checks are not new runtime tests or qualification approvals.
 
 ### Direct-comparison supplement
 
@@ -174,11 +225,11 @@ as new evidence, never written over the original unreviewed packet.
 
 | Gate | Owner | Evidence required before advancing |
 | --- | --- | --- |
-| S1 confirmations | Prabu | Acceptance, capacity, kickoff, useful behavior coverage and independence/custody arrangements |
+| S1 confirmations | Prabu + owner | Conditional acceptance and S2 capacity recorded; confirm bundle verification/access, kickoff, coverage and independence/custody arrangements |
 | S2 source/leakage | Prabu | Per-unit source/notice and COPY/NOT_COPY/unresolved decisions with exact evidence; relevant short-collision and collective-support adjudication |
 | S3 closure/behavior | Implementation owner + independent contract reviewer | Pinned complete closures including external members, independent contracts, semantic references and positive/negative receipts |
 | S4/S5 FLOOR | Human reviewer + evaluator | Two cleared host repositories, real rejected windows, fixed gold/labels and the complete ratified measurement protocol |
-| S6 development/custody | Independent reviewer + Prabu as custodian | Reviewed disjoint development tasks and new private holdout authorship under separate custody; only approved exclusion metadata/public verification reaches Spark |
+| S6 development/custody | Prabu as author/custodian; Danny independently reviews his tasks/contracts | Document private custody/reviewer channel and conflicts; qualify disjoint development tasks and independent private tasks; only approved exclusion metadata/public verification reaches Spark |
 | S7 integration | Implementation owner + reviewers | Bound reproducible dossier, exception review and an explicit milestone decision after prerequisite gates |
 
 On receipt of decisions, verify identity, source/dossier bindings, completeness,

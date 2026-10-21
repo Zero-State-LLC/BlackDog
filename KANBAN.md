@@ -18,10 +18,10 @@ separately, and T07/T10 remain Backlog.
 | Sprint card | Status | Exit |
 | --- | --- | --- |
 | Batch 1 evidence and hash-format review | Done: #99, `ce8087a` | Eight CI checks; 771 tests passed |
-| S1 scope and owner assignment | Technical preparation complete; confirmations pending | 1,430 units / 110 packets / 510 blobs verified; Prabu assigned; acceptance, availability, coverage and independence/custody pending |
+| S1 scope and owner assignment | Technical preparation complete; confirmations pending | 1,430 units / 110 packets / 510 blobs verified; Prabu conditionally accepts S2 days 1–3; bundle verification/access, kickoff, coverage and independence/custody pending |
 | S2 source/leakage and S3 closure/behavior | Handoff sent; 174 decisions UNREVIEWED; blocked on independent inputs | Hash-bound per-unit decisions, approved closures/contracts and reproducible positive/negative receipts |
 | S4 two-project hosts and S5 FLOOR | Blocked on approved inputs | Ratified gold/label protocol and complete measurement result |
-| S6 development/custody | Prabu assigned; acceptance and custody arrangements pending | Disjoint reviewed tasks and separate custody commitments |
+| S6 development/custody | Prabu assigned as author/custodian; Danny as independent reviewer | Document private custody/review channel; disjoint reviewed tasks and custody commitments still required |
 | S7 qualification dossier | Planned after S2–S6 | One reviewed delivery; explicit pass or blocked milestone decision |
 
 ## S1 scope verification and reviewer handoff
@@ -34,9 +34,10 @@ candidates. Every one of the 1,430 units appears in exactly one assigned packet.
 
 Prabu is user-assigned to source/leakage review, independent contract review and
 separate evaluator/holdout custody. All 110 packets have role assignments.
-Acceptance, availability, kickoff, useful behavior coverage and artifact-level
-independence/custody remain unconfirmed. Codex prepared the scope and tooling;
-no independent approval is implied. S1 stays open until those confirmations.
+Prabu conditionally accepts the roles and S2 days 1–3 availability. Confirmed
+evidence access, kickoff, useful coverage and artifact-level independence/custody
+remain pending. Danny independently reviews Prabu-authored private tasks/contracts.
+Codex prepared the scope and tooling; no independent approval is implied. S1 stays open until those confirmations.
 
 Receipts: `/home/delphi/blackdog-qualification-sprint-20261021T194809Z/`;
 start with `REPORT.md` and `REVIEW-INDEX.md`. The local backup is under
@@ -49,9 +50,10 @@ stays unfrozen; no production qualification gate closed during S1 preparation.
 ## Slice 2 reviewer handoff: pending independent decisions
 
 [Handoff, verification and gate owners](docs/runbooks/qualification-sprint.md#slice-2-reviewer-handoff-and-verified-evidence)
-record the user-authorized emails to Prabu on 2026-10-21 PT. No reply was found
-at the latest check that day; acceptance and all 174 unit decisions remain
-pending. A 15-minute reply monitor is configured, but does not establish approval.
+record Prabu’s conditional acceptance on 2026-10-21 PT. All 174 unit decisions
+remain UNREVIEWED. His reported Spark access failure led to owner-authorized email
+delivery of the bundle; recipient verification and agreed day 1 remain pending.
+A 15-minute reply monitor is configured, but does not establish approval.
 
 The supplement on `2dd588a` completed 9,918 isolated-pair comparisons and 12
 uncached parity checks. At floor 40: 103 direct-trigger units, 69
@@ -65,7 +67,16 @@ Spark receipts: `/home/delphi/blackdog-s2-direct-review-20261021/` and
 digests and all 182 + 4 payload checksums passed. This is not a new full-suite run.
 No artifacts or private correspondence enter Git.
 
-Next: validate returned identity/hash-bound source/leakage decisions, complete
+The emailed `blackdog-s2-review-bundle-20261021T2240Z.tar.xz` contains 2,391
+verified payloads and 510 original Git-blob-verified sources. Gmail confirms the
+4,741,632-byte attachment was sent. Spark directory/archive: `/home/delphi/` with
+the bundle name; local archive: the backup root above. See the runbook for exact
+checksums, path mapping, reply/assignment/delivery receipts and limitations. No
+private holdout content or keys were included. Prabu authors private tasks; Danny
+independently reviews his tasks/contracts. Custody remains a plan requiring proof.
+
+Next: obtain bundle verification, agree kickoff/coverage, then validate returned
+identity/hash-bound source/leakage decisions, complete
 independently reviewed closures/contracts, qualify two-project FLOOR hosts and
 fixed gold/labels, and establish disjoint development tasks plus separate holdout
 custody. S1 remains open for confirmations; S2–S6 prerequisites and S7 completion
@@ -101,7 +112,7 @@ Receipts: `/home/delphi/blackdog-slice2-20261021/`. No setup artifacts enter Git
 
 Formerly FaustCoder; renamed 2026-10-17 PT.
 
-Status as of 2026-10-21 PT, main `2dd588a` (spec 0.3.11). T04's corrected ARM/x86 DSP-bank validation completed in [#79](https://github.com/Zero-State-LLC/BlackDog/pull/79): all 40 renders were finite and byte-identical, as were the five compiled WASM binaries. Full suites: ARM 635 passed, 2 skipped; x86 637 passed. All nine PR checks passed, and merged-main activation, smoke test and golden comparison passed on spark-af42. See [Spark setup, evidence and next steps](docs/runbooks/spark-local-setup.md).
+Status as of 2026-10-21 PT, main `671ce35` (spec 0.3.11). T04's corrected ARM/x86 DSP-bank validation completed in [#79](https://github.com/Zero-State-LLC/BlackDog/pull/79): all 40 renders were finite and byte-identical, as were the five compiled WASM binaries. Full suites: ARM 635 passed, 2 skipped; x86 637 passed. All nine PR checks passed, and merged-main activation, smoke test and golden comparison passed on spark-af42. See [Spark setup, evidence and next steps](docs/runbooks/spark-local-setup.md).
 
 T09 fingerprint evidence is COMPLETE for the repaired candidate on spark-af42 at `1ae20ba` (2026-10-21 00:29:27 UTC / 2026-10-20 PT): exit 0, `env_verified`, both artifact envelopes verified and all 20 off-host file checksums passed. See [candidate receipt IDs and locations](docs/runbooks/spark-local-setup.md#repaired-candidate-t09-fingerprint). The earlier r9venv fingerprint on `0cd3382` remains preserved. This is separate from T04; `stack_pin_allowed=false`, the existing Axolotl/torch conflict remains, and that fingerprint provides no training-throughput or second-Spark receipt. A2-PATH and EVAL-SO remain CODE DONE, LIVE WIRING PENDING; their grader implementation is not proof of production reward-path integration. T01 still waits on proposed ADR-0001. T06 H2, H3 and FLOOR, and D3-H1-N9 through N12 remain separate follow-ups. Existing dependency arrows remain promotion gates; this setup does not authorize training or promotion.
 
