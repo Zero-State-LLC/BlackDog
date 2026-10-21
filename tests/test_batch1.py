@@ -45,8 +45,10 @@ def test_trace_does_not_invent_paths_for_unflagged_source():
     assert families["other"] != families["r"]
 
 
-def test_acquisition_hash_mismatch_is_unavailable_and_never_admitted(
-    tmp_path, monkeypatch
+@pytest.mark.parametrize("width", [40, 64])
+@pytest.mark.parametrize("valid", [False, True])
+def test_acquisition_verifies_declared_hash_without_admission(
+    tmp_path, monkeypatch, width, valid
 ):
     from diagnostics import batch1_acquire as m
 
@@ -54,8 +56,12 @@ def test_acquisition_hash_mismatch_is_unavailable_and_never_admitted(
     (repo / "corpus").mkdir(parents=True)
     for name in ("rights-inventory.v1.json", "notice-manifest.v1.json"):
         (repo / "corpus" / name).write_text("{}")
+    from faustcoder.acquire import git_blob_id
+
+    raw = b"process = _;"
+    blob = git_blob_id(raw, "b" * width)
     unit = SimpleNamespace(
-        repo="owner/repo", pin="a" * 40, path="example name.dsp", blob_sha="b" * 40
+        repo="owner/repo", pin="a" * 40, path="example name.dsp", blob_sha=blob
     )
     assert "%20" in pinned_url(unit)
     corpus = SimpleNamespace(
@@ -65,23 +71,29 @@ def test_acquisition_hash_mismatch_is_unavailable_and_never_admitted(
 
     @contextmanager
     def fake_fetch(*args, **kwargs):
-        yield SimpleNamespace(read=lambda limit: b"wrong content")
+        yield SimpleNamespace(read=lambda limit: raw if valid else b"wrong content")
 
     monkeypatch.setattr(m, "urlopen", fake_fetch)
     monkeypatch.setattr(m.time, "sleep", lambda seconds: None)
     for name, data in [
         ("discovery", {"blob_locations": {}}),
         ("sources", {}),
-        ("missing", {"missing_blobs": ["b" * 40]}),
+        ("missing", {"missing_blobs": [blob]}),
     ]:
         (tmp_path / name).write_text(json.dumps(data))
     out = tmp_path / "out"
     run(repo, tmp_path / "discovery", tmp_path / "sources", tmp_path / "missing", out)
     report = json.loads((out / "summary.json").read_text())
-    assert report["verified"] == 0 and report["unavailable"] == ["b" * 40]
+    assert report["verified"] == int(valid)
+    assert report["unavailable"] == ([] if valid else [blob])
     assert report["production_approved"] is False
-    assert not list((out / "blobs").iterdir())
-    assert json.loads((out / "sources.json").read_text()) == {}
+    sources = json.loads((out / "sources.json").read_text())
+    if valid:
+        assert (out / "blobs" / blob).read_bytes() == raw
+        assert sources == {blob: str((out / "blobs" / blob).resolve())}
+    else:
+        assert not list((out / "blobs").iterdir())
+        assert sources == {}
     with pytest.raises(FileExistsError):
         run(
             repo,
@@ -92,12 +104,13 @@ def test_acquisition_hash_mismatch_is_unavailable_and_never_admitted(
         )
 
 
+@pytest.mark.parametrize("width", [40, 64])
 def test_complete_review_serializes_inventory_tuples_without_approval(
-    tmp_path, monkeypatch
+    tmp_path, monkeypatch, width
 ):
     from diagnostics import batch1_review as m
     from faustcoder.inventory import Unit
-    from faustcoder.acquire import git_blob_sha1
+    from faustcoder.acquire import git_blob_id
 
     repo = tmp_path / "repo"
     (repo / "corpus").mkdir(parents=True)
@@ -114,7 +127,7 @@ def test_complete_review_serializes_inventory_tuples_without_approval(
         p.parent.mkdir(exist_ok=True)
         p.write_text("# fixture")
     raw = b"process = _;"
-    blob = git_blob_sha1(raw)
+    blob = git_blob_id(raw, "b" * width)
     source = tmp_path / "source"
     source.write_bytes(raw)
     unit = Unit(

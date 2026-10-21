@@ -8,7 +8,7 @@ from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from urllib.parse import quote
 from urllib.request import Request, urlopen
-from faustcoder.acquire import git_blob_sha1
+from faustcoder.acquire import git_blob_id
 from faustcoder.inventory import parse_corpus
 from faustcoder.canonical import content_digest_for
 
@@ -51,7 +51,7 @@ def run(repo, discovery_path, sources_path, missing_path, output):
                         raw = res.read(MAX_BYTES + 1)
                     if len(raw) > MAX_BYTES:
                         raise ValueError("source exceeds retrieval bound")
-                    actual = git_blob_sha1(raw)
+                    actual = git_blob_id(raw, blob)
                     if actual != blob:
                         raise ValueError("Git blob hash mismatch: " + actual)
                     target = output / "blobs" / blob

@@ -5,7 +5,7 @@ import json
 from collections import defaultdict, Counter, deque
 from dataclasses import asdict
 from pathlib import Path
-from faustcoder.acquire import git_blob_sha1
+from faustcoder.acquire import git_blob_id
 from faustcoder.canonical import canonical_bytes, content_digest_for, sha256_prefixed
 from faustcoder.inventory import parse_corpus
 from faustcoder.function_spans import verify_manifest, extract_span
@@ -105,7 +105,7 @@ def run(repo, acquisition, candidate, qualification, groups, baseline, output):
             missing.append(u.blob_sha)
             continue
         raw = Path(path).read_bytes()
-        if git_blob_sha1(raw) != u.blob_sha:
+        if git_blob_id(raw, u.blob_sha) != u.blob_sha:
             raise ValueError("source hash mismatch: " + u.blob_sha)
         blobs[u.blob_sha] = raw
     text = {}
