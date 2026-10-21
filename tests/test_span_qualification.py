@@ -80,14 +80,14 @@ def test_corrected_pins_still_reject_unreviewed_inventory(corpus_base):
 
 
 def test_batching_preserves_every_reference_and_channel_range():
-    cases=[dict(id=str(i),unit_ids=['u'+str(i)],process='*(.25)',expected='pass',reference=[{'0':.25}]*n,missing_dependency=None)
+    cases=[dict(id=str(i),unit_ids=['u0'],process='*(.25)',expected='pass',reference=[{'0':.25}]*n,missing_dependency=None)
            for i,n in enumerate([2,3,2])]
     contracts=[dict(case=str(i),target='u'+str(i)) for i in range(3)]
     batches,mapped=q.batch_contracts(cases,contracts,max_channels=5)
     assert [len(b['reference']) for b in batches]==[5,2]
     assert [(c['channel_start'],c['channel_end']) for c in mapped]==[(0,2),(2,5),(0,2)]
     assert [v for b in batches for v in b['reference']]==[v for c in cases for v in c['reference']]
-    assert batches[0]['unit_ids']==['u0','u1']
+    assert batches[0]['unit_ids']==['u0']
     assert [c['original_case'] for c in mapped]==['0','1','2']
     assert all(c['control_scope']=='batch-wide corrupted reference' for c in mapped)
 
@@ -130,3 +130,26 @@ def test_outer_output_refuses_symlinks(tmp_path,nested):
     with pytest.raises(ValueError,match='symlinks'):
         with q.qualification_output(out,{}):pass
     assert not list(real.iterdir())
+
+
+def test_neighbor_cannot_supply_missing_closure(sample):
+    from diagnostics import span_corpus as bulk
+    corpus,candidate,blobs,_=sample
+    candidate,_=bulk.propose(corpus,candidate,blobs)
+    rows=review.candidate_rows(corpus,candidate,blobs)
+    cases=[dict(id='missing',unit_ids=['u3'],process='beta(1)',expected='pass',reference=[{'0':.25}],missing_dependency=None),
+           dict(id='neighbor',unit_ids=['u1','u2'],process='alpha(1)',expected='pass',reference=[{'0':.25}],missing_dependency=None)]
+    contracts=[dict(case='missing',target='u3'),dict(case='neighbor',target='u1')]
+    batches,mapped=q.batch_contracts(cases,contracts)
+    assert [b['unit_ids'] for b in batches]==[['u3'],['u1','u2']]
+    prepared=review.prepare_cases({'cases':batches},rows,blobs)
+    assert 'beta=alpha;' in prepared[0][1]
+    assert 'alpha(0)=' not in prepared[0][1] and 'alpha(x)=' not in prepared[0][1]
+    assert mapped[0]['case']!=mapped[1]['case']
+
+
+def test_overload_order_is_part_of_batch_closure():
+    cases=[dict(id=str(i),unit_ids=ids,process='*(.25)',expected='pass',reference=[{'0':.25}],missing_dependency=None)
+           for i,ids in enumerate([['u1','u2'],['u2','u1']])]
+    batches,_=q.batch_contracts(cases,[dict(case=str(i),target='u1') for i in range(2)])
+    assert [b['unit_ids'] for b in batches]==[['u1','u2'],['u2','u1']]

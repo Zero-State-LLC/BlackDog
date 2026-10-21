@@ -123,7 +123,7 @@ def build_plan(rows):
 
 
 def batch_contracts(cases, contracts, max_channels=12):
-    """Pack one-input contracts with explicit channel ranges; preserve every oracle.
+    """Pack only identical ordered closures; preserve every oracle and channel range.
 
 The shared negative control corrupts all output channels. It tests rejection
 of that batch's reference, not independent rejection of every component.
@@ -136,7 +136,7 @@ of that batch's reference, not independent rejection of every component.
     def flush():
         if not pending:return
         name=f'q-batch-{len(batches):03d}'
-        unit_ids=list(dict.fromkeys(uid for c,_ in pending for uid in c['unit_ids']))
+        unit_ids=list(pending[0][0]['unit_ids'])
         reference=[v for c,_ in pending for v in c['reference']]
         expression='_ <: (' + ','.join('('+c['process']+')' for c,_ in pending) + ')'
         batches.append(dict(id=name,unit_ids=unit_ids,process=expression,expected='pass',
@@ -150,7 +150,7 @@ of that batch's reference, not independent rejection of every component.
     for case,contract in zip(cases,contracts,strict=True):
         count=len(case['reference'])
         if not 1<=count<=max_channels:raise ValueError('contract exceeds batch channel bound')
-        if channels+count>max_channels:
+        if pending and (channels+count>max_channels or case['unit_ids']!=pending[0][0]['unit_ids']):
             flush();pending=[];channels=0
         pending.append((case,contract));channels+=count
     flush()

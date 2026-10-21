@@ -35,6 +35,8 @@ helpers. References come from mathematical definitions, known permutations,
 Kronecker deltas, and finite impulse responses. Private library source stays out
 of Git; verified original-byte spans supply the compilation input.
 
+Only contracts with identical ordered dependency closures may share a batch.
+No neighboring contract can contribute an undeclared definition.
 Contracts specify finite parameter domains. Constant answers are pulse encoded;
 scalar zero answers use a fixed offset so silence detection remains active.
 This is an encoding of the same answer, not a relaxed silence threshold.
@@ -98,7 +100,7 @@ tampered completed receipts and unsafe resumption. Do not remove an old binding 
 
 ## Acceptance and remaining gates
 
-On spark-af42, all **122/122 compiler/signal runs passed**: 60 positive
+In the original pre-review run on spark-af42, all **122/122 compiler/signal runs passed**: 60 positive
 renders, 60 corrupted-reference controls and two missing-helper compiler controls.
 The ledger covers all 960 candidate identities in 93 groups: **44 bounded-contract
 passes, 916 blocked**. There are 117 domain contracts, packed into 30 positive
@@ -148,3 +150,23 @@ original receipt checksums verified. Review evidence is preserved separately at
 Publication uses `[skip ci]` because existing full CI invokes sudo, which was not
 authorized for this review. Required CI must be enabled and pass before a later
 merge; this PR does not request or perform a merge.
+
+## PR 97 closure-isolation correction
+
+Automated review found that the original batching union could let a contract use
+an undeclared helper from a neighboring target. The original 122 successful
+runs remain historical batch-conformance evidence; they must not establish an
+isolated compilation-closure claim.
+
+Batching now requires identical ordered `unit_ids`. Different closures and
+changed overload ordering force a new batch. Regression coverage proves a
+missing-helper target cannot acquire its neighbor's definitions. A real sandbox
+compiler probe also rejects an omitted helper and accepts an explicit helper.
+The targeted suite passed 101 tests.
+
+The corrected plan retains 117 domain contracts and has 52 positive batches,
+52 corrupted-reference batches and two missing-helper controls: 210 runs across
+both rates. Fresh results and resumability/integrity verification are recorded
+in PR #97 and `/home/delphi/blackdog-pr97-closure-fix-20261021/`, separately from
+all original receipts. Existing CI sudo operations were subsequently authorized;
+all required checks must pass on the corrected branch before merging.
