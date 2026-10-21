@@ -102,12 +102,14 @@ unit:
 - one file, `{path, blob_sha}` with function `""`, or
 - one function, `{path, blob_sha, function}`.
 
-The whole blob is fetched. T05 function rows do not carry line ranges,
-and this task does not slice `.lib` files (spec §4.2 forbids a Faust
-parser). Slicing a function out of a multi-license library is a
-follow-up. Until then a cleared function unit normalizes the whole
-file, so a library file with more than one license collapses into one
-family and is over-excluded rather than emitted in pieces.
+The whole blob is fetched and its pinned Git hash verified. Admitted function
+units now require a separately reviewed `function-spans.v1` manifest and an
+independently pinned canonical digest. Each range selects exact original UTF-8
+bytes before normalization; missing or invalid spans abort the snapshot rather
+than falling back to the full library. No Faust parser is introduced. See
+[verified function spans](function-spans.md) for the contract and trust boundary.
+Existing inventory rows and notices are unchanged; no production ranges have
+been approved by this implementation. This does not close H2/H3/FLOOR or T07.
 
 If any non-cleared unit shares `(repo, commit, path, blob_sha)` with a
 cleared unit, every cleared unit of that blob is excluded with reason
