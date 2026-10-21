@@ -1,5 +1,17 @@
 # BlackDog implementation backlog
 
+## Slice 2 Batch 1 working result
+
+[Batch 1 evidence completion](docs/runbooks/slice2-batch1.md) recovered all 191
+missing pinned blobs and assembled 110 review packets for 1,430 candidates.
+All 1,240 original candidates remain covered. The expanded audit leaves 1,313
+quarantine candidates and 117 unflagged units in one project. The proposed
+172-unit first wave prioritizes prior bounded contracts and independent-project
+eval candidates, but 170 still require quarantine adjudication. Rights, closure
+and behavioral approvals remain separate human gates. `TOKEN_FLOOR=40` remains
+provisional and T07 remains unfrozen. Receipts are outside Git at
+`/home/delphi/blackdog-batch1-20261021/`; start with `REVIEW-INDEX.md`.
+
 ## Slice 2 candidate result
 
 Merged Slice 1 (#97, `7f16258`) is the base. The [Slice 2 readiness runbook](docs/runbooks/slice2-readiness.md)

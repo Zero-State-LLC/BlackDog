@@ -408,7 +408,7 @@ def family_id(digests: Iterable[str]) -> str:
 def _raw_cluster_families(
     items: Sequence[tuple[str, str]],
     comparison_ids: Collection[str] = (),
-    *, floor: int = TOKEN_FLOOR, canonical: bool = False,
+    *, floor: int = TOKEN_FLOOR, canonical: bool = False, evidence: list | None = None,
 ) -> dict[str, str]:
     """Map each item id to a duplicate-family id.
 
@@ -449,11 +449,15 @@ def _raw_cluster_families(
             parent[item_id], item_id = root, parent[item_id]
         return root
 
-    def union(left: str, right: str) -> None:
+    def union(left: str, right: str, reason: str, **details) -> None:
         left_root = find(left)
         right_root = find(right)
         if left_root == right_root:
             return
+        if evidence is not None:
+            evidence.append(dict(left=left, right=right, reason=reason,
+                                 stream="canonical" if canonical else "raw",
+                                 floor=floor, **details))
         if left_root < right_root:
             parent[right_root] = left_root
         else:
@@ -466,7 +470,7 @@ def _raw_cluster_families(
         anchor = min(group)
         for item_id in group:
             if not canonical or token_count[item_id] < 15 or token_count[item_id] >= floor:
-                union(anchor, item_id)
+                union(anchor, item_id, "exact")
 
     text_of = {item_id: text for item_id, text in items}
     ordered_ids = sorted(parent)
@@ -494,10 +498,10 @@ def _raw_cluster_families(
             )
             if both_long:
                 if jaccard_at_least(shingle_of[left], shingle_of[right]):
-                    union(left, right)
+                    union(left, right, "token_jaccard", intersection=len(shingle_of[left] & shingle_of[right]), union=len(shingle_of[left] | shingle_of[right]))
                 continue
             if not canonical and short_match(left, right):
-                union(left, right)
+                union(left, right, "short_character_match")
 
     comparison = set(comparison_ids)
     unknown = comparison - seen
@@ -530,26 +534,34 @@ def _raw_cluster_families(
                 if len(token_of[whole_id]) >= floor and containment_at_least(
                     whole_shingles[whole_id], part_shingles
                 ):
-                    union(part_id, whole_id)
+                    union(part_id, whole_id, "reverse_containment", intersection=len(whole_shingles[whole_id] & part_shingles), denominator=len(whole_shingles[whole_id]))
                     continue
                 if not part_long:
                     continue
                 run = bool(part_runs and part_runs & whole_runs[whole_id])
                 if run or containment_at_least(part_shingles, whole_shingles[whole_id]):
-                    union(part_id, whole_id)
+                    union(part_id, whole_id, "verbatim_run" if run else "forward_containment", intersection=len(part_shingles & whole_shingles[whole_id]), denominator=len(part_shingles))
 
     if comparison:
+        # Reuse source features for collective coverage; no pairwise re-tokenization.
+        all_shingles = {key: shingles(value) for key, value in token_of.items()}
         for whole_id in sorted(comparison):
             whole = shingle_of[whole_id]
             if not whole:
                 continue
-            overlaps = {key: shingles(tokenize(text_of[key])) & whole
+            overlaps = {key: all_shingles[key] & whole
                         for key in ordered_ids if key not in comparison}
             contributors = [key for key, overlap in overlaps.items() if overlap]
             covered = frozenset().union(*(overlaps[key] for key in contributors))
             if len(contributors) >= 3 and containment_at_least(whole, covered):
+                group_id = sha256_prefixed(canonical_bytes([whole_id, contributors, canonical, floor]))
+                if evidence is not None:
+                    evidence.append(dict(reason="collective_support", group_id=group_id,
+                                         comparison=whole_id, contributors=contributors,
+                                         covered=len(covered), denominator=len(whole),
+                                         stream="canonical" if canonical else "raw", floor=floor))
                 for key in contributors:
-                    union(key, whole_id)
+                    union(key, whole_id, "collective_union", group_id=group_id)
 
     components: dict[str, list[str]] = {}
     for item_id in ordered_ids:
@@ -593,16 +605,18 @@ def _hit_counts(candidate: str, text: str, *, floor: int = TOKEN_FLOOR):
     return None
 
 
-def cluster_families(items, comparison_ids=(), *, floor: int = TOKEN_FLOOR):
+def cluster_families(items, comparison_ids=(), *, floor: int = TOKEN_FLOOR, evidence: list | None = None):
     """OR raw and canonical components; ids remain bound to original text.
 
     Canonical short exact matches are fail-closed pending reviewed idiom pairs.
     No automatic boilerplate exemption or rights override is introduced.
+    Optional evidence records the deterministic joining forest and collective
+    support sets, not every matching pair and not adjudicated copy labels.
     """
     _require_floor(floor)
-    raw = _raw_cluster_families(items, comparison_ids, floor=floor)
+    raw = _raw_cluster_families(items, comparison_ids, floor=floor, evidence=evidence)
     canonical = _raw_cluster_families(
-        [(key, _canonical_source(text)) for key, text in items], comparison_ids, floor=floor, canonical=True)
+        [(key, _canonical_source(text)) for key, text in items], comparison_ids, floor=floor, canonical=True, evidence=evidence)
     parent = {key: key for key, _ in items}
     def find(key):
         while parent[key] != key:
