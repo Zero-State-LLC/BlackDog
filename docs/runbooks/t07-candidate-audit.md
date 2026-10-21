@@ -69,21 +69,24 @@ examples/libraries or reused from exposed smoke diagnostics.
 ## Freeze blockers and acceptance
 
 1. Qualify real function units using the reviewed-span extraction infrastructure
-   merged in #89 (`adee7ae`); [verification and receipts](function-spans.md#merged-main-verification-and-receipts)
-   cover 668 full-CI tests and 143 merged-main Spark regressions. No production
-   range manifest is approved. The [expanded candidate](function-spans.md#expanded-13-span-candidate-and-batch-two-validation)
-   proposes 13 train-only spans, with 952 still missing; full-inventory validation
-   refuses incomplete coverage. Batch two passed 26 compiler/signal runs and four
-   negative controls for six additions. Earlier seven-span diagnostics (28 runs,
-   five controls) remain separate and were not rerun. Receipts are preserved at
-   `/home/delphi/blackdog-span-batch2-20261021/`, outside Git and `/tmp`.
-   Neither run grants independent production approval or broader corpus/task
-   qualification. This audit has not been rerun with functions
-   admitted. Review boundaries, dependency safety and rights; preserve blob-wide
-   quarantine. Complete T06 H2/H3, then FLOOR. Prefer the accepted-floor route.
-   A permitted provisional-floor freeze requires an explicit leakage
-   caveat and scheduled novelty recheck; later exclusions need removal receipts.
-   No P3 exit claim may rely on the holdout before the accepted-floor recheck.
+   merged in #89 and corpus tooling merged in #95 (`0542321`). The
+   [93-group review](span-corpus-review.md#93-group-review-and-inventory-corrections)
+   accounts for 960 unapproved proposals and five inventory ambiguities resolved
+   as proposed corrections. The correction candidates remain unapplied and
+   correctly fail the current T05 digest pin. Review inventory/notice changes,
+   coordinate repinning and rebuild/review bound span manifests before adoption.
+   The 1,318 lexical dependency links are not certified closures. Resolve scopes,
+   overloads, external dependencies and rights; then execute independently
+   referenced behavior plans in the 31/34/28 group waves. The six first-wave
+   designs are unexecuted. Prior 79/79 pilot checks cover the existing plan only,
+   not the 919 new proposals. Receipt locations and acceptance steps are in the
+   [corpus runbook](span-corpus-review.md#group-review-receipts-and-preservation).
+   This split audit has not been rerun with function units admitted. Preserve
+   blob-wide quarantine; complete T06 H2/H3, then FLOOR. `TOKEN_FLOOR=40` remains
+   provisional and T07 remains unfrozen. Prefer the accepted-floor route.
+   A permitted provisional-floor freeze requires an explicit leakage caveat and
+   scheduled novelty recheck; later exclusions need removal receipts. No P3 exit
+   claim may rely on the holdout before the accepted-floor recheck.
 2. Resolve missing pinned sources and qualify an independent development
    project. Recheck rights, notices, upstream copies and cross-project families.
    Local presence alone does not grant rights or prove project independence.
