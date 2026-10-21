@@ -3,8 +3,8 @@
 The renderer is faustwasm's offline processor, driven through
 ``faust/worker/render.mjs`` in the same sandbox as the T03 compiler:
 ``unshare --net``, no Node network permission, bounded time, memory
-and output. Library imports are not rendered here. Staging the pinned
-faustlibraries tree is T03b.
+and output. Both workers stage and verify the pinned T03b faustlibraries
+share tree; the host tree is read-only under Node permissions.
 
 One run is one sample rate (44.1 or 48 kHz), one block size, one seed
 and the stimuli named by the profile (impulse, sine, noise). A suite
@@ -120,6 +120,7 @@ from faustcoder.sandbox import (
     run_in_sandbox,
     unshare_identity,
 )
+from faustcoder.libraries import FAUSTLIBRARIES_SHARE_SHA256, share_directory
 from faustcoder.schemas import validate
 from faustcoder.store import ArtifactStore
 
@@ -821,9 +822,8 @@ def run_signal(
 ) -> SignalRun:
     """Compile and render ``source``. Return a schema-valid receipt.
 
-    Raises ``SignalLibrariesUnavailable`` when ``source`` imports a
-    library. Raises ``SignalHarnessError`` when the sandbox or the
-    worker fails. A failed network canary raises ``SandboxError``
+    Stages the pinned library tree. Raises ``SignalHarnessError`` when
+    the sandbox or the worker fails. A failed network canary raises ``SandboxError``
     and writes no receipt. The compiler canary runs first; a failure
     there does not start the renderer. A program that renders and
     fails a check returns a receipt with ``passed`` false.
@@ -855,11 +855,6 @@ def run_signal(
         profile, reference, reward_graded=reward_graded
     )
     checked = _pin_compile_flags(options, pin=True)
-    if source_needs_libraries(source):
-        raise SignalLibrariesUnavailable(
-            "pinned faustlibraries are not staged; T03b owns that tree, "
-            "and this harness does not render library imports"
-        )
     if "-double" in checked:
         raise SignalHarnessError(
             "signal render uses the float32 offline processor; -double is not supported"
@@ -1580,6 +1575,8 @@ def _harness_preimage() -> dict[str, Any]:
         "node": pin.node,
         "renderer": "faustwasm",
         "render_worker_sha256": _file_sha256(worker / "render.mjs"),
+        "library_stager_sha256": _file_sha256(worker / "libraries.mjs"),
+        "faustlibraries_share_sha256": FAUSTLIBRARIES_SHARE_SHA256,
         "runtime_sha256": {
             "libfaust-wasm.data": pin.data_sha256,
             "libfaust-wasm.js": pin.js_sha256,
@@ -1973,6 +1970,7 @@ def _render(
     script = worker_directory() / "render.mjs"
     if not script.is_file():
         raise SandboxError(f"render worker is missing: {script}")
+    libraries = share_directory()
     mono = stimuli_for(profile)
     request = json.dumps(
         {
@@ -1996,8 +1994,8 @@ def _render(
             (inputs / f"{name}.f32").write_bytes(_f32_bytes(samples))
         command = node_command(
             script,
-            [str(workdir)],
-            read_paths=[worker_directory(), workdir],
+            [str(workdir), str(libraries)],
+            read_paths=[worker_directory(), workdir, libraries],
             write_paths=[workdir],
             # Literal: realpath(/proc/net) is the parent's namespace.
             literal_reads=("/proc/net/dev",),
@@ -2022,6 +2020,8 @@ def _render(
             raise SignalHarnessError("renderer result is not JSON") from exc
         if not isinstance(body, dict) or body.get("faustwasm_version") != FAUSTWASM_VERSION:
             raise SignalHarnessError("renderer result failed the version check")
+        if body.get("library_tree_sha256") != FAUSTLIBRARIES_SHARE_SHA256:
+            raise SandboxError("renderer mounted library tree does not match the pinned share")
         if body.get("compile_ok") is not True:
             diagnostic = body.get("diagnostics")
             text = diagnostic if isinstance(diagnostic, str) else "render compile failed"
