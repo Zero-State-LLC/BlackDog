@@ -8,9 +8,10 @@ Slice 2 readiness exit is blocked**. `TOKEN_FLOOR=40` remains provisional and
 production T07 remains unfrozen. No candidate was promoted to training or eval.
 
 Current human approval and seven-unit execution evidence is recorded in
-[Seven-contract approval and scoped dependency checks](#seven-contract-approval-and-scoped-dependency-checks).
+[Seven-contract approval and scoped dependency checks](#seven-contract-approval-and-scoped-dependency-checks)
+and [Seven-file NOT_COPY and MIT decision](#seven-file-not_copy-and-mit-decision).
 Earlier corpus/handoff sections retain their historical status at delivery;
-they do not override the later owner approval or seven-contract review.
+they do not override the later owner, seven-contract or seven-file source approvals.
 
 ## Shipping comparison changes
 
@@ -215,8 +216,9 @@ cases, 11 expected local-binding-removal rejections and two expected missing-imp
 rejections. Thirty paired execution cases at 44.1/48 kHz produced byte-identical
 import-present/import-free samples and passed a separate analytical replay.
 Each variant retained 144,000 float32 samples per case. Tests covered impulse,
-alternating and multitone probes, and gain values 0/0.25/0.5/1. Full behavioral
-suites, transitions and target/reference substitution controls remain open.
+alternating and multitone probes, and gain values 0/0.25/0.5/1. Later bounded
+behavior/default and compiled-target substitution checks passed;
+see the source-approval section below for scope and receipts.
 No limits, tolerances or sandbox isolation were relaxed.
 
 Approval: `/home/delphi/blackdog-seven-contract-approval-20261022T053119Z/`.
@@ -229,9 +231,29 @@ No evidence artifacts enter Git.
 Danny is named human custodian and independent private-task reviewer. The private
 author arrangement, actual private storage and human-only access remain pending;
 iCloud is coordination only. The owner affirms agent/training exclusion. No
-private tasks or keys were created. Rights/leakage clearance, the remaining
-167 units’ closure/contract evidence, two-project FLOOR inputs and complete
+private tasks or keys were created. Beyond the seven-file source approval below,
+unresolved notice/leakage scope and the remaining 167 units’ closure/contract
+evidence, two-project FLOOR inputs and complete
 qualification remain open. TOKEN_FLOOR=40 stays provisional; T07 stays unfrozen.
+
+## Seven-file NOT_COPY and MIT decision
+
+Danny Meyer approved NOT_COPY against the reviewed comparison evidence and
+repository-level MIT coverage for all seven exact R3b source blobs on
+2026-10-22. See [scope, receipts and remaining gates](qualification-sprint.md#seven-file-source-and-mit-approval-2026-10-22).
+The approval binds source/dossier hashes and Git blobs at pd-faustgen commit
+`9e2aaeabe94a7fab6928711050535ac12a1a591a`; preserve the full Pierre Guillot MIT
+notice. It supersedes pending source/notice decisions for these seven only.
+Original packets and historical counts remain unchanged. Imported libraries and
+third-party scope are excluded; family links and dependency/split gates remain.
+
+Approval: `/home/delphi/blackdog-seven-source-approval-20261022T185548Z/`.
+R3b: `/home/delphi/blackdog-s2-r3b-notice-spans-20261022T173051Z/`.
+Replay: `/home/delphi/blackdog-r3b-intake-20261022T1733Z/`.
+Matching off-host directories under
+`/Users/appliedalchemylabs/Documents/Codex/blackdog-s2-backups/` are checksum-verified.
+All 31 R3b payloads, seven bindings, 61 replayed pairs and 332 span rows passed.
+No production admission; TOKEN_FLOOR=40 provisional and T07 unfrozen.
 
 ## Remaining exit gates
 

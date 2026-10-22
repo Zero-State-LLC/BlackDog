@@ -9,7 +9,9 @@ identified as an AI agent. That acceptance does not fill any human-review role.
 Packet access, hashes and reproduction are verified. The latest
 [seven-contract approval](#seven-contract-human-approval-and-dependency-validation)
 records Danny Meyer’s independent review and scoped dependency results.
-Remaining source/admission decisions, kickoff/coverage and private custody
+The [seven-file source approval](#seven-file-source-and-mit-approval-2026-10-22)
+now records NOT_COPY and repository-level MIT coverage. Remaining broader
+source/admission decisions, kickoff/coverage and private custody
 confirmation still block the milestone; the earlier agent assignments do not
 establish human independence.
 Plan merged in PR #100 as `c7977ce` after eight CI checks passed. Its own
@@ -37,6 +39,72 @@ batches. The existing 44 bounded passes are evidence inputs, not approvals;
 quarantine candidates within the expanded 174-unit review scope and 1,256
 explicitly deferred candidates. Report further scope additions separately;
 no required helper may remain deferred for an accepted unit.
+
+## Seven-file source and MIT approval (2026-10-22)
+
+Danny Meyer directly approved **NOT_COPY against the reviewed comparison evidence**
+and **repository-level MIT coverage** for all seven exact R3b-bound source blobs:
+`.default.dsp`, `dummy.dsp`, `double.dsp`, `parameters.dsp`, `recompile.dsp`,
+`gain.dsp` and `passive.dsp`, at CICM/pd-faustgen commit
+`9e2aaeabe94a7fab6928711050535ac12a1a591a`. This supersedes pending source/notice
+wording for these seven only. Their previously approved behavioral contracts and
+shared plan remain approved. Historical R2 counts (18 REJECT / 156 BLOCKED) and
+original R2/R3/R3b files remain immutable; the new decisions are separate,
+hash-bound approval records, not a rewritten packet or a retained-unit count.
+
+R3b verification passed for 31 manifest payloads and seven source/dossier/notice
+blob bindings. A fresh replay reproduced 61 comparison pairs and 332 canonical
+span rows byte-for-byte. Canonical structural overlap alone does not establish textual copying;
+the human decisions accept the reviewed evidence and its limitations. Notice
+coverage rests on the pinned repository LICENSE and exact-file inventory;
+none of the seven has a file-level license declaration. Five have placeholder
+author declarations; captured path histories do not follow renames and code
+search is non-exhaustive. These limitations remain part of the review record.
+
+Preserve **Copyright (c) 2018 Pierre Guillot** and the full MIT notice with copies
+or substantial portions. This scope does not license imported libraries,
+comparison-library code or separately identified third-party material. Preserve
+family/collective links; NOT_COPY does not erase split constraints or certify
+complete dependency closure. **Production admission remains NOT_GRANTED.**
+
+### Source approval and R3b receipts
+
+Artifacts remain outside Git and `/tmp`:
+
+- Approval: `/home/delphi/blackdog-seven-source-approval-20261022T185548Z/`.
+  `approval.json` and `decisions.csv` bind all seven source/dossier hashes,
+  Git blobs, commit and reviewer; `LICENSE.MIT.Pierre-Guillot.txt` preserves
+  the full notice. All three payloads passed local and Spark checksum checks.
+  SHA256SUMS digest: `6dbc7cb6079ee356dfba5b2a334969ac54a053b9fec542bbcb0fe96694f446cd`.
+- R3b packet: `/home/delphi/blackdog-s2-r3b-notice-spans-20261022T173051Z/`.
+  SHA256SUMS digest: `aced90e48a7461a4104247be60e548ad3872dfcfc82ab625a0dfdb9f4eaf0a38`.
+- Replay/intake: `/home/delphi/blackdog-r3b-intake-20261022T1733Z/`.
+  Includes email evidence, replay outputs and `verification.json`.
+- Verified off-host copies: matching directory names under
+  `/Users/appliedalchemylabs/Documents/Codex/blackdog-s2-backups/`.
+
+### Remaining scope after source approval
+
+The seven bounded behavioral checks also passed: 42 runs / 498 states with
+independent replay at `/home/delphi/blackdog-seven-behavior-20261022T081420Z/`;
+42 default cases and seven compiled incorrect targets rejected in 14 executions,
+with 56-case independent replay, at
+`/home/delphi/blackdog-seven-negative-20261022T081759Z/`. Verified off-host archives
+of both receipts are under the backup root. These are bounded technical tests,
+not full semantic or production qualification.
+
+Still open: imported/third-party notice and complete dependency scope, JOS
+attribution, routes and linearalgebra notice boundaries, member/foreign/resource
+completeness (including missing `violon.wav`), and the other 167 units' evidence.
+Retain full 1,430-unit, 23-short-group and 19-collective-set accounting. Two cleared
+host repositories, approved windows/rename maps, fixed gold/labels, FLOOR
+measurement, project/family-disjoint development qualification and an integrated
+milestone decision remain required. Danny is the custodian and independent
+private-task reviewer; independent private author, actual private storage and
+human-only access remain unconfirmed. iCloud is coordination only; private
+contents and keys stay outside agents, training systems and connected Gmail.
+
+**TOKEN_FLOOR=40 remains provisional; T07 remains unfrozen.**
 
 ## Seven-contract human approval and dependency validation
 
@@ -129,10 +197,11 @@ private storage location. Actual private storage and human-only access still
 need confirmation. Do not send private tasks or keys through connected Gmail,
 agent tools or Spark; no private task/key was created by this work.
 
-Next, complete the approved seven-unit behavioral suites, including control
-transitions and target/reference substitution controls. These dependency receipts
-do not claim those checks passed. Resolve rights, leakage/family decisions and
-any remaining admission evidence separately. The other 167 units are not covered
+The later source-approval section above records completed bounded behavior,
+default and target-substitution checks and the seven human NOT_COPY/MIT decisions.
+The dependency receipts alone did not establish those results. Resolve remaining
+imported/third-party scope, family/split constraints and admission evidence
+separately. The other 167 units are not covered
 by the seven-unit approval or dependency execution. Preserve all 1,430 candidates,
 23 short-collision groups and 19 collective-support sets in the accounting scope.
 Two cleared host repositories, approved real windows, frozen measurement labels,
@@ -506,8 +575,8 @@ The seven-contract update above supersedes historical draft status.
 | Gate | Owner | Evidence required before advancing |
 | --- | --- | --- |
 | S1 confirmations | Owner + named humans | Packet access/integrity verified; replace agent role assumptions with human assignments, agree kickoff/coverage and document independence/custody |
-| S2 source/leakage | Owner + human adjudicators for remaining scope | Owner approved R2 as presented, including blocked/unresolved dispositions; resolve outstanding notice/admission evidence and complete relevant short/collective adjudication without reopening the recorded packet approval |
-| S3 closure/behavior | Implementation owner + Danny Meyer for the seven approved contracts | Seven scoped dependency diagnostics passed; complete their full behavioral/control-transition and substitution tests. Other 167 units need their own closure/contract evidence; no production admission |
+| S2 source/leakage | Owner + human adjudicators for remaining scope | Owner approved R2 as presented, including blocked/unresolved dispositions; seven exact R3b files now have human NOT_COPY/repository-MIT approval; resolve remaining notice/admission evidence and complete relevant short/collective adjudication without reopening the recorded packet approval |
+| S3 closure/behavior | Implementation owner + Danny Meyer for the seven approved contracts | Seven scoped dependency diagnostics and bounded behavior/default/target-substitution checks passed; complete remaining semantic closure and admission evidence. Other 167 units need their own closure/contract evidence; no production admission |
 | S4/S5 FLOOR | Human reviewer + evaluator | Two cleared host repositories, real rejected windows, fixed gold/labels and the complete ratified measurement protocol |
 | S6 development/custody | Danny Meyer, named custodian and independent task reviewer | Confirm independent private author, actual private storage and human-only access; iCloud is coordination only. Qualify disjoint development tasks; only approved public metadata reaches Spark |
 | S7 integration | Implementation owner + reviewers | Bound reproducible dossier, exception review and an explicit milestone decision after prerequisite gates |
