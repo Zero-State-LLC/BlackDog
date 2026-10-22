@@ -18,8 +18,8 @@ separately, and T07/T10 remain Backlog.
 | Sprint card | Status | Exit |
 | --- | --- | --- |
 | Batch 1 evidence and hash-format review | Done: #99, `ce8087a` | Eight CI checks; 771 tests passed |
-| S1 scope and owner assignment | Technical preparation complete; confirmations pending | 1,430 units / 110 packets / 510 blobs verified; Prabu conditionally accepts S2 days 1–3; bundle verification/access, kickoff, coverage and independence/custody pending |
-| S2 source/leakage and S3 closure/behavior | Handoff sent; 174 decisions UNREVIEWED; blocked on independent inputs | Hash-bound per-unit decisions, approved closures/contracts and reproducible positive/negative receipts |
+| S1 scope and owner assignment | Technical preparation complete; confirmations pending | 1,430 units / 110 packets / 510 blobs verified; Prabu conditionally accepts S2 days 1–3; access/hash verification reported; kickoff, coverage and independence/custody pending |
+| S2 source/leakage and S3 closure/behavior | Forge DRAFT reported: 18 REJECT / 156 BLOCKED / 0 retained; no adjudicated approvals | Hash-bound per-unit decisions, approved closures/contracts and reproducible positive/negative receipts |
 | S4 two-project hosts and S5 FLOOR | Blocked on approved inputs | Ratified gold/label protocol and complete measurement result |
 | S6 development/custody | Prabu assigned as author/custodian; Danny as independent reviewer | Document private custody/review channel; disjoint reviewed tasks and custody commitments still required |
 | S7 qualification dossier | Planned after S2–S6 | One reviewed delivery; explicit pass or blocked milestone decision |
@@ -34,9 +34,10 @@ candidates. Every one of the 1,430 units appears in exactly one assigned packet.
 
 Prabu is user-assigned to source/leakage review, independent contract review and
 separate evaluator/holdout custody. All 110 packets have role assignments.
-Prabu conditionally accepts the roles and S2 days 1–3 availability. Confirmed
-evidence access, kickoff, useful coverage and artifact-level independence/custody
-remain pending. Danny independently reviews Prabu-authored private tasks/contracts.
+Prabu conditionally accepts the roles and S2 days 1–3 availability. He now reports
+working read-only access and completed packet/S1 hash checks. Kickoff, useful
+coverage and artifact-level independence/custody remain pending. Danny
+independently reviews Prabu-authored private tasks/contracts.
 Codex prepared the scope and tooling; no independent approval is implied. S1 stays open until those confirmations.
 
 Receipts: `/home/delphi/blackdog-qualification-sprint-20261021T194809Z/`;
@@ -50,10 +51,28 @@ stays unfrozen; no production qualification gate closed during S1 preparation.
 ## Slice 2 reviewer handoff: pending independent decisions
 
 [Handoff, verification and gate owners](docs/runbooks/qualification-sprint.md#slice-2-reviewer-handoff-and-verified-evidence)
-record Prabu’s conditional acceptance on 2026-10-21 PT. All 174 unit decisions
-remain UNREVIEWED. His reported Spark access failure led to owner-authorized email
-delivery of the bundle; recipient verification and agreed day 1 remain pending.
+record Prabu’s conditional acceptance on 2026-10-21 PT. The original return template
+remains UNREVIEWED. His initial Spark access failure led to owner-authorized email
+delivery; he now reports working access and completed packet/S1 hash checks.
+The later Forge draft is not an adjudicated return; agreed day 1 remains pending.
 A 15-minute reply monitor is configured, but does not establish approval.
+
+The [Forge draft intake](docs/runbooks/qualification-sprint.md#forge-first-pass-draft-and-verified-intake)
+reports 174 rows and structural validator PASS: 18 COPY/REJECT, 156 BLOCKED,
+zero retained candidates; 168 draft source-notice approvals and six unresolved.
+All 174 dependencies and all seven gates remain unresolved/pending. Prabu reports
+spot-checking three of the 18 raw matches. Actual draft files and reproduction
+evidence are requested; no independent human approval is inferred.
+
+Intake receipts: `/home/delphi/blackdog-s2-forge-draft-intake-20261022T001253Z/`
+and the same directory name under the local `blackdog-s2-backups/` root below.
+Both `intake.json` checksum checks passed; this verifies the preserved summary
+and request, not the draft CSV or match claims. Next: validate the returned
+packet and reproduce all 18 matches, obtain human adjudication, resolve six
+notices and all closure gaps, and bind contract authorship/independent review.
+Keep the full 1,430-unit pool, 23 short-collision groups and 19 collective-support
+sets in scope. Private custody and kickoff/coverage are still open;
+`TOKEN_FLOOR=40` remains provisional and T07 unfrozen.
 
 The supplement on `2dd588a` completed 9,918 isolated-pair comparisons and 12
 uncached parity checks. At floor 40: 103 direct-trigger units, 69
@@ -75,8 +94,9 @@ checksums, path mapping, reply/assignment/delivery receipts and limitations. No
 private holdout content or keys were included. Prabu authors private tasks; Danny
 independently reviews his tasks/contracts. Custody remains a plan requiring proof.
 
-Next: obtain bundle verification, agree kickoff/coverage, then validate returned
-identity/hash-bound source/leakage decisions, complete
+Next: receive and validate the Forge draft packet and match evidence, agree
+kickoff/coverage, then obtain human identity/hash-bound source/leakage decisions,
+complete
 independently reviewed closures/contracts, qualify two-project FLOOR hosts and
 fixed gold/labels, and establish disjoint development tasks plus separate holdout
 custody. S1 remains open for confirmations; S2–S6 prerequisites and S7 completion
