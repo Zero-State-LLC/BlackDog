@@ -21,32 +21,55 @@ Use `--idiom-filter-min-docs D --idiom-min-repos k` to enable it.
 `ComparisonScope` and `--comparison-scope-min-docs` remain compatibility aliases.
 Omitting the enable flag still passes `scope=None`; k alone does not enable it.
 The feature is called **idiom filter**, distinct from the existing
-`incomplete_comparison_scope` blocker for missing comparison inputs.
+`incomplete_comparison_scope` blocker for missing comparison inputs
+(`diagnostics/batch1_review.py`). Receipts record it as `idiom_filter`.
+Scope off is the label `scope=off`, not an omitted field.
 
-Only enabled containment and collective support use the learned filter. Exact
-hashes, token Jaccard, floor-token verbatim runs and short matching are unchanged.
-Enabled collective groups greedily select the largest marginal shingle coverage
-(ties by unit ID) until the coverage threshold is reached. Incidental one-shingle
-contributors are not all joined. Groups still require at least three selected
-contributors; this is a deterministic coverage witness, not a minimum-set proof.
-The default-off collective algorithm is intentionally unchanged for replay.
+Only enabled containment uses the learned filter. Exact hashes, token Jaccard,
+floor-token verbatim runs and short matching are unchanged. Collective
+membership uses `COLLECTIVE_MIN_MARGINAL` (OBSERVED value 1,
+`faustcoder/neardup.py`) on every path, including scope off. A unit joins only
+when it adds at least that many comparison shingles that no already selected
+unit covers. Selection is greedy by new coverage, then unit id, and stops when
+the union meets the existing 1/2 containment threshold. Groups still require at
+least three selected contributors. This is a deterministic coverage witness,
+not a minimum-set proof. Incidental overlap does not join.
 
 ## Binding and validation
 
-`binding.json` always records on/off, D, k, version and a hash of the sorted raw
-and canonical learned sets, plus the `comparison_scope.py` code hash even off.
-Every output, including source copies and Markdown packets, has a SHA-256 and
-scope descriptor in the binding. The binding itself is excluded to avoid a
-circular hash. Retain it as the trusted run receipt; it is not a signature or
-human approval. `validate_outputs(output)` rejects missing/extra/changed files
-and inconsistent scope metadata, including scope-on outputs paired with an
-off binding.
+`binding.json` always records `idiom_filter` with on/off, D, k, version, label
+(`scope=off` when disabled) and a hash of the sorted raw and canonical learned
+sets (OBSERVED, `diagnostics/batch1_review.py`). It always lists
+`faustcoder/comparison_scope.py` among bound code files, because the default
+path calls `scoped()`. Every output file has a SHA-256 and the same
+`idiom_filter` descriptor in `binding.json` `outputs`. The binding file itself
+is excluded to avoid a circular hash. Retain it as the trusted run receipt; it
+is not a signature or human approval. `validate_outputs(output)` rejects a
+missing idiom-filter record, a missing `comparison_scope.py` code hash,
+missing/extra/changed files, hash mismatches, and scope-on outputs paired with
+an off binding.
 
-Enabled JSON ledgers, summaries and packets also embed scope metadata; packet
-Markdown displays it. Off outputs retain their historical bytes and are scoped
-through the per-output entries in the binding. Collective group IDs bind the
-filter settings and the learned stream-set hash. Mutation checks confirm tests
-fail when scope binding, group scope binding or the module code hash is removed.
+`candidate-ledger.json`, `summary.json`, match evidence, and every packet JSON
+embed `idiom_filter`, including `scope=off`. Packet Markdown prints that label.
+Collective group ids include the same kind of mark, so dropping the scope from
+the group key changes the id. Tests fail when the scope record is deleted, the
+scope is dropped from the group key, `comparison_scope.py` is tampered with
+without the binding hash changing, or an output hash does not match.
+
+Scope-off bytes are not identical to main. OBSERVED intentional fields, beyond
+code hashes of files this branch edits:
+
+- `binding.json`: `idiom_filter`, `outputs` (sha256 plus `idiom_filter` per file),
+  and `code["faustcoder/comparison_scope.py"]`.
+- `idiom_filter` on `candidate-ledger.json`, `summary.json`,
+  `match-evidence.json`, `comparison-ledger.json`, `short-collision-groups.json`,
+  `batch2-proposed-subset.json`, `review-decisions.UNAPPROVED.json`, and each
+  `packets/*.json`.
+- An idiom-filter label line on each `packets/*.md`.
+- Collective contributor lists, group ids, quarantine flags, evidence paths,
+  summary counts, and packet membership, because `COLLECTIVE_MIN_MARGINAL`
+  applies with the filter off. Counts for group `202bb19f` are in the section
+  below. `source-index.json` is not given an inline `idiom_filter` field.
 
 ## Replay and evidence corrections
 
@@ -56,12 +79,55 @@ and `source-index.json`. Of those 1659 payloads, **1430 are input source copies
 and 229 are computed outputs**. This is a provenance/path difference, not a
 claim that all 1659 files were newly computed. Bindings are reported separately.
 
-The current full-pool scope-off replay equals original main `3ab3d1c` in both
-family IDs and complete evidence edges. A separate serialization fixture
-reproduces every non-binding output byte-for-byte against that main version.
-No claim of a fresh full 1659-file serialization replay is made here.
+An earlier commit on this branch reported that scope-off family ids and
+evidence edges matched main `3ab3d1c`. That claim described the tree before
+`COLLECTIVE_MIN_MARGINAL` applied with the idiom filter off. It does not
+describe the current scope-off clustering. No claim of a fresh full 1659-file
+serialization replay is made here.
 
-The corrected enabled sweep (k=2) on the local public 1430-unit pool is:
+## Collective membership on the 1430-unit pool
+
+OBSERVED on the pinned public corpus (1430 cleared units, 19 comparison blobs,
+0 blob-hash mismatches). Function bodies are the lexical spans from
+`diagnostics/span_corpus.py` `definitions`. The scope-off any-overlap group
+key for canonical `filters.lib`, without the new scope mark, is
+`sha256:202bb19f7d3304d9a19c9f11dbcbc9ec15e10c8e5fa581a9ca176ed721a3a473`
+(`faustcoder/neardup.py` group key before the mark was added). That is the
+review group `202bb19f`.
+
+`COLLECTIVE_MIN_MARGINAL` is 1 (`faustcoder/neardup.py:85`). D=20 below is
+`IdiomFilter(20)` with `idiom_min_repos` 2, the current default. The review's
+760-member D=20 figure was a v1 run without that repository gate and was not
+recomputed here (the constructor refuses `idiom_min_repos` below 2).
+
+| Setting | Rule | filters.lib canonical members | Flagged units | Newly flagged |
+| --- | --- | --- | --- | --- |
+| scope off | any shared shingle | 1311 (`202bb19f`) | 1313 |  |
+| scope off | marginal coverage | 3 | 686 | 0 |
+| D=20, k=2 | any shared shingle | 772 | 976 |  |
+| D=20, k=2 | marginal coverage | 10 | 466 | 0 |
+
+OBSERVED: scope off unflags 627 units and adds none. D=20 unflags 510 and adds
+none. Scope-off coverage is 2029/2660 shingles from all 1311 overlapping units,
+and 1406/2660 from the 3 selected units. At D=20 the denominator is 1987
+idiom-filtered shingles; coverage goes from 1356/1987 (772 members) to
+1011/1987 (10 members).
+
+OBSERVED: the 3 scope-off contributors are
+`tests/impulse-tests/dsp/filter.lib` (`u8ea99a0a7cb570b53333`),
+`examples/physicalModeling/faust-stk/piano1.dsp`, and
+`examples/SAM/virtualAnalog/virtualAnalogWithEffectsForBrowser.dsp`.
+The same three remain inside the 10-member D=20 set. The group id changes
+because the contributor list and the `scope=off` mark are part of the key
+(`faustcoder/neardup.py:630`).
+
+The D=20 marginal flag count 466 and 16 collective sets match the D=20 row of
+the earlier k=2 table below. Other D rows in that table were not recomputed
+in this pass. The "largest selected group" column was not recomputed here.
+
+Previously recorded enabled sweep (k=2) on the local public 1430-unit pool.
+D=20 flagged count 466 and 16 collective sets were reproduced in the section
+above. The other cells were not recomputed in this pass:
 
 | D | Flagged | Newly flagged | Edges | Collective sets | Largest selected group |
 | --- | --- | --- | --- | --- | --- |

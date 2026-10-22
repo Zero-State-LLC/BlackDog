@@ -49,7 +49,7 @@ def test_none_scope_is_identical_to_default():
     ev_a, ev_b = [], []
     assert cluster_families(items, ["cmp"], evidence=ev_a) == cluster_families(items, ["cmp"], evidence=ev_b, scope=None)
     assert ev_a == ev_b
-    assert not any(e["reason"] == "comparison_scope" for e in ev_a)
+    assert not any(e["reason"] == "idiom_filter" for e in ev_a)
 
 
 def test_scope_drops_idiom_only_containment_and_records_itself():
@@ -59,7 +59,7 @@ def test_scope_drops_idiom_only_containment_and_records_itself():
     ev = []
     got = cluster_families(items, ["cmp"], evidence=ev, scope=ComparisonScope(3), item_repos={k: "repo/" + k for k, _ in items})
     assert all(got[f"c{k}"] != got["cmp"] for k in range(6))
-    marks = [e for e in ev if e["reason"] == "comparison_scope"]
+    marks = [e for e in ev if e["reason"] == "idiom_filter"]
     assert {e["stream"] for e in marks} == {"raw", "canonical"}
     assert all(e["idiom_min_docs"] == 3 and e["idiom_shingles"] > 0 for e in marks)
 
@@ -159,8 +159,10 @@ def test_binding_records_scope_and_every_output(packet_run):
     for name, scope in (("off", None), ("on", ComparisonScope(3))):
         out = run(name, scope)
         binding = json.loads((out / "binding.json").read_text())
-        descriptor = binding["comparison_scope"]
+        descriptor = binding["idiom_filter"]
+        assert "faustcoder/comparison_scope.py" in binding["code"]
         assert descriptor["enabled"] == (scope is not None)
+        assert descriptor["label"] == ("idiom_filter:D=3:k=2" if scope else "scope=off")
         assert descriptor["idiom_min_docs"] == (3 if scope else None)
         assert descriptor["version"]
         assert descriptor["idiom_set_sha256"].startswith("sha256:")
@@ -168,11 +170,14 @@ def test_binding_records_scope_and_every_output(packet_run):
         assert set(binding["outputs"]) == files
         for name, receipt in binding["outputs"].items():
             assert receipt["sha256"] == "sha256:" + sha256((out / name).read_bytes()).hexdigest()
-            assert receipt["comparison_scope"] == descriptor
-        if scope:
-            for name in ["candidate-ledger.json", "summary.json"] + [str(p.relative_to(out)) for p in (out / "packets").glob("*.json")]:
-                assert json.loads((out / name).read_text())["comparison_scope"] == descriptor
-            assert all(descriptor["idiom_set_sha256"] in p.read_text() for p in (out / "packets").glob("*.md"))
+            assert receipt["idiom_filter"] == descriptor
+        named = ["candidate-ledger.json", "summary.json"] + [
+            str(p.relative_to(out)) for p in (out / "packets").glob("*.json")
+        ]
+        for name in named:
+            assert json.loads((out / name).read_text())["idiom_filter"] == descriptor
+        assert all(descriptor["label"] in p.read_text() and descriptor["idiom_set_sha256"] in p.read_text()
+                   for p in (out / "packets").glob("*.md"))
 
 
 def test_scope_module_changes_off_binding(packet_run):
@@ -197,6 +202,41 @@ def test_on_outputs_rejected_under_off_binding(packet_run):
         validate_outputs(on)
 
 
+def test_deleted_scope_binding_is_rejected(packet_run):
+    import json
+    from diagnostics.batch1_review import validate_outputs
+    run, _ = packet_run
+    out = run("off")
+    validate_outputs(out)
+    binding = json.loads((out / "binding.json").read_text())
+    del binding["idiom_filter"]
+    (out / "binding.json").write_text(json.dumps(binding))
+    with pytest.raises(ValueError, match="omits idiom filter"):
+        validate_outputs(out)
+
+
+def test_deleted_scope_module_binding_is_rejected(packet_run):
+    import json
+    from diagnostics.batch1_review import validate_outputs
+    run, _ = packet_run
+    out = run("off")
+    binding = json.loads((out / "binding.json").read_text())
+    del binding["code"]["faustcoder/comparison_scope.py"]
+    (out / "binding.json").write_text(json.dumps(binding))
+    with pytest.raises(ValueError, match="comparison_scope.py"):
+        validate_outputs(out)
+
+
+def test_output_hash_mismatch_is_rejected(packet_run):
+    from diagnostics.batch1_review import validate_outputs
+    run, _ = packet_run
+    out = run("off")
+    ledger = out / "candidate-ledger.json"
+    ledger.write_bytes(ledger.read_bytes() + b" ")
+    with pytest.raises(ValueError, match="output hash mismatch"):
+        validate_outputs(out)
+
+
 def test_one_repo_copies_are_not_idiom():
     sets = {str(i): frozenset({"copied"}) for i in range(10)}
     repos = {str(i): "same/repository" for i in range(10)}
@@ -213,6 +253,41 @@ def _collective(scope):
     ev = []
     result = cluster_families(items, ["cmp"], evidence=ev, scope=scope)
     return result, [e for e in ev if e["reason"] == "collective_support"]
+
+
+def test_scope_off_collective_excludes_incidental_overlap():
+    result, groups = _collective(None)
+    assert groups
+    assert all(set(g["contributors"]) == {"0", "1", "2"} for g in groups)
+    assert all(g["idiom_filter"]["label"] == "scope=off" for g in groups)
+    assert result["noise"] != result["cmp"]
+
+
+def test_dropping_scope_from_group_key_changes_the_id():
+    from faustcoder.canonical import canonical_bytes, sha256_prefixed
+    _, groups = _collective(None)
+    assert groups
+    for group in groups:
+        canonical = group["stream"] == "canonical"
+        marked = [group["comparison"], group["contributors"], canonical, group["floor"], group["idiom_filter"]]
+        bare = [group["comparison"], group["contributors"], canonical, group["floor"]]
+        assert group["group_id"] == sha256_prefixed(canonical_bytes(marked))
+        assert group["group_id"] != sha256_prefixed(canonical_bytes(bare))
+
+
+def test_scope_off_group_id_differs_when_coverage_matches():
+    _, off = _collective(None)
+    _, on = _collective(ComparisonScope(200))
+    assert off and on
+    assert [e["contributors"] for e in off] == [e["contributors"] for e in on]
+    assert {e["group_id"] for e in off}.isdisjoint(e["group_id"] for e in on)
+
+
+def test_collective_min_marginal_is_enforced(monkeypatch):
+    from faustcoder import neardup
+    monkeypatch.setattr(neardup, "COLLECTIVE_MIN_MARGINAL", 10**6)
+    _, groups = _collective(None)
+    assert groups == []
 
 
 def test_collective_only_joins_coverage_units_and_scope_binds_ids():

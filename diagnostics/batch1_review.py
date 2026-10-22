@@ -44,19 +44,31 @@ def trace_path(key, previous):
 def validate_outputs(output):
     """Validate the complete output set against its retained binding (not an approval)."""
     binding = json.loads((output / "binding.json").read_text())
-    descriptor = binding["comparison_scope"]
+    if "idiom_filter" not in binding:
+        raise ValueError("binding omits idiom filter scope")
+    if "faustcoder/comparison_scope.py" not in binding.get("code", {}):
+        raise ValueError("binding omits comparison_scope.py")
+    descriptor = binding["idiom_filter"]
     files = {str(p.relative_to(output)) for p in output.rglob("*") if p.is_file()} - {"binding.json"}
     if files != set(binding["outputs"]):
         raise ValueError("output inventory mismatch")
     for name, receipt in binding["outputs"].items():
-        if receipt["comparison_scope"] != descriptor:
+        if receipt.get("idiom_filter") != descriptor:
             raise ValueError("output scope mismatch: " + name)
         if sha256_prefixed((output / name).read_bytes()) != receipt["sha256"]:
             raise ValueError("output hash mismatch: " + name)
     for name in ("candidate-ledger.json", "summary.json"):
-        inline = json.loads((output / name).read_text()).get("comparison_scope")
-        if inline != (descriptor if descriptor["enabled"] else None):
+        inline = json.loads((output / name).read_text()).get("idiom_filter")
+        if inline != descriptor:
             raise ValueError("inline scope mismatch: " + name)
+    packet_dir = output / "packets"
+    if packet_dir.is_dir():
+        for packet in packet_dir.glob("*.json"):
+            if json.loads(packet.read_text()).get("idiom_filter") != descriptor:
+                raise ValueError("packet scope mismatch: " + packet.name)
+        for packet in packet_dir.glob("*.md"):
+            if descriptor["label"] not in packet.read_text():
+                raise ValueError("packet scope name missing: " + packet.name)
     return binding
 
 def run(repo, acquisition, candidate, qualification, groups, baseline, output, scope=None):
@@ -89,8 +101,11 @@ def run(repo, acquisition, candidate, qualification, groups, baseline, output, s
     descriptor = scope_descriptor(scope)
 
     def save(name, data):
-        if scope is not None and isinstance(data, dict) and name not in ("source-index.json", "binding.json"):
-            data = {**data, "comparison_scope": descriptor}
+        # Ledger, summary, packets and the other computed JSON records name
+        # the idiom filter, including explicit scope=off. source-index stays
+        # a source map. binding.json records the same descriptor itself.
+        if isinstance(data, dict) and name not in ("source-index.json", "binding.json"):
+            data = {**data, "idiom_filter": descriptor}
         (output / name).write_bytes(
             canonical_bytes(json.loads(json.dumps(data))) + b"\n"
         )
@@ -309,6 +324,7 @@ def run(repo, acquisition, candidate, qualification, groups, baseline, output, s
         if not row["bounded_contract_pass"]:
             row["blockers"].append("executable_semantic_contract_required")
         if missing or failures:
+            # Missing comparison inputs. Not the opt-in idiom filter.
             row["blockers"].append("incomplete_comparison_scope")
         row["review_priority"] = (
             "P0_bounded_contract"
@@ -372,8 +388,12 @@ def run(repo, acquisition, candidate, qualification, groups, baseline, output, s
             "| Unit | Function / path | Priority | Quarantine | Prior contract | Evidence path |",
             "| --- | --- | --- | --- | --- | --- |",
         ]
-        if scope is not None:
-            lines[3:3] = ["Idiom filter scope: `" + json.dumps(descriptor, sort_keys=True) + "`", ""]
+        lines[3:3] = [
+            "Idiom filter: `" + descriptor["label"] + "`",
+            "",
+            "Idiom filter record: `" + json.dumps(descriptor, sort_keys=True) + "`",
+            "",
+        ]
         for k in members:
             v = byid[k]
             label = (v["function"] or v["path"]).replace("|", "\\|")
@@ -459,10 +479,10 @@ def run(repo, acquisition, candidate, qualification, groups, baseline, output, s
         t07_frozen=False,
     )
     save("summary.json", summary)
-    bindings["comparison_scope"] = descriptor
+    bindings["idiom_filter"] = descriptor
     bindings["outputs"] = {
         str(p.relative_to(output)): {"sha256": sha256_prefixed(p.read_bytes()),
-                                     "comparison_scope": descriptor}
+                                     "idiom_filter": descriptor}
         for p in sorted(output.rglob("*")) if p.is_file()
     }
     save("binding.json", bindings)
@@ -485,7 +505,7 @@ def main():
     p.add_argument(
         "--idiom-filter-min-docs", "--comparison-scope-min-docs",
         dest="comparison_scope_min_docs", type=int, default=None,
-        help="opt-in UNREVIEWED document-frequency idiom filter; omit for shipping behavior",
+        help="opt-in UNREVIEWED idiom filter (not the incomplete_comparison_scope blocker); omit for scope=off",
     )
     p.add_argument("--idiom-min-repos", type=int, default=2,
                    help="minimum distinct repositories for an idiom shingle (>=2)")

@@ -1,7 +1,13 @@
 """Opt-in idiom filter for T06 family clustering (UNREVIEWED proposal).
 
-The shipping default is no scope object. With no scope, ``cluster_families``
-behaves exactly as before and every existing receipt reproduces byte for byte.
+The feature name is idiom filter. It is not the
+``incomplete_comparison_scope`` blocker, which means missing comparison
+inputs. The module path stays ``comparison_scope.py`` because the default
+cluster path imports ``scoped`` from it.
+
+The shipping default is no filter object (``scope=None``, label ``scope=off``).
+With no filter, exact, Jaccard, verbatim-run and short-match joins are
+unchanged. Collective membership still uses ``COLLECTIVE_MIN_MARGINAL``.
 
 A ``ComparisonScope`` names a document-frequency idiom set. A 5-token shingle
 is an *idiom shingle* on a stream when it occurs in at least ``idiom_min_docs``
@@ -98,10 +104,21 @@ def scoped(shingle_set: Iterable[str], idiom: frozenset[str] | None) -> frozense
 
 
 def scope_descriptor(scope, streams=None):
-    """Bind the enabled state and exact learned sets, including an empty off set."""
+    """Bind the enabled state and exact learned sets, including explicit scope-off.
+
+    The recorded name is idiom filter. That is distinct from the
+    ``incomplete_comparison_scope`` blocker, which means missing comparison
+    inputs.
+    """
     streams = streams or {}
-    return {"enabled": scope is not None, "version": SCOPE_VERSION,
-            "idiom_min_docs": scope.idiom_min_docs if scope else None,
-            "idiom_min_repos": scope.idiom_min_repos if scope else None,
-            "idiom_set_sha256": content_digest_for(
-                {s: sorted(streams.get(s, ())) for s in ("raw", "canonical")})}
+    learned = {stream: sorted(streams.get(stream, ())) for stream in ("raw", "canonical")}
+    base = {
+        "enabled": scope is not None,
+        "version": SCOPE_VERSION,
+        "idiom_min_docs": scope.idiom_min_docs if scope else None,
+        "idiom_min_repos": scope.idiom_min_repos if scope else None,
+        "idiom_set_sha256": content_digest_for(learned),
+    }
+    if scope is None:
+        return {**base, "label": "scope=off"}
+    return {**base, "label": f"idiom_filter:D={scope.idiom_min_docs}:k={scope.idiom_min_repos}"}

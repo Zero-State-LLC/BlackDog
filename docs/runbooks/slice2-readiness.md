@@ -44,9 +44,12 @@ predicates remain raw-stream measurements; shipping `cluster_families` and
 metadata records the comparison version and rejects a measurement-only floor
 from the split route.
 
-Three-or-more contributor units whose union covers at least half a comparison
-unit's shingles are joined to its family. This conservative H1 unit-level screen
-is not proof of independently adjudicated split-file copies. Sub-15 canonical
+Three or more units that each supply at least `COLLECTIVE_MIN_MARGINAL`
+not-yet-covered comparison shingles, and whose union covers at least half of
+that comparison unit, are joined to its family (`faustcoder/neardup.py`).
+A unit that only repeats a shingle already supplied does not join. This
+conservative H1 unit-level screen is not proof of independently adjudicated
+split-file copies. Sub-15 canonical
 exact matches remain fail-closed; no idiom exemptions were invented. Existing
 upstream-copy rules still apply on the snapshot path. No sandbox limits, signal
 tolerances, x86 goldens or rights pins were relaxed.

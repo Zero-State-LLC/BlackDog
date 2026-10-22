@@ -88,7 +88,7 @@ def main() -> None:
             after=None if not ae else dict(group_id=ae["group_id"], contributors=len(ae["contributors"]),
                                           covered=ae["covered"], denominator=ae["denominator"]),
         ))
-    scope_rows = [e for e in a_edges if e["reason"] == "comparison_scope"]
+    scope_rows = [e for e in a_edges if e["reason"] in ("idiom_filter", "comparison_scope")]
     result = dict(
         note="Detector outputs only; not COPY/NOT_COPY labels; nothing approved.",
         before=str(a.before), after=str(a.after),
