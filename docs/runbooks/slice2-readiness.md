@@ -141,12 +141,25 @@ The [qualification sprint handoff](qualification-sprint.md#slice-2-reviewer-hand
 records later evidence on merged main `2dd588a`: 174 hash-bound reviewer rows,
 9,918 isolated-pair comparisons, verified Spark/off-host receipts and emails to
 Prabu. These supplement the historical audit above and Batch 1's expanded
-1,430-unit scope. All 174 decisions remain UNREVIEWED; no gate below was closed.
+1,430-unit scope. The original return template remains UNREVIEWED; no gate below was closed.
 Prabu subsequently conditionally accepted the roles; the owner assigned him
 private holdout authorship and Danny independent review of his tasks/contracts.
-The verified email bundle was sent, but recipient verification, completed unit
-decisions and documented custody remain pending. See that handoff for current
-receipt locations, limitations and gate owners.
+Prabu now reports read-only Spark access and completed packet/S1 hash checks.
+The [Forge draft intake](qualification-sprint.md#forge-first-pass-draft-and-verified-intake)
+reports 18 COPY/REJECT and 156 BLOCKED across 174 units, with zero retained
+candidates. Source notices are 168 draft APPROVE / six UNRESOLVED; all dependencies
+are unresolved and all seven gates pending. Structural validator PASS and three
+reported human spot-checks do not establish independent adjudication. Actual
+files, bindings and all 18 raw-match reproductions still await intake validation.
+
+The summary/request receipt and off-host copy are checksum verified at
+`/home/delphi/blackdog-s2-forge-draft-intake-20261022T001253Z/` and the matching
+local backup directory documented in the sprint runbook. These checks verify
+intake preservation only. Contract authorship, independent review, complete
+closures, kickoff/coverage and documented private custody remain open. Keep the
+full 1,430-unit pool, 23 short-collision groups and 19 collective-support sets;
+the draft cohort cannot replace them. See the sprint runbook for receipt hashes,
+requested evidence and gate owners.
 
 ## Remaining exit gates
 
