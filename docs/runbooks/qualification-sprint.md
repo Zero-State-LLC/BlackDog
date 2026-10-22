@@ -4,11 +4,11 @@
 
 Proposed duration: ten working days from an agreed kickoff, with an implementation
 owner, a human source/leakage reviewer and a separate evaluator/custodian named
-on day 1. Prabu conditionally accepts the three human roles and offers S2
-days 1–3 for the 174 priority units once the evidence is usable. Danny is assigned
-to independently review Prabu-authored private tasks/contracts. Prabu now reports
-working access and packet hash verification. Agreed kickoff, coverage and
-artifact-level independence/custody remain pending.
+on day 1. Prabu initially accepted the nominated roles, but has since explicitly
+identified as an AI agent. That acceptance does not fill any human-review role.
+Packet access, hashes and reproduction are now verified. Human adjudicators,
+independent contract review, agreed kickoff/coverage and separate custody remain
+pending; the earlier author/reviewer assignment is not proof of independence.
 Plan merged in PR #100 as `c7977ce` after eight CI checks passed. Its own
 [full-suite CI run](https://github.com/Zero-State-LLC/BlackDog/actions/runs/39662227221)
 on PR head `1cb975a` passed 771 tests with 63 warnings. This is separate from
@@ -58,22 +58,19 @@ unadmitted helpers may require further explicit additions. The full 1,430-unit
 ledger remains intact. No required helper can remain deferred for an accepted
 unit, and a bounded behavioral pass does not replace dependency review.
 
-All 110 packets have **Prabu** assigned for human source/leakage and independent
-contract review. The user also assigned Prabu as the separate evaluator/holdout
-custodian. Codex owns S1 preparation and proposed tooling, with no human
-adjudication authority. Prabu subsequently conditionally accepted these roles;
-this is not evidence that any unit review has occurred. The owner assigned Prabu
-as private holdout author and Danny as independent reviewer of his tasks/contracts.
+The historical assignment files name **Prabu** for all 110 packets and for
+source/leakage review, contract review and custody. **Correction: Prabu identifies
+as an AI agent.** These records do not establish human capacity, independence or
+custody. Codex and Forge also provide preparation and evidence, not human
+adjudication. The earlier owner assignment of Prabu as private-task author and
+Danny as reviewer remains an assignment history, not a qualified custody boundary.
 
-Prabu now reports usable Spark access and completed packet/S1 hash checks.
-Pending before S1 closes: agreed kickoff,
-confirmation of useful behavior coverage, and artifact-level
-independence/custody arrangements. Record authorship and conflicts: Prabu cannot
-independently approve contracts he authored; assign another independent
-reviewer where needed. Keep private holdout tasks and signing keys outside
-agent/training access. One person's assignment to multiple roles does not
-establish those boundaries. S1 preparation itself sent no messages; the later
-reviewer handoff below was sent with user authorization.
+Pending before S1 closes: named human adjudicators and an independent human
+contract reviewer, agreed kickoff and useful behavior coverage, and documented
+private custody. Bind contract authorship/conflicts before independent review.
+Keep private tasks and keys outside all agent/training access; no private task
+creation is authorized by this update. S1 preparation itself sent no messages;
+the later handoff was sent with user authorization.
 
 ### S1 receipts and verification
 
@@ -121,7 +118,9 @@ evaluator/holdout custody. He can cover S2 days 1–3 for the 174 priority units
 if the evidence arrives pre-digested. He explicitly approved no units and will
 flag authorship conflicts rather than approve his own contracts. The original
 174-row return template remains `UNREVIEWED`. The later Forge draft summary below is not an
-adjudicated return; its actual files have not yet been received.
+adjudicated return; its files have now been received and technically verified
+as recorded below. Prabu later corrected his identity to AI agent; the earlier
+role acceptance and spot-checks were not human review.
 
 Prabu reported that his `spark` alias reached the other Spark and that access
 to `spark-af42` failed host-key verification. No SSH trust bypass or key change
@@ -132,9 +131,11 @@ report supersedes the access blocker; SENT alone was not proof of access. Day 1 
 not set until access, complete evidence and coverage are confirmed and kickoff
 is agreed. A 15-minute reply monitor remains configured.
 
-The owner chose **Prabu as private holdout author and Danny as independent
-reviewer of Prabu-authored tasks/contracts**. These assignments were communicated
-to Prabu. Separate custody, a private reviewer channel, conflict declarations and
+The earlier owner assignment named **Prabu as private holdout author and Danny
+as independent reviewer of Prabu-authored tasks/contracts**. After Prabu
+identified as an AI agent, that assignment cannot establish the required
+human-controlled custody or independent human sign-off. Separate custody, a
+private reviewer channel, conflict declarations and
 a documented authorship plan must precede private task creation. The plan keeps
 task contents and signing keys outside Spark and agent/training access; only
 approved exclusion metadata, review commitments and public verification may
@@ -227,73 +228,96 @@ as new evidence, never written over the original unreviewed packet.
 
 ### Forge first-pass draft and verified intake
 
-On 2026-10-21 PT, the owner forwarded Prabu's first-pass summary. Forge on
-`gpt-5.6-sol` produced the draft after the Luna run was interrupted; the reviewer
-field is reported as `forge-sol`. **This is agent-generated draft evidence, not
-independent human adjudication.** No source, dependency, contract or gate is
-approved by this intake.
+On 2026-10-21 PT, the Forge/Sol packet was delivered on `spark-af42`. Verification
+used a fresh copy outside Git and `/tmp`, preserving the delivered packet and
+its reproduction directory. **Structural validation and match reproduction pass;
+no human adjudication or qualification gate is complete.**
 
-| Reported draft result | Count / limitation |
+| Verified packet result | Count / limitation |
 | --- | --- |
-| Rows and structural validator | 174; reported PASS, IDs/hashes unchanged, allowed values, helper links and gates checked; no UNREVIEWED values left in the draft |
-| Disposition | 18 REJECT, 156 BLOCKED, 0 RETAIN_CANDIDATE |
-| Copy labels | 18 COPY, 156 UNRESOLVED, 0 NOT_COPY; detector triggers were not treated as labels |
-| Raw-match evidence | All 18 reportedly reproduce at least 40 exact raw tokens against Git-blob-verified comparisons; Prabu reports personally rechecking three |
-| Source notice | 168 APPROVE, 6 UNRESOLVED; these remain draft judgments |
-| Dependency decisions | All 174 UNRESOLVED; complete pinned closure manifests are absent |
+| Packet integrity | All 18 manifest payload checks passed; manifest and CSV digests match delivery |
+| Rows and bindings | 174 unique rows; original order, columns and ten identity/assignment fields unchanged; all 174 source and dossier hashes verified |
+| Structural validator | PASS; allowed values, helper links and pending gates checked |
+| Disposition proposals | 18 REJECT, 156 BLOCKED, 0 RETAIN_CANDIDATE |
+| Copy-label proposals | 18 COPY, 156 UNRESOLVED, 0 NOT_COPY |
+| Raw-match reproduction | 18/18 reproduced with both supplied tokenizers; comparison Git blobs verified; regenerated JSON/CSV byte-identical |
+| Source-notice proposals | 168 APPROVE, 6 UNRESOLVED; not human rights clearance |
+| Dependency decisions | All 174 UNRESOLVED; no complete pinned closure manifests |
 | Gates | All seven PENDING; zero adjudicated approvals |
 
-The six unresolved notices comprise two units each from `faust-examples-stk`,
-`routes.lib:parameterized` and `routes.lib:simple`. The reported helper links are
-`u076896a91f7701b693f8` → `ucc2017a1332ec6436113` and
-`u9f0c7ae700a832f1fdaf` → `u9a92732462d9fdc78df5`; links alone do not establish
-complete dependency closure. The cohort does not replace the 1,430-unit pool,
-23 short-collision groups or 19 collective-support sets.
+**AI-only review correction:** Prabu explicitly states he is an AI agent. The
+previously reported three personal spot-checks were agent checks, not human
+checks; he extended his cross-check to all 18. Forge on `gpt-5.6-sol` produced
+the draft after the interrupted Luna run. The packet's reviewer stamp still says
+`forge-sol (draft, pending Prabu adjudication)`; that wording is not authority
+for Prabu to adjudicate. Historical receipts stay immutable. A revised packet
+should say pending human adjudication and preserve earlier versions.
 
-The actual draft files remain requested: `unit-decisions.FORGE-DRAFT.csv`,
-`gate-decisions.FORGE-DRAFT.json`, `REVIEW-NOTES.md`, `validation-output.txt` and
-a checksum manifest. Reported CSV SHA-256:
+Tokenizer A is the supplied comment-stripped, NFKC-normalized raw tokenizer;
+B is a separately written tokenization cross-check that retains comments.
+Both replays are automated evidence, not independent human review or a new
+full-corpus FLOOR measurement. Six freeverb matches against blob
+`3448b86afe14d461a26a3aca73f19be9ffbbb134` are exactly 40 under A.
+`uff20c5e12cefbb8a9541` is near-boundary at 43 under both tokenizers. Seven
+NLFfm matches need human review of shared control/UI scaffolding; five zita-reverb
+matches also await human sign-off. Reproduction does not ratify an inclusive
+40-token cutoff or settle materiality, provenance or rights.
+
+The original CSV digest is verified as
+`32316c1f340cb4eb68596f67ccf866c057a5978d34bbbb7f25a9c4829402c7ec`.
+Delivered draft CSV digest:
 `e89f29e1f91f6bddbf930514931d0356dc8dd723ac3e343a1563d25c155cbe29`.
-This expected digest has not yet been checked against received CSV bytes. The
-meaning of the separately cited original digest is also awaiting clarification.
-Requested match evidence includes blob identities, tokenizer/version, token
-ranges, reproduction commands/results and the three human-checked unit IDs.
+Delivered `SHA256SUMS` digest:
+`5f84bd7bc65177d295f6ac8f9f79353bfe8064310bca06c10af27edbd8716adf`.
+The manifest covers **18**, not the 17 files initially reported. The replay also
+verified the original return/direct/S1 manifests (4 + 182 + 1,680 entries).
 
-The **intake receipt**, distinct from the missing draft packet, preserves the
-forwarded summary and sent request. Both copies of `intake.json` were checksum
-verified again for this documentation update:
+Receipt locations, all outside Git and `/tmp`:
 
-- Spark: `/home/delphi/blackdog-s2-forge-draft-intake-20261022T001253Z/`.
-- Off-host: `/Users/appliedalchemylabs/Documents/Codex/blackdog-s2-backups/blackdog-s2-forge-draft-intake-20261022T001253Z/`.
-- Files: `intake.json` and `SHA256SUMS`; payload SHA-256:
-  `8d7adc3bd63bd45ce0f0053393fc01ee77ee40edb635893f8f0ba93b8bfd2638`.
+- Delivered packet: `/home/delphi/blackdog-s2-forge-draft-return-20261022T015921Z/`.
+  Includes draft CSV/gates, notes, validator/generator/reproduction scripts,
+  comparison blobs, match evidence and `SHA256SUMS`.
+- Verification: `/home/delphi/blackdog-s2-forge-verified-20261022T0213Z/`.
+  Includes `assessment.json`, `reproduction.log`, `original-after.log`, copied
+  packet and `SHA256SUMS`. Original packet checks passed again after replay.
+- Off-host backup: `/Users/appliedalchemylabs/Documents/Codex/blackdog-s2-backups/blackdog-s2-forge-verified-20261022T0213Z/`.
+  Includes `spark-receipts.tar.gz`, `email-evidence.json` and `SHA256SUMS`.
+  All 22 archived verification payload checks passed; the backup's two file
+  checksums were rechecked for this documentation update. Reproduction scratch
+  files/symlinks are excluded from the archive.
+- Earlier summary/request intake remains at
+  `/home/delphi/blackdog-s2-forge-draft-intake-20261022T001253Z/` and its matching
+  off-host directory; it is historical summary evidence, not the delivered packet.
 
-The directory timestamp is UTC (October 21 PT). These two successful checksum
-checks verify preservation of the intake, not the draft's validator or matches.
-Prabu's correction that S1's 1,680-entry digest check was already complete is
-recorded as his report; it is no longer listed as awaiting his verification.
+Remaining review work is substantive. The two JOS-attributed units
+`u669fb3ae2b89fb0d49af` and `uc9ddf0f62f5b6577cb64` need pinned attribution evidence.
+The four routes helpers need exact pinned MIT bitonic-section boundaries versus
+the file-wide LGPL notice. Their links remain
+`u076896a91f7701b693f8` → `ucc2017a1332ec6436113` and
+`u9f0c7ae700a832f1fdaf` → `u9a92732462d9fdc78df5`; links do not establish closure.
+Recheck `linearalgebra.lib`'s literal MIT declaration under an LGPL header; it
+cannot be treated as cleared by the draft's APPROVE value. All notice values
+remain proposals until qualified human review.
 
-Next, ingest the returned files into a new timestamped receipt directory outside
-Git, validate all identities/source/dossier bindings and reproduce the 18 matches.
-Obtain human decisions separately from the agent draft. Resolve the six notice
-questions and pinned closures before any retained-unit qualification. Existing
-bound manifests inspected so far do not establish contract authorship; an
-inventory reviewer field is not an authorship attestation. The independent
-contract reviewer remains unset in the draft. Bind per-contract authorship and
-conflicts before independent review. Prabu authors future private holdout tasks;
-Danny independently reviews those tasks/contracts through a documented private
-channel. Historical authorship, custody evidence, kickoff and coverage remain
-open. `TOKEN_FLOOR=40` stays provisional and T07 stays unfrozen.
+Obtain human decisions on the 18 matches and unresolved cohort, complete pinned
+per-unit/group closures keyed by source hash and library pin, and bind contract
+authorship plus independent human review. Do not substitute this 174-unit cohort
+for the 1,430-unit pool, 23 short-collision groups or 19 collective-support sets.
+The proposed October 22 kickoff (America/Denver) is unconfirmed; human capacity
+and coverage still need agreement. Custody remains a plan only; no private tasks
+or keys exist in the packet. A human-controlled private location and review
+channel must be documented before private task creation. `TOKEN_FLOOR=40` stays
+provisional and T07 stays unfrozen.
 
 ### Pending gates and next actions
 
 | Gate | Owner | Evidence required before advancing |
 | --- | --- | --- |
-| S1 confirmations | Prabu + owner | Conditional acceptance and S2 capacity recorded; access/hash verification now reported; agree kickoff, coverage and independence/custody arrangements |
-| S2 source/leakage | Prabu | Receive and independently validate the Forge draft, then obtain human per-unit source/notice and COPY/NOT_COPY/unresolved decisions with exact evidence; relevant short-collision and collective-support adjudication |
+| S1 confirmations | Owner + named humans | Packet access/integrity verified; replace agent role assumptions with human assignments, agree kickoff/coverage and document independence/custody |
+| S2 source/leakage | Human adjudicators, to be confirmed | Technical intake/reproduction passed; obtain human source/notice and COPY/NOT_COPY/unresolved decisions, including boundary/scaffolding cases and relevant short/collective adjudication |
 | S3 closure/behavior | Implementation owner + independent contract reviewer | Pinned complete closures including external members, independent contracts, semantic references and positive/negative receipts |
 | S4/S5 FLOOR | Human reviewer + evaluator | Two cleared host repositories, real rejected windows, fixed gold/labels and the complete ratified measurement protocol |
-| S6 development/custody | Prabu as author/custodian; Danny independently reviews his tasks/contracts | Document private custody/reviewer channel and conflicts; qualify disjoint development tasks and independent private tasks; only approved exclusion metadata/public verification reaches Spark |
+| S6 development/custody | Owner + named human evaluator/custodian and independent reviewer | Document private custody/reviewer channel and conflicts; qualify disjoint development tasks and independent private tasks; only approved exclusion metadata/public verification reaches Spark |
 | S7 integration | Implementation owner + reviewers | Bound reproducible dossier, exception review and an explicit milestone decision after prerequisite gates |
 
 On receipt of decisions, verify identity, source/dossier bindings, completeness,

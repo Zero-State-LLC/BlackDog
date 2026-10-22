@@ -18,10 +18,10 @@ separately, and T07/T10 remain Backlog.
 | Sprint card | Status | Exit |
 | --- | --- | --- |
 | Batch 1 evidence and hash-format review | Done: #99, `ce8087a` | Eight CI checks; 771 tests passed |
-| S1 scope and owner assignment | Technical preparation complete; confirmations pending | 1,430 units / 110 packets / 510 blobs verified; Prabu conditionally accepts S2 days 1–3; access/hash verification reported; kickoff, coverage and independence/custody pending |
-| S2 source/leakage and S3 closure/behavior | Forge DRAFT reported: 18 REJECT / 156 BLOCKED / 0 retained; no adjudicated approvals | Hash-bound per-unit decisions, approved closures/contracts and reproducible positive/negative receipts |
+| S1 scope and owner assignment | Technical preparation complete; confirmations pending | 1,430 units / 110 packets / 510 blobs verified; packet/bindings verified; Prabu is an AI agent; human assignments, kickoff, coverage and custody pending |
+| S2 source/leakage and S3 closure/behavior | Forge DRAFT verified; 18/18 matches reproduced; 18 proposed REJECT / 156 BLOCKED / 0 retained; no human approvals | Hash-bound per-unit decisions, approved closures/contracts and reproducible positive/negative receipts |
 | S4 two-project hosts and S5 FLOOR | Blocked on approved inputs | Ratified gold/label protocol and complete measurement result |
-| S6 development/custody | Prabu assigned as author/custodian; Danny as independent reviewer | Document private custody/review channel; disjoint reviewed tasks and custody commitments still required |
+| S6 development/custody | Human custody/reviewer assignments require confirmation after AI-only correction | Document private custody/review channel; disjoint reviewed tasks and custody commitments still required |
 | S7 qualification dossier | Planned after S2–S6 | One reviewed delivery; explicit pass or blocked milestone decision |
 
 ## S1 scope verification and reviewer handoff
@@ -32,13 +32,11 @@ including two additional helper candidates; 1,256 units remain explicitly
 deferred. All 174 retain dependency review gates and 172 remain quarantine
 candidates. Every one of the 1,430 units appears in exactly one assigned packet.
 
-Prabu is user-assigned to source/leakage review, independent contract review and
-separate evaluator/holdout custody. All 110 packets have role assignments.
-Prabu conditionally accepts the roles and S2 days 1–3 availability. He now reports
-working read-only access and completed packet/S1 hash checks. Kickoff, useful
-coverage and artifact-level independence/custody remain pending. Danny
-independently reviews Prabu-authored private tasks/contracts.
-Codex prepared the scope and tooling; no independent approval is implied. S1 stays open until those confirmations.
+Historical assignments name Prabu for review and custody, but he now explicitly
+identifies as an AI agent. These assignments and his conditional acceptance do
+not establish human review capacity or independent custody. Packet access and
+hashes are verified. Name human adjudicators and an independent contract reviewer,
+confirm kickoff/coverage, and document private custody before S1 can close.
 
 Receipts: `/home/delphi/blackdog-qualification-sprint-20261021T194809Z/`;
 start with `REPORT.md` and `REVIEW-INDEX.md`. The local backup is under
@@ -57,22 +55,20 @@ delivery; he now reports working access and completed packet/S1 hash checks.
 The later Forge draft is not an adjudicated return; agreed day 1 remains pending.
 A 15-minute reply monitor is configured, but does not establish approval.
 
-The [Forge draft intake](docs/runbooks/qualification-sprint.md#forge-first-pass-draft-and-verified-intake)
-reports 174 rows and structural validator PASS: 18 COPY/REJECT, 156 BLOCKED,
-zero retained candidates; 168 draft source-notice approvals and six unresolved.
-All 174 dependencies and all seven gates remain unresolved/pending. Prabu reports
-spot-checking three of the 18 raw matches. Actual draft files and reproduction
-evidence are requested; no independent human approval is inferred.
+The [verified Forge packet](docs/runbooks/qualification-sprint.md#forge-first-pass-draft-and-verified-intake)
+passes all 18 file checksums and 174 source/dossier bindings. All 18 matches
+reproduce with both supplied tokenizers and byte-identical evidence. Draft counts
+remain 18 COPY/REJECT, 156 BLOCKED, zero retained; 168 notice APPROVE proposals and
+six unresolved. All 174 dependencies and all seven gates remain unresolved/pending.
+**Prabu is an AI agent: the three earlier spot-checks were not human checks.**
+No human adjudication is established. Six matches are exactly 40 under tokenizer
+A; one is 43. Boundary and shared UI/scaffolding cases still need human decisions.
 
-Intake receipts: `/home/delphi/blackdog-s2-forge-draft-intake-20261022T001253Z/`
-and the same directory name under the local `blackdog-s2-backups/` root below.
-Both `intake.json` checksum checks passed; this verifies the preserved summary
-and request, not the draft CSV or match claims. Next: validate the returned
-packet and reproduce all 18 matches, obtain human adjudication, resolve six
-notices and all closure gaps, and bind contract authorship/independent review.
-Keep the full 1,430-unit pool, 23 short-collision groups and 19 collective-support
-sets in scope. Private custody and kickoff/coverage are still open;
-`TOKEN_FLOOR=40` remains provisional and T07 unfrozen.
+Delivered packet: `/home/delphi/blackdog-s2-forge-draft-return-20261022T015921Z/`.
+Verification: `/home/delphi/blackdog-s2-forge-verified-20261022T0213Z/`;
+off-host backup uses that directory name under the local `blackdog-s2-backups/`
+root below. All 22 archived verification payloads passed. Original receipts are
+preserved; no raw artifacts enter Git. See the runbook for hashes and limitations.
 
 The supplement on `2dd588a` completed 9,918 isolated-pair comparisons and 12
 uncached parity checks. At floor 40: 103 direct-trigger units, 69
@@ -91,13 +87,13 @@ verified payloads and 510 original Git-blob-verified sources. Gmail confirms the
 4,741,632-byte attachment was sent. Spark directory/archive: `/home/delphi/` with
 the bundle name; local archive: the backup root above. See the runbook for exact
 checksums, path mapping, reply/assignment/delivery receipts and limitations. No
-private holdout content or keys were included. Prabu authors private tasks; Danny
-independently reviews his tasks/contracts. Custody remains a plan requiring proof.
+private holdout content or keys were included. The earlier Prabu-author/Danny-reviewer
+assignment does not establish independent custody after the AI-only correction.
+Private task creation waits for a documented human-controlled boundary.
 
-Next: receive and validate the Forge draft packet and match evidence, agree
-kickoff/coverage, then obtain human identity/hash-bound source/leakage decisions,
-complete
-independently reviewed closures/contracts, qualify two-project FLOOR hosts and
+Next: agree human assignments and kickoff/coverage, obtain human identity/hash-bound
+source/leakage decisions (including boundary/scaffolding cases and notice conflicts),
+complete independently reviewed closures/contracts, qualify two-project FLOOR hosts and
 fixed gold/labels, and establish disjoint development tasks plus separate holdout
 custody. S1 remains open for confirmations; S2–S6 prerequisites and S7 completion
 remain pending. `TOKEN_FLOOR=40` stays provisional and T07 stays unfrozen.
@@ -195,7 +191,7 @@ Issue #68: the D3-H2-C change reads the drop-file owner with `fstat` on an `O_NO
 
 ## Immediate execution order
 
-1. Close S1’s pending human confirmations using the verified scope and Prabu’s
+1. Close S1’s pending human confirmations using the verified scope and confirmed human
    assignments, then execute [S2–S7 as one delivery](docs/runbooks/qualification-sprint.md).
    Account for all 1,430 identities; review the 174-unit scope and any additional
    required helpers, with the day-3 two-project checkpoint unchanged.

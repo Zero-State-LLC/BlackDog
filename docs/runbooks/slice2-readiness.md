@@ -142,24 +142,26 @@ records later evidence on merged main `2dd588a`: 174 hash-bound reviewer rows,
 9,918 isolated-pair comparisons, verified Spark/off-host receipts and emails to
 Prabu. These supplement the historical audit above and Batch 1's expanded
 1,430-unit scope. The original return template remains UNREVIEWED; no gate below was closed.
-Prabu subsequently conditionally accepted the roles; the owner assigned him
-private holdout authorship and Danny independent review of his tasks/contracts.
-Prabu now reports read-only Spark access and completed packet/S1 hash checks.
-The [Forge draft intake](qualification-sprint.md#forge-first-pass-draft-and-verified-intake)
-reports 18 COPY/REJECT and 156 BLOCKED across 174 units, with zero retained
-candidates. Source notices are 168 draft APPROVE / six UNRESOLVED; all dependencies
-are unresolved and all seven gates pending. Structural validator PASS and three
-reported human spot-checks do not establish independent adjudication. Actual
-files, bindings and all 18 raw-match reproductions still await intake validation.
+Prabu subsequently delivered the Forge packet and corrected his identity to AI
+agent. Earlier role acceptance and three spot-checks were not human review.
+The [verified packet](qualification-sprint.md#forge-first-pass-draft-and-verified-intake)
+passes all 18 manifest checks, 174 source/dossier bindings and reproduction of all
+18 matches with both supplied tokenizers; regenerated evidence is byte-identical.
+Six matches are exactly 40 under tokenizer A; one is 43. These are reproduction
+results, not human COPY adjudication or final floor acceptance.
 
-The summary/request receipt and off-host copy are checksum verified at
-`/home/delphi/blackdog-s2-forge-draft-intake-20261022T001253Z/` and the matching
-local backup directory documented in the sprint runbook. These checks verify
-intake preservation only. Contract authorship, independent review, complete
-closures, kickoff/coverage and documented private custody remain open. Keep the
-full 1,430-unit pool, 23 short-collision groups and 19 collective-support sets;
-the draft cohort cannot replace them. See the sprint runbook for receipt hashes,
-requested evidence and gate owners.
+Draft counts remain 18 proposed REJECT, 156 BLOCKED and zero retained; 168 notice
+APPROVE proposals and six unresolved. All dependencies and seven gates remain
+pending. Human review must resolve boundary/scaffolding cases, JOS attribution,
+routes section boundaries and the linearalgebra notice conflict, then complete
+pinned closures, author/reviewer bindings and private custody.
+
+Packet: `/home/delphi/blackdog-s2-forge-draft-return-20261022T015921Z/`.
+Verification: `/home/delphi/blackdog-s2-forge-verified-20261022T0213Z/`, with a
+verified off-host archive under the matching local backup directory documented
+in the sprint runbook (22 archived payloads). Preserve the full 1,430-unit pool,
+23 short-collision groups and 19 collective-support sets. Kickoff remains
+unconfirmed, `TOKEN_FLOOR=40` provisional and T07 unfrozen.
 
 ## Remaining exit gates
 
@@ -170,10 +172,11 @@ requested evidence and gate owners.
    fixed ground truth; obtain an explicit floor decision or provisional route.
 3. Qualify project-disjoint development tasks with semantic references and no
    unresolved family conflicts. The recovered files are candidates only.
-4. Prabu is assigned as private holdout author/custodian and Danny as independent
-   reviewer of his tasks/contracts. Document separate custody and the private
-   review channel, create independent tasks, and bind exclusion metadata and
-   completed independent reviews; assignments alone do not close this gate.
+4. Confirm human evaluator/custodian and independent reviewer assignments after
+   the AI-only correction. Document separate human-controlled custody and a
+   private review channel before creating independent tasks; bind exclusion
+   metadata and completed independent reviews. Agent role assignments cannot
+   close this gate.
 5. Review the signing implementation and configure trusted public verification
    only after these gates close. Production T07 must remain unfrozen meanwhile.
 
