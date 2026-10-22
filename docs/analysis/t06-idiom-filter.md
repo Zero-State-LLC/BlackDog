@@ -34,14 +34,16 @@ union must cover at least half of the comparison shingles
 group key, so those group ids stay main's unmarked ids.
 
 Marginal coverage is a separate opt-in, `--marginal-coverage`, recorded as
-`marginal_coverage` in `binding.json`. It is not turned on by the idiom filter.
-`COLLECTIVE_MIN_MARGINAL` (OBSERVED value 1, `faustcoder/neardup.py:89`) applies
-only on that path. Selection is greedy by new coverage, then unit id. It does
-not stop at the 1/2 threshold while fewer than three contributors are selected.
-It stops once three contributors meet that threshold, or when no remaining unit
-supplies the minimum. A unit whose overlap is already covered does not join.
-This is a deterministic coverage witness, not a minimum-set proof, and it is
-not the shipping H1 rule.
+`marginal_coverage` in `binding.json` and copied onto the computed JSON
+records. It is not turned on by the idiom filter.
+`COLLECTIVE_MIN_MARGINAL` (OBSERVED value 1, `faustcoder/neardup.py:90`) applies
+only on that path. Selection is greedy by new coverage, then unit id
+(`faustcoder/neardup.py:339`). It keeps adding while any remaining unit adds
+at least that many not-yet-covered comparison shingles. It does not stop when
+three contributors cover half. The group is still emitted only when at least
+three contributors cover at least half (`faustcoder/neardup.py:643`). A unit
+whose overlap is already covered does not join. This is a deterministic
+coverage witness, not a minimum-set proof, and it is not the shipping H1 rule.
 
 ## Binding and validation
 
@@ -57,11 +59,16 @@ circular hash. Retain it as the trusted run receipt; it is not a signature or
 human approval. `validate_outputs(output)` rejects a missing idiom-filter
 record, a missing marginal-coverage flag, a missing `idiom_filter.py` code
 hash, an inventory mismatch, a per-receipt scope or marginal-coverage mismatch,
-an inline ledger or summary mismatch, a packet JSON or Markdown scope mismatch,
-and an output hash mismatch.
+an inline ledger or summary scope or marginal-coverage mismatch, a packet JSON
+scope or marginal-coverage mismatch, a packet Markdown scope name or marginal
+line missing, and an output hash mismatch. Flipping `marginal_coverage` to
+false on an opt-in result set, including every receipt, still fails: the
+ledger, summary, and packet JSON still say true, and packet Markdown still
+says marginal coverage is on.
 
 `candidate-ledger.json`, `summary.json`, match evidence, and every packet JSON
-embed `idiom_filter`, including `scope=off`. Packet Markdown prints that label.
+embed `idiom_filter`, including `scope=off`, and `marginal_coverage`. Packet
+Markdown prints the idiom label and whether marginal coverage is on or off.
 An enabled idiom filter is part of the collective group key, so two different
 D values do not share a group id when the selected units match. Scope off does
 not add that mark. Tests fail when the scope record is deleted, the filter is
@@ -70,21 +77,21 @@ the binding hash changing, a learned idiom set changes without
 `idiom_set_sha256` changing, or an output hash does not match. `run` calls
 `validate_outputs` on the output directory.
 
-With both opts off, collective membership, group ids, quarantine flags and the
-19 collective sets match main. OBSERVED intentional differences, beyond code
-hashes of files this branch edits:
+With both opts off, families, evidence records, and group ids are identical
+to main. New metadata keys are the only intentional differences in the batch1
+records, beyond code hashes of files this branch edits:
 
 - `binding.json`: `idiom_filter`, `marginal_coverage`, `outputs` (sha256,
   `idiom_filter`, and `marginal_coverage` per file), and
   `code["faustcoder/idiom_filter.py"]`.
-- `idiom_filter` on `candidate-ledger.json`, `summary.json`,
-  `match-evidence.json`, `comparison-ledger.json`, `short-collision-groups.json`,
-  `batch2-proposed-subset.json`, `review-decisions.UNAPPROVED.json`, and each
-  `packets/*.json`.
-- An idiom-filter label line on each `packets/*.md`.
+- `idiom_filter` and `marginal_coverage` on `candidate-ledger.json`,
+  `summary.json`, `match-evidence.json`, `comparison-ledger.json`,
+  `short-collision-groups.json`, `batch2-proposed-subset.json`,
+  `review-decisions.UNAPPROVED.json`, and each `packets/*.json`.
+- An idiom-filter label line and a marginal-coverage line on each `packets/*.md`.
 
-`source-index.json` is not given an inline `idiom_filter` field. Detector
-membership is not one of those differences when both opts are off.
+`source-index.json` is not given those inline fields. Detector membership is
+not one of those differences when both opts are off.
 
 ## Replay and evidence corrections
 
@@ -96,8 +103,8 @@ claim that all 1659 files were newly computed. Bindings are reported separately.
 
 An earlier commit on this branch applied marginal coverage on the default
 path and changed scope-off clustering. That commit is superseded. With both
-opts off, collective membership and group ids again follow main. No claim of
-a fresh full 1659-file serialization replay is made here.
+opts off, families, evidence records, and group ids are identical to main.
+No claim of a fresh full 1659-file serialization replay is made here.
 
 ## Collective membership on the 1430-unit pool
 
@@ -111,29 +118,45 @@ filter off and `marginal_coverage` off) was compared to main `ee456c73`'s
 | --- | --- | --- | --- | --- |
 | main `ee456c73` | any shared shingle | 1311 (`202bb19f`) | 1313 | 19 |
 | scope off, marginal off | same rule | 1311 (`202bb19f`) | 1313 | 19 |
-| scope off, `--marginal-coverage` | opt-in witness | 3 | 686 | 19 |
+| scope off, `--marginal-coverage` | opt-in, no early stop | 124 (`04901622`) | 765 | 19 |
 
-OBSERVED: scope off matches main on flagged unit ids and on every collective
-group id and contributor list. The canonical `filters.lib` group id is
+OBSERVED: with both opts off, families, evidence records, and group ids are
+identical to main. The full evidence list is 2105 edges on both sides. The
+canonical `filters.lib` group id is
 `sha256:202bb19f7d3304d9a19c9f11dbcbc9ec15e10c8e5fa581a9ca176ed721a3a473`.
-Coverage of that group is the full any-overlap union.
+Coverage of that group is 2029/2660.
 
-OBSERVED: the opt-in rule flags 686 units, adds 0, and drops 627 relative to
-scope off. It still emits 19 collective sets. The canonical `filters.lib`
-witness has 3 contributors and covers 1406/2660. Its group id is
-`sha256:5c2c87ebfe33b773c69e69a253175e6facec2a82677f9a26a24d0e7d75dfe888`
-because the contributor list is the witness, not the any-overlap set. This
-opt-in is not the shipping H1 rule. Changing the shipping rule still needs
-Danny's sign-off.
+OBSERVED: the opt-in rule flags 765 units, adds 0, and drops 548 relative to
+scope off. It still emits 19 collective sets. The largest selected group has
+133 contributors. The canonical `filters.lib` witness has 124 contributors and
+covers 2029/2660, the same shingle coverage as main's 1311-member union. Its
+group id is
+`sha256:0490162260b441f44abfb543df2e8e3c9fc6eaa12fad26f779046ed8b57b209f`
+because the contributor list is the marginal witness, not the any-overlap set.
+The earlier 686-flag, 3-contributor witness was the superseded stop at three
+contributors and half coverage. This opt-in is not the shipping H1 rule.
+Changing the shipping rule still needs Danny's sign-off.
 
-Synthetic probes (OBSERVED, both streams, `tests/test_comparison_scope.py`):
+Synthetic probes (OBSERVED, both streams, `tests/test_idiom_filter.py`):
 
 | Probe | Opt-in result |
 | --- | --- |
 | 3-way split, pieces under 40 tokens | 3/3 contributors; the noise file is not a contributor and is not in the family |
 | Interleaved 3-way (two hosts already cover half) | 3/3 |
-| Two independent 3-way copies | 6/6, two distinct families |
-| 4-way plus a noise file | 3/4 split files (`c0` `c1` `c2`). Selection stops once three contributors cover half, so `c3` is outside the witness. The noise file is not a contributor and is not in the family |
+| Two independent 3-way copies, plus a noise file | 6/6, two distinct families. The noise file is not a contributor on raw or canonical, and it is not in either family |
+| 4-way plus a noise file | 4/4 |
+| 5-way plus a noise file | 5/5 |
+| 6-way plus a noise file | 6/6 |
+
+The noise file in these probes is the first 5 tokens of one selected piece
+plus tokens that do not occur in the comparison. After that piece is selected
+it adds no new shingle, so it stays out. A noise file that contains a
+comparison shingle the selected copies do not cover does join. That is the
+opt-in rule. On the adversary SP5 fixture, an incidental noise file joined the
+raw stream. An earlier sentence on this page said the noise file is not in the
+family. That sentence described this repository's fixture only. The adversary
+two-copy result of 5/6 was the old stop dropping one piece. With that stop
+removed, every disjoint copy joins, which is what the 6/6 row records.
 
 The shipping default joins the noise file on the 3-way probe, which is main's
 any-overlap rule.
@@ -155,6 +178,32 @@ current opt-in, and not a description of scope off:
 Zero new flags is an observation on that historical sweep, not a guarantee and
 not the shipping scope-off result. The historical v1 counts were already
 superseded by that sweep. Both are retained only as prior measurements.
+
+## Opt-in plant check (scope off, reconstructed windows)
+
+OBSERVED on this branch. The adversary plant cache was not available here, so
+this is not their window file. Windows are 50 contiguous non-overlapping
+raw-token slices at each of 17, 25, 35, and 45 tokens, taken round-robin from
+the 19 comparison blobs (200 windows). Hosts are the 117 units that are not in
+a comparison family when both opts are off. m=2 prefers distinct repositories.
+A window counts when a planted host joins a comparison family. Scope is off.
+This is a detection count, not gold recall.
+
+| Rule | m=1 (under 40 tokens) | m=2 (under 40 tokens) |
+| --- | --- | --- |
+| default, same families as main | 199/200 (149/150) | 199/200 (149/150) |
+| `--marginal-coverage` | 84/200 (34/150) | 84/200 (34/150) |
+
+Opt-in by width, and m=1 matches m=2: 17 tokens 8/50, 25 tokens 10/50, 35
+tokens 16/50, 45 tokens 50/50. The one default miss is a 25-token window.
+Four full `cluster_families` replays of sampled windows agreed with the fast
+detector used for the table.
+
+The review's counterfactual without the stop, on its own window file, was
+92/200 at m=1 (42/150 under 40). That file's m=2 was not run. Pool membership
+here matches that counterfactual: 765 flags, largest group 133. The plant
+counts in the table are this window construction. The promotion bar and the
+six sub-40 verbatim copies are not remeasured. The default rule is unchanged.
 
 ## Corrected plant sensitivity (not gold recall)
 

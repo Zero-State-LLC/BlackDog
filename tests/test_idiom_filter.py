@@ -202,9 +202,15 @@ def test_binding_records_scope_and_every_output(packet_run):
             str(p.relative_to(out)) for p in (out / "packets").glob("*.json")
         ]
         for named_file in named:
-            assert json.loads((out / named_file).read_text())["idiom_filter"] == descriptor
-        assert all(descriptor["label"] in p.read_text() and descriptor["idiom_set_sha256"] in p.read_text()
-                   for p in (out / "packets").glob("*.md"))
+            payload = json.loads((out / named_file).read_text())
+            assert payload["idiom_filter"] == descriptor
+            assert payload["marginal_coverage"] is False
+        assert all(
+            descriptor["label"] in p.read_text()
+            and descriptor["idiom_set_sha256"] in p.read_text()
+            and "Marginal coverage: `off`" in p.read_text()
+            for p in (out / "packets").glob("*.md")
+        )
     assert digests["off"] != digests["on"]
 
 
@@ -373,11 +379,129 @@ def test_marginal_coverage_is_recorded_in_binding(packet_run):
     binding = json.loads((out / "binding.json").read_text())
     assert binding["marginal_coverage"] is True
     assert all(receipt["marginal_coverage"] is True for receipt in binding["outputs"].values())
+    ledger = json.loads((out / "candidate-ledger.json").read_text())
+    summary = json.loads((out / "summary.json").read_text())
+    assert ledger["marginal_coverage"] is True
+    assert summary["marginal_coverage"] is True
+    assert all(json.loads(p.read_text())["marginal_coverage"] is True for p in (out / "packets").glob("*.json"))
+    assert all("Marginal coverage: `on`" in p.read_text() for p in (out / "packets").glob("*.md"))
     validate_outputs(out)
     del binding["marginal_coverage"]
     _rewrite_binding(out, binding)
     with pytest.raises(ValueError, match="omits marginal coverage"):
         validate_outputs(out)
+
+
+def test_flipped_marginal_flag_fails_without_rewriting_outputs(packet_run):
+    """T1: receipts and the top-level flag can both say false while payloads stay true."""
+    import json
+    from diagnostics.batch1_review import validate_outputs
+    run, _ = packet_run
+    out = run("marginal-flip", marginal_coverage=True)
+    validate_outputs(out)
+    binding = json.loads((out / "binding.json").read_text())
+    binding["marginal_coverage"] = False
+    for receipt in binding["outputs"].values():
+        receipt["marginal_coverage"] = False
+    _rewrite_binding(out, binding)
+    with pytest.raises(ValueError, match="inline marginal coverage mismatch"):
+        validate_outputs(out)
+
+
+def test_per_receipt_marginal_mismatch_is_rejected(packet_run):
+    """N5: dropping the per-receipt flag check lets one receipt lie."""
+    import json
+    from diagnostics.batch1_review import validate_outputs
+    run, _ = packet_run
+    out = run("marginal-receipt", marginal_coverage=True)
+    binding = json.loads((out / "binding.json").read_text())
+    name = "summary.json"
+    binding["outputs"][name]["marginal_coverage"] = False
+    _rewrite_binding(out, binding)
+    with pytest.raises(ValueError, match="output marginal coverage mismatch: summary.json"):
+        validate_outputs(out)
+
+
+def test_run_marginal_coverage_changes_the_ledger(tmp_path, monkeypatch):
+    """N3: ignoring --marginal-coverage leaves the noise unit quarantined."""
+    import json
+    from dataclasses import dataclass
+    from pathlib import Path
+    from types import SimpleNamespace
+    from diagnostics import batch1_review as module
+    from faustcoder.acquire import git_blob_id
+
+    @dataclass
+    class Unit:
+        unit_id: str = "unit"
+        repo: str = "owner/project"
+        pin: str = "a" * 40
+        path: str = "example.dsp"
+        function: object = None
+        blob_sha: str = ""
+        decision: str = "candidate"
+        entry_id: str = "entry"
+        eligible_for: tuple = ()
+
+    alphabet = _symbol_alphabet()
+    pieces = [_piece(alphabet, i * 18, 18) for i in range(4)]
+    noise = " ".join(pieces[0].split()[:5]) + " " + " ".join(alphabet[80:110])
+    texts = {f"c{i}": pieces[i] for i in range(4)}
+    texts["noise"] = noise
+    texts["cmp"] = " ".join(pieces)
+    root = tmp_path / "repo"
+    (root / "corpus").mkdir(parents=True)
+    for name in ("rights-inventory.v1.json", "notice-manifest.v1.json"):
+        (root / "corpus" / name).write_text("{}")
+    for name in (
+        "diagnostics/batch1_review.py", "faustcoder/neardup.py", "faustcoder/normalize.py",
+        "faustcoder/inventory.py", "faustcoder/function_spans.py", "faustcoder/idiom_filter.py",
+    ):
+        dest = root / name
+        dest.parent.mkdir(exist_ok=True)
+        dest.write_bytes(Path(name).read_bytes())
+    cleared = []
+    locations = {}
+    for unit_id, body in texts.items():
+        raw = (body + "\n").encode()
+        source = tmp_path / f"{unit_id}.dsp"
+        source.write_bytes(raw)
+        blob = git_blob_id(raw, "a" * 40)
+        locations[blob] = str(source)
+        if unit_id == "cmp":
+            comparison = Unit(unit_id="cmp", repo="owner/rejected", path="rejected.dsp",
+                              blob_sha=blob, decision="rights_rejected", entry_id="cmp")
+        else:
+            cleared.append(Unit(unit_id=unit_id, repo="owner/" + unit_id, path=f"{unit_id}.dsp",
+                                blob_sha=blob, entry_id=unit_id))
+    monkeypatch.setattr(module, "parse_corpus", lambda *args: SimpleNamespace(
+        units=cleared, comparisons=[comparison], inventory_digest="inv", notice_digest="notice"))
+    monkeypatch.setattr(module, "verify_manifest", lambda *args: {})
+    inputs = {
+        "sources.json": locations,
+        "discovery.json": {"blob_locations": {}},
+        "candidate.json": {},
+        "qualification.json": {"units": []},
+        "groups.json": [],
+        "baseline.json": {"rows": []},
+    }
+    for name, data in inputs.items():
+        (tmp_path / name).write_text(json.dumps(data))
+
+    def once(name, marginal_coverage):
+        out = tmp_path / name
+        module.run(root, tmp_path, tmp_path / "candidate.json", tmp_path / "qualification.json",
+                   tmp_path / "groups.json", tmp_path / "baseline.json", out,
+                   marginal_coverage=marginal_coverage)
+        ledger = json.loads((out / "candidate-ledger.json").read_text())
+        return {row["unit_id"]: row["quarantine_candidate"] for row in ledger["units"]}
+
+    default = once("default-rule", False)
+    opted = once("marginal-rule", True)
+    assert default["noise"] is True
+    assert all(default[f"c{i}"] is True for i in range(4))
+    assert opted["noise"] is False
+    assert all(opted[f"c{i}"] is True for i in range(4))
 
 
 def test_learned_sets_change_idiom_digest():
@@ -453,16 +577,18 @@ def _three_way_items(alphabet, start=0):
     return items
 
 
-def test_marginal_selection_keeps_going_until_three_contributors():
+def test_marginal_selection_keeps_adding_while_new_coverage_remains():
     from faustcoder.neardup import select_collective_contributors
-    whole = frozenset(f"s{i}" for i in range(10))
+    whole = frozenset(f"s{i}" for i in range(12))
     overlaps = {
         "a": frozenset(f"s{i}" for i in range(4)),
         "b": frozenset(f"s{i}" for i in range(4, 8)),
         "c": frozenset({"s8", "s9"}),
+        "d": frozenset({"s10", "s11"}),
         "noise": frozenset({"s0"}),
     }
-    assert select_collective_contributors(overlaps, whole) == ["a", "b", "c"]
+    # a and b already cover more than half. d still adds shingles, so it joins.
+    assert select_collective_contributors(overlaps, whole) == ["a", "b", "c", "d"]
 
 
 def test_opt_in_catches_three_way_split_and_excludes_noise():
@@ -508,14 +634,20 @@ def test_opt_in_catches_two_independent_three_way_copies():
     alphabet = _symbol_alphabet()
     items = []
     cursor = 0
+    first_piece = None
     for name in ("a", "b"):
         pieces = []
         for index in range(3):
             text = _piece(alphabet, cursor, 18)
             cursor += 18
             pieces.append(text)
+            if first_piece is None:
+                first_piece = text
             items.append((f"{name}{index}", text))
         items.append((f"cmp{name}", " ".join(pieces)))
+    # Subset of a selected piece, plus tokens absent from both comparisons.
+    noise = " ".join(first_piece.split()[:5]) + " " + " ".join(alphabet[cursor:cursor + 30])
+    items.append(("noise", noise))
     result, groups = _groups(items, ["cmpa", "cmpb"], marginal_coverage=True)
     assert result["cmpa"] != result["cmpb"]
     for name in ("a", "b"):
@@ -524,20 +656,59 @@ def test_opt_in_catches_two_independent_three_way_copies():
         mine = [group for group in groups if group["comparison"] == f"cmp{name}"]
         assert {group["stream"] for group in mine} == {"raw", "canonical"}
         assert all(group["contributors"] == members for group in mine)
+    assert result["noise"] != result["cmpa"]
+    assert result["noise"] != result["cmpb"]
+    for stream in ("raw", "canonical"):
+        streamed = [group for group in groups if group["stream"] == stream]
+        assert streamed
+        assert all("noise" not in group["contributors"] for group in streamed)
 
 
-def test_opt_in_four_way_excludes_noise():
+def _assert_opt_in_k_way(k):
     alphabet = _symbol_alphabet()
-    pieces = [_piece(alphabet, i * 18, 18) for i in range(4)]
-    noise = " ".join(pieces[0].split()[:5]) + " " + " ".join(alphabet[200:240])
-    items = [("cmp", " ".join(pieces))] + [(f"c{i}", pieces[i]) for i in range(4)] + [("noise", noise)]
+    pieces = [_piece(alphabet, i * 18, 18) for i in range(k)]
+    noise = " ".join(pieces[0].split()[:5]) + " " + " ".join(alphabet[k * 18:k * 18 + 30])
+    items = [("cmp", " ".join(pieces))] + [(f"c{i}", pieces[i]) for i in range(k)] + [("noise", noise)]
     result, groups = _groups(items, ["cmp"], marginal_coverage=True)
-    assert groups
-    assert all(group["contributors"] == ["c0", "c1", "c2"] for group in groups)
-    assert all("noise" not in group["contributors"] and "c3" not in group["contributors"] for group in groups)
+    expect = [f"c{i}" for i in range(k)]
+    assert {group["stream"] for group in groups} == {"raw", "canonical"}
+    for stream in ("raw", "canonical"):
+        streamed = [group for group in groups if group["stream"] == stream]
+        assert streamed
+        assert all(group["contributors"] == expect for group in streamed)
+        assert all("noise" not in group["contributors"] for group in streamed)
+    assert all(result[name] == result["cmp"] for name in expect)
     assert result["noise"] != result["cmp"]
-    assert result["c3"] != result["cmp"]
-    assert all(result[f"c{i}"] == result["cmp"] for i in range(3))
+
+
+def test_opt_in_four_way_includes_every_copy_and_excludes_noise():
+    _assert_opt_in_k_way(4)
+
+
+def test_opt_in_five_way_includes_every_copy_and_excludes_noise():
+    _assert_opt_in_k_way(5)
+
+
+def test_opt_in_six_way_includes_every_copy_and_excludes_noise():
+    _assert_opt_in_k_way(6)
+
+
+def test_opt_in_group_id_keeps_marginal_marker():
+    """N6: dropping the marginal mark makes the group id the bare main key."""
+    from faustcoder.canonical import canonical_bytes, sha256_prefixed
+    from faustcoder.neardup import COLLECTIVE_MIN_MARGINAL
+    items = _three_way_items(_symbol_alphabet())
+    _, groups = _groups(items, ["cmp"], marginal_coverage=True)
+    assert groups
+    marker = {"marginal_coverage": True, "collective_min_marginal": COLLECTIVE_MIN_MARGINAL}
+    for group in groups:
+        canonical = group["stream"] == "canonical"
+        bare = [group["comparison"], group["contributors"], canonical, group["floor"]]
+        marked = [*bare, marker]
+        assert group["group_id"] == sha256_prefixed(canonical_bytes(marked))
+        assert group["group_id"] != sha256_prefixed(canonical_bytes(bare))
+        assert group["marginal_coverage"] is True
+        assert group["collective_min_marginal"] == COLLECTIVE_MIN_MARGINAL
 
 
 def test_scope_off_group_id_is_the_unmarked_main_key():

@@ -52,10 +52,11 @@ unmarked key ``[comparison, contributors, canonical, floor]``.
 
 ``marginal_coverage`` is a separate opt-in. It keeps only units that add
 at least ``COLLECTIVE_MIN_MARGINAL`` not-yet-covered comparison shingles.
-Selection does not stop at the 1/2 threshold while fewer than three
-contributors are selected. It stops once three contributors meet that
-threshold, or when no remaining unit supplies the minimum. The opt-in
-idiom filter is a different switch and does not turn marginal coverage on.
+Selection keeps adding while any remaining unit supplies that minimum.
+It does not stop when three contributors cover half. The group is still
+emitted only when at least three contributors cover at least half. The
+opt-in idiom filter is a different switch and does not turn marginal
+coverage on.
 """
 
 from __future__ import annotations
@@ -322,10 +323,11 @@ def select_collective_contributors(
 ) -> list[str]:
     """Return units that each add ``COLLECTIVE_MIN_MARGINAL`` new shingles.
 
-    Greedy by descending new coverage, then unit id. Do not stop when the
-    1/2 containment threshold is reached with fewer than three contributors.
-    Stop once three contributors meet that threshold, or when no remaining
-    unit supplies the minimum (coverage is complete).
+    Greedy by descending new coverage, then unit id. Keep adding while any
+    remaining unit supplies the minimum. Do not stop at three contributors
+    or at the 1/2 threshold. A unit whose overlap is already covered is
+    left out. The caller still requires at least three contributors and
+    half coverage before it emits a group.
     """
     if type(COLLECTIVE_MIN_MARGINAL) is not int or COLLECTIVE_MIN_MARGINAL < 1:
         raise ValueError("COLLECTIVE_MIN_MARGINAL must be an int >= 1")
@@ -335,8 +337,6 @@ def select_collective_contributors(
     contributors: list[str] = []
     supplied: set[str] = set()
     while remaining:
-        if len(contributors) >= 3 and containment_at_least(whole, frozenset(supplied)):
-            break
         best = min(remaining, key=lambda key: (-len(overlaps[key] - supplied), key))
         added = overlaps[best] - supplied
         if len(added) < COLLECTIVE_MIN_MARGINAL:
@@ -580,7 +580,7 @@ def _raw_cluster_families(
     if comparison:
         token_of = {item_id: tokenize(text) for item_id, text in text_of.items()}
         if scope is not None:
-            # Opt-in comparison scope (UNREVIEWED proposal). Document
+            # Opt-in idiom filter (UNREVIEWED proposal). Document
             # frequency is counted on this stream over non-comparison items.
             idiom = idiom_shingles(
                 {key: shingles(value) for key, value in token_of.items()},

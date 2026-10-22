@@ -1,4 +1,4 @@
-"""Planted-window sensitivity check for an opt-in comparison scope.
+"""Planted-window sensitivity check for an opt-in idiom filter.
 
 AGENT DIAGNOSTIC, NOT FLOOR QUALIFICATION. It plants unlabeled candidate
 windows (not gold) into pool hosts and asks, pair by pair, whether the

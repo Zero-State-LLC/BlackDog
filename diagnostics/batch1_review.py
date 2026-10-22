@@ -62,18 +62,27 @@ def validate_outputs(output):
             raise ValueError("output marginal coverage mismatch: " + name)
         if sha256_prefixed((output / name).read_bytes()) != receipt["sha256"]:
             raise ValueError("output hash mismatch: " + name)
+    marginal_line = "Marginal coverage: `" + ("on" if marginal else "off") + "`"
     for name in ("candidate-ledger.json", "summary.json"):
-        inline = json.loads((output / name).read_text()).get("idiom_filter")
-        if inline != descriptor:
+        payload = json.loads((output / name).read_text())
+        if payload.get("idiom_filter") != descriptor:
             raise ValueError("inline scope mismatch: " + name)
+        if payload.get("marginal_coverage") is not marginal:
+            raise ValueError("inline marginal coverage mismatch: " + name)
     packet_dir = output / "packets"
     if packet_dir.is_dir():
         for packet in packet_dir.glob("*.json"):
-            if json.loads(packet.read_text()).get("idiom_filter") != descriptor:
+            body = json.loads(packet.read_text())
+            if body.get("idiom_filter") != descriptor:
                 raise ValueError("packet scope mismatch: " + packet.name)
+            if body.get("marginal_coverage") is not marginal:
+                raise ValueError("packet marginal coverage mismatch: " + packet.name)
         for packet in packet_dir.glob("*.md"):
-            if descriptor["label"] not in packet.read_text():
+            text = packet.read_text()
+            if descriptor["label"] not in text:
                 raise ValueError("packet scope name missing: " + packet.name)
+            if marginal_line not in text:
+                raise ValueError("packet marginal coverage missing: " + packet.name)
     return binding
 
 def run(repo, acquisition, candidate, qualification, groups, baseline, output, scope=None,
@@ -110,10 +119,11 @@ def run(repo, acquisition, candidate, qualification, groups, baseline, output, s
 
     def save(name, data):
         # Ledger, summary, packets and the other computed JSON records name
-        # the idiom filter, including explicit scope=off. source-index stays
-        # a source map. binding.json records the same descriptor itself.
+        # the idiom filter, including explicit scope=off, and the marginal
+        # coverage flag. source-index stays a source map. binding.json records
+        # the same descriptor and flag itself.
         if isinstance(data, dict) and name not in ("source-index.json", "binding.json"):
-            data = {**data, "idiom_filter": descriptor}
+            data = {**data, "idiom_filter": descriptor, "marginal_coverage": marginal_coverage}
         (output / name).write_bytes(
             canonical_bytes(json.loads(json.dumps(data))) + b"\n"
         )
@@ -402,6 +412,8 @@ def run(repo, acquisition, candidate, qualification, groups, baseline, output, s
             "",
             "Idiom filter record: `" + json.dumps(descriptor, sort_keys=True) + "`",
             "",
+            "Marginal coverage: `" + ("on" if marginal_coverage else "off") + "`",
+            "",
         ]
         for k in members:
             v = byid[k]
@@ -522,7 +534,7 @@ def main():
                    help="minimum distinct repositories for an idiom shingle (>=2)")
     p.add_argument(
         "--marginal-coverage", action="store_true",
-        help="opt-in collective rule: keep adding marginal contributors until 3 cover half; default off",
+        help="opt-in collective rule: keep units that add new coverage, then require at least 3 covering half; default off",
     )
     a = p.parse_args()
     scope = (
