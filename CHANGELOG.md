@@ -8,6 +8,28 @@ See [docs/VERSIONING.md](docs/VERSIONING.md).
 
 ## [Unreleased]
 
+- Record seven-span bounded compiler/signal validation: 28 positive runs, five negative controls, receipt locations and preservation results. Independent production approval, 958 missing ranges and T06/T07 qualification gates remain open; TOKEN_FLOOR stays 40/provisional and T07 unfrozen.
+
+- Document the unapproved seven-span production candidate, 958 missing spans, verified source blobs, receipt locations and remaining qualification gaps. Full-inventory validation still refuses incomplete coverage; TOKEN_FLOOR stays 40/provisional and T07 remains unfrozen.
+
+- Record merged #89 function-span extraction and merged-main Spark verification (143 regressions; 92,319 preserved files/symlinks), full CI (668 passed), receipt locations and remaining T06/T07 qualification gates. TOKEN_FLOOR remains 40/provisional; T07 remains unfrozen.
+
+- Require independently digest-pinned, reviewed byte spans for admitted T06 function units. Bind extracted bytes and span provenance into Example and DedupManifest records; reject missing, overlapping, stale or mismatched ranges. Preserve whole-blob quarantine and comparison guards. TOKEN_FLOOR stays 40/provisional and T07 remains unfrozen.
+
+- Render pinned Faust library imports using shared compiler/renderer staging and mounted-tree hash verification. Keep the host library tree read-only, reject symlinks and remote imports, and bind the staging helper and library pin into signal harness identity. Add sandbox regressions; numerical tolerances and goldens remain unchanged.
+
+- Record the isolated spark-af42 T10 direct Hugging Face environment, passing import/dense CUDA checks, preserved setup/receipts and unresolved cuSPARSELt platform-tag dependency blocker. Synchronize the Kanban and canonical task status; no validation bypass or training readiness is claimed.
+
+- Record successful spark-af42 T09 fingerprinting on `0cd3382`, verified receipt IDs and durable off-host evidence; retain T10 blockers for Axolotl/torch compatibility, model-stack/throughput validation and training dependency gates. No training or stack pin is claimed.
+
+- Record completed T04 ARM/x86 validation and merged-main readiness in the board and runbooks; plan T09 fingerprint evidence with workload clearance, the existing supported torch environment and off-host receipt verification. T09 evidence was pending at that stage; the successful spark-af42 execution is recorded above.
+
+- Correct the DSP-bank biquad feedback sign and delay, reject nonfinite bank output, and regenerate x86 goldens from finite renders verified byte-for-byte on ARM. Add finite-output and independent recurrence regressions without changing tolerances.
+
+- Record spark-af42 setup and validation, reconcile merged #71/#74/#77 in the board and docs index, and plan outstanding ARM comparison, T09 fingerprint and training prerequisites.
+
+- Fix native sandbox capability dropping on ARM64 using libc capset; retain fail-closed behavior and verify cleared capabilities and no-new-privileges. Separate default unshare path validation from execution with the configured dedicated binary on restricted hosts.
+
 ### Security
 
 - Human triage of a D3-H2 halt counts only with an OpenSSH Ed25519 signature in namespace `faustcoder-triage-v1`, verified with `ssh-keygen -Y verify` at both the grader-written `appended_at` and `triaged_at`. Those times, and `valid-after` / `valid-before` / `-Overify-time`, are UTC. The verifier is the absolute path `/usr/bin/ssh-keygen` (the constant `SSH_KEYGEN_PATH`), a root-owned regular file that is not group- or world-writable and not a symlink. `PATH` is not consulted, and the version check runs that binary rather than `ssh -V`. A timeout is a refusal. The allowed-signers file is `/etc/faustcoder/triage-allowed-signers`, root-owned, mode `0644`. Each line is one principal with a UTC `valid-after`. A second principal, a pattern character (`*`, `?`, `!`, `,`), a duplicate key, a missing or unparseable `valid-after`, a missing or misowned list, an unknown key, a bad signature, a parse error, a missing `ssh-keygen`, or OpenSSH older than 8.7 leaves the halt in place. OpenSSH is checked when P3 starts. One reviewer clears an ordinary halt. A late halt needs two distinct principals and two distinct key fingerprints. The same principal twice counts once. The same key twice counts once. The recorded writer is the drop-file owner, read with `fstat` on an `O_NONBLOCK | O_NOFOLLOW` fd. A symlink, a FIFO, a hard link, or a drop owned by `fc-grader` or root, does not clear a halt. A `v:1` line and a run-key MAC alone do not clear a halt. P3 refuses to start unless the process is the dedicated `fc-grader` account, not uid 1000, and not an enrolled reviewer. A software key is enough, including for Danny's key. Spec 001 is 0.3.11.

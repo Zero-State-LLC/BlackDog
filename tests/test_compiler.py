@@ -1029,6 +1029,23 @@ def test_native_sandbox_masks_a_host_faust_share(tmp_path: Path) -> None:
     assert plain.stdout.endswith(b"visible\n")
 
 
+def test_native_sandbox_drops_all_capabilities_and_sets_no_new_privs(tmp_path: Path) -> None:
+    masked = tmp_path / "masked"
+    masked.mkdir()
+    run = run_in_sandbox(
+        ["/bin/cat", "/proc/self/status"],
+        stdin=b"",
+        workdir=tmp_path,
+        limits=ResourceLimits(timeout_s=5),
+        mask_directories=(masked,),
+    )
+    assert run.returncode == 0, run.stderr
+    status = dict(line.split(":", 1) for line in run.stdout.decode().splitlines() if ":" in line)
+    for field in ("CapInh", "CapPrm", "CapEff", "CapAmb"):
+        assert int(status[field].strip(), 16) == 0, (field, status[field])
+    assert status["NoNewPrivs"].strip() == "1"
+
+
 def test_faust_fallback_mounts_skip_missing_and_resolve_symlinks(tmp_path: Path) -> None:
     missing = tmp_path / "absent"
     present = tmp_path / "faust"
@@ -1840,6 +1857,16 @@ def test_unshare_path_defaults_to_the_system_binary(
     assert Path(system).name == "unshare"
     monkeypatch.setenv("FAUSTCODER_UNSHARE", system)
     assert unshare_executable() == str(Path(system).resolve())
+    monkeypatch.setenv("FAUSTCODER_UNSHARE", str(tmp_path / "missing-unshare"))
+    with pytest.raises(SandboxError, match="FAUSTCODER_UNSHARE"):
+        unshare_executable()
+    monkeypatch.setenv("FAUSTCODER_UNSHARE", "unshare")
+    with pytest.raises(SandboxError, match="absolute"):
+        unshare_executable()
+
+
+def test_configured_unshare_executes_in_sandbox(tmp_path: Path) -> None:
+    # Preserve the dedicated AppArmor-approved binary on self-hosted runners.
     run = run_in_sandbox(
         ["/bin/true"],
         stdin=b"",
@@ -1848,12 +1875,6 @@ def test_unshare_path_defaults_to_the_system_binary(
     )
     assert run.returncode == 0
     assert run.stop_reason == ""
-    monkeypatch.setenv("FAUSTCODER_UNSHARE", str(tmp_path / "missing-unshare"))
-    with pytest.raises(SandboxError, match="FAUSTCODER_UNSHARE"):
-        unshare_executable()
-    monkeypatch.setenv("FAUSTCODER_UNSHARE", "unshare")
-    with pytest.raises(SandboxError, match="absolute"):
-        unshare_executable()
 
 
 def _copy_library_checkout(destination: Path) -> None:

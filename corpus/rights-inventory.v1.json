@@ -2467,7 +2467,7 @@
         "commit": "2edec0537f536eaa130d42c354884d7db971663c",
         "ref": "master"
       },
-      "file_count": 742,
+      "file_count": 737,
       "license": "LGPL-2.1-or-later",
       "evidence_label": "OBSERVED",
       "evidence_uri": "https://github.com/grame-cncm/faustlibraries/blob/2edec0537f536eaa130d42c354884d7db971663c/basics.lib",
@@ -6052,31 +6052,6 @@
           "path": "soundfiles.lib",
           "blob_sha": "63349341fd766d6064725c8881ddaf002b7a1ce2",
           "function": "sound"
-        },
-        {
-          "path": "soundfiles.lib",
-          "blob_sha": "63349341fd766d6064725c8881ddaf002b7a1ce2",
-          "function": "s1"
-        },
-        {
-          "path": "soundfiles.lib",
-          "blob_sha": "63349341fd766d6064725c8881ddaf002b7a1ce2",
-          "function": "sample1"
-        },
-        {
-          "path": "soundfiles.lib",
-          "blob_sha": "63349341fd766d6064725c8881ddaf002b7a1ce2",
-          "function": "sample2"
-        },
-        {
-          "path": "soundfiles.lib",
-          "blob_sha": "63349341fd766d6064725c8881ddaf002b7a1ce2",
-          "function": "sample3"
-        },
-        {
-          "path": "soundfiles.lib",
-          "blob_sha": "63349341fd766d6064725c8881ddaf002b7a1ce2",
-          "function": "play"
         },
         {
           "path": "spats.lib",

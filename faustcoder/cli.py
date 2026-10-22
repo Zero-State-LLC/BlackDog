@@ -61,6 +61,12 @@ def main(argv: Sequence[str] | None = None) -> int:
             actor=args.actor,
             created_at=args.created_at,
             compile_check=args.compile_check,
+            function_spans=(
+                loads_strict(Path(args.function_spans).read_text(encoding="utf-8"))
+                if args.function_spans
+                else None
+            ),
+            function_spans_digest=args.function_spans_digest,
         )
         digest = commit_snapshot(ArtifactStore(args.store), compiled)
     except (CompilerGateError, InventoryError, PolicyError, CanonicalError, OSError, ValueError) as exc:
@@ -87,6 +93,10 @@ def _parser() -> argparse.ArgumentParser:
         "--notice",
         required=True,
         help="T05 notice-manifest.v1 JSON",
+    )
+    parser.add_argument("--function-spans", help="reviewed function-spans.v1 JSON")
+    parser.add_argument(
+        "--function-spans-digest", help="independently pinned canonical sha256 digest"
     )
     parser.add_argument("--store", required=True, help="artifact store directory")
     parser.add_argument(

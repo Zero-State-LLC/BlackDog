@@ -508,6 +508,59 @@ def test_hard_clip_levels_fail_the_loud_sine_and_the_twin_tone() -> None:
     assert ess["passband_millihz"][1] - ess["passband_millihz"][0] > 15_000_000
 
 
+@pytest.mark.parametrize("name", DSP_BANK)
+def test_dsp_bank_output_is_finite(name: str) -> None:
+    profile = nonlinear_suite_profile()
+    run = run_signal(DSP_BANK[name], profile, _reference(profile, lambda samples: samples),
+                     options=PINNED_COMPILE_FLAGS)
+    for stimulus in profile.stimuli:
+        render = run.receipt["metrics"]["renders"][stimulus]
+        assert render["finite"], (name, stimulus)
+        assert render["nan_count"] == 0, (name, stimulus)
+        assert render["inf_count"] == 0, (name, stimulus)
+
+
+def test_biquad_cascade_matches_stable_recurrence() -> None:
+    # Independent direct-form-II reference: w[n] = x[n] - a1*w[n-1] - a2*w[n-2].
+    # This checks feedback sign and delay, not just the absence of NaNs.
+    def cascade(samples):
+        for b0, b1, b2, a1, a2 in (
+            (0.02, 0.04, 0.02, -1.4, 0.5),
+            (0.03, 0.02, 0.03, -1.2, 0.4),
+            (0.05, 0.0, 0.05, -1.1, 0.3),
+        ):
+            b0, b1, b2, a1, a2 = map(f32, (b0, b1, b2, a1, a2))
+            w1 = w2 = 0.0
+            output = []
+            for sample in samples:
+                w0 = f32(sample - f32(f32(a1 * w1) + f32(a2 * w2)))
+                output.append(f32(f32(f32(b0 * w0) + f32(b1 * w1)) + f32(b2 * w2)))
+                w2, w1 = w1, w0
+            samples = output
+        return samples
+
+    profile = nonlinear_suite_profile()
+    run = run_signal(DSP_BANK["biquad_cascade"], profile, _reference(profile, cascade),
+                     options=PINNED_COMPILE_FLAGS)
+    assert run.receipt["passed"], run.receipt["failures"]
+
+
+@pytest.mark.parametrize("bad_render", [
+    {"finite": False, "nan_count": 1, "inf_count": 0},
+    {"finite": False, "nan_count": 0, "inf_count": 1},
+])
+def test_dsp_bank_refuses_nonfinite_hashes(monkeypatch, bad_render) -> None:
+    from types import SimpleNamespace
+    import faustcoder.signal as signal
+
+    profile = nonlinear_suite_profile()
+    monkeypatch.setattr(signal, "run_signal", lambda *args, **kwargs: SimpleNamespace(
+        receipt={"metrics": {"renders": {name: bad_render for name in profile.stimuli}}}
+    ))
+    with pytest.raises(SignalHarnessError, match="DSP bank biquad_cascade/.*: nonfinite output"):
+        render_dsp_bank()
+
+
 def test_dsp_bank_matches_committed_x86_goldens() -> None:
     if platform.machine() not in {"x86_64", "AMD64"}:
         pytest.skip("x86 goldens; ARM compare is pending on the DGX Spark")

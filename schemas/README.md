@@ -14,7 +14,7 @@ file. That commit is #31, when `target-receipt.schema.json` was added to
 the contracts. The schema files were edited again after it. The last of
 those edits is #45.
 
-`inference-api.md` is not a JSON Schema and is not copied. Each `$id` is
+`inference-api.md` is not a JSON Schema and is not copied. Existing `$id` values are
 still `https://github.com/Zero-State-LLC/FaustCoder/specs/001-faustcoder/contracts/<name>`.
 That host is the former repository name. It is the schema identity, not a
 link to a live clone. The repository is `Zero-State-LLC/BlackDog`. The
@@ -62,3 +62,6 @@ nothing excluded. `get` and `list` recompute it and reject a mismatch,
 including a rewrite of `producer`, `created_at`, `parents`,
 `schema_version`, `artifact_id`, `content_digest` or `payload` that
 leaves the sidecar unchanged.
+
+`function-spans.schema.json` is added with the BlackDog identity in ADR-0007;
+its source and copy match. Existing schema identities are unchanged.
