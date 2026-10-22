@@ -242,7 +242,7 @@ no human adjudication or qualification gate is complete.**
 | Copy-label proposals | 18 COPY, 156 UNRESOLVED, 0 NOT_COPY |
 | Raw-match reproduction | 18/18 reproduced with both supplied tokenizers; comparison Git blobs verified; regenerated JSON/CSV byte-identical |
 | Source-notice proposals | 166 PROPOSED_APPROVE, 8 UNRESOLVED; agent proposals, not human rights clearance |
-| Dependency decisions | All 174 UNRESOLVED; no complete pinned closure manifests |
+| Dependency decisions | All 174 UNRESOLVED; 174 pinned drafts now available, none complete or human-approved |
 | Gates | All seven PENDING; zero adjudicated approvals |
 
 **AI-only review correction:** Prabu explicitly states he is an AI agent. The
@@ -309,10 +309,9 @@ Both `linearalgebra.lib` rows now remain UNRESOLVED/BLOCKED because the MIT line
 sits under an LGPL header. The 166 PROPOSED_APPROVE values still require notice
 re-checks and qualified human review; none establishes rights clearance.
 
-Obtain human decisions on the 18 matches and unresolved cohort, complete pinned
-per-unit/group closures keyed by source hash and library pin, and bind contract
-authorship plus independent human review. Forge drafting closure manifests is a
-proposal pending owner assignment, not an approved dependency decision. Do not
+Obtain human decisions on the 18 matches and unresolved cohort, review the
+owner-authorized closure drafts below, and bind contract authorship plus independent
+human review. Draft production does not approve any dependency decision. Do not
 substitute this 174-unit cohort for the 1,430-unit pool, 23 short-collision groups
 or 19 collective-support sets.
 The proposed October 22 kickoff (America/Denver) is unconfirmed; human capacity
@@ -321,13 +320,82 @@ or keys exist in the packet. A human-controlled private location and review
 channel must be documented before private task creation. `TOKEN_FLOOR=40` stays
 provisional and T07 stays unfrozen.
 
+### Pinned dependency-closure drafts: human review pending
+
+Owner-authorized drafting on main `cee7fa6` produced **174 draft manifests**:
+46 function slices and 128 whole-file units across 21 review groups. Each binds
+R2 unit/source/dossier identity, original Git blob and commit pin, selected source
+bytes, proposed local helpers and qualified members, a transitive file/import
+envelope, foreign/resource candidates and a validation plan. All remain
+`DRAFT_PENDING_HUMAN_REVIEW`, with `closure_complete=false`,
+`production_approved=false`, no human approval and no independent reviewer.
+The R2 CSV and its disposition/source-notice proposals remain unchanged.
+
+The shared graph contains 528 hash-verified file identity nodes; each unit's
+conservative envelope contains 1–47 files. Supporting nodes outside the 174-unit
+cohort do not expand admission. Canonical and runtime-share library tree hashes
+match the repository pins, including the `old/` and `dx7/` file aliases. No
+missing or ambiguous literal import file candidates remain in these envelopes.
+This does not establish Faust name resolution, actual use, minimal executable
+closure, complete semantic closure or rights clearance.
+
+| Draft validation | Result and scope |
+| --- | --- |
+| Manifest checks | 174/174 passed; immutable bindings, source bytes and file envelopes checked |
+| Function spans | Exact selected byte ranges verified for all 46 function units |
+| Tampering controls | 5/5 rejected: invented approval, wrong commit pin, dropped envelope node, altered source binding and frozen T07 |
+| Scanner/path checks | 10/10 passed, including comments/strings, malformed syntax, dynamic imports, traversal and foreign-header classification |
+| Preservation | 113,301 prior metadata entries unchanged; 870 read-input hashes rechecked; original R1/R2/replay manifests passed |
+| Off-host backup | Archive digest and all 940 payload checksums passed |
+
+These are automated structural checks, not human adjudication or new compiler,
+signal or full-suite results. Metadata preservation checks are not full content
+hashes of every environment. No environment changes or DSP execution occurred.
+
+Remaining observed gaps include **19 qualified-reference occurrences across six
+units** (`ma.EPSILON` and `bpf.start`/`point`/`end`). Selected-unit foreign/resource
+references occur in six units; C headers are distinguished from Faust members.
+Use `member-gaps.json` and `foreign-resource-review.json` for the exact inventory.
+Every draft still needs review of local shadowing, parameters, overload dispatch,
+environment scope, import ordering, foreign resources and scoped notices.
+
+Start with `REVIEW-INDEX.md` and the 174-row `human-review-queue.csv`, organized
+into 21 groups. Human reviewers must refine the conservative envelopes into
+complete pinned closures, resolve gaps and notice conflicts, and bind independent
+contracts before production compiler/signal validation. The per-unit plans call
+for the existing dedicated sandbox, dependency-removal negative controls,
+corruption/substitution rejection and independently authored target-exercising
+semantic references at 44.1/48 kHz. These planned checks have not run or passed.
+
+Final draft receipts, all outside Git and `/tmp`:
+
+- Spark: `/home/delphi/blackdog-r2-closures-20261022T0424Z-v3/`.
+  Includes `units/*.DRAFT.json`, `index.DRAFT.json`, `file-graph.DRAFT.json`,
+  review queue/index, gap inventories, pinned input/source snapshots, generator
+  and validator, `tests.json`, `validation.json`, `preservation.json`, `REPORT.md`
+  and `SHA256SUMS` (940 payloads). Earlier attempts remain preserved; v3 is the
+  final draft handoff.
+- Off-host archive: `/Users/appliedalchemylabs/Documents/Codex/blackdog-s2-backups/blackdog-r2-closures-20261022T0424Z-v3.tar.gz`,
+  with adjacent `.tar.gz.sha256`. SHA-256:
+  `8c25300cd26ab025ff0677fe846942dbbff98e3648f439887522fb20bb64b925`.
+- Readable report: `/Users/appliedalchemylabs/Documents/Codex/blackdog-s2-backups/blackdog-r2-closures-20261022T0424Z-v3-REPORT.md`,
+  with adjacent `.md.sha256`.
+
+No unit was promoted: 18 proposed COPY/REJECT, 156 BLOCKED, zero retained;
+166 proposed notice approvals and eight unresolved notices remain agent-only.
+All 174 dependency decisions and all seven gates remain pending. Human
+assignments, contract authorship/independence, kickoff/coverage and private
+custody remain unresolved. The full 1,430-unit pool, 23 short-collision groups
+and 19 collective-support sets remain required. `TOKEN_FLOOR=40` stays
+provisional and T07 stays unfrozen.
+
 ### Pending gates and next actions
 
 | Gate | Owner | Evidence required before advancing |
 | --- | --- | --- |
 | S1 confirmations | Owner + named humans | Packet access/integrity verified; replace agent role assumptions with human assignments, agree kickoff/coverage and document independence/custody |
 | S2 source/leakage | Human adjudicators, to be confirmed | Technical intake/reproduction passed; obtain human source/notice and COPY/NOT_COPY/unresolved decisions, including boundary/scaffolding cases and relevant short/collective adjudication |
-| S3 closure/behavior | Implementation owner + independent contract reviewer | Pinned complete closures including external members, independent contracts, semantic references and positive/negative receipts |
+| S3 closure/behavior | Implementation owner + independent contract reviewer | Review/refine the 174 drafts into complete pinned closures including external members; bind independent contracts, then obtain semantic references and positive/negative receipts |
 | S4/S5 FLOOR | Human reviewer + evaluator | Two cleared host repositories, real rejected windows, fixed gold/labels and the complete ratified measurement protocol |
 | S6 development/custody | Owner + named human evaluator/custodian and independent reviewer | Document private custody/reviewer channel and conflicts; qualify disjoint development tasks and independent private tasks; only approved exclusion metadata/public verification reaches Spark |
 | S7 integration | Implementation owner + reviewers | Bound reproducible dossier, exception review and an explicit milestone decision after prerequisite gates |

@@ -163,9 +163,35 @@ verified off-host `.tar.gz` archive and checksum under the local backup root
 specified in the sprint runbook (23 archived payloads). R1 and R2 originals
 remain intact; both manifests passed after the fresh R2 replay. R2 explicitly
 says pending human adjudication and leaves the independent reviewer blank.
-Closure drafting remains a proposal pending owner assignment. Preserve the full
+Owner-authorized drafting has now produced the 174 manifests described below;
+none is a complete or approved closure. Preserve the full
 1,430-unit pool, 23 short-collision groups and 19 collective-support sets.
 Kickoff remains unconfirmed, `TOKEN_FLOOR=40` provisional and T07 unfrozen.
+
+## Dependency-closure draft handoff
+
+The [174 pinned drafts](qualification-sprint.md#pinned-dependency-closure-drafts-human-review-pending)
+cover 46 function slices and 128 whole-file units in 21 groups, with source,
+Git-blob/commit and R2 dossier bindings. All 174 manifest checks passed, along
+with five tampering controls and ten scanner/path checks. The shared graph has
+528 hash-verified file nodes and conservative per-unit envelopes of 1–47 files.
+No missing/ambiguous literal import file candidates remain; semantic closure,
+actual use and rights are not established. No compiler/signal/full-suite run
+was performed for these drafts.
+
+Nineteen qualified-reference occurrences across six units remain unresolved
+(`ma.EPSILON` and `bpf.start`/`point`/`end`); six units have selected foreign/resource
+references. All drafts retain incomplete/unapproved status and pending human
+review of scope, shadowing, overloads, import ordering, foreign resources,
+notices and independent contracts. Review the 21-group queue, refine complete
+closures, then execute approved sandbox and semantic/negative-control plans.
+
+Spark receipts: `/home/delphi/blackdog-r2-closures-20261022T0424Z-v3/`.
+Off-host archive: `/Users/appliedalchemylabs/Documents/Codex/blackdog-s2-backups/blackdog-r2-closures-20261022T0424Z-v3.tar.gz`
+with SHA-256 sidecar; all 940 archived payloads passed. The sprint runbook records
+the digest, readable report and preservation checks. R1/R2 inputs and environments
+remain preserved. All 174 dependency decisions and seven gates remain pending;
+`TOKEN_FLOOR=40` remains provisional and T07 remains unfrozen.
 
 ## Remaining exit gates
 
