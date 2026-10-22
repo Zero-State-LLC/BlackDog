@@ -19,7 +19,7 @@ separately, and T07/T10 remain Backlog.
 | --- | --- | --- |
 | Batch 1 evidence and hash-format review | Done: #99, `ce8087a` | Eight CI checks; 771 tests passed |
 | S1 scope and owner assignment | Technical preparation complete; confirmations pending | 1,430 units / 110 packets / 510 blobs verified; packet/bindings verified; Prabu is an AI agent; human assignments, kickoff, coverage and custody pending |
-| S2 source/leakage and S3 closure/behavior | Forge R2 DRAFT verified; 18/18 matches reproduced; 18 proposed REJECT / 156 BLOCKED / 0 retained; no human approvals | Hash-bound per-unit decisions, approved closures/contracts and reproducible positive/negative receipts |
+| S2 source/leakage and S3 closure/behavior | Forge R2 and 174 closure drafts verified structurally; 18/18 matches reproduced; 18 proposed REJECT / 156 BLOCKED / 0 retained; no human approvals | Hash-bound per-unit decisions, approved closures/contracts and reproducible positive/negative receipts |
 | S4 two-project hosts and S5 FLOOR | Blocked on approved inputs | Ratified gold/label protocol and complete measurement result |
 | S6 development/custody | Human custody/reviewer assignments require confirmation after AI-only correction | Document private custody/review channel; disjoint reviewed tasks and custody commitments still required |
 | S7 qualification dossier | Planned after S2–S6 | One reviewed delivery; explicit pass or blocked milestone decision |
@@ -73,6 +73,23 @@ payloads passed. R1 and R2 originals passed post-replay checks and remain intact
 R2 says pending human adjudication; independent contract reviewer stays blank.
 No raw artifacts enter Git. See the runbook for hashes and limitations.
 
+The [174 pinned dependency-closure drafts](docs/runbooks/qualification-sprint.md#pinned-dependency-closure-drafts-human-review-pending)
+cover 46 function slices and 128 whole-file units across 21 groups. All 174
+manifest checks, five tampering controls and ten scanner/path checks passed;
+all 940 off-host payload checksums passed. These are structural checks, not
+compiler/signal results or human approvals. The 528-node shared file graph
+provides conservative envelopes, not complete executable closures. Nineteen
+qualified-reference occurrences across six units remain unresolved; six units
+have selected foreign/resource references. Every draft still needs semantic,
+notice and independent contract review; no unit is admitted.
+
+Final Spark receipts: `/home/delphi/blackdog-r2-closures-20261022T0424Z-v3/`;
+start with `REVIEW-INDEX.md` and `human-review-queue.csv`. Off-host archive:
+`/Users/appliedalchemylabs/Documents/Codex/blackdog-s2-backups/blackdog-r2-closures-20261022T0424Z-v3.tar.gz`
+with checksum sidecar and a standalone `-REPORT.md`. The runbook records the
+archive digest, validation scope and remaining gates. Environments and prior
+receipts remain preserved; all drafts stay pending human approval.
+
 The supplement on `2dd588a` completed 9,918 isolated-pair comparisons and 12
 uncached parity checks. At floor 40: 103 direct-trigger units, 69
 indirect-family-only units and two unflagged candidates. These are diagnostic
@@ -96,7 +113,7 @@ Private task creation waits for a documented human-controlled boundary.
 
 Next: agree human assignments and kickoff/coverage, obtain human identity/hash-bound
 source/leakage decisions (including boundary/scaffolding cases and notice conflicts),
-complete independently reviewed closures/contracts, qualify two-project FLOOR hosts and
+review/refine the 174 closure drafts and bind independent contracts, qualify two-project FLOOR hosts and
 fixed gold/labels, and establish disjoint development tasks plus separate holdout
 custody. S1 remains open for confirmations; S2–S6 prerequisites and S7 completion
 remain pending. `TOKEN_FLOOR=40` stays provisional and T07 stays unfrozen.
