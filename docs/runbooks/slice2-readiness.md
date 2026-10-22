@@ -1,5 +1,18 @@
 # Slice 2 leakage and split readiness
 
+## Latest human source decision
+
+Danny approved COPY/shared lineage for the exact pinned `filter.lib` / `filters.lib`
+pair, candidate `u8ea99a0a7cb570b53333`, for leakage and family handling.
+See the [approval bindings, receipt and remaining gates](qualification-sprint.md#superseding-filter-pair-copy-approval--2026-10-22).
+The receipt is outside Git at
+`/Users/appliedalchemylabs/Documents/Codex/blackdog-s2-backups/blackdog-filter-source-approval-20261022T201616Z/`.
+Earlier pending wording for this pair is superseded; other source, dependency,
+family/split, two-project FLOOR and independent private custody gates remain open.
+Existing seven-file source/MIT and contract approvals remain valid within their
+recorded scope. No production admission; PR #110 remains unmerged,
+`TOKEN_FLOOR=40` provisional and T07 unfrozen.
+
 ## Status
 
 Branch `feat/slice2-leakage-readiness` starts at merged main `7f16258`
@@ -254,6 +267,23 @@ Matching off-host directories under
 `/Users/appliedalchemylabs/Documents/Codex/blackdog-s2-backups/` are checksum-verified.
 All 31 R3b payloads, seven bindings, 61 replayed pairs and 332 span rows passed.
 No production admission; TOKEN_FLOOR=40 provisional and T07 unfrozen.
+
+## Imported-notice handling decision
+
+Danny Meyer approved scoped notice handling for exact `.default.dsp` and
+`gain.dsp`, preserving their MIT notice separately from pinned `stdfaust.lib`'s
+GRAME LGPL-2.1-or-later notice and complete compiled-code exception.
+[Bindings, evidence and remaining gates](qualification-sprint.md#imported-notice-handling-approval--2026-10-22).
+Receipt: `/Users/appliedalchemylabs/Documents/Codex/blackdog-s2-backups/blackdog-imported-notice-approval-20261022T221607Z/`;
+six payloads checksum-verified. Full LGPL license text must accompany any
+redistributed library-source bundle; it is not included in this receipt.
+
+This closes the scoped notice-handling decision only. The 44-file conservative
+envelope is not collectively cleared; native filesystem tracing, where required,
+is still absent. Human closure/host and family/split review, broader third-party
+scope, two-project hosts and fixed-gold FLOOR measurements, development/custody
+and integration gates remain open. No host or production admission.
+PR #110 stays unmerged; `TOKEN_FLOOR=40` provisional; T07 unfrozen.
 
 ## Remaining exit gates
 

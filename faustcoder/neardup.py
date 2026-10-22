@@ -43,6 +43,20 @@ texts.
 Family ids are ``sha256:`` of the canonical JSON array of the sorted
 unique normalized digests in the component. The id does not depend on
 unit ids or comparison order.
+
+Collective support on the shipping path unions every non-comparison unit
+that shares at least one shingle with the comparison unit. The group
+still needs at least three such units, and their union must cover at
+least half of the comparison shingles. Group ids on that path are the
+unmarked key ``[comparison, contributors, canonical, floor]``.
+
+``marginal_coverage`` is a separate opt-in. It keeps only units that add
+at least ``COLLECTIVE_MIN_MARGINAL`` not-yet-covered comparison shingles.
+Selection keeps adding while any remaining unit supplies that minimum.
+It does not stop when three contributors cover half. The group is still
+emitted only when at least three contributors cover at least half. The
+opt-in idiom filter is a different switch and does not turn marginal
+coverage on.
 """
 
 from __future__ import annotations
@@ -53,6 +67,7 @@ import unicodedata
 from collections.abc import Collection, Iterable, Sequence
 
 from faustcoder.canonical import canonical_bytes, sha256_prefixed
+from faustcoder.idiom_filter import IdiomFilter, idiom_shingles, scoped
 
 NGRAM_N = 5
 THRESHOLD_NUMERATOR = 4
@@ -68,6 +83,11 @@ VERBATIM_RUN = TOKEN_FLOOR
 # (INFERRED).
 CONTAINMENT_NUMERATOR = 1
 CONTAINMENT_DENOMINATOR = 2
+# Opt-in marginal coverage only. A unit joins that rule when it supplies
+# at least this many comparison shingles that no already selected unit
+# covers. 1 means any positive new coverage. The shipping default does
+# not use this constant: any shared shingle can join.
+COLLECTIVE_MIN_MARGINAL = 1
 # Short texts never reach the token shingles. A character 5-gram
 # fallback covers them. Jaccard is still an integer compare.
 # Texts of at least 32 non-space characters match at 4/5.
@@ -281,6 +301,53 @@ def containment_at_least(
     return len(part & whole) * denominator >= len(part) * numerator
 
 
+def collective_scope_mark(scope, idiom: frozenset[str] | None) -> dict:
+    """Identity of an enabled idiom filter inside a collective group id.
+
+    Scope off does not append this mark. The unmarked key is main's group
+    id. An enabled filter appends the mark so its id cannot match scope off
+    when the selected units match.
+    """
+    if scope is None:
+        return {"enabled": False, "label": "scope=off"}
+    return {
+        **scope.describe(),
+        "enabled": True,
+        "label": f"idiom_filter:D={scope.idiom_min_docs}:k={scope.idiom_min_repos}",
+        "idiom_set_sha256": sha256_prefixed(canonical_bytes(sorted(idiom or ()))),
+    }
+
+
+def select_collective_contributors(
+    overlaps: dict[str, frozenset[str]], whole: frozenset[str]
+) -> list[str]:
+    """Return units that each add ``COLLECTIVE_MIN_MARGINAL`` new shingles.
+
+    Greedy by descending new coverage, then unit id. Keep adding while any
+    remaining unit supplies the minimum. Do not stop at three contributors
+    or at the 1/2 threshold. A unit whose overlap is already covered is
+    left out. The caller still requires at least three contributors and
+    half coverage before it emits a group.
+    """
+    if type(COLLECTIVE_MIN_MARGINAL) is not int or COLLECTIVE_MIN_MARGINAL < 1:
+        raise ValueError("COLLECTIVE_MIN_MARGINAL must be an int >= 1")
+    remaining = {
+        key for key, overlap in overlaps.items() if len(overlap) >= COLLECTIVE_MIN_MARGINAL
+    }
+    contributors: list[str] = []
+    supplied: set[str] = set()
+    while remaining:
+        best = min(remaining, key=lambda key: (-len(overlaps[key] - supplied), key))
+        added = overlaps[best] - supplied
+        if len(added) < COLLECTIVE_MIN_MARGINAL:
+            break
+        contributors.append(best)
+        supplied.update(added)
+        remaining.remove(best)
+    contributors.sort()
+    return contributors
+
+
 def has_verbatim_run(
     part: Sequence[str],
     whole: Sequence[str],
@@ -409,6 +476,8 @@ def _raw_cluster_families(
     items: Sequence[tuple[str, str]],
     comparison_ids: Collection[str] = (),
     *, floor: int = TOKEN_FLOOR, canonical: bool = False, evidence: list | None = None,
+    scope: IdiomFilter | None = None, item_repos: dict[str, str] | None = None,
+    marginal_coverage: bool = False,
 ) -> dict[str, str]:
     """Map each item id to a duplicate-family id.
 
@@ -507,12 +576,24 @@ def _raw_cluster_families(
     unknown = comparison - seen
     if unknown:
         raise ValueError(f"comparison id is not in the cluster: {min(unknown)}")
+    idiom = None
     if comparison:
         token_of = {item_id: tokenize(text) for item_id, text in text_of.items()}
+        if scope is not None:
+            # Opt-in idiom filter (UNREVIEWED proposal). Document
+            # frequency is counted on this stream over non-comparison items.
+            idiom = idiom_shingles(
+                {key: shingles(value) for key, value in token_of.items()},
+                comparison, scope.idiom_min_docs, item_repos=item_repos,
+                min_repos=scope.idiom_min_repos)
+            if evidence is not None:
+                evidence.append(dict(reason="idiom_filter", **collective_scope_mark(scope, idiom),
+                                     idiom_shingles=len(idiom),
+                                     stream="canonical" if canonical else "raw", floor=floor))
         cleared_ids = [item_id for item_id in ordered_ids if item_id not in comparison]
         compared_ids = [item_id for item_id in ordered_ids if item_id in comparison]
         whole_shingles = {
-            item_id: shingles(token_of[item_id]) for item_id in compared_ids
+            item_id: scoped(shingles(token_of[item_id]), idiom) for item_id in compared_ids
         }
         whole_runs = {
             item_id: shingles(token_of[item_id], floor)
@@ -522,7 +603,7 @@ def _raw_cluster_families(
         }
         for part_id in cleared_ids:
             part_tokens = token_of[part_id]
-            part_shingles = shingles(part_tokens)
+            part_shingles = scoped(shingles(part_tokens), idiom)
             part_long = len(part_tokens) >= floor
             part_runs = shingles(part_tokens, floor) if part_long else frozenset()
             for whole_id in compared_ids:
@@ -546,20 +627,40 @@ def _raw_cluster_families(
         # Reuse source features for collective coverage; no pairwise re-tokenization.
         all_shingles = {key: shingles(value) for key, value in token_of.items()}
         for whole_id in sorted(comparison):
-            whole = shingle_of[whole_id]
+            whole = scoped(shingle_of[whole_id], idiom)
             if not whole:
                 continue
             overlaps = {key: all_shingles[key] & whole
                         for key in ordered_ids if key not in comparison}
-            contributors = [key for key, overlap in overlaps.items() if overlap]
-            covered = frozenset().union(*(overlaps[key] for key in contributors))
+            # Shipping path matches main: any shared shingle may join.
+            # Marginal coverage is opt-in and is the only path that drops
+            # a unit whose overlap is already covered.
+            if marginal_coverage:
+                contributors = select_collective_contributors(overlaps, whole)
+            else:
+                contributors = [key for key, overlap in overlaps.items() if overlap]
+            covered = frozenset().union(*(overlaps[key] for key in contributors)) if contributors else frozenset()
             if len(contributors) >= 3 and containment_at_least(whole, covered):
-                group_id = sha256_prefixed(canonical_bytes([whole_id, contributors, canonical, floor]))
+                group_key = [whole_id, contributors, canonical, floor]
+                if scope is not None:
+                    group_key.append(collective_scope_mark(scope, idiom))
+                if marginal_coverage:
+                    group_key.append({
+                        "marginal_coverage": True,
+                        "collective_min_marginal": COLLECTIVE_MIN_MARGINAL,
+                    })
+                group_id = sha256_prefixed(canonical_bytes(group_key))
                 if evidence is not None:
-                    evidence.append(dict(reason="collective_support", group_id=group_id,
-                                         comparison=whole_id, contributors=contributors,
-                                         covered=len(covered), denominator=len(whole),
-                                         stream="canonical" if canonical else "raw", floor=floor))
+                    record = dict(reason="collective_support", group_id=group_id,
+                                  comparison=whole_id, contributors=contributors,
+                                  covered=len(covered), denominator=len(whole),
+                                  stream="canonical" if canonical else "raw", floor=floor)
+                    if scope is not None:
+                        record["idiom_filter"] = collective_scope_mark(scope, idiom)
+                    if marginal_coverage:
+                        record["marginal_coverage"] = True
+                        record["collective_min_marginal"] = COLLECTIVE_MIN_MARGINAL
+                    evidence.append(record)
                 for key in contributors:
                     union(key, whole_id, "collective_union", group_id=group_id)
 
@@ -605,18 +706,33 @@ def _hit_counts(candidate: str, text: str, *, floor: int = TOKEN_FLOOR):
     return None
 
 
-def cluster_families(items, comparison_ids=(), *, floor: int = TOKEN_FLOOR, evidence: list | None = None):
+def cluster_families(items, comparison_ids=(), *, floor: int = TOKEN_FLOOR, evidence: list | None = None,
+                     scope: IdiomFilter | None = None, item_repos: dict[str, str] | None = None,
+                     marginal_coverage: bool = False):
     """OR raw and canonical components; ids remain bound to original text.
 
     Canonical short exact matches are fail-closed pending reviewed idiom pairs.
-    No automatic boilerplate exemption or rights override is introduced.
+    With the default ``scope=None`` no automatic boilerplate exemption or rights
+    override is introduced. An ``IdiomFilter`` is an opt-in, UNREVIEWED proposal
+    (see ``faustcoder.idiom_filter``); it never changes exact, Jaccard,
+    verbatim-run or short-match joins. It is not the
+    ``incomplete_comparison_scope`` blocker. Collective joins use main's
+    any-overlap rule unless ``marginal_coverage`` is set. That flag is not
+    implied by the idiom filter.
     Optional evidence records the deterministic joining forest and collective
     support sets, not every matching pair and not adjudicated copy labels.
     """
     _require_floor(floor)
-    raw = _raw_cluster_families(items, comparison_ids, floor=floor, evidence=evidence)
+    if scope is not None and not isinstance(scope, IdiomFilter):
+        raise TypeError("scope must be an IdiomFilter or None")
+    if type(marginal_coverage) is not bool:
+        raise TypeError("marginal_coverage must be a bool")
+    raw = _raw_cluster_families(
+        items, comparison_ids, floor=floor, evidence=evidence, scope=scope,
+        item_repos=item_repos, marginal_coverage=marginal_coverage)
     canonical = _raw_cluster_families(
-        [(key, _canonical_source(text)) for key, text in items], comparison_ids, floor=floor, canonical=True, evidence=evidence)
+        [(key, _canonical_source(text)) for key, text in items], comparison_ids, floor=floor, canonical=True,
+        evidence=evidence, scope=scope, item_repos=item_repos, marginal_coverage=marginal_coverage)
     parent = {key: key for key, _ in items}
     def find(key):
         while parent[key] != key:

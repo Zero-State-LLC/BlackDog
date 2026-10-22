@@ -19,12 +19,46 @@ separately, and T07/T10 remain Backlog.
 | --- | --- | --- |
 | Batch 1 evidence and hash-format review | Done: #99, `ce8087a` | Eight CI checks; 771 tests passed |
 | S1 scope and owner assignment | Technical preparation complete; confirmations pending | 1,430 units / 110 packets / 510 blobs verified; packet/bindings verified; Prabu is an AI agent; seven-contract reviewer/custodian named; remaining assignments, kickoff, coverage and private custody pending |
-| S2 source/leakage and S3 closure/behavior | Owner approved R2/closure packets as presented; Danny approved seven contracts. Seven exact R3b files approved NOT_COPY/repository-MIT; bounded dependency/behavior checks pass; historical R2: 18 REJECT / 156 BLOCKED / 0 retained; no production admission | Hash-bound per-unit decisions, approved closures/contracts and reproducible positive/negative receipts |
+| S2 source/leakage and S3 closure/behavior | Owner approved R2/closure packets as presented; Danny approved seven contracts. Seven exact R3b files approved NOT_COPY/repository-MIT; exact filter pair approved COPY/shared lineage; .default/gain imported-notice handling approved (no host admission); bounded dependency/behavior checks pass; historical R2: 18 REJECT / 156 BLOCKED / 0 retained; no production admission | Hash-bound per-unit decisions, approved closures/contracts and reproducible positive/negative receipts |
 | S4 two-project hosts and S5 FLOOR | Blocked on approved inputs | Ratified gold/label protocol and complete measurement result |
 | S6 development/custody | Danny named human custodian/task reviewer; independent author, actual storage and human-only access pending | Document private custody/review channel; disjoint reviewed tasks and custody commitments still required |
 | S7 qualification dossier | Planned after S2–S6 | One reviewed delivery; explicit pass or blocked milestone decision |
 
-## Latest: seven files approved NOT_COPY and repository-level MIT
+## Imported-notice handling approved; host gates remain open
+
+**Done: scoped decision receipt. S4/S5 remain blocked.** Danny Meyer approved
+imported-notice handling for exact `.default.dsp` and `gain.dsp` and their pinned
+`stdfaust.lib` binding. Preserve the source MIT notice separately from the GRAME
+LGPL notice and compiled-code exception; no blanket imported-library clearance.
+[Scope, evidence and remaining gates](docs/runbooks/qualification-sprint.md#imported-notice-handling-approval--2026-10-22).
+
+Receipt: `/Users/appliedalchemylabs/Documents/Codex/blackdog-s2-backups/blackdog-imported-notice-approval-20261022T221607Z/`;
+six payloads verified, artifacts outside Git. Full LGPL license text must accompany
+any redistributed library-source bundle; it is not included in this receipt.
+
+Next: review closure/host and family/split eligibility, resolve broader notice
+scope and any required native path trace, establish two cleared host repositories
+and fixed gold/labels, complete FLOOR and independent custody/development gates.
+No host or production admission. PR #110 unmerged; `TOKEN_FLOOR=40` provisional;
+T07 unfrozen. Prior approvals and immutable evidence remain preserved.
+
+## Filter pair human approval recorded
+
+**Done: decision receipt. Qualification remains blocked.** Danny approved
+COPY/shared lineage for the exact pinned `filter.lib` / `filters.lib` pair
+(candidate `u8ea99a0a7cb570b53333`) for leakage and family handling.
+[Bindings, evidence and open gates](docs/runbooks/qualification-sprint.md#superseding-filter-pair-copy-approval--2026-10-22).
+Receipt: `/Users/appliedalchemylabs/Documents/Codex/blackdog-s2-backups/blackdog-filter-source-approval-20261022T201616Z/`;
+five files checksum verified, artifacts outside Git. Original packets unchanged.
+
+Next: bind the decision into family/split review; resolve remaining source/notice
+and dependency scope; complete independent behavior qualification, full-pool and
+two-project FLOOR evidence, and independent private author/storage/access/review
+confirmation. Existing approvals are preserved; this decision grants no
+production admission. PR #110 stays unmerged; idiom filtering stays default-off,
+`TOKEN_FLOOR=40` stays provisional and T07 stays unfrozen.
+
+## Seven files approved NOT_COPY and repository-level MIT
 
 Danny Meyer approved all seven exact R3b-bound pd-faustgen source files on
 2026-10-22. [Scope, verification and remaining gates](docs/runbooks/qualification-sprint.md#seven-file-source-and-mit-approval-2026-10-22)
