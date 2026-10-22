@@ -19,7 +19,7 @@ separately, and T07/T10 remain Backlog.
 | --- | --- | --- |
 | Batch 1 evidence and hash-format review | Done: #99, `ce8087a` | Eight CI checks; 771 tests passed |
 | S1 scope and owner assignment | Technical preparation complete; confirmations pending | 1,430 units / 110 packets / 510 blobs verified; packet/bindings verified; Prabu is an AI agent; human assignments, kickoff, coverage and custody pending |
-| S2 source/leakage and S3 closure/behavior | Forge DRAFT verified; 18/18 matches reproduced; 18 proposed REJECT / 156 BLOCKED / 0 retained; no human approvals | Hash-bound per-unit decisions, approved closures/contracts and reproducible positive/negative receipts |
+| S2 source/leakage and S3 closure/behavior | Forge R2 DRAFT verified; 18/18 matches reproduced; 18 proposed REJECT / 156 BLOCKED / 0 retained; no human approvals | Hash-bound per-unit decisions, approved closures/contracts and reproducible positive/negative receipts |
 | S4 two-project hosts and S5 FLOOR | Blocked on approved inputs | Ratified gold/label protocol and complete measurement result |
 | S6 development/custody | Human custody/reviewer assignments require confirmation after AI-only correction | Document private custody/review channel; disjoint reviewed tasks and custody commitments still required |
 | S7 qualification dossier | Planned after S2–S6 | One reviewed delivery; explicit pass or blocked milestone decision |
@@ -55,20 +55,23 @@ delivery; he now reports working access and completed packet/S1 hash checks.
 The later Forge draft is not an adjudicated return; agreed day 1 remains pending.
 A 15-minute reply monitor is configured, but does not establish approval.
 
-The [verified Forge packet](docs/runbooks/qualification-sprint.md#forge-first-pass-draft-and-verified-intake)
+The [verified Forge R2 packet](docs/runbooks/qualification-sprint.md#forge-first-pass-draft-and-verified-intake)
 passes all 18 file checksums and 174 source/dossier bindings. All 18 matches
 reproduce with both supplied tokenizers and byte-identical evidence. Draft counts
-remain 18 COPY/REJECT, 156 BLOCKED, zero retained; 168 notice APPROVE proposals and
-six unresolved. All 174 dependencies and all seven gates remain unresolved/pending.
+remain 18 COPY/REJECT, 156 BLOCKED, zero retained; 166 PROPOSED_APPROVE notices and
+eight unresolved (both linearalgebra notice proposals downgraded). All 174
+dependencies and all seven gates remain unresolved/pending.
 **Prabu is an AI agent: the three earlier spot-checks were not human checks.**
 No human adjudication is established. Six matches are exactly 40 under tokenizer
 A; one is 43. Boundary and shared UI/scaffolding cases still need human decisions.
 
-Delivered packet: `/home/delphi/blackdog-s2-forge-draft-return-20261022T015921Z/`.
-Verification: `/home/delphi/blackdog-s2-forge-verified-20261022T0213Z/`;
-off-host backup uses that directory name under the local `blackdog-s2-backups/`
-root below. All 22 archived verification payloads passed. Original receipts are
-preserved; no raw artifacts enter Git. See the runbook for hashes and limitations.
+Delivered R2: `/home/delphi/blackdog-s2-forge-draft-return-R2-20261022T035347Z/`.
+Verification: `/home/delphi/blackdog-s2-forge-r2-verified-20261022T0356Z/`;
+off-host archive is `blackdog-s2-forge-r2-verified-20261022T0356Z.tar.gz` under
+the local backup root below, with an adjacent SHA-256 sidecar. All 23 archived
+payloads passed. R1 and R2 originals passed post-replay checks and remain intact.
+R2 says pending human adjudication; independent contract reviewer stays blank.
+No raw artifacts enter Git. See the runbook for hashes and limitations.
 
 The supplement on `2dd588a` completed 9,918 isolated-pair comparisons and 12
 uncached parity checks. At floor 40: 103 direct-trigger units, 69

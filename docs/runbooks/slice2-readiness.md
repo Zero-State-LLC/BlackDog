@@ -144,24 +144,28 @@ Prabu. These supplement the historical audit above and Batch 1's expanded
 1,430-unit scope. The original return template remains UNREVIEWED; no gate below was closed.
 Prabu subsequently delivered the Forge packet and corrected his identity to AI
 agent. Earlier role acceptance and three spot-checks were not human review.
-The [verified packet](qualification-sprint.md#forge-first-pass-draft-and-verified-intake)
+The [verified R2 packet](qualification-sprint.md#forge-first-pass-draft-and-verified-intake)
 passes all 18 manifest checks, 174 source/dossier bindings and reproduction of all
 18 matches with both supplied tokenizers; regenerated evidence is byte-identical.
 Six matches are exactly 40 under tokenizer A; one is 43. These are reproduction
 results, not human COPY adjudication or final floor acceptance.
 
-Draft counts remain 18 proposed REJECT, 156 BLOCKED and zero retained; 168 notice
-APPROVE proposals and six unresolved. All dependencies and seven gates remain
-pending. Human review must resolve boundary/scaffolding cases, JOS attribution,
-routes section boundaries and the linearalgebra notice conflict, then complete
-pinned closures, author/reviewer bindings and private custody.
+Draft counts remain 18 proposed REJECT, 156 BLOCKED and zero retained; 166 notice
+PROPOSED_APPROVE values and eight unresolved after both linearalgebra downgrades.
+All dependencies and seven gates remain pending. Human review must resolve
+boundary/scaffolding cases, JOS attribution,
+routes helper scope within the cited MIT range and the linearalgebra notice
+conflict, then complete pinned closures, author/reviewer bindings and private custody.
 
-Packet: `/home/delphi/blackdog-s2-forge-draft-return-20261022T015921Z/`.
-Verification: `/home/delphi/blackdog-s2-forge-verified-20261022T0213Z/`, with a
-verified off-host archive under the matching local backup directory documented
-in the sprint runbook (22 archived payloads). Preserve the full 1,430-unit pool,
-23 short-collision groups and 19 collective-support sets. Kickoff remains
-unconfirmed, `TOKEN_FLOOR=40` provisional and T07 unfrozen.
+R2 packet: `/home/delphi/blackdog-s2-forge-draft-return-R2-20261022T035347Z/`.
+Verification: `/home/delphi/blackdog-s2-forge-r2-verified-20261022T0356Z/`, with a
+verified off-host `.tar.gz` archive and checksum under the local backup root
+specified in the sprint runbook (23 archived payloads). R1 and R2 originals
+remain intact; both manifests passed after the fresh R2 replay. R2 explicitly
+says pending human adjudication and leaves the independent reviewer blank.
+Closure drafting remains a proposal pending owner assignment. Preserve the full
+1,430-unit pool, 23 short-collision groups and 19 collective-support sets.
+Kickoff remains unconfirmed, `TOKEN_FLOOR=40` provisional and T07 unfrozen.
 
 ## Remaining exit gates
 

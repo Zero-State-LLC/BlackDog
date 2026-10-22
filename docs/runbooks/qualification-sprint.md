@@ -228,7 +228,7 @@ as new evidence, never written over the original unreviewed packet.
 
 ### Forge first-pass draft and verified intake
 
-On 2026-10-21 PT, the Forge/Sol packet was delivered on `spark-af42`. Verification
+On 2026-10-21 PT, the Forge/Sol R2 packet was delivered on `spark-af42`. Verification
 used a fresh copy outside Git and `/tmp`, preserving the delivered packet and
 its reproduction directory. **Structural validation and match reproduction pass;
 no human adjudication or qualification gate is complete.**
@@ -241,17 +241,21 @@ no human adjudication or qualification gate is complete.**
 | Disposition proposals | 18 REJECT, 156 BLOCKED, 0 RETAIN_CANDIDATE |
 | Copy-label proposals | 18 COPY, 156 UNRESOLVED, 0 NOT_COPY |
 | Raw-match reproduction | 18/18 reproduced with both supplied tokenizers; comparison Git blobs verified; regenerated JSON/CSV byte-identical |
-| Source-notice proposals | 168 APPROVE, 6 UNRESOLVED; not human rights clearance |
+| Source-notice proposals | 166 PROPOSED_APPROVE, 8 UNRESOLVED; agent proposals, not human rights clearance |
 | Dependency decisions | All 174 UNRESOLVED; no complete pinned closure manifests |
 | Gates | All seven PENDING; zero adjudicated approvals |
 
 **AI-only review correction:** Prabu explicitly states he is an AI agent. The
 previously reported three personal spot-checks were agent checks, not human
 checks; he extended his cross-check to all 18. Forge on `gpt-5.6-sol` produced
-the draft after the interrupted Luna run. The packet's reviewer stamp still says
-`forge-sol (draft, pending Prabu adjudication)`; that wording is not authority
-for Prabu to adjudicate. Historical receipts stay immutable. A revised packet
-should say pending human adjudication and preserve earlier versions.
+the draft after the interrupted Luna run. R2 now says
+`forge-sol (R2 draft, pending human adjudication; source/leakage review)`.
+The immutable `assigned_reviewer=Prabu` binding does not confer adjudication
+authority. `independent_contract_reviewer` remains blank on all 174 rows.
+R1 is preserved unchanged; its earlier “pending Prabu adjudication” wording is
+historical, not a human approval. R2 downgrades both `linearalgebra.lib` notice
+proposals to UNRESOLVED, correcting R1's 168 proposals / six unresolved to
+**166 proposals / eight unresolved**.
 
 Tokenizer A is the supplied comment-stripped, NFKC-normalized raw tokenizer;
 B is a separately written tokenization cross-check that retains comments.
@@ -265,44 +269,52 @@ matches also await human sign-off. Reproduction does not ratify an inclusive
 
 The original CSV digest is verified as
 `32316c1f340cb4eb68596f67ccf866c057a5978d34bbbb7f25a9c4829402c7ec`.
-Delivered draft CSV digest:
-`e89f29e1f91f6bddbf930514931d0356dc8dd723ac3e343a1563d25c155cbe29`.
-Delivered `SHA256SUMS` digest:
-`5f84bd7bc65177d295f6ac8f9f79353bfe8064310bca06c10af27edbd8716adf`.
-The manifest covers **18**, not the 17 files initially reported. The replay also
-verified the original return/direct/S1 manifests (4 + 182 + 1,680 entries).
+Delivered R2 draft CSV digest:
+`ff68a0c2f07e0c95bea35f5af99d06622da7f743b0d53b5f5d0c284594c08c51`.
+Delivered R2 `SHA256SUMS` digest:
+`e90c78df8d3a1d6c8fc4333e62bbeb7d9f41568967d734dbe35033f7c32b631f`.
+All 18 payloads passed. A fresh R2 validator and two-tokenizer replay passed in
+an isolated receipt directory; generated JSON/CSV is byte-identical to delivery.
+The validator also checked return/direct/S1 manifests (4 + 182 + 1,680 entries).
+Both original R1 and R2 manifests passed again after replay.
 
 Receipt locations, all outside Git and `/tmp`:
 
-- Delivered packet: `/home/delphi/blackdog-s2-forge-draft-return-20261022T015921Z/`.
-  Includes draft CSV/gates, notes, validator/generator/reproduction scripts,
-  comparison blobs, match evidence and `SHA256SUMS`.
-- Verification: `/home/delphi/blackdog-s2-forge-verified-20261022T0213Z/`.
-  Includes `assessment.json`, `reproduction.log`, `original-after.log`, copied
-  packet and `SHA256SUMS`. Original packet checks passed again after replay.
-- Off-host backup: `/Users/appliedalchemylabs/Documents/Codex/blackdog-s2-backups/blackdog-s2-forge-verified-20261022T0213Z/`.
-  Includes `spark-receipts.tar.gz`, `email-evidence.json` and `SHA256SUMS`.
-  All 22 archived verification payload checks passed; the backup's two file
-  checksums were rechecked for this documentation update. Reproduction scratch
-  files/symlinks are excluded from the archive.
-- Earlier summary/request intake remains at
-  `/home/delphi/blackdog-s2-forge-draft-intake-20261022T001253Z/` and its matching
-  off-host directory; it is historical summary evidence, not the delivered packet.
+- Complete R2 packet: `/home/delphi/blackdog-s2-forge-draft-return-R2-20261022T035347Z/`.
+- R2 verification: `/home/delphi/blackdog-s2-forge-r2-verified-20261022T0356Z/`.
+  Contains `assessment.json`, `REPORT.md`, `validation.log`, `reproduction.log`,
+  `original-manifests-after.log`, copied packet and `SHA256SUMS`.
+- Off-host R2 archive: `/Users/appliedalchemylabs/Documents/Codex/blackdog-s2-backups/blackdog-s2-forge-r2-verified-20261022T0356Z.tar.gz`.
+  All 23 archived payload checksums passed; replay scratch/symlinks are excluded.
+  Adjacent `.tar.gz.sha256` digest:
+  `c31c2f980f9306fef79551764f0a420959c244583e6dbba058435c643affcf2e`.
+- Earlier partial R2 intake: `/home/delphi/blackdog-s2-forge-r2-intake-20261022T0349Z/`
+  and matching directory under the local `blackdog-s2-backups/` root. The complete
+  delivery supersedes its transport blocker; no further packet request is needed.
+- Preserved R1 packet: `/home/delphi/blackdog-s2-forge-draft-return-20261022T015921Z/`.
+  R1 CSV digest: `e89f29e1f91f6bddbf930514931d0356dc8dd723ac3e343a1563d25c155cbe29`;
+  R1 manifest digest: `5f84bd7bc65177d295f6ac8f9f79353bfe8064310bca06c10af27edbd8716adf`.
+  R1 verification remains `/home/delphi/blackdog-s2-forge-verified-20261022T0213Z/`
+  with its matching off-host backup directory (22 archived payloads).
 
 Remaining review work is substantive. The two JOS-attributed units
 `u669fb3ae2b89fb0d49af` and `uc9ddf0f62f5b6577cb64` need pinned attribution evidence.
-The four routes helpers need exact pinned MIT bitonic-section boundaries versus
-the file-wide LGPL notice. Their links remain
+R2 records routes.lib commit `2edec0537f536eaa130d42c354884d7db971663c`,
+blob `b5e22c181d2f18e1a4548c735df05cddcdf490c9`, file-wide LGPL lines 20–45
+and MIT bitonic range 419–470. These packet citations still require human scope
+review; all four units remain UNRESOLVED/BLOCKED. Their links remain
 `u076896a91f7701b693f8` → `ucc2017a1332ec6436113` and
 `u9f0c7ae700a832f1fdaf` → `u9a92732462d9fdc78df5`; links do not establish closure.
-Recheck `linearalgebra.lib`'s literal MIT declaration under an LGPL header; it
-cannot be treated as cleared by the draft's APPROVE value. All notice values
-remain proposals until qualified human review.
+Both `linearalgebra.lib` rows now remain UNRESOLVED/BLOCKED because the MIT line
+sits under an LGPL header. The 166 PROPOSED_APPROVE values still require notice
+re-checks and qualified human review; none establishes rights clearance.
 
 Obtain human decisions on the 18 matches and unresolved cohort, complete pinned
 per-unit/group closures keyed by source hash and library pin, and bind contract
-authorship plus independent human review. Do not substitute this 174-unit cohort
-for the 1,430-unit pool, 23 short-collision groups or 19 collective-support sets.
+authorship plus independent human review. Forge drafting closure manifests is a
+proposal pending owner assignment, not an approved dependency decision. Do not
+substitute this 174-unit cohort for the 1,430-unit pool, 23 short-collision groups
+or 19 collective-support sets.
 The proposed October 22 kickoff (America/Denver) is unconfirmed; human capacity
 and coverage still need agreement. Custody remains a plan only; no private tasks
 or keys exist in the packet. A human-controlled private location and review
