@@ -96,7 +96,7 @@ def main() -> None:
         after_tree_sha256=hashlib.sha256(json.dumps(tree_hashes(a.after), sort_keys=True).encode()).hexdigest(),
         before_files={f: sha(a.before / f) for f in ("candidate-ledger.json", "match-evidence.json", "short-collision-groups.json", "summary.json", "binding.json")},
         after_files={f: sha(a.after / f) for f in ("candidate-ledger.json", "match-evidence.json", "short-collision-groups.json", "summary.json", "binding.json")},
-        comparison_scope=scope_rows,
+        idiom_filter=scope_rows,
         pool=count(units), cohort_174=count([u for u in units if u["in_cohort"]]) if cohort else None,
         quarantine_transitions={f"{k[0]}->{k[1]}": v for k, v in flips.items()},
         links=dict(before=len(b_links), after=len(a_links), removed=len(b_links - a_links), added=len(a_links - b_links),

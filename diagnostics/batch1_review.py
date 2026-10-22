@@ -11,7 +11,7 @@ from faustcoder.inventory import parse_corpus
 from faustcoder.function_spans import verify_manifest, extract_span
 from faustcoder.normalize import normalize_bytes
 from faustcoder.neardup import cluster_families, canonical_tokens, tokens, shingles
-from faustcoder.comparison_scope import ComparisonScope, idiom_shingles, scope_descriptor
+from faustcoder.idiom_filter import IdiomFilter, idiom_shingles, scope_descriptor
 
 
 def evidence_paths(edges, comparison_ids):
@@ -46,15 +46,20 @@ def validate_outputs(output):
     binding = json.loads((output / "binding.json").read_text())
     if "idiom_filter" not in binding:
         raise ValueError("binding omits idiom filter scope")
-    if "faustcoder/comparison_scope.py" not in binding.get("code", {}):
-        raise ValueError("binding omits comparison_scope.py")
+    if "faustcoder/idiom_filter.py" not in binding.get("code", {}):
+        raise ValueError("binding omits idiom_filter.py")
+    if type(binding.get("marginal_coverage")) is not bool:
+        raise ValueError("binding omits marginal coverage")
     descriptor = binding["idiom_filter"]
+    marginal = binding["marginal_coverage"]
     files = {str(p.relative_to(output)) for p in output.rglob("*") if p.is_file()} - {"binding.json"}
     if files != set(binding["outputs"]):
         raise ValueError("output inventory mismatch")
     for name, receipt in binding["outputs"].items():
         if receipt.get("idiom_filter") != descriptor:
             raise ValueError("output scope mismatch: " + name)
+        if receipt.get("marginal_coverage") is not marginal:
+            raise ValueError("output marginal coverage mismatch: " + name)
         if sha256_prefixed((output / name).read_bytes()) != receipt["sha256"]:
             raise ValueError("output hash mismatch: " + name)
     for name in ("candidate-ledger.json", "summary.json"):
@@ -71,7 +76,10 @@ def validate_outputs(output):
                 raise ValueError("packet scope name missing: " + packet.name)
     return binding
 
-def run(repo, acquisition, candidate, qualification, groups, baseline, output, scope=None):
+def run(repo, acquisition, candidate, qualification, groups, baseline, output, scope=None,
+        marginal_coverage=False):
+    if type(marginal_coverage) is not bool:
+        raise TypeError("marginal_coverage must be a bool")
     inventory = json.loads((repo / "corpus/rights-inventory.v1.json").read_text())
     notice = json.loads((repo / "corpus/notice-manifest.v1.json").read_text())
     corpus = parse_corpus(inventory, notice)
@@ -126,7 +134,7 @@ def run(repo, acquisition, candidate, qualification, groups, baseline, output, s
                 "faustcoder/normalize.py",
                 "faustcoder/inventory.py",
                 "faustcoder/function_spans.py",
-                "faustcoder/comparison_scope.py",
+                "faustcoder/idiom_filter.py",
             )
         },
         "production_approved": False,
@@ -258,7 +266,8 @@ def run(repo, acquisition, candidate, qualification, groups, baseline, output, s
                 scope.idiom_min_docs, item_repos=item_repos, min_repos=scope.idiom_min_repos)
     descriptor = scope_descriptor(scope, streams)
     families = cluster_families(sorted(text.items()), comparison, evidence=edges,
-                                scope=scope, item_repos=item_repos)
+                                scope=scope, item_repos=item_repos,
+                                marginal_coverage=marginal_coverage)
     # A joining forest must reconstruct the complete family membership exactly.
     previous = evidence_paths(edges, comparison)
     tainted = {families[k] for k in comparison}
@@ -480,9 +489,11 @@ def run(repo, acquisition, candidate, qualification, groups, baseline, output, s
     )
     save("summary.json", summary)
     bindings["idiom_filter"] = descriptor
+    bindings["marginal_coverage"] = marginal_coverage
     bindings["outputs"] = {
         str(p.relative_to(output)): {"sha256": sha256_prefixed(p.read_bytes()),
-                                     "idiom_filter": descriptor}
+                                     "idiom_filter": descriptor,
+                                     "marginal_coverage": marginal_coverage}
         for p in sorted(output.rglob("*")) if p.is_file()
     }
     save("binding.json", bindings)
@@ -503,16 +514,20 @@ def main():
     ):
         p.add_argument("--" + name, type=Path, required=True)
     p.add_argument(
-        "--idiom-filter-min-docs", "--comparison-scope-min-docs",
-        dest="comparison_scope_min_docs", type=int, default=None,
+        "--idiom-filter-min-docs",
+        dest="idiom_filter_min_docs", type=int, default=None,
         help="opt-in UNREVIEWED idiom filter (not the incomplete_comparison_scope blocker); omit for scope=off",
     )
     p.add_argument("--idiom-min-repos", type=int, default=2,
                    help="minimum distinct repositories for an idiom shingle (>=2)")
+    p.add_argument(
+        "--marginal-coverage", action="store_true",
+        help="opt-in collective rule: keep adding marginal contributors until 3 cover half; default off",
+    )
     a = p.parse_args()
     scope = (
-        None if a.comparison_scope_min_docs is None
-        else ComparisonScope(a.comparison_scope_min_docs, idiom_min_repos=a.idiom_min_repos)
+        None if a.idiom_filter_min_docs is None
+        else IdiomFilter(a.idiom_filter_min_docs, idiom_min_repos=a.idiom_min_repos)
     )
     run(
         a.repo,
@@ -523,6 +538,7 @@ def main():
         a.baseline,
         a.output,
         scope=scope,
+        marginal_coverage=a.marginal_coverage,
     )
 
 

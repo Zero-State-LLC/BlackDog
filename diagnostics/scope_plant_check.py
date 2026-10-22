@@ -3,7 +3,7 @@
 AGENT DIAGNOSTIC, NOT FLOOR QUALIFICATION. It plants unlabeled candidate
 windows (not gold) into pool hosts and asks, pair by pair, whether the
 shipping predicates still join the planted host to the window's comparison
-blob with and without a ``ComparisonScope``. Labels, host approval and
+blob with and without an ``IdiomFilter``. Labels, host approval and
 fixed-gold freeze remain human gates. Collective support is not exercised
 by a single plant and is reported separately by the full recompute.
 """

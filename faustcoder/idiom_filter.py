@@ -2,14 +2,15 @@
 
 The feature name is idiom filter. It is not the
 ``incomplete_comparison_scope`` blocker, which means missing comparison
-inputs. The module path stays ``comparison_scope.py`` because the default
-cluster path imports ``scoped`` from it.
+inputs. This module is ``idiom_filter.py``.
 
 The shipping default is no filter object (``scope=None``, label ``scope=off``).
 With no filter, exact, Jaccard, verbatim-run and short-match joins are
-unchanged. Collective membership still uses ``COLLECTIVE_MIN_MARGINAL``.
+unchanged. Collective membership on that path is main's any-overlap rule.
+Marginal coverage is a separate opt-in (``marginal_coverage``) and is not
+implied by this filter.
 
-A ``ComparisonScope`` names a document-frequency idiom set. A 5-token shingle
+An ``IdiomFilter`` names a document-frequency idiom set. A 5-token shingle
 is an *idiom shingle* on a stream when it occurs in at least ``idiom_min_docs``
 distinct non-comparison items of the clustered pool, counted on that stream.
 Comparison (reject-class) items are never counted. A shingle must also occur
@@ -59,15 +60,11 @@ class IdiomFilter:
         if type(self.idiom_min_repos) is not int or self.idiom_min_repos < 2:
             raise ValueError("idiom_min_repos must be an int >= 2")
         if self.version != SCOPE_VERSION:
-            raise ValueError(f"unknown comparison scope version: {self.version}")
+            raise ValueError(f"unknown idiom filter version: {self.version}")
 
     def describe(self) -> dict:
         return {"version": self.version, "idiom_min_docs": self.idiom_min_docs,
                 "idiom_min_repos": self.idiom_min_repos}
-
-
-# Compatibility name for existing callers; the feature is an idiom filter.
-ComparisonScope = IdiomFilter
 
 
 def idiom_shingles(

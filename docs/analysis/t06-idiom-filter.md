@@ -18,58 +18,73 @@ copied code; copied code spread across multiple repositories remains a risk.
 The learned set still comes from the evaluated pool and is not independent gold.
 
 Use `--idiom-filter-min-docs D --idiom-min-repos k` to enable it.
-`ComparisonScope` and `--comparison-scope-min-docs` remain compatibility aliases.
-Omitting the enable flag still passes `scope=None`; k alone does not enable it.
+Omitting that flag still passes `scope=None`; k alone does not enable it.
+There is no `ComparisonScope` alias and no `--comparison-scope-min-docs` alias.
 The feature is called **idiom filter**, distinct from the existing
 `incomplete_comparison_scope` blocker for missing comparison inputs
 (`diagnostics/batch1_review.py`). Receipts record it as `idiom_filter`.
 Scope off is the label `scope=off`, not an omitted field.
 
 Only enabled containment uses the learned filter. Exact hashes, token Jaccard,
-floor-token verbatim runs and short matching are unchanged. Collective
-membership uses `COLLECTIVE_MIN_MARGINAL` (OBSERVED value 1,
-`faustcoder/neardup.py`) on every path, including scope off. A unit joins only
-when it adds at least that many comparison shingles that no already selected
-unit covers. Selection is greedy by new coverage, then unit id, and stops when
-the union meets the existing 1/2 containment threshold. Groups still require at
-least three selected contributors. This is a deterministic coverage witness,
-not a minimum-set proof. Incidental overlap does not join.
+floor-token verbatim runs and short matching are unchanged. The shipping
+collective rule is unchanged from main: any non-comparison unit that shares a
+shingle may join, the group still needs at least three contributors, and their
+union must cover at least half of the comparison shingles
+(`faustcoder/neardup.py`). Scope off does not append a filter mark to the
+group key, so those group ids stay main's unmarked ids.
+
+Marginal coverage is a separate opt-in, `--marginal-coverage`, recorded as
+`marginal_coverage` in `binding.json`. It is not turned on by the idiom filter.
+`COLLECTIVE_MIN_MARGINAL` (OBSERVED value 1, `faustcoder/neardup.py:89`) applies
+only on that path. Selection is greedy by new coverage, then unit id. It does
+not stop at the 1/2 threshold while fewer than three contributors are selected.
+It stops once three contributors meet that threshold, or when no remaining unit
+supplies the minimum. A unit whose overlap is already covered does not join.
+This is a deterministic coverage witness, not a minimum-set proof, and it is
+not the shipping H1 rule.
 
 ## Binding and validation
 
 `binding.json` always records `idiom_filter` with on/off, D, k, version, label
 (`scope=off` when disabled) and a hash of the sorted raw and canonical learned
-sets (OBSERVED, `diagnostics/batch1_review.py`). It always lists
-`faustcoder/comparison_scope.py` among bound code files, because the default
-path calls `scoped()`. Every output file has a SHA-256 and the same
-`idiom_filter` descriptor in `binding.json` `outputs`. The binding file itself
-is excluded to avoid a circular hash. Retain it as the trusted run receipt; it
-is not a signature or human approval. `validate_outputs(output)` rejects a
-missing idiom-filter record, a missing `comparison_scope.py` code hash,
-missing/extra/changed files, hash mismatches, and scope-on outputs paired with
-an off binding.
+sets (OBSERVED, `diagnostics/batch1_review.py` `scope_descriptor`). It always
+records `marginal_coverage` (false unless `--marginal-coverage` is passed).
+It always lists `faustcoder/idiom_filter.py` among bound code files, because
+the default path calls `scoped()`. Every output file has a SHA-256, the same
+`idiom_filter` descriptor, and the same `marginal_coverage` flag in
+`binding.json` `outputs`. The binding file itself is excluded to avoid a
+circular hash. Retain it as the trusted run receipt; it is not a signature or
+human approval. `validate_outputs(output)` rejects a missing idiom-filter
+record, a missing marginal-coverage flag, a missing `idiom_filter.py` code
+hash, an inventory mismatch, a per-receipt scope or marginal-coverage mismatch,
+an inline ledger or summary mismatch, a packet JSON or Markdown scope mismatch,
+and an output hash mismatch.
 
 `candidate-ledger.json`, `summary.json`, match evidence, and every packet JSON
 embed `idiom_filter`, including `scope=off`. Packet Markdown prints that label.
-Collective group ids include the same kind of mark, so dropping the scope from
-the group key changes the id. Tests fail when the scope record is deleted, the
-scope is dropped from the group key, `comparison_scope.py` is tampered with
-without the binding hash changing, or an output hash does not match.
+An enabled idiom filter is part of the collective group key, so two different
+D values do not share a group id when the selected units match. Scope off does
+not add that mark. Tests fail when the scope record is deleted, the filter is
+dropped from an enabled group key, `idiom_filter.py` is tampered with without
+the binding hash changing, a learned idiom set changes without
+`idiom_set_sha256` changing, or an output hash does not match. `run` calls
+`validate_outputs` on the output directory.
 
-Scope-off bytes are not identical to main. OBSERVED intentional fields, beyond
-code hashes of files this branch edits:
+With both opts off, collective membership, group ids, quarantine flags and the
+19 collective sets match main. OBSERVED intentional differences, beyond code
+hashes of files this branch edits:
 
-- `binding.json`: `idiom_filter`, `outputs` (sha256 plus `idiom_filter` per file),
-  and `code["faustcoder/comparison_scope.py"]`.
+- `binding.json`: `idiom_filter`, `marginal_coverage`, `outputs` (sha256,
+  `idiom_filter`, and `marginal_coverage` per file), and
+  `code["faustcoder/idiom_filter.py"]`.
 - `idiom_filter` on `candidate-ledger.json`, `summary.json`,
   `match-evidence.json`, `comparison-ledger.json`, `short-collision-groups.json`,
   `batch2-proposed-subset.json`, `review-decisions.UNAPPROVED.json`, and each
   `packets/*.json`.
 - An idiom-filter label line on each `packets/*.md`.
-- Collective contributor lists, group ids, quarantine flags, evidence paths,
-  summary counts, and packet membership, because `COLLECTIVE_MIN_MARGINAL`
-  applies with the filter off. Counts for group `202bb19f` are in the section
-  below. `source-index.json` is not given an inline `idiom_filter` field.
+
+`source-index.json` is not given an inline `idiom_filter` field. Detector
+membership is not one of those differences when both opts are off.
 
 ## Replay and evidence corrections
 
@@ -79,55 +94,54 @@ and `source-index.json`. Of those 1659 payloads, **1430 are input source copies
 and 229 are computed outputs**. This is a provenance/path difference, not a
 claim that all 1659 files were newly computed. Bindings are reported separately.
 
-An earlier commit on this branch reported that scope-off family ids and
-evidence edges matched main `3ab3d1c`. That claim described the tree before
-`COLLECTIVE_MIN_MARGINAL` applied with the idiom filter off. It does not
-describe the current scope-off clustering. No claim of a fresh full 1659-file
-serialization replay is made here.
+An earlier commit on this branch applied marginal coverage on the default
+path and changed scope-off clustering. That commit is superseded. With both
+opts off, collective membership and group ids again follow main. No claim of
+a fresh full 1659-file serialization replay is made here.
 
 ## Collective membership on the 1430-unit pool
 
 OBSERVED on the pinned public corpus (1430 cleared units, 19 comparison blobs,
-0 blob-hash mismatches). Function bodies are the lexical spans from
-`diagnostics/span_corpus.py` `definitions`. The scope-off any-overlap group
-key for canonical `filters.lib`, without the new scope mark, is
-`sha256:202bb19f7d3304d9a19c9f11dbcbc9ec15e10c8e5fa581a9ca176ed721a3a473`
-(`faustcoder/neardup.py` group key before the mark was added). That is the
-review group `202bb19f`.
+0 blob-hash mismatches, 0 skipped paths). Function bodies are the lexical spans
+from `diagnostics/span_corpus.py` `definitions`. Shipping scope off (idiom
+filter off and `marginal_coverage` off) was compared to main `ee456c73`'s
+`faustcoder/neardup.py` on the same texts.
 
-`COLLECTIVE_MIN_MARGINAL` is 1 (`faustcoder/neardup.py:85`). D=20 below is
-`IdiomFilter(20)` with `idiom_min_repos` 2, the current default. The review's
-760-member D=20 figure was a v1 run without that repository gate and was not
-recomputed here (the constructor refuses `idiom_min_repos` below 2).
-
-| Setting | Rule | filters.lib canonical members | Flagged units | Newly flagged |
+| Setting | Rule | filters.lib canonical members | Flagged units | Collective sets |
 | --- | --- | --- | --- | --- |
-| scope off | any shared shingle | 1311 (`202bb19f`) | 1313 |  |
-| scope off | marginal coverage | 3 | 686 | 0 |
-| D=20, k=2 | any shared shingle | 772 | 976 |  |
-| D=20, k=2 | marginal coverage | 10 | 466 | 0 |
+| main `ee456c73` | any shared shingle | 1311 (`202bb19f`) | 1313 | 19 |
+| scope off, marginal off | same rule | 1311 (`202bb19f`) | 1313 | 19 |
+| scope off, `--marginal-coverage` | opt-in witness | 3 | 686 | 19 |
 
-OBSERVED: scope off unflags 627 units and adds none. D=20 unflags 510 and adds
-none. Scope-off coverage is 2029/2660 shingles from all 1311 overlapping units,
-and 1406/2660 from the 3 selected units. At D=20 the denominator is 1987
-idiom-filtered shingles; coverage goes from 1356/1987 (772 members) to
-1011/1987 (10 members).
+OBSERVED: scope off matches main on flagged unit ids and on every collective
+group id and contributor list. The canonical `filters.lib` group id is
+`sha256:202bb19f7d3304d9a19c9f11dbcbc9ec15e10c8e5fa581a9ca176ed721a3a473`.
+Coverage of that group is the full any-overlap union.
 
-OBSERVED: the 3 scope-off contributors are
-`tests/impulse-tests/dsp/filter.lib` (`u8ea99a0a7cb570b53333`),
-`examples/physicalModeling/faust-stk/piano1.dsp`, and
-`examples/SAM/virtualAnalog/virtualAnalogWithEffectsForBrowser.dsp`.
-The same three remain inside the 10-member D=20 set. The group id changes
-because the contributor list and the `scope=off` mark are part of the key
-(`faustcoder/neardup.py:630`).
+OBSERVED: the opt-in rule flags 686 units, adds 0, and drops 627 relative to
+scope off. It still emits 19 collective sets. The canonical `filters.lib`
+witness has 3 contributors and covers 1406/2660. Its group id is
+`sha256:5c2c87ebfe33b773c69e69a253175e6facec2a82677f9a26a24d0e7d75dfe888`
+because the contributor list is the witness, not the any-overlap set. This
+opt-in is not the shipping H1 rule. Changing the shipping rule still needs
+Danny's sign-off.
 
-The D=20 marginal flag count 466 and 16 collective sets match the D=20 row of
-the earlier k=2 table below. Other D rows in that table were not recomputed
-in this pass. The "largest selected group" column was not recomputed here.
+Synthetic probes (OBSERVED, both streams, `tests/test_comparison_scope.py`):
 
-Previously recorded enabled sweep (k=2) on the local public 1430-unit pool.
-D=20 flagged count 466 and 16 collective sets were reproduced in the section
-above. The other cells were not recomputed in this pass:
+| Probe | Opt-in result |
+| --- | --- |
+| 3-way split, pieces under 40 tokens | 3/3 contributors; the noise file is not a contributor and is not in the family |
+| Interleaved 3-way (two hosts already cover half) | 3/3 |
+| Two independent 3-way copies | 6/6, two distinct families |
+| 4-way plus a noise file | 3/4 split files (`c0` `c1` `c2`). Selection stops once three contributors cover half, so `c3` is outside the witness. The noise file is not a contributor and is not in the family |
+
+The shipping default joins the noise file on the 3-way probe, which is main's
+any-overlap rule.
+
+Previously recorded enabled sweep (k=2) on the local public 1430-unit pool,
+from the superseded early-stop default. D is `IdiomFilter(D)` with
+`idiom_min_repos` 2. Not recomputed under the restored shipping rule or the
+current opt-in, and not a description of scope off:
 
 | D | Flagged | Newly flagged | Edges | Collective sets | Largest selected group |
 | --- | --- | --- | --- | --- | --- |
@@ -138,8 +152,9 @@ above. The other cells were not recomputed in this pass:
 | 200 | 617 | 0 | 1094 | 11 | 14 |
 | 400 | 658 | 0 | 1133 | 10 | 12 |
 
-Zero new flags is an observation on this pool and these settings, not a guarantee.
-The historical v1 counts are superseded by this k=2 / coverage-witness sweep.
+Zero new flags is an observation on that historical sweep, not a guarantee and
+not the shipping scope-off result. The historical v1 counts were already
+superseded by that sweep. Both are retained only as prior measurements.
 
 ## Corrected plant sensitivity (not gold recall)
 

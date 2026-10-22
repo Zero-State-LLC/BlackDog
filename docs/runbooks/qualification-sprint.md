@@ -40,7 +40,9 @@ two-project hosts and ratified FLOOR qualification. Danny is the named human
 custodian/reviewer, but an independent private author, actual human-only storage,
 access isolation and completed independent task review remain unconfirmed.
 Any retained slice needs its own source-bound review. No production admission.
-PR #110 stays unmerged, the idiom filter stays default-off,
+PR #110 stays unmerged. The idiom filter stays default-off, and the shipping
+collective rule is unchanged: three or more contributor units whose union
+covers at least half a comparison unit's shingles (19 collective sets).
 `TOKEN_FLOOR=40` stays provisional and T07 stays unfrozen.
 
 ## Milestone and scope
