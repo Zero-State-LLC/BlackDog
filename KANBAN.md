@@ -94,8 +94,9 @@ checksums, path mapping, reply/assignment/delivery receipts and limitations. No
 private holdout content or keys were included. Prabu authors private tasks; Danny
 independently reviews his tasks/contracts. Custody remains a plan requiring proof.
 
-Next: obtain bundle verification, agree kickoff/coverage, then validate returned
-identity/hash-bound source/leakage decisions, complete
+Next: receive and validate the Forge draft packet and match evidence, agree
+kickoff/coverage, then obtain human identity/hash-bound source/leakage decisions,
+complete
 independently reviewed closures/contracts, qualify two-project FLOOR hosts and
 fixed gold/labels, and establish disjoint development tasks plus separate holdout
 custody. S1 remains open for confirmations; S2–S6 prerequisites and S7 completion
