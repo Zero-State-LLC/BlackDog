@@ -48,6 +48,7 @@ Index of the documents in this repository at main `84dd841` (spec 001 version 0.
 | Note | Description |
 |---|---|
 | [t06-short-kernel-floor.md](analysis/t06-short-kernel-floor.md) | Short rejected kernels at floors 40, 30, 20 and 15. `TOKEN_FLOOR=40` is not accepted clearance policy |
+| [t06-comparison-scope.md](analysis/t06-comparison-scope.md) | UNREVIEWED opt-in document-frequency comparison scope, recompute and plant sensitivity. Default unchanged |
 
 ## Other docs
 

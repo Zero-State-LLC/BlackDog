@@ -53,6 +53,7 @@ import unicodedata
 from collections.abc import Collection, Iterable, Sequence
 
 from faustcoder.canonical import canonical_bytes, sha256_prefixed
+from faustcoder.comparison_scope import ComparisonScope, idiom_shingles, scoped
 
 NGRAM_N = 5
 THRESHOLD_NUMERATOR = 4
@@ -409,6 +410,7 @@ def _raw_cluster_families(
     items: Sequence[tuple[str, str]],
     comparison_ids: Collection[str] = (),
     *, floor: int = TOKEN_FLOOR, canonical: bool = False, evidence: list | None = None,
+    scope: ComparisonScope | None = None,
 ) -> dict[str, str]:
     """Map each item id to a duplicate-family id.
 
@@ -507,12 +509,23 @@ def _raw_cluster_families(
     unknown = comparison - seen
     if unknown:
         raise ValueError(f"comparison id is not in the cluster: {min(unknown)}")
+    idiom = None
     if comparison:
         token_of = {item_id: tokenize(text) for item_id, text in text_of.items()}
+        if scope is not None:
+            # Opt-in comparison scope (UNREVIEWED proposal). Document
+            # frequency is counted on this stream over non-comparison items.
+            idiom = idiom_shingles(
+                {key: shingles(value) for key, value in token_of.items()},
+                comparison, scope.idiom_min_docs)
+            if evidence is not None:
+                evidence.append(dict(reason="comparison_scope", **scope.describe(),
+                                     idiom_shingles=len(idiom),
+                                     stream="canonical" if canonical else "raw", floor=floor))
         cleared_ids = [item_id for item_id in ordered_ids if item_id not in comparison]
         compared_ids = [item_id for item_id in ordered_ids if item_id in comparison]
         whole_shingles = {
-            item_id: shingles(token_of[item_id]) for item_id in compared_ids
+            item_id: scoped(shingles(token_of[item_id]), idiom) for item_id in compared_ids
         }
         whole_runs = {
             item_id: shingles(token_of[item_id], floor)
@@ -522,7 +535,7 @@ def _raw_cluster_families(
         }
         for part_id in cleared_ids:
             part_tokens = token_of[part_id]
-            part_shingles = shingles(part_tokens)
+            part_shingles = scoped(shingles(part_tokens), idiom)
             part_long = len(part_tokens) >= floor
             part_runs = shingles(part_tokens, floor) if part_long else frozenset()
             for whole_id in compared_ids:
@@ -546,7 +559,7 @@ def _raw_cluster_families(
         # Reuse source features for collective coverage; no pairwise re-tokenization.
         all_shingles = {key: shingles(value) for key, value in token_of.items()}
         for whole_id in sorted(comparison):
-            whole = shingle_of[whole_id]
+            whole = scoped(shingle_of[whole_id], idiom)
             if not whole:
                 continue
             overlaps = {key: all_shingles[key] & whole
@@ -554,7 +567,10 @@ def _raw_cluster_families(
             contributors = [key for key, overlap in overlaps.items() if overlap]
             covered = frozenset().union(*(overlaps[key] for key in contributors))
             if len(contributors) >= 3 and containment_at_least(whole, covered):
-                group_id = sha256_prefixed(canonical_bytes([whole_id, contributors, canonical, floor]))
+                group_key = [whole_id, contributors, canonical, floor]
+                if scope is not None:
+                    group_key.append(scope.describe())
+                group_id = sha256_prefixed(canonical_bytes(group_key))
                 if evidence is not None:
                     evidence.append(dict(reason="collective_support", group_id=group_id,
                                          comparison=whole_id, contributors=contributors,
@@ -605,18 +621,25 @@ def _hit_counts(candidate: str, text: str, *, floor: int = TOKEN_FLOOR):
     return None
 
 
-def cluster_families(items, comparison_ids=(), *, floor: int = TOKEN_FLOOR, evidence: list | None = None):
+def cluster_families(items, comparison_ids=(), *, floor: int = TOKEN_FLOOR, evidence: list | None = None,
+                     scope: ComparisonScope | None = None):
     """OR raw and canonical components; ids remain bound to original text.
 
     Canonical short exact matches are fail-closed pending reviewed idiom pairs.
-    No automatic boilerplate exemption or rights override is introduced.
+    With the default ``scope=None`` no automatic boilerplate exemption or rights
+    override is introduced. A ``ComparisonScope`` is an opt-in, UNREVIEWED
+    proposal (see ``faustcoder.comparison_scope``); it never changes exact,
+    Jaccard, verbatim-run or short-match joins.
     Optional evidence records the deterministic joining forest and collective
     support sets, not every matching pair and not adjudicated copy labels.
     """
     _require_floor(floor)
-    raw = _raw_cluster_families(items, comparison_ids, floor=floor, evidence=evidence)
+    if scope is not None and not isinstance(scope, ComparisonScope):
+        raise TypeError("scope must be a ComparisonScope or None")
+    raw = _raw_cluster_families(items, comparison_ids, floor=floor, evidence=evidence, scope=scope)
     canonical = _raw_cluster_families(
-        [(key, _canonical_source(text)) for key, text in items], comparison_ids, floor=floor, canonical=True, evidence=evidence)
+        [(key, _canonical_source(text)) for key, text in items], comparison_ids, floor=floor, canonical=True,
+        evidence=evidence, scope=scope)
     parent = {key: key for key, _ in items}
     def find(key):
         while parent[key] != key:

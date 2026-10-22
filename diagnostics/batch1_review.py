@@ -11,6 +11,7 @@ from faustcoder.inventory import parse_corpus
 from faustcoder.function_spans import verify_manifest, extract_span
 from faustcoder.normalize import normalize_bytes
 from faustcoder.neardup import cluster_families, canonical_tokens, tokens, shingles
+from faustcoder.comparison_scope import ComparisonScope
 
 
 def evidence_paths(edges, comparison_ids):
@@ -39,7 +40,7 @@ def trace_path(key, previous):
     return result
 
 
-def run(repo, acquisition, candidate, qualification, groups, baseline, output):
+def run(repo, acquisition, candidate, qualification, groups, baseline, output, scope=None):
     inventory = json.loads((repo / "corpus/rights-inventory.v1.json").read_text())
     notice = json.loads((repo / "corpus/notice-manifest.v1.json").read_text())
     corpus = parse_corpus(inventory, notice)
@@ -94,6 +95,12 @@ def run(repo, acquisition, candidate, qualification, groups, baseline, output):
         "token_floor": 40,
         "token_floor_status": "provisional",
     }
+    if scope is not None:
+        # Opt-in, UNREVIEWED comparison-scope proposal; absent by default so
+        # default runs reproduce historical receipts byte for byte.
+        bindings["comparison_scope"] = scope.describe()
+        bindings["code"]["faustcoder/comparison_scope.py"] = sha256_prefixed(
+            (repo / "faustcoder/comparison_scope.py").read_bytes())
     save("binding.json", bindings)
     blobs = {}
     missing = []
@@ -210,7 +217,7 @@ def run(repo, acquisition, candidate, qualification, groups, baseline, output):
         )
     save("source-index.json", metadata)
     edges = []
-    families = cluster_families(sorted(text.items()), comparison, evidence=edges)
+    families = cluster_families(sorted(text.items()), comparison, evidence=edges, scope=scope)
     # A joining forest must reconstruct the complete family membership exactly.
     previous = evidence_paths(edges, comparison)
     tainted = {families[k] for k in comparison}
@@ -439,7 +446,15 @@ def main():
         "output",
     ):
         p.add_argument("--" + name, type=Path, required=True)
+    p.add_argument(
+        "--comparison-scope-min-docs", type=int, default=None,
+        help="opt-in UNREVIEWED document-frequency comparison scope; omit for shipping behavior",
+    )
     a = p.parse_args()
+    scope = (
+        None if a.comparison_scope_min_docs is None
+        else ComparisonScope(a.comparison_scope_min_docs)
+    )
     run(
         a.repo,
         a.acquisition,
@@ -448,6 +463,7 @@ def main():
         a.groups,
         a.baseline,
         a.output,
+        scope=scope,
     )
 
 
