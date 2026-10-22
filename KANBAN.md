@@ -19,12 +19,34 @@ separately, and T07/T10 remain Backlog.
 | --- | --- | --- |
 | Batch 1 evidence and hash-format review | Done: #99, `ce8087a` | Eight CI checks; 771 tests passed |
 | S1 scope and owner assignment | Technical preparation complete; confirmations pending | 1,430 units / 110 packets / 510 blobs verified; packet/bindings verified; Prabu is an AI agent; seven-contract reviewer/custodian named; remaining assignments, kickoff, coverage and private custody pending |
-| S2 source/leakage and S3 closure/behavior | Owner approved R2/closure packets as presented; Danny approved seven contracts. Seven scoped dependency diagnostics pass; 18 REJECT / 156 BLOCKED / 0 retained; admission remains blocked | Hash-bound per-unit decisions, approved closures/contracts and reproducible positive/negative receipts |
+| S2 source/leakage and S3 closure/behavior | Owner approved R2/closure packets as presented; Danny approved seven contracts. Seven exact R3b files approved NOT_COPY/repository-MIT; bounded dependency/behavior checks pass; historical R2: 18 REJECT / 156 BLOCKED / 0 retained; no production admission | Hash-bound per-unit decisions, approved closures/contracts and reproducible positive/negative receipts |
 | S4 two-project hosts and S5 FLOOR | Blocked on approved inputs | Ratified gold/label protocol and complete measurement result |
 | S6 development/custody | Danny named human custodian/task reviewer; independent author, actual storage and human-only access pending | Document private custody/review channel; disjoint reviewed tasks and custody commitments still required |
 | S7 qualification dossier | Planned after S2–S6 | One reviewed delivery; explicit pass or blocked milestone decision |
 
-## Latest: seven contracts approved; dependency checks passed
+## Latest: seven files approved NOT_COPY and repository-level MIT
+
+Danny Meyer approved all seven exact R3b-bound pd-faustgen source files on
+2026-10-22. [Scope, verification and remaining gates](docs/runbooks/qualification-sprint.md#seven-file-source-and-mit-approval-2026-10-22)
+record the human NOT_COPY decisions and repository-level MIT coverage, with the
+full Pierre Guillot notice preserved. R3b: 31 payload hashes, seven bindings,
+61 replayed pairs and 332 canonical span rows passed. Original packets stay
+immutable; historical R2 dispositions are not a new admission count.
+
+Approval: `/home/delphi/blackdog-seven-source-approval-20261022T185548Z/`.
+R3b: `/home/delphi/blackdog-s2-r3b-notice-spans-20261022T173051Z/`.
+Replay: `/home/delphi/blackdog-r3b-intake-20261022T1733Z/`.
+Matching off-host directories in
+`/Users/appliedalchemylabs/Documents/Codex/blackdog-s2-backups/` are checksum-verified.
+No raw evidence artifacts enter Git.
+
+Remaining: imported/third-party notice and complete dependency scope, other
+167 units, full 1,430-unit / 23-short-group / 19-collective-set accounting,
+two-project hosts and fixed-gold FLOOR qualification, family-disjoint development,
+independent private author and actual human-only custody, and final integration.
+**No production admission; TOKEN_FLOOR=40 provisional; T07 unfrozen.**
+
+## Seven contracts approved; dependency checks passed
 
 [Approval, results and remaining gates](docs/runbooks/qualification-sprint.md#seven-contract-human-approval-and-dependency-validation)
 record Danny Meyer’s approval of all seven pd-faustgen contracts and the shared
@@ -38,9 +60,10 @@ import-removal equivalence evidence. Original sources/drafts remain immutable.
   byte-identical raw samples and separate analytical replay.
 - Seven refined technical dependency receipts; **498 backup payload checks passed**.
   This is not full behavioral qualification or a full-suite run.
-- Next S3 work: full seven-contract behavior/control transitions and
-  target/reference substitution checks, plus separate rights/leakage clearance.
-  The other 167 units still require their own evidence.
+- Later bounded behavior checks passed (42 runs / 498 states), plus 42 default
+  cases and 14 compiled-target rejection executions with independent replay.
+  Seven source/MIT decisions are approved above; complete semantic dependency
+  scope and the other 167 units still require evidence.
 - S4/S5 remain blocked on two cleared host repositories, approved windows/labels
   and complete FLOOR measurement. Full 1,430-unit / 23-short-group /
   19-collective-set accounting remains required.
