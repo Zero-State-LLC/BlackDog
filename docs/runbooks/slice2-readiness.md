@@ -268,6 +268,23 @@ Matching off-host directories under
 All 31 R3b payloads, seven bindings, 61 replayed pairs and 332 span rows passed.
 No production admission; TOKEN_FLOOR=40 provisional and T07 unfrozen.
 
+## Imported-notice handling decision
+
+Danny Meyer approved scoped notice handling for exact `.default.dsp` and
+`gain.dsp`, preserving their MIT notice separately from pinned `stdfaust.lib`'s
+GRAME LGPL-2.1-or-later notice and complete compiled-code exception.
+[Bindings, evidence and remaining gates](qualification-sprint.md#imported-notice-handling-approval--2026-10-22).
+Receipt: `/Users/appliedalchemylabs/Documents/Codex/blackdog-s2-backups/blackdog-imported-notice-approval-20261022T221607Z/`;
+six payloads checksum-verified. Full LGPL license text must accompany any
+redistributed library-source bundle; it is not included in this receipt.
+
+This closes the scoped notice-handling decision only. The 44-file conservative
+envelope is not collectively cleared; native filesystem tracing, where required,
+is still absent. Human closure/host and family/split review, broader third-party
+scope, two-project hosts and fixed-gold FLOOR measurements, development/custody
+and integration gates remain open. No host or production admission.
+PR #110 stays unmerged; `TOKEN_FLOOR=40` provisional; T07 unfrozen.
+
 ## Remaining exit gates
 
 1. Independently approve a useful source/task/dependency subset; adjudicate the

@@ -1,5 +1,50 @@
 # T06/T07 qualification sprint
 
+## Imported-notice handling approval — 2026-10-22
+
+Danny Meyer directly approved the recommended **scoped imported-notice handling**
+for exact pd-faustgen `external/.default.dsp` (`u017e8346c741c864edc1`) and
+`external/examples/gain.dsp` (`uc4f8b53b25994954ca1b`). The receipt binds their
+source/dossier SHA-256 values and the imported `stdfaust.lib` at faustlibraries
+commit `2edec0537f536eaa130d42c354884d7db971663c`, Git blob
+`a5d52a30f26a361e074cf1712c9b65e7a4e81ae2`. This supersedes pending wording for
+this notice-handling decision only; it grants **no FLOOR host or production admission**.
+
+Preserve Pierre Guillot's full MIT notice for the two pd-faustgen sources and,
+separately, the pinned library's GRAME copyright, LGPL-2.1-or-later notice and
+complete compiled-code exception. MIT coverage is not extended to imported
+libraries, and the exception is not blanket library-source clearance. The full
+applicable LGPL license text must accompany any redistributed library-source
+bundle; that full license text is not included in this approval receipt.
+The supplemental STK notice conveys no finding of use or approval.
+
+Receipt (local, outside Git):
+`/Users/appliedalchemylabs/Documents/Codex/blackdog-s2-backups/blackdog-imported-notice-approval-20261022T221607Z/`.
+Start with `approval.json`; six payloads were checksum-verified in the working
+copy and backup. `SHA256SUMS` digest:
+`d0826d40aa21fefd64b03ee6c417c41c73bc28a7ff73ae00a2fea22a7d638501`.
+No Delphi write or remote receipt is claimed.
+
+Supporting local evidence under the same backup root:
+
+- `seven-host-evidence-20261022T215902Z/`: seven source-bound local closure records,
+  44 conservative imported snapshots and notice index; 122 verified payloads.
+- `compiler-notice-evidence-20261022T220248Z/`: 87 verified payloads; both retained
+  WASM outputs report only `/usr/share/faust/stdfaust.lib`, both native C++
+  outputs equal their import-free counterparts byte for byte, and eight output
+  bundles match their compiler receipt digests. These are rechecked retained
+  outputs, not new compiler runs or filesystem traces.
+
+Remaining: human closure/host and family/split review; any required native
+filesystem resolution trace (not retained); broader imported/third-party scope
+and the 44-file conservative envelope (not collectively cleared); other units'
+closure/contract evidence; full 1,430-unit / 23-short-group / 19-collective-set
+accounting; two cleared host repositories, fixed gold/labels and ratified FLOOR
+measurement; disjoint development and independent private author/storage/access
+and review confirmations; final integration. Existing source, contract and filter
+pair approvals remain effective and must not be requested again.
+PR #110 remains unmerged; `TOKEN_FLOOR=40` provisional; T07 unfrozen.
+
 ## Superseding filter pair COPY approval — 2026-10-22
 
 Danny Meyer directly approved **COPY/shared lineage** for candidate
@@ -620,7 +665,7 @@ The seven-contract update above supersedes historical draft status.
 | Gate | Owner | Evidence required before advancing |
 | --- | --- | --- |
 | S1 confirmations | Owner + named humans | Packet access/integrity verified; replace agent role assumptions with human assignments, agree kickoff/coverage and document independence/custody |
-| S2 source/leakage | Owner + human adjudicators for remaining scope | Owner approved R2 as presented, including blocked/unresolved dispositions; seven exact R3b files now have human NOT_COPY/repository-MIT approval; resolve remaining notice/admission evidence and complete relevant short/collective adjudication without reopening the recorded packet approval |
+| S2 source/leakage | Owner + human adjudicators for remaining scope | Owner approved R2 as presented, including blocked/unresolved dispositions; seven exact R3b files now have human NOT_COPY/repository-MIT approval; scoped imported-notice handling for .default/gain approved; resolve broader notice/admission evidence and complete relevant short/collective adjudication without reopening the recorded packet approval |
 | S3 closure/behavior | Implementation owner + Danny Meyer for the seven approved contracts | Seven scoped dependency diagnostics and bounded behavior/default/target-substitution checks passed; complete remaining semantic closure and admission evidence. Other 167 units need their own closure/contract evidence; no production admission |
 | S4/S5 FLOOR | Human reviewer + evaluator | Two cleared host repositories, real rejected windows, fixed gold/labels and the complete ratified measurement protocol |
 | S6 development/custody | Danny Meyer, named custodian and independent task reviewer | Confirm independent private author, actual private storage and human-only access; iCloud is coordination only. Qualify disjoint development tasks; only approved public metadata reaches Spark |
