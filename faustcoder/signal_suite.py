@@ -823,10 +823,11 @@ DSP_BANK: Mapping[str, str] = MappingProxyType(
     {
         "biquad_cascade": """
 conv3(k0,k1,k2,x) = k0*x + k1*x' + k2*x'';
-conv2(k0,k1,x) = k0*x' + k1*x'';
+// Feedback enters the first input of sub; ~ already supplies one delay.
+conv2(k0,k1,x) = k0*x + k1*x';
 tf2(b0,b1,b2,a1,a2) = sub ~ conv2(a1,a2) : conv3(b0,b1,b2)
 with {
-  sub(x,y) = x - y;
+  sub(feedback,input) = input - feedback;
 };
 process = tf2(0.02, 0.04, 0.02, -1.4, 0.5)
         : tf2(0.03, 0.02, 0.03, -1.2, 0.4)
@@ -855,6 +856,7 @@ def render_dsp_bank() -> dict[str, Any]:
     program's per-stimulus sample hashes. ``render_ms``, ``wall_ms``
     and ``toolchain`` are recorded and are not compared. ``wall_ms``
     for ``denormal_decay`` is the measurement against the 120 s cap.
+    Nonfinite output is refused before it can become a golden digest.
     """
     from faustcoder.signal import run_signal
 
@@ -867,6 +869,10 @@ def render_dsp_bank() -> dict[str, Any]:
         run = run_signal(source, profile, reference, options=PINNED_COMPILE_FLAGS)
         wall_ms = int((time.monotonic() - started) * 1000)
         renders = run.receipt["metrics"]["renders"]
+        for stimulus in profile.stimuli:
+            render = renders[stimulus]
+            if not render["finite"] or render["nan_count"] or render["inf_count"]:
+                raise SignalHarnessError(f"DSP bank {name}/{stimulus}: nonfinite output")
         programs[name] = {
             "render_ms": run.receipt["metrics"].get("render_ms", {}),
             "sample_sha256": {stim: renders[stim]["sample_sha256"] for stim in profile.stimuli},

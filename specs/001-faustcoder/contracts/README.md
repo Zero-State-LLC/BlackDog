@@ -19,3 +19,8 @@ tests (task T02) and copied to `schemas/`.
 | [target-receipt.schema.json](target-receipt.schema.json) | §8 TargetReceipt (0.3.0) |
 | [transition-receipt.schema.json](transition-receipt.schema.json) | §7 |
 | [inference-api.md](inference-api.md) | R-010 |
+
+- [function-spans.schema.json](function-spans.schema.json): reviewed byte ranges
+  bound to inventory/notice digests (ADR-0007). Schema validation is structural;
+  runtime also verifies the independent manifest pin, identity, coverage,
+  non-overlap, bounds, UTF-8 boundaries and extracted content hashes.

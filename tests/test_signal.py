@@ -14,7 +14,6 @@ from faustcoder.signal import (
     DEFAULT_TOLERANCE,
     SAMPLE_RATES,
     SignalHarnessError,
-    SignalLibrariesUnavailable,
     SignalProfile,
     SignalReference,
     SignalSuite,
@@ -190,12 +189,47 @@ def test_reproducible_digest_drops_cpu_only() -> None:
     assert reproducible_signal_digest(receipt) != reproducible_signal_digest(changed)
 
 
-def test_library_import_is_refused_until_t03b() -> None:
-    source = _read(SIGNAL / "needs_stdfaust.dsp")
+@pytest.mark.parametrize("rate", SAMPLE_RATES)
+def test_pinned_library_render_matches_reference(rate: int) -> None:
+    source = 'import("stdfaust.lib"); process = _ * (0.5 * ba.db2linear(0));'
     assert source_needs_libraries(source)
-    with pytest.raises(SignalLibrariesUnavailable, match="T03b"):
-        _run(source, _profile(), None)
-    assert "Not from the Faust distribution" in source
+    profile = _profile(rate, stimuli=("sine",))
+    result = _run(source, profile, _reference(profile, lambda xs: _scale(xs, 0.5)))
+    assert result.receipt["passed"] is True
+
+
+def test_renderer_rejects_unpinned_library_bytes(tmp_path: Path, monkeypatch) -> None:
+    from faustcoder import signal
+    from faustcoder.sandbox import ResourceLimits, SandboxError
+
+    (tmp_path / "injected.lib").write_text("injected = 1;\n")
+    monkeypatch.setattr(signal, "share_directory", lambda: tmp_path)
+    with pytest.raises(SandboxError, match="mounted library tree"):
+        signal._render("process = _ * 0.5;", _profile(stimuli=("sine",)),
+                       options=("-ftz", "0"), limits=ResourceLimits())
+
+
+def test_renderer_rejects_library_symlink(tmp_path: Path, monkeypatch) -> None:
+    from faustcoder import signal
+    from faustcoder.sandbox import ResourceLimits
+
+    (tmp_path / "real.lib").write_text("value = 1;\n")
+    (tmp_path / "alias.lib").symlink_to(tmp_path / "real.lib")
+    monkeypatch.setattr(signal, "share_directory", lambda: tmp_path)
+    with pytest.raises(SignalHarnessError, match="symlink"):
+        signal._render("process = _ * 0.5;", _profile(stimuli=("sine",)),
+                       options=("-ftz", "0"), limits=ResourceLimits())
+
+
+def test_remote_library_is_rejected_before_render(monkeypatch) -> None:
+    from faustcoder import signal
+
+    def forbidden(*args, **kwargs):
+        pytest.fail("remote imports must never reach renderer")
+    monkeypatch.setattr(signal, "_render", forbidden)
+    with pytest.raises(SignalHarnessError, match="successful wasm compile"):
+        _run('import("https://example.com/remote.lib"); process = _;',
+             _profile(stimuli=("sine",)), None)
 
 
 def test_fixtures_are_not_eval_or_holdout_data() -> None:
@@ -906,3 +940,13 @@ def test_matching_dc_reference_is_compared_not_rejected() -> None:
     assert "impulse:dc" in against_dry.failures
     other = _run("process = 0.2;\n", profile, reference)
     assert "impulse:dc" in other.failures
+
+
+def test_harness_digest_covers_library_stager(monkeypatch) -> None:
+    from faustcoder import signal
+
+    before = signal.harness_digest()
+    original = signal._file_sha256
+    monkeypatch.setattr(signal, "_file_sha256", lambda p: "0" * 64
+                        if p.name == "libraries.mjs" else original(p))
+    assert signal.harness_digest() != before

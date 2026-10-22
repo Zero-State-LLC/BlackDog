@@ -178,3 +178,35 @@ def long_text(prefix: str, count: int = 60, replacement: str | None = None) -> s
     if replacement is not None:
         words[-1] = replacement
     return " ".join(words) + "\n"
+
+
+def span_manifest(inventory, notice, ranges):
+    """Explicit reviewed test ranges: unit function -> (raw bytes, start, end)."""
+    from faustcoder.canonical import canonical_bytes, sha256_prefixed
+
+    with pins_for(inventory, notice):
+        corpus = parse_corpus(inventory, notice)
+    rows = []
+    for unit in corpus.units:
+        if not unit.function:
+            continue
+        raw, start, end = ranges[unit.function]
+        rows.append(
+            {
+                **{
+                    k: getattr(unit, k)
+                    for k in ("unit_id", "repo", "pin", "path", "blob_sha", "function")
+                },
+                "start_byte": start,
+                "end_byte": end,
+                "sha256": sha256_prefixed(raw[start:end]),
+            }
+        )
+    document = {
+        "schema_version": "function-spans.v1",
+        "inventory_digest": corpus.inventory_digest,
+        "notice_digest": corpus.notice_digest,
+        "reviewer": "fixture span reviewer",
+        "spans": rows,
+    }
+    return document, sha256_prefixed(canonical_bytes(document))

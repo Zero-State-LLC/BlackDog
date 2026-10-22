@@ -123,9 +123,11 @@ present.
 
 ## Libraries and fixtures
 
-A source that imports a library raises `SignalLibrariesUnavailable`.
-Pinned faustlibraries staging is T03b. This harness does not copy that
-tree into the compiler filesystem.
+Both compiler and renderer stage the pinned T03b library share into their
+Emscripten filesystems, replacing bundled library bytes. The host share is
+read-only under Node permissions. Each worker hashes the mounted bytes; Python
+rejects a hash that differs from the pinned share. Remote imports, library
+symlinks and network access remain refused. Signal tolerances are unchanged.
 
 Fixtures under `tests/fixtures/dsp/signal` are harness fixtures. They
 are not Faust `tests/impulse-tests` sources, not the development suite,
@@ -419,3 +421,21 @@ the Python diagnostics.
 
 The candidate table is
 [the candidate machine](../state-machines/candidate.md).
+
+### Corrected biquad baseline (2026-10-20)
+
+The original DSP-bank biquad reversed the feedback subtraction and added a
+second delay despite Faust's recursive composition already supplying one.
+It overflowed on both architectures; the eight differing hashes represented
+NaN sign bits, not finite numerical drift. The corrected fixture preserves
+the coefficients and comparison tolerances. Bank rendering now refuses
+nonfinite samples before producing a baseline document.
+
+The regenerated x86 golden uses the finite receipts from
+[the corrected Node 22.14.0 run](https://github.com/Zero-State-LLC/BlackDog/actions/runs/39503349798),
+commit `e9f146a`. All 40 raw renders and five compiled WASM binaries matched
+the corrected spark-af42 ARM capture byte-for-byte. Only the eight biquad
+sample hashes changed; the other 32 remain identical. Per-render timing
+metadata comes from those receipts. Whole-run `wall_ms` is omitted from the
+golden because that capture did not record it; fresh renders still record
+and test the denormal timing cap. Timing is not part of the hash comparison.

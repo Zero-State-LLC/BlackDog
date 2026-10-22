@@ -336,8 +336,10 @@ def drop_capabilities():
 
     header = Header(0x20080522, 0)
     data = (Data * 2)()
-    libc.syscall.restype = ctypes.c_long
-    if libc.syscall(126, ctypes.byref(header), data) != 0:
+    # libc selects the architecture-specific syscall (x86_64 and ARM64 differ).
+    libc.capset.argtypes = [ctypes.POINTER(Header), ctypes.POINTER(Data)]
+    libc.capset.restype = ctypes.c_int
+    if libc.capset(ctypes.byref(header), data) != 0:
         fail("capset errno %s" % ctypes.get_errno())
     if libc.prctl(38, 1, 0, 0, 0) != 0:
         fail("no_new_privs errno %s" % ctypes.get_errno())

@@ -12,6 +12,8 @@ import { pathToFileURL, fileURLToPath } from "node:url";
 import { assertNetworkIsolated } from "./netns-canary.mjs";
 import { terminationFields } from "./termination.mjs";
 
+import { stageLibraries, mountedLibrarySha256 } from "./libraries.mjs";
+
 const FAUSTWASM_VERSION = "0.19.0";
 const MAX_STDIN = 2 * 1024 * 1024;
 const SAFE_OPTION = /^(-[a-z][a-z0-9]*|[0-9]+)$/;
@@ -169,6 +171,11 @@ async function main() {
   }
   const pressFirst = request.press_buttons_first_block !== false;
   const { faustwasm, compiler } = await loadCompiler(join(workdir, "runtime", "libfaust-wasm.js"));
+  const libraryRoot = process.argv[3];
+  if (!libraryRoot) failClosed("library tree argument is required");
+  const writtenSha = stageLibraries(compiler, libraryRoot);
+  const libraryTreeSha256 = mountedLibrarySha256(compiler.fs());
+  if (writtenSha !== libraryTreeSha256) failClosed("mounted library tree does not match the bytes written");
   const libfaustVersion = compiler.version();
   const generator = new faustwasm.FaustMonoDspGenerator();
   let compiled;
@@ -180,6 +187,7 @@ async function main() {
     writeResult(workdir, {
       faustwasm_version: FAUSTWASM_VERSION,
       libfaust_version: libfaustVersion,
+      library_tree_sha256: libraryTreeSha256,
       compile_ok: false,
       diagnostics: message.endsWith("\n") ? message : `${message}\n`,
       inputs: 0,
@@ -195,6 +203,7 @@ async function main() {
     writeResult(workdir, {
       faustwasm_version: FAUSTWASM_VERSION,
       libfaust_version: libfaustVersion,
+      library_tree_sha256: libraryTreeSha256,
       compile_ok: false,
       diagnostics: message.endsWith("\n") ? message : `${message}\n`,
       inputs: 0,
@@ -229,6 +238,7 @@ async function main() {
     writeResult(workdir, {
       faustwasm_version: FAUSTWASM_VERSION,
       libfaust_version: libfaustVersion,
+      library_tree_sha256: libraryTreeSha256,
       compile_ok: false,
       diagnostics: `internal: ${message.endsWith("\n") ? message : `${message}\n`}`,
       inputs: inputCount,
@@ -242,6 +252,7 @@ async function main() {
   writeResult(workdir, {
     faustwasm_version: FAUSTWASM_VERSION,
     libfaust_version: libfaustVersion,
+    library_tree_sha256: libraryTreeSha256,
     toolchain: {
       faustwasm: FAUSTWASM_VERSION,
       node: process.version,
