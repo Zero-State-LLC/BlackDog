@@ -410,7 +410,7 @@ def _raw_cluster_families(
     items: Sequence[tuple[str, str]],
     comparison_ids: Collection[str] = (),
     *, floor: int = TOKEN_FLOOR, canonical: bool = False, evidence: list | None = None,
-    scope: ComparisonScope | None = None,
+    scope: ComparisonScope | None = None, item_repos: dict[str, str] | None = None,
 ) -> dict[str, str]:
     """Map each item id to a duplicate-family id.
 
@@ -517,10 +517,12 @@ def _raw_cluster_families(
             # frequency is counted on this stream over non-comparison items.
             idiom = idiom_shingles(
                 {key: shingles(value) for key, value in token_of.items()},
-                comparison, scope.idiom_min_docs)
+                comparison, scope.idiom_min_docs, item_repos=item_repos,
+                min_repos=scope.idiom_min_repos)
             if evidence is not None:
                 evidence.append(dict(reason="comparison_scope", **scope.describe(),
                                      idiom_shingles=len(idiom),
+                                     idiom_set_sha256=sha256_prefixed(canonical_bytes(sorted(idiom))),
                                      stream="canonical" if canonical else "raw", floor=floor))
         cleared_ids = [item_id for item_id in ordered_ids if item_id not in comparison]
         compared_ids = [item_id for item_id in ordered_ids if item_id in comparison]
@@ -565,11 +567,24 @@ def _raw_cluster_families(
             overlaps = {key: all_shingles[key] & whole
                         for key in ordered_ids if key not in comparison}
             contributors = [key for key, overlap in overlaps.items() if overlap]
+            if scope is not None:
+                # Deterministic marginal coverage: do not attach incidental overlap.
+                remaining = set(contributors)
+                contributors, supplied = [], set()
+                while remaining and not containment_at_least(whole, supplied):
+                    best = min(remaining, key=lambda k: (-len(overlaps[k] - supplied), k))
+                    if not (overlaps[best] - supplied):
+                        break
+                    contributors.append(best)
+                    supplied.update(overlaps[best])
+                    remaining.remove(best)
+                contributors.sort()
             covered = frozenset().union(*(overlaps[key] for key in contributors))
             if len(contributors) >= 3 and containment_at_least(whole, covered):
                 group_key = [whole_id, contributors, canonical, floor]
                 if scope is not None:
-                    group_key.append(scope.describe())
+                    group_key.append({**scope.describe(), "idiom_set_sha256":
+                                      sha256_prefixed(canonical_bytes(sorted(idiom)))})
                 group_id = sha256_prefixed(canonical_bytes(group_key))
                 if evidence is not None:
                     evidence.append(dict(reason="collective_support", group_id=group_id,
@@ -622,7 +637,7 @@ def _hit_counts(candidate: str, text: str, *, floor: int = TOKEN_FLOOR):
 
 
 def cluster_families(items, comparison_ids=(), *, floor: int = TOKEN_FLOOR, evidence: list | None = None,
-                     scope: ComparisonScope | None = None):
+                     scope: ComparisonScope | None = None, item_repos: dict[str, str] | None = None):
     """OR raw and canonical components; ids remain bound to original text.
 
     Canonical short exact matches are fail-closed pending reviewed idiom pairs.
@@ -636,10 +651,10 @@ def cluster_families(items, comparison_ids=(), *, floor: int = TOKEN_FLOOR, evid
     _require_floor(floor)
     if scope is not None and not isinstance(scope, ComparisonScope):
         raise TypeError("scope must be a ComparisonScope or None")
-    raw = _raw_cluster_families(items, comparison_ids, floor=floor, evidence=evidence, scope=scope)
+    raw = _raw_cluster_families(items, comparison_ids, floor=floor, evidence=evidence, scope=scope, item_repos=item_repos)
     canonical = _raw_cluster_families(
         [(key, _canonical_source(text)) for key, text in items], comparison_ids, floor=floor, canonical=True,
-        evidence=evidence, scope=scope)
+        evidence=evidence, scope=scope, item_repos=item_repos)
     parent = {key: key for key, _ in items}
     def find(key):
         while parent[key] != key:

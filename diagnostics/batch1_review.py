@@ -11,7 +11,7 @@ from faustcoder.inventory import parse_corpus
 from faustcoder.function_spans import verify_manifest, extract_span
 from faustcoder.normalize import normalize_bytes
 from faustcoder.neardup import cluster_families, canonical_tokens, tokens, shingles
-from faustcoder.comparison_scope import ComparisonScope
+from faustcoder.comparison_scope import ComparisonScope, idiom_shingles, scope_descriptor
 
 
 def evidence_paths(edges, comparison_ids):
@@ -40,6 +40,25 @@ def trace_path(key, previous):
     return result
 
 
+
+def validate_outputs(output):
+    """Validate the complete output set against its retained binding (not an approval)."""
+    binding = json.loads((output / "binding.json").read_text())
+    descriptor = binding["comparison_scope"]
+    files = {str(p.relative_to(output)) for p in output.rglob("*") if p.is_file()} - {"binding.json"}
+    if files != set(binding["outputs"]):
+        raise ValueError("output inventory mismatch")
+    for name, receipt in binding["outputs"].items():
+        if receipt["comparison_scope"] != descriptor:
+            raise ValueError("output scope mismatch: " + name)
+        if sha256_prefixed((output / name).read_bytes()) != receipt["sha256"]:
+            raise ValueError("output hash mismatch: " + name)
+    for name in ("candidate-ledger.json", "summary.json"):
+        inline = json.loads((output / name).read_text()).get("comparison_scope")
+        if inline != (descriptor if descriptor["enabled"] else None):
+            raise ValueError("inline scope mismatch: " + name)
+    return binding
+
 def run(repo, acquisition, candidate, qualification, groups, baseline, output, scope=None):
     inventory = json.loads((repo / "corpus/rights-inventory.v1.json").read_text())
     notice = json.loads((repo / "corpus/notice-manifest.v1.json").read_text())
@@ -67,7 +86,11 @@ def run(repo, acquisition, candidate, qualification, groups, baseline, output, s
     (output / "sources").mkdir()
     (output / "packets").mkdir()
 
+    descriptor = scope_descriptor(scope)
+
     def save(name, data):
+        if scope is not None and isinstance(data, dict) and name not in ("source-index.json", "binding.json"):
+            data = {**data, "comparison_scope": descriptor}
         (output / name).write_bytes(
             canonical_bytes(json.loads(json.dumps(data))) + b"\n"
         )
@@ -88,6 +111,7 @@ def run(repo, acquisition, candidate, qualification, groups, baseline, output, s
                 "faustcoder/normalize.py",
                 "faustcoder/inventory.py",
                 "faustcoder/function_spans.py",
+                "faustcoder/comparison_scope.py",
             )
         },
         "production_approved": False,
@@ -95,13 +119,6 @@ def run(repo, acquisition, candidate, qualification, groups, baseline, output, s
         "token_floor": 40,
         "token_floor_status": "provisional",
     }
-    if scope is not None:
-        # Opt-in, UNREVIEWED comparison-scope proposal; absent by default so
-        # default runs reproduce historical receipts byte for byte.
-        bindings["comparison_scope"] = scope.describe()
-        bindings["code"]["faustcoder/comparison_scope.py"] = sha256_prefixed(
-            (repo / "faustcoder/comparison_scope.py").read_bytes())
-    save("binding.json", bindings)
     blobs = {}
     missing = []
     for u in corpus.units + corpus.comparisons:
@@ -217,7 +234,16 @@ def run(repo, acquisition, candidate, qualification, groups, baseline, output, s
         )
     save("source-index.json", metadata)
     edges = []
-    families = cluster_families(sorted(text.items()), comparison, evidence=edges, scope=scope)
+    item_repos = {k: v["repo"] for k, v in metadata.items()}
+    streams = {}
+    if scope is not None:
+        for stream, tokenize in (("raw", tokens), ("canonical", canonical_tokens)):
+            streams[stream] = idiom_shingles(
+                {k: shingles(tokenize(t)) for k, t in text.items()}, comparison,
+                scope.idiom_min_docs, item_repos=item_repos, min_repos=scope.idiom_min_repos)
+    descriptor = scope_descriptor(scope, streams)
+    families = cluster_families(sorted(text.items()), comparison, evidence=edges,
+                                scope=scope, item_repos=item_repos)
     # A joining forest must reconstruct the complete family membership exactly.
     previous = evidence_paths(edges, comparison)
     tainted = {families[k] for k in comparison}
@@ -346,6 +372,8 @@ def run(repo, acquisition, candidate, qualification, groups, baseline, output, s
             "| Unit | Function / path | Priority | Quarantine | Prior contract | Evidence path |",
             "| --- | --- | --- | --- | --- | --- |",
         ]
+        if scope is not None:
+            lines[3:3] = ["Idiom filter scope: `" + json.dumps(descriptor, sort_keys=True) + "`", ""]
         for k in members:
             v = byid[k]
             label = (v["function"] or v["path"]).replace("|", "\\|")
@@ -431,6 +459,14 @@ def run(repo, acquisition, candidate, qualification, groups, baseline, output, s
         t07_frozen=False,
     )
     save("summary.json", summary)
+    bindings["comparison_scope"] = descriptor
+    bindings["outputs"] = {
+        str(p.relative_to(output)): {"sha256": sha256_prefixed(p.read_bytes()),
+                                     "comparison_scope": descriptor}
+        for p in sorted(output.rglob("*")) if p.is_file()
+    }
+    save("binding.json", bindings)
+    validate_outputs(output)
     print(json.dumps(summary, indent=2))
 
 
@@ -447,13 +483,16 @@ def main():
     ):
         p.add_argument("--" + name, type=Path, required=True)
     p.add_argument(
-        "--comparison-scope-min-docs", type=int, default=None,
-        help="opt-in UNREVIEWED document-frequency comparison scope; omit for shipping behavior",
+        "--idiom-filter-min-docs", "--comparison-scope-min-docs",
+        dest="comparison_scope_min_docs", type=int, default=None,
+        help="opt-in UNREVIEWED document-frequency idiom filter; omit for shipping behavior",
     )
+    p.add_argument("--idiom-min-repos", type=int, default=2,
+                   help="minimum distinct repositories for an idiom shingle (>=2)")
     a = p.parse_args()
     scope = (
         None if a.comparison_scope_min_docs is None
-        else ComparisonScope(a.comparison_scope_min_docs)
+        else ComparisonScope(a.comparison_scope_min_docs, idiom_min_repos=a.idiom_min_repos)
     )
     run(
         a.repo,

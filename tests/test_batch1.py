@@ -122,6 +122,7 @@ def test_complete_review_serializes_inventory_tuples_without_approval(
         "faustcoder/normalize.py",
         "faustcoder/inventory.py",
         "faustcoder/function_spans.py",
+        "faustcoder/comparison_scope.py",
     ):
         p = repo / name
         p.parent.mkdir(exist_ok=True)

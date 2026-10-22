@@ -49,19 +49,23 @@ def _sh(text: str, stream: str, n: int = NGRAM_N) -> frozenset[str]:
 class DocFreq:
     """Lazy idiom view: a shingle is idiom when its adjusted document frequency >= d."""
 
-    def __init__(self, base: dict[str, Counter], delta: dict[str, Counter], d: int):
+    def __init__(self, base, delta, d, repo_support, repo_delta, min_repos=2):
         self.base, self.delta, self.d = base, delta, d
+        self.repo_support, self.repo_delta, self.min_repos = repo_support, repo_delta, min_repos
 
     def __getitem__(self, stream: str) -> "_StreamIdiom":
-        return _StreamIdiom(self.base[stream], self.delta[stream], self.d)
+        return _StreamIdiom(self.base[stream], self.delta[stream], self.d,
+                            self.repo_support[stream], self.repo_delta[stream], self.min_repos)
 
 
 class _StreamIdiom:
-    def __init__(self, base: Counter, delta: Counter, d: int):
+    def __init__(self, base, delta, d, repo_support, repo_delta, min_repos):
         self.base, self.delta, self.d = base, delta, d
+        self.repo_support, self.repo_delta, self.min_repos = repo_support, repo_delta, min_repos
 
     def __contains__(self, s: str) -> bool:
-        return self.base.get(s, 0) + self.delta.get(s, 0) >= self.d
+        return (self.base.get(s, 0) + self.delta.get(s, 0) >= self.d
+                and self.repo_support.get(s, 0) + self.repo_delta.get(s, 0) >= self.min_repos)
 
     def __rsub__(self, other):
         return frozenset(s for s in other if s not in self)
@@ -136,27 +140,108 @@ def doc_freq(text: dict[str, str]) -> dict[str, Counter]:
     return out
 
 
+
+def floor_artifact(host, planted, whole, baseline, floor=TOKEN_FLOOR):
+    """A baseline hit caused solely by crossing the floor with pre-existing overlap."""
+    if not baseline:
+        return False
+    for reason in baseline:
+        stream, kind = reason.split(":", 1)
+        if (kind != "forward_containment" or len(stream_tokens(host, stream)) >= floor
+                or len(stream_tokens(planted, stream)) < floor
+                or not containment_at_least(_sh(host, stream), _sh(whole, stream))):
+            return False
+    return True
+
+
+def boundary_windows(windows):
+    """Synthetic token-prefix plants, explicitly distinct from original byte windows."""
+    extra = []
+    for w in windows:
+        sequence = tokens(w["text"])
+        if len(sequence) < 50:
+            continue
+        for width in range(36, 50):
+            text = " ".join(sequence[:width])
+            extra.append({**w, "window_id": w["window_id"] + f"-token-prefix-{width}",
+                          "text": text, "raw_tokens": width,
+                          "canonical_tokens": len(stream_tokens(text, "canonical")),
+                          "kind": "synthetic_token_prefix", "parent_window_id": w["window_id"],
+                          "window_sha256": hashlib.sha256(text.encode()).hexdigest()})
+    return extra
+
+
+def summarize(rows, thresholds):
+    """Window counts are unions of changed rows, never sums across multiplicities.
+
+    A window can be lost at one host and gained at another; both sets are explicit.
+    Net is gained minus lost. Floor-only hits are excluded from these sets.
+    """
+    def counts(selected, d):
+        lost = [r for r in selected if r["baseline"] and not r[f"scope_df{d}"] and not r["floor_artifact"]]
+        gained = [r for r in selected if not r["baseline"] and r[f"scope_df{d}"] and not r["floor_artifact"]]
+        artifacts = [r for r in selected if r["floor_artifact"]]
+        a, b = sorted({r["window_id"] for r in lost}), sorted({r["window_id"] for r in gained})
+        return dict(windows=len({r["window_id"] for r in selected}), rows=len(selected),
+                    lost_windows=len(a), gained_windows=len(b), net_windows=len(b)-len(a),
+                    lost_window_ids=a, gained_window_ids=b, lost_rows=len(lost), gained_rows=len(gained),
+                    floor_artifact_windows=len({r["window_id"] for r in artifacts}),
+                    floor_artifact_rows=len(artifacts),
+                    floor_artifact_lost_rows=sum(not r[f"scope_df{d}"] for r in artifacts))
+    thresholds = sorted(set(thresholds))
+    flips = []
+    reversals = []
+    for r in rows:
+        states = [bool(r[f"scope_df{d}"]) for d in thresholds]
+        directions = {int(b)-int(a) for a,b in zip(states,states[1:])} - {0}
+        if -1 in directions:
+            record = dict(window_id=r["window_id"], host=r["host"], multiplicity=r["multiplicity"], states=states)
+            flips.append(record)
+            if directions == {-1,1}:
+                reversals.append(record)
+    return dict(thresholds=thresholds, net_definition="gained minus lost; distinct union of changed host rows",
+                by_D={str(d): counts(rows,d) for d in thresholds},
+                by_D_and_m={f"D{d}_m{m}": counts([r for r in rows if r["multiplicity"]==m],d)
+                            for d in thresholds for m in sorted({r["multiplicity"] for r in rows})},
+                by_D_m_width={f"D{d}_m{m}_raw{w}": counts([r for r in rows if r["multiplicity"]==m and r["raw_tokens"]==w],d)
+                              for d in thresholds for m in sorted({r["multiplicity"] for r in rows})
+                              for w in sorted({r["raw_tokens"] for r in rows})},
+                nonmonotonic_rows=flips, direction_reversal_rows=reversals)
+
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--recompute", type=Path, required=True, help="a batch1_review output directory")
     ap.add_argument("--windows", type=Path, required=True, help="floor-window-proposals.csv")
     ap.add_argument("--min-docs", type=int, nargs="+", required=True)
     ap.add_argument("--multiplicity", type=int, nargs="+", default=[1, 2])
+    ap.add_argument("--min-repos", type=int, default=2)
+    ap.add_argument("--boundary", action="store_true", help="add synthetic token-prefix plants at every width 36..49")
     ap.add_argument("--output", type=Path, required=True)
     a = ap.parse_args()
     text, repo, comps = load_pool(a.recompute)
+    if a.min_repos < 2:
+        raise ValueError("min-repos must be >= 2")
+    a.min_docs = sorted(set(a.min_docs))
     base_df = doc_freq(text)
+    per_repo = {r: doc_freq({h:t for h,t in text.items() if repo[h]==r}) for r in sorted(set(repo.values()))}
+    repo_support = {s: Counter(sh for df in per_repo.values() for sh in df[s]) for s in base_df}
     windows = list(csv.DictReader(a.windows.open()))
+    for w in windows:
+        _, _, comp_path = comps[w["source_blob"]]
+        raw = comp_path.read_bytes()[int(w["start_byte"]):int(w["end_byte"])]
+        if hashlib.sha256(raw).hexdigest() != w["window_sha256"]:
+            raise ValueError("window hash mismatch: " + w["window_id"])
+        w["text"] = raw.decode("utf-8")
+        w["kind"] = "original_byte_window"
+    if a.boundary:
+        windows += boundary_windows(windows)
     hosts_all = sorted(text)
     rows = []
     for n_done, w in enumerate(windows):
         if n_done % 20 == 0:
             print(f"window {n_done}/{len(windows)}", flush=True)
-        _, comp_text, comp_path = comps[w["source_blob"]]
-        raw = comp_path.read_bytes()[int(w["start_byte"]):int(w["end_byte"])]
-        if hashlib.sha256(raw).hexdigest() != w["window_sha256"]:
-            raise ValueError("window hash mismatch: " + w["window_id"])
-        win = raw.decode("utf-8")
+        _, comp_text, _ = comps[w["source_blob"]]
+        win = w["text"]
         order = sorted(hosts_all, key=lambda h: hashlib.sha256((w["window_id"] + h).encode()).hexdigest())
         # Hosts that do not already join this comparison pairwise in either scope.
         free = [h for h in order if not pair_joins(text[h], comp_text, None)][:max(a.multiplicity) * 4]
@@ -174,28 +259,41 @@ def main() -> None:
                 for s in delta:
                     delta[s].subtract(_sh(text[h], s))
                     delta[s].update(_sh(planted[h], s))
+            repo_delta = {s: Counter() for s in base_df}
+            for r in {repo[h] for h in chosen}:
+                for stream in base_df:
+                    change = Counter()
+                    for h in chosen:
+                        if repo[h] == r:
+                            change.subtract(_sh(text[h], stream))
+                            change.update(_sh(planted[h], stream))
+                    for sh, delta_count in change.items():
+                        old = per_repo[r][stream].get(sh, 0)
+                        repo_delta[stream][sh] += int(old + delta_count > 0) - int(old > 0)
             for h in chosen:
+                baseline = pair_joins(planted[h], comp_text, None)
                 rec = dict(window_id=w["window_id"], source_blob=w["source_blob"], raw_tokens=int(w["raw_tokens"]),
                            canonical_tokens=int(w["canonical_tokens"]), multiplicity=m, host=h, host_repo=repo[h],
-                           baseline=";".join(pair_joins(planted[h], comp_text, None)))
+                           baseline=";".join(baseline),
+                           floor_artifact=floor_artifact(text[h], planted[h], comp_text, baseline),
+                           window_kind=w["kind"], idiom_min_repos=a.min_repos)
                 for d in a.min_docs:
-                    rec[f"scope_df{d}"] = ";".join(pair_joins(planted[h], comp_text, DocFreq(base_df, delta, d)))
+                    rec[f"scope_df{d}"] = ";".join(pair_joins(planted[h], comp_text, DocFreq(base_df, delta, d, repo_support, repo_delta, a.min_repos)))
                 rows.append(rec)
     a.output.mkdir(parents=True, exist_ok=False)
     with (a.output / "plant-results.csv").open("w", newline="") as fh:
         wr = csv.DictWriter(fh, fieldnames=list(rows[0]))
         wr.writeheader()
         wr.writerows(rows)
-    summary = {}
-    for m in a.multiplicity:
-        for bucket in (17, 25, 35, 50):
-            sel = [r for r in rows if r["multiplicity"] == m and r["raw_tokens"] == bucket]
-            ent = {"plants": len(sel), "baseline_detected": sum(bool(r["baseline"]) for r in sel)}
-            for d in a.min_docs:
-                k = f"scope_df{d}"
-                ent[k + "_detected"] = sum(bool(r[k]) for r in sel)
-                ent[k + "_lost_vs_baseline"] = sum(bool(r["baseline"]) and not r[k] for r in sel)
-            summary[f"m{m}_raw{bucket}"] = ent
+    summary = summarize(rows, a.min_docs)
+    summary["idiom_min_repos"] = a.min_repos
+    summary["requested_windows"] = len(windows)
+    placed = Counter((r["window_id"], r["multiplicity"]) for r in rows)
+    summary["underfilled_placements"] = [
+        {"window_id": w["window_id"], "requested_hosts": m, "actual_hosts": placed[w["window_id"], m]}
+        for w in windows for m in a.multiplicity if placed[w["window_id"], m] < m]
+    summary["unplaced_window_ids"] = sorted({w["window_id"] for w in windows} - {r["window_id"] for r in rows})
+    (a.output / "windows.json").write_text(json.dumps(windows, indent=1, sort_keys=True) + "\n")
     (a.output / "summary.json").write_text(json.dumps(summary, indent=1, sort_keys=True) + "\n")
     print(json.dumps(summary, indent=1, sort_keys=True))
 
