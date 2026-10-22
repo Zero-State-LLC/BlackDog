@@ -19,10 +19,26 @@ separately, and T07/T10 remain Backlog.
 | --- | --- | --- |
 | Batch 1 evidence and hash-format review | Done: #99, `ce8087a` | Eight CI checks; 771 tests passed |
 | S1 scope and owner assignment | Technical preparation complete; confirmations pending | 1,430 units / 110 packets / 510 blobs verified; packet/bindings verified; Prabu is an AI agent; human assignments, kickoff, coverage and custody pending |
-| S2 source/leakage and S3 closure/behavior | Forge R2 and 174 closure drafts verified structurally; 18/18 matches reproduced; 18 proposed REJECT / 156 BLOCKED / 0 retained; no human approvals | Hash-bound per-unit decisions, approved closures/contracts and reproducible positive/negative receipts |
+| S2 source/leakage and S3 closure/behavior | Forge R2 and 174 closure drafts verified structurally; 18/18 matches reproduced; original 18 proposed REJECT / 156 BLOCKED / 0 retained; owner packet approvals, seven contract/source approvals and exact filter-pair COPY approval recorded; no production admission | Hash-bound per-unit decisions, approved closures/contracts and reproducible positive/negative receipts |
 | S4 two-project hosts and S5 FLOOR | Blocked on approved inputs | Ratified gold/label protocol and complete measurement result |
-| S6 development/custody | Human custody/reviewer assignments require confirmation after AI-only correction | Document private custody/review channel; disjoint reviewed tasks and custody commitments still required |
+| S6 development/custody | Danny named human custodian/reviewer; independent private author and actual isolated storage pending | Document private custody/review channel; disjoint reviewed tasks and custody commitments still required |
 | S7 qualification dossier | Planned after S2–S6 | One reviewed delivery; explicit pass or blocked milestone decision |
+
+## Filter pair human approval recorded
+
+**Done: decision receipt. Qualification remains blocked.** Danny approved
+COPY/shared lineage for the exact pinned `filter.lib` / `filters.lib` pair
+(candidate `u8ea99a0a7cb570b53333`) for leakage and family handling.
+[Bindings, evidence and open gates](docs/runbooks/qualification-sprint.md#superseding-filter-pair-copy-approval--2026-10-22).
+Receipt: `/Users/appliedalchemylabs/Documents/Codex/blackdog-s2-backups/blackdog-filter-source-approval-20261022T201616Z/`;
+five files checksum verified, artifacts outside Git. Original packets unchanged.
+
+Next: bind the decision into family/split review; resolve remaining source/notice
+and dependency scope; complete independent behavior qualification, full-pool and
+two-project FLOOR evidence, and independent private author/storage/access/review
+confirmation. Existing approvals are preserved; this decision grants no
+production admission. PR #110 stays unmerged; idiom filtering stays default-off,
+`TOKEN_FLOOR=40` stays provisional and T07 stays unfrozen.
 
 ## S1 scope verification and reviewer handoff
 

@@ -1,5 +1,18 @@
 # Slice 2 leakage and split readiness
 
+## Latest human source decision
+
+Danny approved COPY/shared lineage for the exact pinned `filter.lib` / `filters.lib`
+pair, candidate `u8ea99a0a7cb570b53333`, for leakage and family handling.
+See the [approval bindings, receipt and remaining gates](qualification-sprint.md#superseding-filter-pair-copy-approval--2026-10-22).
+The receipt is outside Git at
+`/Users/appliedalchemylabs/Documents/Codex/blackdog-s2-backups/blackdog-filter-source-approval-20261022T201616Z/`.
+Earlier pending wording for this pair is superseded; other source, dependency,
+family/split, two-project FLOOR and independent private custody gates remain open.
+Existing seven-file source/MIT and contract approvals remain valid within their
+recorded scope. No production admission; PR #110 remains unmerged,
+`TOKEN_FLOOR=40` provisional and T07 unfrozen.
+
 ## Status
 
 Branch `feat/slice2-leakage-readiness` starts at merged main `7f16258`

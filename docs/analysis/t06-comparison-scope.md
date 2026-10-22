@@ -1,8 +1,11 @@
 # T06 idiom filter (draft, default off)
 
 This is an opt-in diagnostic proposal, not a shipping or source-label decision.
-`TOKEN_FLOOR=40` remains provisional; T07 remains unfrozen. The decision whether
-`filter.lib` copies `filters.lib` is reserved for human adjudication.
+`TOKEN_FLOOR=40` remains provisional; T07 remains unfrozen. Danny approved
+COPY/shared lineage for the exact pinned
+`filter.lib` / `filters.lib` pair for leakage and family handling. See the
+[hash-bound approval, receipt and remaining gates](../runbooks/qualification-sprint.md#superseding-filter-pair-copy-approval--2026-10-22).
+This does not grant production admission or authorize merging PR #110.
 
 ## Configuration and naming
 

@@ -1,5 +1,48 @@
 # T06/T07 qualification sprint
 
+## Superseding filter pair COPY approval — 2026-10-22
+
+Danny Meyer directly approved **COPY/shared lineage** for candidate
+`u8ea99a0a7cb570b53333` and the exact pinned comparison below, for leakage and
+family handling. This is a human decision, superseding pending wording for this
+pair; it does not establish copying direction, infringement, blanket rights
+rejection or production admission. Original packets and corpus labels remain
+unchanged; the approval is recorded in a separate receipt.
+
+| Role | Repository / path | Commit | Git blob |
+| --- | --- | --- | --- |
+| Candidate | `grame-cncm/faust`, `tests/impulse-tests/dsp/filter.lib` | `8c00913e44d42f9d25aa3f1a0d500bde5662d7bc` | `35e17f06c2957877af98928624c088597b157979` |
+| Comparison | `grame-cncm/faustlibraries`, `filters.lib` | `2edec0537f536eaa130d42c354884d7db971663c` | `0af91c8e5d9029bd24c099abd65928fa4d250beb` |
+
+Evidence includes 23 identical lines in `bandpass12e`, shared `tf2np`
+implementation/comments and Julius O. Smith attribution. The receipt binds both
+full SHA-256 source hashes, preserves the owner's exact approval and includes
+source snapshots and the recommendation with remaining uncertainty.
+
+Receipt (outside Git):
+`/Users/appliedalchemylabs/Documents/Codex/blackdog-s2-backups/blackdog-filter-source-approval-20261022T201616Z/`.
+Start with `approval.json` and `evidence.md`. Five copied files were checksum
+verified. `SHA256SUMS` digest:
+`70d512d9032be7562e2436ca1175425bd4fbd39658ed79e8df5be985117beaee`.
+No Delphi copy or write was made for this approval.
+
+This decision does not revoke the earlier owner approval of R2/closure drafts
+as presented, the seven independently reviewed behavioral contracts, or the
+seven exact R3b NOT_COPY/repository-level MIT decisions. Historical pending or
+zero-human-approval statements below describe the original packets, not current
+approval state.
+
+Remaining gates: apply this pair's decision to a hash-bound family/split review;
+resolve other source/notice and imported/third-party scope decisions; complete
+semantic dependency closures and applicable independent contracts/controls;
+retain the full 1,430-unit pool, 23 short groups and 19 collective sets; complete
+two-project hosts and ratified FLOOR qualification. Danny is the named human
+custodian/reviewer, but an independent private author, actual human-only storage,
+access isolation and completed independent task review remain unconfirmed.
+Any retained slice needs its own source-bound review. No production admission.
+PR #110 stays unmerged, the idiom filter stays default-off,
+`TOKEN_FLOOR=40` stays provisional and T07 stays unfrozen.
+
 ## Milestone and scope
 
 Proposed duration: ten working days from an agreed kickoff, with an implementation
