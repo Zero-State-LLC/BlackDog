@@ -20,6 +20,12 @@ Branch `feat/slice2-leakage-readiness` starts at merged main `7f16258`
 Slice 2 readiness exit is blocked**. `TOKEN_FLOOR=40` remains provisional and
 production T07 remains unfrozen. No candidate was promoted to training or eval.
 
+Current human approval and seven-unit execution evidence is recorded in
+[Seven-contract approval and scoped dependency checks](#seven-contract-approval-and-scoped-dependency-checks)
+and [Seven-file NOT_COPY and MIT decision](#seven-file-not_copy-and-mit-decision).
+Earlier corpus/handoff sections retain their historical status at delivery;
+they do not override the later owner, seven-contract or seven-file source approvals.
+
 ## Shipping comparison changes
 
 T06 clustering combines raw and canonical streams by OR. H2 maps identifiers,
@@ -206,6 +212,62 @@ the digest, readable report and preservation checks. R1/R2 inputs and environmen
 remain preserved. All 174 dependency decisions and seven gates remain pending;
 `TOKEN_FLOOR=40` remains provisional and T07 remains unfrozen.
 
+## Seven-contract approval and scoped dependency checks
+
+The [latest sprint evidence](qualification-sprint.md#seven-contract-human-approval-and-dependency-validation)
+supersedes historical pending-approval statements for seven CICM/pd-faustgen
+contracts. Danny Meyer approved all seven, the shared plan and the `.default.dsp`
+import correction, attesting no authorship/material coauthorship or conflict.
+Codex authored the drafts. Both `.default.dsp` and `gain.dsp` declare
+`import("stdfaust.lib")`; the corrected receipt preserves this dependency.
+The earlier owner approval of R2/closure packets accepts their blocked dispositions,
+not production admission. Original packet files remain unchanged.
+
+On `spark-af42` at `84e0192`, all seven originals compiled on WASM/native paths;
+both import-free variants compiled on both paths. Total: 18 successful compiler
+cases, 11 expected local-binding-removal rejections and two expected missing-import
+rejections. Thirty paired execution cases at 44.1/48 kHz produced byte-identical
+import-present/import-free samples and passed a separate analytical replay.
+Each variant retained 144,000 float32 samples per case. Tests covered impulse,
+alternating and multitone probes, and gain values 0/0.25/0.5/1. Later bounded
+behavior/default and compiled-target substitution checks passed;
+see the source-approval section below for scope and receipts.
+No limits, tolerances or sandbox isolation were relaxed.
+
+Approval: `/home/delphi/blackdog-seven-contract-approval-20261022T053119Z/`.
+Results: `/home/delphi/blackdog-seven-dependencies-20261022T053421Z/`.
+The matching `.tar.gz` and SHA-256 sidecar under the local `blackdog-s2-backups/`
+root passed archive verification and all 498 payload checks. The sprint runbook
+records the exact archive digest, corrected contracts and preservation details.
+No evidence artifacts enter Git.
+
+Danny is named human custodian and independent private-task reviewer. The private
+author arrangement, actual private storage and human-only access remain pending;
+iCloud is coordination only. The owner affirms agent/training exclusion. No
+private tasks or keys were created. Beyond the seven-file source approval below,
+unresolved notice/leakage scope and the remaining 167 units’ closure/contract
+evidence, two-project FLOOR inputs and complete
+qualification remain open. TOKEN_FLOOR=40 stays provisional; T07 stays unfrozen.
+
+## Seven-file NOT_COPY and MIT decision
+
+Danny Meyer approved NOT_COPY against the reviewed comparison evidence and
+repository-level MIT coverage for all seven exact R3b source blobs on
+2026-10-22. See [scope, receipts and remaining gates](qualification-sprint.md#seven-file-source-and-mit-approval-2026-10-22).
+The approval binds source/dossier hashes and Git blobs at pd-faustgen commit
+`9e2aaeabe94a7fab6928711050535ac12a1a591a`; preserve the full Pierre Guillot MIT
+notice. It supersedes pending source/notice decisions for these seven only.
+Original packets and historical counts remain unchanged. Imported libraries and
+third-party scope are excluded; family links and dependency/split gates remain.
+
+Approval: `/home/delphi/blackdog-seven-source-approval-20261022T185548Z/`.
+R3b: `/home/delphi/blackdog-s2-r3b-notice-spans-20261022T173051Z/`.
+Replay: `/home/delphi/blackdog-r3b-intake-20261022T1733Z/`.
+Matching off-host directories under
+`/Users/appliedalchemylabs/Documents/Codex/blackdog-s2-backups/` are checksum-verified.
+All 31 R3b payloads, seven bindings, 61 replayed pairs and 332 span rows passed.
+No production admission; TOKEN_FLOOR=40 provisional and T07 unfrozen.
+
 ## Remaining exit gates
 
 1. Independently approve a useful source/task/dependency subset; adjudicate the
@@ -215,11 +277,10 @@ remain preserved. All 174 dependency decisions and seven gates remain pending;
    fixed ground truth; obtain an explicit floor decision or provisional route.
 3. Qualify project-disjoint development tasks with semantic references and no
    unresolved family conflicts. The recovered files are candidates only.
-4. Confirm human evaluator/custodian and independent reviewer assignments after
-   the AI-only correction. Document separate human-controlled custody and a
-   private review channel before creating independent tasks; bind exclusion
-   metadata and completed independent reviews. Agent role assignments cannot
-   close this gate.
+4. Danny Meyer is named custodian and independent private-task reviewer; confirm
+   the independent author arrangement, actual private storage and human-only
+   access. iCloud is coordination only. Bind exclusion metadata and completed
+   independent reviews before treating private tasks as qualified holdout data.
 5. Review the signing implementation and configure trusted public verification
    only after these gates close. Production T07 must remain unfrozen meanwhile.
 

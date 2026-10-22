@@ -49,9 +49,14 @@ Proposed duration: ten working days from an agreed kickoff, with an implementati
 owner, a human source/leakage reviewer and a separate evaluator/custodian named
 on day 1. Prabu initially accepted the nominated roles, but has since explicitly
 identified as an AI agent. That acceptance does not fill any human-review role.
-Packet access, hashes and reproduction are now verified. Human adjudicators,
-independent contract review, agreed kickoff/coverage and separate custody remain
-pending; the earlier author/reviewer assignment is not proof of independence.
+Packet access, hashes and reproduction are verified. The latest
+[seven-contract approval](#seven-contract-human-approval-and-dependency-validation)
+records Danny Meyer’s independent review and scoped dependency results.
+The [seven-file source approval](#seven-file-source-and-mit-approval-2026-10-22)
+now records NOT_COPY and repository-level MIT coverage. Remaining broader
+source/admission decisions, kickoff/coverage and private custody
+confirmation still block the milestone; the earlier agent assignments do not
+establish human independence.
 Plan merged in PR #100 as `c7977ce` after eight CI checks passed. Its own
 [full-suite CI run](https://github.com/Zero-State-LLC/BlackDog/actions/runs/39662227221)
 on PR head `1cb975a` passed 771 tests with 63 warnings. This is separate from
@@ -77,6 +82,180 @@ batches. The existing 44 bounded passes are evidence inputs, not approvals;
 quarantine candidates within the expanded 174-unit review scope and 1,256
 explicitly deferred candidates. Report further scope additions separately;
 no required helper may remain deferred for an accepted unit.
+
+## Seven-file source and MIT approval (2026-10-22)
+
+Danny Meyer directly approved **NOT_COPY against the reviewed comparison evidence**
+and **repository-level MIT coverage** for all seven exact R3b-bound source blobs:
+`.default.dsp`, `dummy.dsp`, `double.dsp`, `parameters.dsp`, `recompile.dsp`,
+`gain.dsp` and `passive.dsp`, at CICM/pd-faustgen commit
+`9e2aaeabe94a7fab6928711050535ac12a1a591a`. This supersedes pending source/notice
+wording for these seven only. Their previously approved behavioral contracts and
+shared plan remain approved. Historical R2 counts (18 REJECT / 156 BLOCKED) and
+original R2/R3/R3b files remain immutable; the new decisions are separate,
+hash-bound approval records, not a rewritten packet or a retained-unit count.
+
+R3b verification passed for 31 manifest payloads and seven source/dossier/notice
+blob bindings. A fresh replay reproduced 61 comparison pairs and 332 canonical
+span rows byte-for-byte. Canonical structural overlap alone does not establish textual copying;
+the human decisions accept the reviewed evidence and its limitations. Notice
+coverage rests on the pinned repository LICENSE and exact-file inventory;
+none of the seven has a file-level license declaration. Five have placeholder
+author declarations; captured path histories do not follow renames and code
+search is non-exhaustive. These limitations remain part of the review record.
+
+Preserve **Copyright (c) 2018 Pierre Guillot** and the full MIT notice with copies
+or substantial portions. This scope does not license imported libraries,
+comparison-library code or separately identified third-party material. Preserve
+family/collective links; NOT_COPY does not erase split constraints or certify
+complete dependency closure. **Production admission remains NOT_GRANTED.**
+
+### Source approval and R3b receipts
+
+Artifacts remain outside Git and `/tmp`:
+
+- Approval: `/home/delphi/blackdog-seven-source-approval-20261022T185548Z/`.
+  `approval.json` and `decisions.csv` bind all seven source/dossier hashes,
+  Git blobs, commit and reviewer; `LICENSE.MIT.Pierre-Guillot.txt` preserves
+  the full notice. All three payloads passed local and Spark checksum checks.
+  SHA256SUMS digest: `6dbc7cb6079ee356dfba5b2a334969ac54a053b9fec542bbcb0fe96694f446cd`.
+- R3b packet: `/home/delphi/blackdog-s2-r3b-notice-spans-20261022T173051Z/`.
+  SHA256SUMS digest: `aced90e48a7461a4104247be60e548ad3872dfcfc82ab625a0dfdb9f4eaf0a38`.
+- Replay/intake: `/home/delphi/blackdog-r3b-intake-20261022T1733Z/`.
+  Includes email evidence, replay outputs and `verification.json`.
+- Verified off-host copies: matching directory names under
+  `/Users/appliedalchemylabs/Documents/Codex/blackdog-s2-backups/`.
+
+### Remaining scope after source approval
+
+The seven bounded behavioral checks also passed: 42 runs / 498 states with
+independent replay at `/home/delphi/blackdog-seven-behavior-20261022T081420Z/`;
+42 default cases and seven compiled incorrect targets rejected in 14 executions,
+with 56-case independent replay, at
+`/home/delphi/blackdog-seven-negative-20261022T081759Z/`. Verified off-host archives
+of both receipts are under the backup root. These are bounded technical tests,
+not full semantic or production qualification.
+
+Still open: imported/third-party notice and complete dependency scope, JOS
+attribution, routes and linearalgebra notice boundaries, member/foreign/resource
+completeness (including missing `violon.wav`), and the other 167 units' evidence.
+Retain full 1,430-unit, 23-short-group and 19-collective-set accounting. Two cleared
+host repositories, approved windows/rename maps, fixed gold/labels, FLOOR
+measurement, project/family-disjoint development qualification and an integrated
+milestone decision remain required. Danny is the custodian and independent
+private-task reviewer; independent private author, actual private storage and
+human-only access remain unconfirmed. iCloud is coordination only; private
+contents and keys stay outside agents, training systems and connected Gmail.
+
+**TOKEN_FLOOR=40 remains provisional; T07 remains unfrozen.**
+
+## Seven-contract human approval and dependency validation
+
+This update supersedes the historical pending-approval wording below for these
+seven contracts only. On 2026-10-21 PT, **Danny Meyer approved all seven
+CICM/pd-faustgen behavioral contracts and the shared test plan**. Codex authored
+the drafts; Danny attests that he did not author or materially co-author them
+and has no conflict. Approval is bound to each original contract, source and
+dossier hash, commit pin and Git blob. Original drafts remain immutable.
+
+The owner also approved the earlier R2 and 174-closure packets as presented,
+including their blocked/unresolved dispositions. That approval does not turn
+18 COPY/REJECT and 156 BLOCKED units into retained data: retained count remains
+zero. It does not establish complete closures or blanket rights clearance.
+
+| Approved contract | Unit | Expected behavior |
+| --- | --- | --- |
+| `external/.default.dsp` | `u017e8346c741c864edc1` | Identity, one input/output |
+| `external/examples/dummy.dsp` | `u0460a32e5ecf754ed1ba` | Four inputs mixed to two: `y0=x0+x2`, `y1=x1+x3` |
+| `tests/double.dsp` | `u05d15f7e8bbd074442d2` | `y=0.01*x` |
+| `external/examples/parameters.dsp` | `u2722e443a8e04b8478d8` | Button × checkbox × slider/3 × number/4 × input |
+| `tests/recompile.dsp` | `uadb178ca8253dba3c9e1` | Two independently controlled gains from one input |
+| `external/examples/gain.dsp` | `uc4f8b53b25994954ca1b` | `y=gain*x` |
+| `tests/passive.dsp` | `uef3533570ae0b1c9fc7e` | Product of four gains × input; default product 0.0024 |
+
+All seven source pins remain `9e2aaeabe94a7fab6928711050535ac12a1a591a`.
+The approved correction records `.default.dsp`'s declared
+`import("stdfaust.lib")`, which its original contract incorrectly called absent.
+Both `.default.dsp` and `gain.dsp` require import-removal equivalence. New corrected
+contracts bind Danny's approval; the source files and original drafts were not edited.
+
+### Scoped dependency results
+
+The dependency diagnostic ran on `spark-af42` against merged main `84e0192`.
+It is not the full behavioral suite, a full repository test run, or source admission.
+
+| Check | Verified result |
+| --- | --- |
+| Original compiler checks | 7/7 on libfaust-wasm 2.90.0 and 7/7 on native Faust 2.88.0 |
+| Import-free compiler checks | Both import-free variants passed both compiler paths: 4 passes |
+| Local dependency negatives | All 11 individually removed UI bindings rejected; diagnostics name the missing binding |
+| Import negatives | Both nonexistent-import substitutions rejected |
+| Total compiler cases | 31: 18 successful compilations and 13 expected rejections |
+| Import execution equivalence | 30 paired cases passed at 44.1/48 kHz; each variant produced 144,000 float32 samples per case |
+| Probe/control coverage | Impulse, alternating-sign and multitone inputs; gain values 0, 0.25, 0.5 and 1 |
+| Output verification | Every paired output byte-identical and matched the approved analytical formula; separate Python replay passed all 30 cases |
+| Preservation | Original contract/approval/closure manifests rechecked: 22 + 2 + 940 payloads; tracked and staged diffs empty during execution |
+| Off-host backup | Archive SHA-256 and all 498 payload checksums passed |
+
+Whole WASM artifacts differ after import removal, so compilation alone was not
+counted as equivalence. Retained samples support the bounded execution claim.
+Five units declare no imports. Eleven required local UI bindings across four
+units are explicit. No selected external member or foreign/resource dependency
+was found in these seven small sources. The old conservative imported file
+envelopes remain pinned compiler inputs; unused library definitions neither
+establish target resource requirements nor receive rights clearance.
+
+The existing namespace and Node permission model were retained. Per-case runs
+kept the 768 MiB memory and 8 MiB output limits, with a 60-second time cap.
+The initial combined run terminated after producing outputs near the output
+cap; partial evidence is preserved. Separating cases passed under the same
+limits. No sudo, workload stops or environment installation was used.
+
+### Approval and validation receipts
+
+All artifacts remain outside Git and `/tmp`:
+
+- Packet approval: `/home/delphi/blackdog-owner-approval-20261022T045848Z/`.
+- Seven-contract approval: `/home/delphi/blackdog-seven-contract-approval-20261022T053119Z/`.
+  `approval.json` binds the exact seven contracts, source/dossier hashes,
+  reviewer attestation, shared plan and import correction.
+- Dependency results: `/home/delphi/blackdog-seven-dependencies-20261022T053421Z/`.
+  Start with `REPORT.md`, `refined-closures/`, `*.contract.CORRECTED.json`,
+  `import-execution-v2/summary.json`, `independent-sample-replay.json` and
+  `preservation.json`. Original/modified source variants, compiler receipts,
+  WASM/C++ outputs, raw samples, drivers and the partial first attempt are retained.
+- Local backup root: `/Users/appliedalchemylabs/Documents/Codex/blackdog-s2-backups/`.
+  Approval directories have matching names. Dependency archive:
+  `blackdog-seven-dependencies-20261022T053421Z.tar.gz`, with adjacent
+  `.tar.gz.sha256`. Verified archive SHA-256:
+  `d3bb1a2497e0deca3b9ef2a516f2befea84636b4f5a297eb298257453e2c22ab`.
+
+### Remaining gates after this approval
+
+Danny is the named human holdout custodian and independent private-task reviewer.
+The private author must be independent of that reviewer; the arrangement remains
+unconfirmed. The owner affirms agents and training systems are excluded.
+The designated iCloud address is **coordination only**, not an established
+private storage location. Actual private storage and human-only access still
+need confirmation. Do not send private tasks or keys through connected Gmail,
+agent tools or Spark; no private task/key was created by this work.
+
+The later source-approval section above records completed bounded behavior,
+default and target-substitution checks and the seven human NOT_COPY/MIT decisions.
+The dependency receipts alone did not establish those results. Resolve remaining
+imported/third-party scope, family/split constraints and admission evidence
+separately. The other 167 units are not covered
+by the seven-unit approval or dependency execution. Preserve all 1,430 candidates,
+23 short-collision groups and 19 collective-support sets in the accounting scope.
+Two cleared host repositories, approved real windows, frozen measurement labels,
+FLOOR execution and the final integrated milestone decision remain outstanding.
+
+**TOKEN_FLOOR=40 remains provisional; T07 remains unfrozen.** Neither contract
+approval nor scoped dependency validation grants production admission or freeze.
+
+The S1 and reviewer-handoff history below retains delivery-time draft statuses.
+The seven-contract update above supersedes those statuses only within its
+explicit approval and validation scope.
 
 ## S1 verified scope and assignments
 
@@ -434,13 +613,15 @@ provisional and T07 stays unfrozen.
 
 ### Pending gates and next actions
 
+The seven-contract update above supersedes historical draft status.
+
 | Gate | Owner | Evidence required before advancing |
 | --- | --- | --- |
 | S1 confirmations | Owner + named humans | Packet access/integrity verified; replace agent role assumptions with human assignments, agree kickoff/coverage and document independence/custody |
-| S2 source/leakage | Human adjudicators, to be confirmed | Technical intake/reproduction passed; obtain human source/notice and COPY/NOT_COPY/unresolved decisions, including boundary/scaffolding cases and relevant short/collective adjudication |
-| S3 closure/behavior | Implementation owner + independent contract reviewer | Review/refine the 174 drafts into complete pinned closures including external members; bind independent contracts, then obtain semantic references and positive/negative receipts |
+| S2 source/leakage | Owner + human adjudicators for remaining scope | Owner approved R2 as presented, including blocked/unresolved dispositions; seven exact R3b files now have human NOT_COPY/repository-MIT approval; resolve remaining notice/admission evidence and complete relevant short/collective adjudication without reopening the recorded packet approval |
+| S3 closure/behavior | Implementation owner + Danny Meyer for the seven approved contracts | Seven scoped dependency diagnostics and bounded behavior/default/target-substitution checks passed; complete remaining semantic closure and admission evidence. Other 167 units need their own closure/contract evidence; no production admission |
 | S4/S5 FLOOR | Human reviewer + evaluator | Two cleared host repositories, real rejected windows, fixed gold/labels and the complete ratified measurement protocol |
-| S6 development/custody | Owner + named human evaluator/custodian and independent reviewer | Document private custody/reviewer channel and conflicts; qualify disjoint development tasks and independent private tasks; only approved exclusion metadata/public verification reaches Spark |
+| S6 development/custody | Danny Meyer, named custodian and independent task reviewer | Confirm independent private author, actual private storage and human-only access; iCloud is coordination only. Qualify disjoint development tasks; only approved public metadata reaches Spark |
 | S7 integration | Implementation owner + reviewers | Bound reproducible dossier, exception review and an explicit milestone decision after prerequisite gates |
 
 On receipt of decisions, verify identity, source/dossier bindings, completeness,

@@ -18,10 +18,10 @@ separately, and T07/T10 remain Backlog.
 | Sprint card | Status | Exit |
 | --- | --- | --- |
 | Batch 1 evidence and hash-format review | Done: #99, `ce8087a` | Eight CI checks; 771 tests passed |
-| S1 scope and owner assignment | Technical preparation complete; confirmations pending | 1,430 units / 110 packets / 510 blobs verified; packet/bindings verified; Prabu is an AI agent; human assignments, kickoff, coverage and custody pending |
-| S2 source/leakage and S3 closure/behavior | Forge R2 and 174 closure drafts verified structurally; 18/18 matches reproduced; original 18 proposed REJECT / 156 BLOCKED / 0 retained; owner packet approvals, seven contract/source approvals and exact filter-pair COPY approval recorded; no production admission | Hash-bound per-unit decisions, approved closures/contracts and reproducible positive/negative receipts |
+| S1 scope and owner assignment | Technical preparation complete; confirmations pending | 1,430 units / 110 packets / 510 blobs verified; packet/bindings verified; Prabu is an AI agent; seven-contract reviewer/custodian named; remaining assignments, kickoff, coverage and private custody pending |
+| S2 source/leakage and S3 closure/behavior | Owner approved R2/closure packets as presented; Danny approved seven contracts. Seven exact R3b files approved NOT_COPY/repository-MIT; exact filter pair approved COPY/shared lineage; bounded dependency/behavior checks pass; historical R2: 18 REJECT / 156 BLOCKED / 0 retained; no production admission | Hash-bound per-unit decisions, approved closures/contracts and reproducible positive/negative receipts |
 | S4 two-project hosts and S5 FLOOR | Blocked on approved inputs | Ratified gold/label protocol and complete measurement result |
-| S6 development/custody | Danny named human custodian/reviewer; independent private author and actual isolated storage pending | Document private custody/review channel; disjoint reviewed tasks and custody commitments still required |
+| S6 development/custody | Danny named human custodian/task reviewer; independent author, actual storage and human-only access pending | Document private custody/review channel; disjoint reviewed tasks and custody commitments still required |
 | S7 qualification dossier | Planned after S2–S6 | One reviewed delivery; explicit pass or blocked milestone decision |
 
 ## Filter pair human approval recorded
@@ -39,6 +39,63 @@ two-project FLOOR evidence, and independent private author/storage/access/review
 confirmation. Existing approvals are preserved; this decision grants no
 production admission. PR #110 stays unmerged; idiom filtering stays default-off,
 `TOKEN_FLOOR=40` stays provisional and T07 stays unfrozen.
+
+## Latest: seven files approved NOT_COPY and repository-level MIT
+
+Danny Meyer approved all seven exact R3b-bound pd-faustgen source files on
+2026-10-22. [Scope, verification and remaining gates](docs/runbooks/qualification-sprint.md#seven-file-source-and-mit-approval-2026-10-22)
+record the human NOT_COPY decisions and repository-level MIT coverage, with the
+full Pierre Guillot notice preserved. R3b: 31 payload hashes, seven bindings,
+61 replayed pairs and 332 canonical span rows passed. Original packets stay
+immutable; historical R2 dispositions are not a new admission count.
+
+Approval: `/home/delphi/blackdog-seven-source-approval-20261022T185548Z/`.
+R3b: `/home/delphi/blackdog-s2-r3b-notice-spans-20261022T173051Z/`.
+Replay: `/home/delphi/blackdog-r3b-intake-20261022T1733Z/`.
+Matching off-host directories in
+`/Users/appliedalchemylabs/Documents/Codex/blackdog-s2-backups/` are checksum-verified.
+No raw evidence artifacts enter Git.
+
+Remaining: imported/third-party notice and complete dependency scope, other
+167 units, full 1,430-unit / 23-short-group / 19-collective-set accounting,
+two-project hosts and fixed-gold FLOOR qualification, family-disjoint development,
+independent private author and actual human-only custody, and final integration.
+**No production admission; TOKEN_FLOOR=40 provisional; T07 unfrozen.**
+
+## Seven contracts approved; dependency checks passed
+
+[Approval, results and remaining gates](docs/runbooks/qualification-sprint.md#seven-contract-human-approval-and-dependency-validation)
+record Danny Meyer’s approval of all seven pd-faustgen contracts and the shared
+test plan, with no authorship conflict. The approved `.default.dsp` correction
+records its declared `stdfaust.lib` import; both it and `gain.dsp` now have
+import-removal equivalence evidence. Original sources/drafts remain immutable.
+
+- Compiler diagnostics: **18 successful cases and 13 expected rejections**
+  (11 local-binding removals, two missing imports).
+- Import equivalence: **30 paired cases passed** at 44.1/48 kHz, with
+  byte-identical raw samples and separate analytical replay.
+- Seven refined technical dependency receipts; **498 backup payload checks passed**.
+  This is not full behavioral qualification or a full-suite run.
+- Later bounded behavior checks passed (42 runs / 498 states), plus 42 default
+  cases and 14 compiled-target rejection executions with independent replay.
+  Seven source/MIT decisions are approved above; complete semantic dependency
+  scope and the other 167 units still require evidence.
+- S4/S5 remain blocked on two cleared host repositories, approved windows/labels
+  and complete FLOOR measurement. Full 1,430-unit / 23-short-group /
+  19-collective-set accounting remains required.
+- S6: Danny is custodian and independent task reviewer; independent private author,
+  actual storage and human-only access remain pending. iCloud is coordination
+  only; owner affirms agents/training excluded. No private tasks or keys created.
+
+Approval: `/home/delphi/blackdog-seven-contract-approval-20261022T053119Z/`.
+Results: `/home/delphi/blackdog-seven-dependencies-20261022T053421Z/`.
+Local backup: `/Users/appliedalchemylabs/Documents/Codex/blackdog-s2-backups/blackdog-seven-dependencies-20261022T053421Z.tar.gz`
+and adjacent checksum. See the runbook for the archive digest and original-manifest
+preservation checks. Artifacts stay out of Git; TOKEN_FLOOR=40 provisional, T07 unfrozen.
+
+The historical handoff sections below describe the state at delivery; the owner’s
+packet approval and seven-contract update above supersede their pending-approval
+wording. No production admission follows from accepting blocked dispositions.
 
 ## S1 scope verification and reviewer handoff
 
@@ -127,7 +184,8 @@ private holdout content or keys were included. The earlier Prabu-author/Danny-re
 assignment does not establish independent custody after the AI-only correction.
 Private task creation waits for a documented human-controlled boundary.
 
-Next: agree human assignments and kickoff/coverage, obtain human identity/hash-bound
+Next: apply the latest seven-contract approval above, agree remaining assignments
+and kickoff/coverage, obtain human identity/hash-bound
 source/leakage decisions (including boundary/scaffolding cases and notice conflicts),
 review/refine the 174 closure drafts and bind independent contracts, qualify two-project FLOOR hosts and
 fixed gold/labels, and establish disjoint development tasks plus separate holdout
