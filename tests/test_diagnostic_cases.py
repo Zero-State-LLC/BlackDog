@@ -184,3 +184,9 @@ def test_legacy_request_bytes_have_no_extension(monkeypatch):
     expected={'source':'process=_;','options':[],'sample_rate':48000,'block_size':64,
               'frames':256,'stimuli':['sine'],'press_buttons_first_block':True}
     assert seen==[json.dumps(expected,ensure_ascii=False,separators=(',',':')).encode()]
+
+
+@pytest.mark.parametrize("kwargs", [{"block_size":0},{"block_size":True},{"frames":64.5}])
+def test_diagnostic_render_dimensions_fail_closed(kwargs):
+    with pytest.raises(ValueError):
+        SignalProfile(48000,diagnostic_case=DiagnosticCase("bad"),**kwargs)

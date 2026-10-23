@@ -780,7 +780,6 @@ The halt report line records `persisted_at` (RFC 3339) inside the MAC'd body. Th
 
 Not covered by this subsection: compromise of a human key; root on the host or anyone who can write the allowed-signers file; restoring both the report log and the consumed log to an older snapshot, and deleting the halt marker, the anchor and the report together (the existing D3-H2 limits); social engineering of a triager. Deleting the allowed-signers file fails closed and keeps every halt. A grader that forges the run-key MAC can set `appended_at` inside a former validity window of a reviewer key that is later revoked. The drop file's ctime does not close that: a drop written while the key was valid has a ctime inside that window, and the same grader writes both the MAC and `appended_at`. A later read uses the recorded `appended_at`. That limit is not covered.
 
-
 ## 27. Bounded diagnostic signal cases (0.3.12)
 
 Approved by the owner in this chat: "Approve the bounded amendment and implementation",

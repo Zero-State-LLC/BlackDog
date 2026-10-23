@@ -137,7 +137,6 @@ CI reuses `.github/workflows/spec-check.yml` and the hygiene workflows.
 
 None.
 
-
 ### Issue #108: diagnostic case extension (spec §27)
 
 Owner approved the bounded amendment and implementation on 2026-10-22 PT.

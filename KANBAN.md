@@ -395,7 +395,6 @@ Mirrors the decision items on the [project board](https://github.com/orgs/Zero-S
 | D3-H2 | Sampled rerun audit rules (spec §26 0.3.9) | ACCEPTED 2026-10-18 8:10 AM PT (Danny, "Approve the §26 0.3.9 amendment as recommended"). Implemented in #57 (`63aac31`) and the follow-ups in Done | [danny-d3h2-audit-2026-10-18.md](docs/decisions/danny-d3h2-audit-2026-10-18.md), spec §26 |
 | D3-H2-C | Human triage credential (spec §26 0.3.10) | ACCEPTED as spec text 2026-10-18 5:11 PM PT (Danny, "approved the BlackDog §26 option C spec amendment with ADVERSARY's defaults"), #66 (`fab50c2`). Implementation merged in #71 (`cf319f3`); follow-ups remain open. Later ruling 2026-10-18 5:45 PM PT, issue #68: a software key is fine for Danny's key | [danny-d3h2-option-c-2026-10-18.md](docs/decisions/danny-d3h2-option-c-2026-10-18.md), spec §26, issues #64 and #68 |
 
-
 ### Issue #108 bounded harness amendment
 
 Owner approved spec §27 / ADR-0008 and bounded implementation on 2026-10-22 PT.

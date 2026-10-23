@@ -59,6 +59,8 @@ class DiagnosticCase:
                 raise ValueError("unknown input stimulus")
 
     def validate_profile(self, profile):
+        if type(profile.block_size) is not int or profile.block_size < 1 or type(profile.frames) is not int:
+            raise ValueError("diagnostic frames and block size must be positive integers")
         if any(e.block >= profile.frames // profile.block_size for e in self.controls):
             raise ValueError("control block outside render")
         if profile.absolute_tolerance != 2e-6 or profile.relative_tolerance != 1e-5:
