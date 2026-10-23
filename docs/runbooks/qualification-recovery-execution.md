@@ -418,3 +418,5 @@ The [Goertzel/family resolution](../analysis/goertzel-family-resolution-2026-10-
 [Analyzer closure qualification](../analysis/analyzer-closure-qualification-2026-10-23.md) records 206 verified receipts, the low-pass boundary failure, oversize sequence rejections and actual readiness replay.
 
 [Low-pass/meter/size checkpoint](../analysis/lowpass-meter-size-checkpoint-2026-10-23.md) distinguishes the explicit TPT alternative, controlled meter validation, remaining end-to-end failures and proposed modular targets. None clears readiness.
+
+[Precision diagnosis and modular contracts](../analysis/precision-modular-contracts-2026-10-23.md): modular_pairs.review requires the expected full harness digest from independently verified compiler evidence. It is a structural diagnostic, not a readiness authority adapter. Double diagnostics do not enable production double mode.

@@ -196,3 +196,5 @@ unknown. Keep canonical admission, complete closure and independent review separ
 Record stream-component wrapper joins in graph evidence and replay full active/counterfactual populations. Test the Goertzel DC repair separately from original-source qualification.
 
 Explore a separately reviewed dependency-supplied instruction contract for oversized closures. Keep original full-closure rejection and canonical qualification gates unchanged. Isolate actual meter capture from filter numerical accuracy and keep instrumented diagnostics outside production readiness authority.
+
+Implement modular structural replay separately from readiness authority. Test hostile context/target mutations, then bind the four real candidates to their verified full harnesses and original families. Diagnose precision in an isolated harness; preserve the production float32 guard.

@@ -417,3 +417,7 @@ Record actual stream-family wrapper joins without changing assignments. Require 
 ### Proposed dependency-supplied diagnostic contract
 
 A modular target may be reviewed separately with exact original target spans and a hash-bound complete dependency harness. This is a new task contract proposal, not an active exception to self-contained sequence bounds. Require independent prompt semantics, complete context/source/rights binding, negative controls and full-closure family screening. Smaller targets never create independent families.
+
+### Modular structural replay acceptance
+
+Validate exact target insertion against an externally supplied, previously verified full-harness digest. Reject malformed/extra fields, unsafe paths, source/context rebinding, exact target leakage and missing declared interfaces. Preserve semantic, rights, tokenizer, full-family and signed-partition blockers in every result. Structural success never admits a pair.

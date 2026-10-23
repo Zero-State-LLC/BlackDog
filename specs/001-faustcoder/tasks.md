@@ -387,3 +387,10 @@ Parallel starts after T01: T02, T05 and T09. Lanes T17 to T19, T21 and T22 run i
 - [x] Bind proposed modular targets to full dependency harnesses and check pinned token counts.
 - [ ] Resolve original direct-form and end-to-end sine-meter discrepancies.
 - [ ] Review modular task contract, independent prompt semantics, rights and complete family bindings before qualification.
+
+### QR-10 precision and modular structural replay
+
+- [x] Compare original low-pass/spectral source at double precision without changing production guard or tolerance.
+- [x] Implement bounded modular structural reviewer and mutation tests.
+- [x] Replay four real compiled harnesses, full-closure lineage and explicit-interface tokenization.
+- [ ] Resolve production float32 qualification and independently review modular semantics, rights and split evidence.

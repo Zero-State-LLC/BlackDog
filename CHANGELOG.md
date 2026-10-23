@@ -8,6 +8,8 @@ See [docs/VERSIONING.md](docs/VERSIONING.md).
 
 ## [Unreleased]
 
+- Add bounded structural replay for dependency-supplied modular targets without admission authority; document original-source double-precision diagnostics while retaining production float32 blockers.
+
 - Document explicit TPT low-pass diagnostics, actual bargraph capture and proposed dependency-supplied targets while preserving default-path and end-to-end qualification failures.
 
 - Record exact analyzer/elliptic closures, fixed-tolerance signal diagnostics and expanded candidate qualification; retain boundary, sequence-length and admission blockers. Repair dead publisher citations.

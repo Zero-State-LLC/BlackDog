@@ -597,3 +597,7 @@ Four standalone closures compile; 81 omissions reject. 53/54 positive numerical 
 ## Low-pass and meter checkpoint
 
 132 receipts verified. Explicit TPT low-pass alternative passes the bounded sweep; default direct-form failure remains. Controlled-band meter chain passes meter-specific negatives; full sine-meter comparison remains blocked. Four modular target proposals fit 106–313 tokens but require a reviewed dependency-supplied contract.
+
+## Precision and modular replay checkpoint
+
+Original low-pass/spectral definitions pass isolated double diagnostics; production float32 failures remain. Four modular contracts structurally replay their compiled harnesses and fit 154–355 tokens with explicit interfaces. 318 focused tests pass. Rights, independent semantics/families and signed readiness remain blocked.
