@@ -6,7 +6,7 @@ Governing spec: [qualification recovery](docs/specs/qualification-recovery-2026-
 
 | ID | Priority | Task | Depends on | Exit evidence | Status |
 | --- | --- | --- | --- | --- | --- |
-| QR-01 | P0 | Reconcile PR #112/#113/#114/#76/#73 and review #33; inspect overlap, review threads, SHA-bound CI and merge order | current main | PR matrix, regression and mutation results | Backlog |
+| QR-01 | P0 | Reconcile PR #112/#113/#114/#76/#73 and review #33; inspect overlap, review threads, SHA-bound CI and merge order | current main | PR matrix, regression and mutation results | In progress: metadata/file overlap documented; CI, patches and review threads pending |
 | QR-02 | P1 | Complete reward TaskSpec boundary and negative tests for #76 | QR-01 | reward/diagnostic separation and frozen profile verification | Backlog |
 | QR-03 | P0 | Generate canonical source-eligibility ledger and full 1,430-unit accounting | S1/S2 receipts | checksum, unique-unit and denominator reconciliation | Backlog |
 | QR-04 | P0 | Resolve remaining dependency/notice closures and family/leakage splits | QR-03 | independent scoped approvals and reproducible negative checks | Blocked: rights/review |
