@@ -99,14 +99,16 @@ def load_manifest(path: Path) -> EvidenceManifest:
 
 
 def verify_manifest(manifest: EvidenceManifest, root: Path, *, mode: Mode,
-                    scope_digest: str) -> dict:
+                    scope_digest: str, scope: dict | None = None,
+                    trusted_split_public_key: str | None = None) -> dict:
     """Verify immutable references, returning only exceptions and digests.
 
-    A PASS assertion is intentionally insufficient to clear a gate. Semantic
-    verifier and authorization adapters must be separately implemented/tested.
+    A PASS assertion is insufficient to clear a gate. Only an explicit semantic
+    replay adapter can verify a technical gate; authorization remains separate.
     """
     blockers = []
     verified = []
+    semantic = []
     if manifest.mode != mode or manifest.scope_digest != scope_digest:
         return {'verified': [], 'blockers': [{
             'gate': 'manifest_scope', 'status': 'INVALID', 'code': 'scope_mismatch',
@@ -130,8 +132,28 @@ def verify_manifest(manifest: EvidenceManifest, root: Path, *, mode: Mode,
         verified.append({'receipt_id': ref.receipt_id, 'gate': ref.gate,
                          'sha256': ref.sha256, 'scope_digest': ref.scope_digest,
                          'status': 'INTEGRITY_VERIFIED'})
+        if ref.outcome == 'PASS' and ref.gate in {'t07_signed_split', 'family_disjoint_split'}:
+            if scope is None or trusted_split_public_key is None:
+                blockers.append({'gate': ref.gate, 'receipt_id': ref.receipt_id,
+                                 'status': 'REVIEW_REQUIRED', 'code': 'semantic_inputs_required',
+                                 'next_action': 'Supply the hash-bound scope file and out-of-band custodian public key'})
+                continue
+            from faustcoder.readiness_evidence import verify_split_evidence
+            try:
+                decision = verify_split_evidence(data, root, gate=ref.gate,
+                    scope_digest=scope_digest, scope=scope, trusted_public_key=trusted_split_public_key)
+            except (ArtifactStoreError, OSError, ValueError, TypeError, KeyError, RecursionError):
+                blockers.append({'gate': ref.gate, 'receipt_id': ref.receipt_id,
+                                 'status': 'INVALID', 'code': 'semantic_verification_failed',
+                                 'next_action': 'Restore complete scope-bound public evidence and verify the trusted signer and recheck date'})
+                continue
+            semantic.append({**decision, 'receipt_id': ref.receipt_id, 'sha256': ref.sha256})
+            continue
         blockers.append({'gate': ref.gate, 'receipt_id': ref.receipt_id,
                          'status': 'REVIEW_REQUIRED',
                          'code': 'receipt_outcome_not_verified' if ref.outcome == 'PASS' else 'receipt_reports_blocker',
                          'next_action': 'Validate receipt semantics and required authority with the gate-specific verifier'})
-    return {'verified': verified, 'blockers': blockers}
+    blocked_gates = {row['gate'] for row in blockers}
+    return {'verified': verified, 'semantic_verification': semantic,
+            'verified_gates': sorted({row['gate'] for row in semantic} - blocked_gates),
+            'blockers': blockers}

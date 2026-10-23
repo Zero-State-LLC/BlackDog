@@ -196,3 +196,36 @@ reviewed-span bindings are supported by this entry point. Tests cover each early
 stop, canonical rights refusal, blob mismatch, compiler identity, both rates,
 reference failure, and missing independent replay. QR-08 remains partial until
 actual sandbox and independent evidence runs pass.
+
+## QR-09 signed-snapshot semantic adapter
+
+Journey: an operator reuses a completed public T07 evidence store instead of
+re-approving its decisions. Workflow: pin an external run-scope file by exact
+SHA-256 -> verify a strict, explicitly enumerated public evidence bundle ->
+replay canonical verify_frozen_snapshot using an out-of-band trusted public key
+-> remove only the signed-split or family-separation blocker that was verified.
+States: INTEGRITY_VERIFIED -> SEMANTICALLY_VERIFIED; malformed/tampered/incomplete,
+wrong-scope, wrong-signer or expired evidence -> BLOCKED. Training authorization
+never changes in this adapter. Preserve the explicit provisional-floor route.
+
+Contracts: readiness-scope.schema.json binds mode, dataset snapshot, code revision,
+model and recipe digests. readiness-verification.schema.json enumerates exact
+canonical object and witness paths; no filesystem discovery and no key supplied
+by the bundle. A bounded read-only ArtifactStore view reuses the canonical DAG
+and signed-freeze verifier. It refuses private-task entities, duplicate identities
+and paths, missing parents/witnesses, symlinks and altered metadata. Only public
+source/rights/snapshot/transition records are accepted. No private holdout payloads
+are required or allowed. Results remain scoped to the exact snapshot in the plan.
+
+Implementation tasks: schema/fixture tests -> read-only bundle view -> adapter ->
+reporter/CLI integration -> negative and mutation tests -> CI. Acceptance includes
+real disposable SSH-signed fixture freezes, wrong key and digest, stale recheck,
+incomplete freeze, missing parents, tampering and proof that verified split/family
+receipts cannot clear pilot-training authorization. Unknown receipt types remain
+unverified; do not pretend other technical gates have semantic adapters yet.
+
+The public-store exporter requires the external custodian public key and replays
+the existing signed freeze before emitting PASS claims for these two gates.
+The receiver repeats the verification. The exporter does not enroll a key,
+change an input receipt or approve training. Full-corpus authorization and
+dataset approval use distinct gate names from the bounded pilot lane.

@@ -68,3 +68,7 @@ its source and copy match. Existing schema identities are unchanged.
 
 `readiness-manifest.schema.json` is the advisory QR-09 evidence index described
 in ADR-0009. It grants no admission or training authority. Source and copy match.
+
+`readiness-scope.schema.json` and `readiness-verification.schema.json` support
+the ADR-0009 signed-snapshot replay adapter. Their copies match the source
+contracts; they do not define a new training authorization format.

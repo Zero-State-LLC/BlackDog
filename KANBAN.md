@@ -14,7 +14,7 @@ Governing spec: [qualification recovery](docs/specs/qualification-recovery-2026-
 | QR-06 | P0 | Establish independent private author and custody; execute FLOOR; assemble S7 dossier | QR-05 | human-only access proof, both-host metrics, PASS/FAIL/BLOCKED | Blocked: human custody |
 | QR-07 | P1 | Qualify repaired isolated Spark candidate with approved local model and checkpoint probes | operator/model approval | pinned provenance, VRAM/throughput and restore receipts | Blocked: model approval |
 | QR-08 | P1 | Implement tiered static/compiler/signal/independent evaluation reporting | QR-01, QR-02 | mutation-backed guards and immutable stage receipts | In progress: canonical rights/blob, compiler and both-rate diagnostic stages emit chained receipts and fail early; independent replay adapter and real sandbox execution pending |
-| QR-09 | P0 | Implement automated readiness report and exception-only owner queue; preserve fail-closed red gates | QR-03 | one-command evidence/blocked-action report with hashes | In progress: strict typed manifest, safe paths, scope/hash/duplicate validation and exception reporting implemented; semantic/authority adapters remain pending |
+| QR-09 | P0 | Implement automated readiness report and exception-only owner queue; preserve fail-closed red gates | QR-03 | one-command evidence/blocked-action report with hashes | In progress: typed integrity checks plus canonical signed-snapshot replay/export implemented; T07/family gates require an external trusted key and exact scope; other semantic/authority adapters remain pending |
 | QR-10 | P1 | Define synthetic diagnostic and small rights-cleared pilot training lanes; reconcile canonical training gates | QR-07, QR-09 | bounded pilot plan, isolation tests and one approval packet | In progress: bounded Qwen recipe, estimates, diagnostic probe command and rollback documented; qualified snapshot/signed split and training launcher not yet supplied |
 
 ## Recovery implementation checkpoint
@@ -43,6 +43,18 @@ conflicts. No PR was merged into main. See
 - Actual training: technical readiness NOT VERIFIED, authorization NOT VERIFIED.
   A recipe with null dataset/split bindings is not permission or an executable
   production training configuration. No model downloads or training ran here.
+
+## Signed-snapshot semantic replay checkpoint
+
+OBSERVED: published integration `9ed7fc8` passed all eight CI checks with 945
+runtime tests; published funnel head `092e324` passed all eight with 959 tests.
+The follow-up readiness adapter passed 434 focused/broad regressions and killed
+all eight targeted guard-removal mutants. Spec Kit and changed-document lint
+passed; latest-head CI is required after publication. It reuses signed snapshots
+and existing decisions;
+it never converts fixture evidence or a self-declared PASS into training approval.
+Real off-host snapshot/approval stores and Spark remain unavailable in this
+workspace. Production T07, baseline and training gates remain unverified.
 
 ## Current milestone: qualification sprint
 

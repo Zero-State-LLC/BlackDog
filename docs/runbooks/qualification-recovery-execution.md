@@ -114,3 +114,52 @@ source-unit diagnostics, not arbitrary model-generated candidates or function
 units. It grants no reward, training permission, promotion or corpus admission.
 The fixture tests establish early-stop/lineage contracts; they do not establish
 real-corpus performance or independently replayed quality.
+
+## Reuse a signed public T07 store
+
+The semantic adapter can now verify `t07_signed_split` and
+`family_disjoint_split`. It invokes the canonical signed-freeze verifier,
+including exact transition receipts and the scheduled provisional-floor recheck.
+It does not clear source qualification, model, baseline, environment, checkpoint
+or owner training gates. No self-declared PASS or valid hash authorizes training.
+
+Prepare a JSON scope using `readiness-scope.schema.json`: schema_version 1,
+mode, dataset_snapshot_digest, code_revision, model_digest and recipe_digest.
+Use the exact frozen snapshot digest and full code commit. Model/recipe digests
+bind their immutable manifests; null is permitted for preparation and does not
+make a pilot ready. The exact bytes of this scope file determine scope_digest.
+Do not put a trusted signer or an approval flag in the scope or bundle.
+
+Export from an explicitly selected **public-only** canonical artifact store:
+
+```bash
+python -m faustcoder.readiness_evidence \
+  --public-store /absolute/public-snapshot-store \
+  --scope-file /absolute/run-scope.json \
+  --trusted-split-public-key /absolute/trusted/custodian.pub \
+  --output /absolute/new/readiness-bundle
+```
+
+The public key must come from the existing trusted custodian channel, outside
+the evidence store/bundle. Both CLIs reject a trust-key file inside their evidence
+inputs or exported bundle. This reads no private key and enrolls no signer.
+Never select a store containing private tasks or evaluation secrets. The exporter
+refuses unsupported task/benchmark entities, symlinks, missing witnesses, changed
+bytes, incomplete freezes and existing output directories. It preflights the
+canonical signature before writing. It does not change the input store or any
+prior receipt. Keep generated bundles outside Git.
+
+The result includes an executable `next_command` argv list for the read-only
+reporter. That command independently replays the exported evidence using the
+out-of-band key. It may remove only the two verified blockers. A mixed valid and
+invalid receipt for one gate leaves that gate blocked. No full-corpus FLOOR
+completion is added as a prerequisite for an accepted provisional T07 freeze.
+
+No real off-host store has been consumed in this implementation session. Tests
+use disposable, generated sources and temporary SSH keys; fixture success is
+not evidence that BlackDog's production T07 is frozen or its pilot is authorized.
+
+Full mode names separate `approved_full_dataset` and
+`full_training_authorization` gates. A bounded pilot approval cannot satisfy
+those full-corpus gates. Neither mode accepts authorization from a self-declared
+manifest outcome.

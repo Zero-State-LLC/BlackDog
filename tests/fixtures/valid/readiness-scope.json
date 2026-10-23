@@ -1,0 +1,8 @@
+{
+  "schema_version": 1,
+  "mode": "pilot",
+  "dataset_snapshot_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "code_revision": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "model_digest": null,
+  "recipe_digest": null
+}

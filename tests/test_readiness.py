@@ -31,3 +31,13 @@ def test_modes_do_not_force_full_corpus_gates_on_pilot(tmp_path):
     assert {b["gate"] for b in synthetic["blockers"]} == {"environment_probe", "synthetic_checkpoint_probe"}
     full = assess(tmp_path, mode="full")
     assert "two_host_floor" in {b["gate"] for b in full["blockers"]}
+
+
+def test_pilot_approval_names_cannot_satisfy_full_mode(tmp_path):
+    result = assess(tmp_path, mode="full")
+    gates = {row["gate"] for row in result["blockers"]}
+    assert "full_training_authorization" in gates
+    assert "approved_full_dataset" in gates
+    assert "pilot_training_authorization" not in gates
+    assert "approved_pilot_dataset" not in gates
+    assert not result["training_authorized"]
