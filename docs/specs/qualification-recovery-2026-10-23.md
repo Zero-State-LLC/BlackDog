@@ -229,3 +229,28 @@ the existing signed freeze before emitting PASS claims for these two gates.
 The receiver repeats the verification. The exporter does not enroll a key,
 change an input receipt or approve training. Full-corpus authorization and
 dataset approval use distinct gate names from the bounded pilot lane.
+
+## QR-10 bounded public data preparation contract
+
+Journey: prepare the smallest reproducible pilot inputs without accessing private
+tasks or claiming that preparation grants permission. Workflow: supply an exact
+pilot scope, hash-bound T07 descriptor and external custodian key; replay the
+canonical signed freeze; export complete train/development source partitions.
+State: verified public snapshot to `PREPARED_NOT_QUALIFIED`, with no training-run
+transition or admission effect.
+
+Contract: `faustcoder.pilot_data` accepts only pilot-scoped signed evidence.
+It emits at most 28 train and seven development examples, both nonempty, preserving
+each selected unit's notice, license, provenance and immutable example/source
+references. It never exports holdout examples or truncates a partition to fit
+the bound. Recheck normalized text hashes and signed manifest bindings before
+writing. Existing output, symlink inputs/parents and outputs inside the checkout
+or evidence root are refused. Write private files and a completion manifest last.
+Equal verified inputs and exporter code produce byte-identical output files.
+
+Acceptance: `tests/test_pilot_data.py` exercises deterministic replay, holdout
+exclusion, notice retention, scope/key/hash/tampering rejection, expired split,
+malformed JSON, bounds, source binding, no overwrite and symlink refusals.
+Task: QR-10 preparation only. Source/closure semantic qualification, compiler and
+signal receipts, instruction-pair definition, baseline, environment, model and
+owner authorization are still required before an actual training launcher runs.

@@ -6,16 +6,16 @@ Governing spec: [qualification recovery](docs/specs/qualification-recovery-2026-
 
 | ID | Priority | Task | Depends on | Exit evidence | Status |
 | --- | --- | --- | --- | --- | --- |
-| QR-01 | P0 | Reconcile PR #112/#113/#114/#76/#73 and review #33; inspect overlap, review threads, SHA-bound CI and merge order | current main | PR matrix, regression and mutation results | In progress: #112/#114/#113/#76/#73 integrated on recovery branch; #73 provisional-freeze correction and three #113 findings fixed; fresh integration CI and independent review pending |
-| QR-02 | P1 | Complete reward TaskSpec boundary and negative tests for #76 | QR-01 | reward/diagnostic separation and frozen profile verification | In progress: TaskSpec validation/binding, whole-suite preflight and sealed-native propagation implemented; 90 focused reward tests pass, pinned sandbox integration pending |
+| QR-01 | P0 | Reconcile PR #112/#113/#114/#76/#73 and review #33; inspect overlap, review threads, SHA-bound CI and merge order | current main | PR matrix, regression and mutation results | In progress: #112/#114/#113/#76/#73 integrated on recovery branch; #73 provisional-freeze correction and three #113 findings fixed; integration CI passed at `0cc1a0c` (1,000 tests); independent review pending |
+| QR-02 | P1 | Complete reward TaskSpec boundary and negative tests for #76 | QR-01 | reward/diagnostic separation and frozen profile verification | In progress: TaskSpec validation/binding, whole-suite preflight and sealed-native propagation implemented; 90 focused reward tests pass; pinned Linux CI passed at `0cc1a0c`; independent review pending |
 | QR-03 | P0 | Generate canonical source-eligibility ledger and full 1,430-unit accounting | S1/S2 receipts | checksum, unique-unit and denominator reconciliation | In progress: hash-bound replay and accounting report implemented; real off-host batch and approval semantics not yet verified |
 | QR-04 | P0 | Resolve remaining dependency/notice closures and family/leakage splits | QR-03 | independent scoped approvals and reproducible negative checks | Blocked: rights/review |
 | QR-05 | P0 | Clear two host projects and ratify fixed gold/FLOOR protocol | QR-03, QR-04 | host rights, disjoint families, gold/label receipt | Blocked: host approvals |
 | QR-06 | P0 | Establish independent private author and custody; execute FLOOR; assemble S7 dossier | QR-05 | human-only access proof, both-host metrics, PASS/FAIL/BLOCKED | Blocked: human custody |
-| QR-07 | P1 | Qualify repaired isolated Spark candidate with approved local model and checkpoint probes | operator/model approval | pinned provenance, VRAM/throughput and restore receipts | Blocked: model approval |
+| QR-07 | P1 | Qualify repaired isolated Spark candidate with approved local model and checkpoint probes | operator/model approval | pinned provenance, VRAM/throughput and restore receipts | Blocked: Spark unavailable here; approved pinned Qwen candidate recorded, formal representative replay pending |
 | QR-08 | P1 | Implement tiered static/compiler/signal/independent evaluation reporting | QR-01, QR-02 | mutation-backed guards and immutable stage receipts | In progress: canonical rights/blob, compiler and both-rate diagnostic stages emit chained receipts and fail early; independent replay adapter and real sandbox execution pending |
 | QR-09 | P0 | Implement automated readiness report and exception-only owner queue; preserve fail-closed red gates | QR-03 | one-command evidence/blocked-action report with hashes | In progress: typed integrity checks plus canonical signed-snapshot replay/export implemented; T07/family gates require an external trusted key and exact scope; other semantic/authority adapters remain pending |
-| QR-10 | P1 | Define synthetic diagnostic and small rights-cleared pilot training lanes; reconcile canonical training gates | QR-07, QR-09 | bounded pilot plan, isolation tests and one approval packet | In progress: bounded Qwen recipe, estimates, diagnostic probe command and rollback documented; qualified snapshot/signed split and training launcher not yet supplied |
+| QR-10 | P1 | Define synthetic diagnostic and small rights-cleared pilot training lanes; reconcile canonical training gates | QR-07, QR-09 | bounded pilot plan, isolation tests and one approval packet | In progress: bounded Qwen recipe and signed-snapshot train/development preparation implemented; real qualified snapshot, instruction-pair contract and authorized training launcher remain pending |
 
 ## Recovery implementation checkpoint
 
@@ -50,11 +50,22 @@ OBSERVED: published integration `9ed7fc8` passed all eight CI checks with 945
 runtime tests; published funnel head `092e324` passed all eight with 959 tests.
 The follow-up readiness adapter passed 434 focused/broad regressions and killed
 all eight targeted guard-removal mutants. Spec Kit and changed-document lint
-passed; latest-head CI is required after publication. It reuses signed snapshots
+passed; published semantic head `0cc1a0c` passed the complete CI runtime suite
+(1,000 tests). It reuses signed snapshots
 and existing decisions;
 it never converts fixture evidence or a self-declared PASS into training approval.
 Real off-host snapshot/approval stores and Spark remain unavailable in this
 workspace. Production T07, baseline and training gates remain unverified.
+
+## Bounded pilot preparation checkpoint
+
+OBSERVED: the public signed-snapshot exporter passes 183 related preparation,
+readiness, snapshot, split, rights and accounting regressions. Eight targeted
+guard-removal mutants are killed, including exact descriptor scope binding.
+Spec Kit and changed-document lint pass. Fresh-head CI remains required after
+publication. No real off-host source snapshot was consumed and no training ran.
+The preparation manifest reports remaining qualification/authorization blockers;
+source-only JSONL does not supply the pending instruction-pair contract.
 
 ## Current milestone: qualification sprint
 

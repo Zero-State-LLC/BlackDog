@@ -163,3 +163,39 @@ Full mode names separate `approved_full_dataset` and
 `full_training_authorization` gates. A bounded pilot approval cannot satisfy
 those full-corpus gates. Neither mode accepts authorization from a self-declared
 manifest outcome.
+
+## Prepare bounded public pilot data
+
+After exporting a verified public bundle, use the exact scope hash and T07
+descriptor hash recorded in its readiness manifest. The output parent must
+already exist outside the checkout and evidence root, with no symlink parents:
+
+```bash
+python -m faustcoder.pilot_data \
+  --evidence-root /absolute/readiness-bundle \
+  --bundle t07_signed_split.json \
+  --bundle-sha256 <descriptor-sha256> \
+  --scope-file /absolute/readiness-bundle/scope.json \
+  --scope-digest <scope-sha256> \
+  --trusted-split-public-key /absolute/trusted/custodian.pub \
+  --output /absolute/new-pilot-data
+```
+
+The command replays the signature and current freeze, then writes train.jsonl,
+development.jsonl and preparation.json with private permissions. Output preserves
+source text, notices, attribution and immutable provenance. It exports complete
+partitions only, at most 28 train and seven development units, with no holdout
+examples. A larger snapshot requires a separately reviewed smaller candidate;
+the exporter never silently samples or breaks dependency/family coverage.
+
+Exit 0 means `PREPARED_NOT_QUALIFIED`, not training permission. The manifest hashes
+every data file and reports all remaining pilot readiness gates plus compiler/
+signal qualification and the instruction-pair contract. Source-only rows must
+not be treated as completion-only instruction examples without that contract.
+Use a fresh output directory for retries. A partial output without preparation.json
+is incomplete and must not be consumed. Rollback consists of leaving the fresh
+preparation unused; no upstream evidence, source, model or environment is modified.
+
+Published semantic head `0cc1a0c` passed all four workflow runs, including 1,000
+runtime tests in 391.14 seconds. This is engineering CI evidence, not source
+admission or permission for an actual training run.
