@@ -14,7 +14,7 @@ Governing spec: [qualification recovery](docs/specs/qualification-recovery-2026-
 | QR-06 | P0 | Establish independent private author and custody; execute FLOOR; assemble S7 dossier | QR-05 | human-only access proof, both-host metrics, PASS/FAIL/BLOCKED | Blocked: human custody |
 | QR-07 | P1 | Qualify repaired isolated Spark candidate with approved local model and checkpoint probes | operator/model approval | pinned provenance, VRAM/throughput and restore receipts | Blocked: model approval |
 | QR-08 | P1 | Implement tiered static/compiler/signal/independent evaluation reporting | QR-01, QR-02 | mutation-backed guards and immutable stage receipts | Backlog |
-| QR-09 | P0 | Implement automated readiness report and exception-only owner queue; preserve fail-closed red gates | QR-03 | one-command evidence/blocked-action report with hashes | Backlog |
+| QR-09 | P0 | Implement automated readiness report and exception-only owner queue; preserve fail-closed red gates | QR-03 | one-command evidence/blocked-action report with hashes | In progress: read-only report and initial unit tests committed; approval receipts and exception queue not yet integrated |
 | QR-10 | P1 | Define synthetic diagnostic and small rights-cleared pilot training lanes; reconcile canonical training gates | QR-07, QR-09 | bounded pilot plan, isolation tests and one approval packet | Backlog |
 
 
