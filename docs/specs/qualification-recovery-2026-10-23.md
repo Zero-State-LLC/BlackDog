@@ -104,3 +104,7 @@ Preserve canonical spec 001's provisional T07 freeze route with documented leaka
 
 ### Acceptance criteria
 One command produces a readiness report with machine-readable blockers, waiver-ineligible red gates, owner-action queue, evidence hashes, source/lineage counts and next safe executable action. No per-unit human approval for mechanically verifiable clean items. All ambiguous cases remain quarantined. Synthetic training diagnostics are not presented as qualified model training. A single owner review should cover a coherent batch of exceptions.
+
+## QR-09 implementation slice
+
+Read-only `python -m faustcoder.readiness --repo-root . --json` inventories required documentation, SHA-256 hashes and unverified approval gates. Unit tests cover missing evidence and document-presence-not-approval. This is a first slice only: it does not ingest external receipts, validate rights, enumerate 1,430 units, execute tests or make an authorization decision. Run CI before claiming tests passed. Next implement a typed evidence manifest, immutable receipt verification, machine-readable exceptions and qualified pilot criteria under the canonical gates.
