@@ -145,7 +145,7 @@ def test_pair_only_removes_silence_after_own_execution(monkeypatch,defect):
 
 def test_worker_boundaries_and_channel_order():
     script=Path(__file__).with_name('diagnostic_worker_checks.mjs')
-    subprocess.run(['node',str(script)],check=True,capture_output=True,text=True)
+    subprocess.run(['node',str(script)],check=True,capture_output=True,text=True,timeout=60)
 
 
 @pytest.mark.skipif(sys.platform != 'linux', reason='production sandbox requires Linux namespaces')
@@ -157,7 +157,7 @@ def test_real_compiler_controls_routing_and_always_zero_mutant():
     source='process = _ * hslider("gain", 1, 0, 1, 0.25);'
     runs=run_diagnostic_cases(source,[live,zero],[live_ref,reference(zero)])
     assert all(r.receipt['passed'] for r in runs)
-    mutant=run_diagnostic_cases('g=hslider("gain",1,0,1,.25); process = _ * g * 0;', [live,zero],[live_ref,reference(zero)])
+    mutant=run_diagnostic_cases('g=hslider("gain",1,0,1,.25); process = attach(_ * 0,g);', [live,zero],[live_ref,reference(zero)])
     assert not any(r.receipt['passed'] for r in mutant)
     p=profile(DiagnosticCase('routing',input_stimuli=('sine','noise','alternating')))
     channels=input_buffers(p)
