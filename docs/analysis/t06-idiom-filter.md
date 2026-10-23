@@ -154,9 +154,19 @@ it adds no new shingle, so it stays out. A noise file that contains a
 comparison shingle the selected copies do not cover does join. That is the
 opt-in rule. On the adversary SP5 fixture, an incidental noise file joined the
 raw stream. An earlier sentence on this page said the noise file is not in the
-family. That sentence described this repository's fixture only. The adversary
-two-copy result of 5/6 was the old stop dropping one piece. With that stop
-removed, every disjoint copy joins, which is what the 6/6 row records.
+family. That sentence described this repository's fixture only.
+
+**OBSERVED (ADVERSARY PR #110 r4 SP4, as supplied in the review):** The
+adversary two-copy probe still selects 5/6 (`a0`, `a1`, `a2`, `b0`, `b1`,
+omitting `b2`). Both three-way copies target the same comparison blob `R`.
+**INFERRED:** Once the first copy covers all of `R`, the second supplies no
+uncovered raw shingles; canonical ties account for the different selection.
+The selector only retains positive marginal coverage
+(`faustcoder/neardup.py:321-346`). This is not an obsolete r3 early-stop result.
+**OBSERVED:** The repository's 6/6 fixture instead uses two distinct comparison
+blobs, `cmpa` and `cmpb`, and asserts separate families
+(`tests/test_idiom_filter.py:670-701`). The 6/6 row describes that fixture,
+not SP4.
 
 The shipping default joins the noise file on the 3-way probe, which is main's
 any-overlap rule.

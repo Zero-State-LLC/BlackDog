@@ -6,18 +6,41 @@ Governing spec: [qualification recovery](docs/specs/qualification-recovery-2026-
 
 | ID | Priority | Task | Depends on | Exit evidence | Status |
 | --- | --- | --- | --- | --- | --- |
-| QR-01 | P0 | Reconcile PR #112/#113/#114/#76/#73 and review #33; inspect overlap, review threads, SHA-bound CI and merge order | current main | PR matrix, regression and mutation results | In progress: metadata/file overlap documented; CI, patches and review threads pending |
-| QR-02 | P1 | Complete reward TaskSpec boundary and negative tests for #76 | QR-01 | reward/diagnostic separation and frozen profile verification | Backlog |
-| QR-03 | P0 | Generate canonical source-eligibility ledger and full 1,430-unit accounting | S1/S2 receipts | checksum, unique-unit and denominator reconciliation | Backlog |
+| QR-01 | P0 | Reconcile PR #112/#113/#114/#76/#73 and review #33; inspect overlap, review threads, SHA-bound CI and merge order | current main | PR matrix, regression and mutation results | In progress: #112/#114/#113/#76/#73 integrated on recovery branch; #73 provisional-freeze correction and three #113 findings fixed; fresh integration CI and independent review pending |
+| QR-02 | P1 | Complete reward TaskSpec boundary and negative tests for #76 | QR-01 | reward/diagnostic separation and frozen profile verification | In progress: TaskSpec validation/binding, whole-suite preflight and sealed-native propagation implemented; 90 focused reward tests pass, pinned sandbox integration pending |
+| QR-03 | P0 | Generate canonical source-eligibility ledger and full 1,430-unit accounting | S1/S2 receipts | checksum, unique-unit and denominator reconciliation | In progress: hash-bound replay and accounting report implemented; real off-host batch and approval semantics not yet verified |
 | QR-04 | P0 | Resolve remaining dependency/notice closures and family/leakage splits | QR-03 | independent scoped approvals and reproducible negative checks | Blocked: rights/review |
 | QR-05 | P0 | Clear two host projects and ratify fixed gold/FLOOR protocol | QR-03, QR-04 | host rights, disjoint families, gold/label receipt | Blocked: host approvals |
 | QR-06 | P0 | Establish independent private author and custody; execute FLOOR; assemble S7 dossier | QR-05 | human-only access proof, both-host metrics, PASS/FAIL/BLOCKED | Blocked: human custody |
 | QR-07 | P1 | Qualify repaired isolated Spark candidate with approved local model and checkpoint probes | operator/model approval | pinned provenance, VRAM/throughput and restore receipts | Blocked: model approval |
 | QR-08 | P1 | Implement tiered static/compiler/signal/independent evaluation reporting | QR-01, QR-02 | mutation-backed guards and immutable stage receipts | Backlog |
-| QR-09 | P0 | Implement automated readiness report and exception-only owner queue; preserve fail-closed red gates | QR-03 | one-command evidence/blocked-action report with hashes | In progress: read-only report and initial unit tests committed; approval receipts and exception queue not yet integrated |
-| QR-10 | P1 | Define synthetic diagnostic and small rights-cleared pilot training lanes; reconcile canonical training gates | QR-07, QR-09 | bounded pilot plan, isolation tests and one approval packet | Backlog |
+| QR-09 | P0 | Implement automated readiness report and exception-only owner queue; preserve fail-closed red gates | QR-03 | one-command evidence/blocked-action report with hashes | In progress: strict typed manifest, safe paths, scope/hash/duplicate validation and exception reporting implemented; semantic/authority adapters remain pending |
+| QR-10 | P1 | Define synthetic diagnostic and small rights-cleared pilot training lanes; reconcile canonical training gates | QR-07, QR-09 | bounded pilot plan, isolation tests and one approval packet | In progress: bounded Qwen recipe, estimates, diagnostic probe command and rollback documented; qualified snapshot/signed split and training launcher not yet supplied |
 
+## Recovery implementation checkpoint
 
+OBSERVED: recovery branch integrates the five input PR heads without textual
+conflicts. No PR was merged into main. See
+[execution runbook](docs/runbooks/qualification-recovery-execution.md).
+
+- 336 focused regressions passed; 53 portable diagnostic checks passed (14
+  hardware-dependent checks deselected), including ten compiled worker fixtures.
+- Final focused reward checks: 90 passed, two namespace-dependent checks
+  deselected. All nine targeted guard-removal mutants were killed.
+- Full regression invocation: 787 passed, 154 failed, two skipped. This is not a
+  green suite: the workspace denies namespace mapping and sudo/ownership
+  operations required by compiler and credential tests; native Faust is absent.
+  Subsequent compiler-provenance checks passed the focused reward suite.
+- Spec Kit and changed-document Markdown lint pass. PR #115's prior Markdown
+  failure is repaired locally; fresh remote CI remains required.
+- Off-host batch/approval payloads and Spark are unavailable here. The real
+  denominator, qualification dossier, approved snapshot, signed T07, T08,
+  representative model qualification and pilot authorization remain unverified.
+- QR-04/05/06 and the QR-08 staged reporter remain open. Harness fixes do not
+  constitute a complete evaluation funnel or an independent evaluation result.
+- Actual training: technical readiness NOT VERIFIED, authorization NOT VERIFIED.
+  A recipe with null dataset/split bindings is not permission or an executable
+  production training configuration. No model downloads or training ran here.
 
 ## Current milestone: qualification sprint
 
@@ -37,11 +60,43 @@ separately, and T07/T10 remain Backlog.
 | Sprint card | Status | Exit |
 | --- | --- | --- |
 | Batch 1 evidence and hash-format review | Done: #99, `ce8087a` | Eight CI checks; 771 tests passed |
-| S1 scope and owner assignment | Technical preparation complete; confirmations pending | 1,430 units / 110 packets / 510 blobs verified; packet/bindings verified; Prabu is an AI agent; seven-contract reviewer/custodian named; remaining assignments, kickoff, coverage and private custody pending |
-| S2 source/leakage and S3 closure/behavior | Owner approved R2/closure packets as presented; Danny approved seven contracts. Seven exact R3b files approved NOT_COPY/repository-MIT; exact filter pair approved COPY/shared lineage; .default/gain imported-notice handling approved (no host admission); bounded dependency/behavior checks pass; historical R2: 18 REJECT / 156 BLOCKED / 0 retained; no production admission | Hash-bound per-unit decisions, approved closures/contracts and reproducible positive/negative receipts |
+| S1 scope and owner assignment | Technical preparation complete; confirmations pending | 1,430 units / 110 packets / 510 blobs verified; packet/bindings verified; Prabu is an AI agent; seven-contract reviewer/custodian named; custody arrangements and owner independence waiver recorded; remaining coverage and separate-task evidence pending |
+| S2 source/leakage and S3 closure/behavior | Owner approved R2/closure packets as presented; Danny approved seven contracts. Seven exact R3b files approved NOT_COPY/repository-MIT; exact filter pair approved COPY/shared lineage; .default/gain imported-notice handling and both bounded imported closures approved; 7 accepted bounded closures / 167 unresolved, not retained units; bounded dependency/behavior checks pass; historical R2: 18 REJECT / 156 BLOCKED / 0 retained; no production admission | Hash-bound per-unit decisions, approved closures/contracts and reproducible positive/negative receipts |
 | S4 two-project hosts and S5 FLOOR | Blocked on approved inputs | Ratified gold/label protocol and complete measurement result |
-| S6 development/custody | Danny named human custodian/task reviewer; independent author, actual storage and human-only access pending | Document private custody/review channel; disjoint reviewed tasks and custody commitments still required |
+| S6 development/custody | Owner-attested sole-human iPhone custody/access and independence waiver recorded (not independent); separate-task creation/review NOT_ESTABLISHED | Preserve recorded custody arrangements and waiver; disjoint reviewed tasks and permitted public exclusion evidence still required |
 | S7 qualification dossier | Planned after S2–S6 | One reviewed delivery; explicit pass or blocked milestone decision |
+
+## Two bounded imported closures approved; qualification remains blocked
+
+**Done: exact closure decision receipts. S4/S5 remain blocked on reviewed inputs.**
+Danny directly approved `.default.dsp` and `gain.dsp` bounded closures, including
+the pinned compiler import in the tested configurations.
+[Exact bindings, evidence and remaining gates](docs/runbooks/qualification-sprint.md#two-bounded-imported-closures-approved--2026-10-22).
+
+Receipt outside Git:
+`/Users/appliedalchemylabs/Documents/Codex/blackdog-s2-backups/two-imported-closure-approval-20261023T035922Z/`.
+Manifest SHA-256:
+`6a2be59588f63f5cb78a5e787195a365d2d1b17efb32055cfaecd2ce400a94b3`.
+Three payloads and matching local backup verified; no new off-host verification.
+Preserve original packets, declared imports and existing notices.
+
+Closure overlay: **7 accepted / 167 unresolved** of 174 (five owner-confirmed
+delegated-agent source-local reviews, two direct-owner imported approvals).
+Original 18 REJECT / 156 BLOCKED source dispositions are unchanged; these counts
+are not retention or independent-review counts.
+
+Next: exact retained-unit selection and remaining applicable closures; full
+1,430-unit / 23-short-group / 19-collective-set source/family adjudication;
+reviewed two-project hosts, windows and fixed gold labels; ratified FLOOR;
+disjoint development/candidate-split checks, separate-task public evidence and
+final integration. Custody arrangements and the owner waiver stand; independence
+is waived, not passed. The seven public-contract reviews are not separate tasks.
+No experimental collective variant is adopted.
+
+**No host, gold, retention or production admission; TOKEN_FLOOR=40 provisional;
+T07 unfrozen.** This card supersedes older pending closure/native-trace/custody
+wording below. PR #110 is already squash-merged at
+`5f9986b5f4be8cc77719050085673df6603a80ac`; older unmerged references are historical.
 
 ## Imported-notice handling approved; host gates remain open
 
@@ -58,7 +113,9 @@ any redistributed library-source bundle; it is not included in this receipt.
 Next: review closure/host and family/split eligibility, resolve broader notice
 scope and any required native path trace, establish two cleared host repositories
 and fixed gold/labels, complete FLOOR and independent custody/development gates.
-No host or production admission. PR #110 unmerged; `TOKEN_FLOOR=40` provisional;
+No host or production admission. **OBSERVED:** PR #110 merged as `5f9986b5`;
+both `--idiom-filter-min-docs` and `--marginal-coverage` remain default-off
+(`diagnostics/batch1_review.py:528-537`); `TOKEN_FLOOR=40` provisional;
 T07 unfrozen. Prior approvals and immutable evidence remain preserved.
 
 ## Filter pair human approval recorded
@@ -74,7 +131,9 @@ Next: bind the decision into family/split review; resolve remaining source/notic
 and dependency scope; complete independent behavior qualification, full-pool and
 two-project FLOOR evidence, and independent private author/storage/access/review
 confirmation. Existing approvals are preserved; this decision grants no
-production admission. PR #110 stays unmerged; idiom filtering stays default-off,
+production admission. **OBSERVED:** PR #110 merged as `5f9986b5`; both
+`--idiom-filter-min-docs` and `--marginal-coverage` remain default-off
+(`diagnostics/batch1_review.py:528-537`),
 `TOKEN_FLOOR=40` stays provisional and T07 stays unfrozen.
 
 ## Seven files approved NOT_COPY and repository-level MIT
@@ -413,3 +472,12 @@ Mirrors the decision items on the [project board](https://github.com/orgs/Zero-S
 | Q4 | ADR-0002 accepted in full (Jev's default; Danny may still choose P3 PROPOSED); only the ~5M-token threshold ratified | ACCEPTED 2026-10-17 7:40 PM PT (Jev; Danny "use jev to make decisions" 7:37 PM PT) | docs/adr/0002, spec §24 verbatim |
 | D3-H2 | Sampled rerun audit rules (spec §26 0.3.9) | ACCEPTED 2026-10-18 8:10 AM PT (Danny, "Approve the §26 0.3.9 amendment as recommended"). Implemented in #57 (`63aac31`) and the follow-ups in Done | [danny-d3h2-audit-2026-10-18.md](docs/decisions/danny-d3h2-audit-2026-10-18.md), spec §26 |
 | D3-H2-C | Human triage credential (spec §26 0.3.10) | ACCEPTED as spec text 2026-10-18 5:11 PM PT (Danny, "approved the BlackDog §26 option C spec amendment with ADVERSARY's defaults"), #66 (`fab50c2`). Implementation merged in #71 (`cf319f3`); follow-ups remain open. Later ruling 2026-10-18 5:45 PM PT, issue #68: a software key is fine for Danny's key | [danny-d3h2-option-c-2026-10-18.md](docs/decisions/danny-d3h2-option-c-2026-10-18.md), spec §26, issues #64 and #68 |
+
+### Issue #108 bounded harness amendment
+
+Owner approved spec §27 / ADR-0008 and bounded implementation on 2026-10-22 PT.
+Review implementation: per-block controls, per-input deterministic stimuli and
+expected-zero cases guarded by runner-executed nonzero companions. Legacy reward
+profile digests remain frozen; enabled cases are diagnostic-only. Validation and
+remaining CI status belong to the separate review PR. No host/production admission;
+TOKEN_FLOOR=40 provisional; T07 unfrozen. Experimental evidence stays outside Git.

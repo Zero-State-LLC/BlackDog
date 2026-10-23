@@ -65,3 +65,6 @@ leaves the sidecar unchanged.
 
 `function-spans.schema.json` is added with the BlackDog identity in ADR-0007;
 its source and copy match. Existing schema identities are unchanged.
+
+`readiness-manifest.schema.json` is the advisory QR-09 evidence index described
+in ADR-0009. It grants no admission or training authority. Source and copy match.

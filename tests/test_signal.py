@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+import json
 from pathlib import Path
 
 import pytest
@@ -110,6 +111,8 @@ def _delayed(samples: list[float], delay: int, gain: float) -> list[float]:
 
 
 def _run(source: str, profile: SignalProfile, reference: SignalReference | None = None, **kwargs):
+    if kwargs.get("reward_graded"):
+        kwargs["task"] = json.loads((ROOT / "tests/fixtures/valid/task-spec.json").read_text())
     return run_signal(source, profile, reference, **kwargs)
 
 

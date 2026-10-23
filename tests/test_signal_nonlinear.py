@@ -207,7 +207,7 @@ def test_suite_floor_refuses_a_short_render_before_compile(
         stimuli=("ess",),
     )
     with pytest.raises(ValueError, match="144000"):
-        run_signal("process = _;\n", profile, None, reward_graded=True)
+        run_signal("process = _;\n", profile, None, reward_graded=True, task=json.loads((Path(__file__).parent / "fixtures/valid/task-spec.json").read_text()))
     with pytest.raises(ValueError, match="144000"):
         SignalProfile(
             sample_rate=48000,
@@ -234,7 +234,7 @@ def test_fast_math_and_a_different_ftz_are_refused_before_compile(
             profile,
             None,
             options=("-fm", "def"),
-            reward_graded=True,
+            reward_graded=True, task=json.loads((Path(__file__).parent / "fixtures/valid/task-spec.json").read_text()),
         )
     with pytest.raises(SignalHarnessError, match="-ftz"):
         run_signal(
@@ -242,7 +242,7 @@ def test_fast_math_and_a_different_ftz_are_refused_before_compile(
             profile,
             None,
             options=("-ftz", "2"),
-            reward_graded=True,
+            reward_graded=True, task=json.loads((Path(__file__).parent / "fixtures/valid/task-spec.json").read_text()),
         )
     with pytest.raises(SignalHarnessError, match="-fm"):
         run_signal(
@@ -270,7 +270,7 @@ def test_diagnostic_and_reward_pin_the_same_flags(monkeypatch: pytest.MonkeyPatc
     profile = SignalProfile(sample_rate=48000, frames=256, stimuli=("sine",))
     for graded in (False, True):
         with pytest.raises(SignalHarnessError, match="stopped after flags"):
-            run_signal("process = _;\n", profile, None, reward_graded=graded)
+            run_signal("process = _;\n", profile, None, reward_graded=graded, task=json.loads((Path(__file__).parent / "fixtures/valid/task-spec.json").read_text()))
     assert seen == [PINNED_COMPILE_FLAGS, PINNED_COMPILE_FLAGS]
 
 

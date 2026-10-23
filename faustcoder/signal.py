@@ -93,7 +93,7 @@ import sys
 import tempfile
 import time
 from collections.abc import Callable, Mapping, Sequence
-from dataclasses import dataclass, replace
+from dataclasses import dataclass, replace, replace
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -110,6 +110,7 @@ from faustcoder.compiler import (
     compile_source,
     runtime_pin,
     store_compiler_receipt,
+    reproducible_receipt_digest,
     worker_directory,
 )
 from faustcoder.compiler import _raise_if_canary_failed, _stage_runtime, _validate_options
@@ -256,8 +257,14 @@ class SignalProfile:
     require_reference: bool = True
     press_buttons_first_block: bool = True
     suite: str | None = None
+    diagnostic_case: Any = None
 
     def __post_init__(self) -> None:
+        if self.diagnostic_case is not None:
+            from faustcoder.diagnostic_cases import DiagnosticCase
+            if not isinstance(self.diagnostic_case, DiagnosticCase):
+                raise ValueError("diagnostic_case must be a DiagnosticCase")
+            self.diagnostic_case.validate_profile(self)
         if self.sample_rate not in SAMPLE_RATES:
             raise ValueError("sample_rate must be 44100 or 48000")
         if self.block_size < 1 or self.block_size > 4096:
@@ -404,6 +411,8 @@ class SignalRun:
     termination_signal: int | None = None
     runtime_stack_overflow: bool = False
     wasm_trap: str | None = None
+    reward_task_digest: str | None = None
+    native_match: object | None = None
 
 
 @dataclass(frozen=True)
@@ -548,7 +557,7 @@ def profile_payload(profile: SignalProfile) -> dict[str, Any]:
     Version 2 is the allowlist shape. Stimulus bytes and compile flags
     are recorded on the receipt metrics. They are not fields here.
     """
-    return {
+    payload = {
         "absolute_tolerance_nano": to_nano(profile.absolute_tolerance),
         "block_size": profile.block_size,
         "clip_peak_nano": to_nano(profile.clip_peak),
@@ -576,6 +585,10 @@ def profile_payload(profile: SignalProfile) -> dict[str, Any]:
         "stimuli": list(profile.stimuli),
         "version": 2,
     }
+
+    if profile.diagnostic_case is not None:
+        payload["diagnostic_case"] = profile.diagnostic_case.payload()
+    return payload
 
 
 def reference_payload(reference: SignalReference) -> dict[str, Any]:
@@ -725,7 +738,7 @@ def _require_reward_ledger(ledger: object) -> Any:
     return ledger
 
 
-def _hold_compiler_for_reward(compiled: Compilation, ledger: object) -> None:
+def _hold_compiler_for_reward(compiled: Compilation, ledger: object, *, task: Mapping[str, Any], native: object = None) -> None:
     """Grade a failed compile onto the ledger. Always raises."""
     bound = _require_reward_ledger(ledger)
     from faustcoder.compiler import COMPILER_SCHEMA_VERSION
@@ -744,6 +757,8 @@ def _hold_compiler_for_reward(compiled: Compilation, ledger: object) -> None:
         policy="signal",
         queue=bound.queue,
         rates=bound.rates,
+        task=task,
+        native=native,
     )
     raise RewardOutcomeHeld(grade)
 
@@ -782,6 +797,8 @@ def _hold_crash_for_reward(
     *,
     kind: str,
     exit_code: int = 126,
+    task: Mapping[str, Any],
+    native: object = None,
 ) -> None:
     """Grade a worker or harness crash onto the ledger. Always raises."""
     bound = _require_reward_ledger(ledger)
@@ -804,11 +821,49 @@ def _hold_crash_for_reward(
         policy="signal",
         queue=bound.queue,
         rates=bound.rates,
+        task=task,
+        native=native,
     )
     raise RewardOutcomeHeld(grade)
 
 
+def _validated_reward_task(task: object) -> dict[str, Any]:
+    from faustcoder.canonical import canonical_bytes, loads_strict
+    from faustcoder.reward.grader import RewardProvenanceError
+    from faustcoder.signal_suite import require_task_rewardable
+    if not isinstance(task, Mapping):
+        raise RewardProvenanceError("reward execution requires a bound TaskSpec")
+    frozen = loads_strict(canonical_bytes(dict(task)))
+    validate(frozen, "task-spec.schema.json")
+    require_task_rewardable(frozen)
+    return frozen
+
+
 def run_signal(
+    source: str, profile: SignalProfile, reference: SignalReference | None = None,
+    *, options: Sequence[str] = (), limits: ResourceLimits | None = None,
+    promotion_candidate: bool = False, reward_graded: bool = False,
+    ledger: object | None = None, defer_reward_failure: bool = False,
+    task: Mapping[str, Any] | None = None, native: object | None = None,
+) -> SignalRun:
+    """Validate reward TaskSpec before executing, then bind the exact task.
+
+    Diagnostic calls remain task-free. Native evidence is accepted only by the
+    existing sealed-match grader; absent/mismatched evidence stays ungraded.
+    """
+    from faustcoder.reward.grader import task_digest_full
+    if profile.diagnostic_case is not None and (reward_graded or promotion_candidate):
+        raise ValueError("diagnostic cases are not admitted for reward or promotion")
+    frozen = _validated_reward_task(task) if reward_graded else None
+    run = _run_signal(source, profile, reference, options=options, limits=limits,
+                      promotion_candidate=promotion_candidate, reward_graded=reward_graded,
+                      ledger=ledger, defer_reward_failure=defer_reward_failure,
+                      task=frozen, native=native)
+    return replace(run, reward_task_digest=task_digest_full(frozen) if frozen is not None else None,
+                   native_match=native if reward_graded else None)
+
+
+def _run_signal(
     source: str,
     profile: SignalProfile,
     reference: SignalReference | None = None,
@@ -819,6 +874,8 @@ def run_signal(
     reward_graded: bool = False,
     ledger: object | None = None,
     defer_reward_failure: bool = False,
+    task: Mapping[str, Any] | None = None,
+    native: object | None = None,
 ) -> SignalRun:
     """Compile and render ``source``. Return a schema-valid receipt.
 
@@ -851,6 +908,11 @@ def run_signal(
     """
     if not isinstance(source, str):
         raise TypeError("source must be a string")
+    if profile.diagnostic_case is not None:
+        if reward_graded or promotion_candidate:
+            raise ValueError("diagnostic cases are not admitted for reward or promotion")
+        if reference is None or reference.frames != profile.frames:
+            raise ValueError("diagnostic cases require an explicit full-length reference")
     profile, reference = _prepare_render(
         profile, reference, reward_graded=reward_graded
     )
@@ -868,7 +930,7 @@ def run_signal(
             _hold_crash_for_reward(
                 "sha256:" + hashlib.sha256(source.encode("utf-8")).hexdigest(),
                 ledger,
-                kind="harness_crash",
+                kind="harness_crash", task=task, native=native,
             )
         raise
     if compiled.receipt["exit_code"] != 0 or compiled.receipt["diagnostic_class"] not in {
@@ -880,7 +942,7 @@ def run_signal(
                 compiled, "compiler", source=source, options=checked, limits=bounds
             )
         if reward_graded:
-            _hold_compiler_for_reward(compiled, ledger)
+            _hold_compiler_for_reward(compiled, ledger, task=task, native=native)
         raise SignalHarnessError(
             "signal tests require a successful wasm compile "
             f"({compiled.receipt['diagnostic_class']})"
@@ -894,7 +956,7 @@ def run_signal(
             )
         if reward_graded:
             _hold_crash_for_reward(
-                compiled.reproducible_digest, ledger, kind="harness_crash"
+                compiled.reproducible_digest, ledger, kind="harness_crash", task=task, native=native
             )
         raise
     except SignalHarnessError as exc:
@@ -912,7 +974,7 @@ def run_signal(
             )
         if reward_graded:
             _hold_crash_for_reward(
-                compiled.reproducible_digest, ledger, kind="worker_crash"
+                compiled.reproducible_digest, ledger, kind="worker_crash", task=task, native=native
             )
         raise
     if rendered["libfaust_version"] != compiled.receipt["faust_version"]:
@@ -944,6 +1006,8 @@ def run_signal_suite(
     promotion_candidate: bool = False,
     reward_graded: bool = False,
     ledger: object | None = None,
+    task: Mapping[str, Any] | None = None,
+    native: object | None = None,
     **profile_kwargs: Any,
 ) -> SignalSuite:
     """Run ``source`` at each sample rate. Default rates are 44.1 and 48 kHz.
@@ -967,6 +1031,7 @@ def run_signal_suite(
             "reward-graded signal suites require a reward ledger; "
             "refusing to score or drop compile failures and crashes"
         )
+    task = _validated_reward_task(task) if reward_graded else task
     runs: list[SignalRun] = []
     for rate in sample_rates:
         profile = _default_impulse_frames(
@@ -988,7 +1053,7 @@ def run_signal_suite(
                 promotion_candidate=promotion_candidate,
                 reward_graded=reward_graded,
                 ledger=ledger,
-                defer_reward_failure=reward_graded,
+                defer_reward_failure=reward_graded, task=task, native=native,
             )
         )
     return SignalSuite(runs=tuple(runs), ledger=ledger)
@@ -1003,6 +1068,7 @@ def commit_signal_check(
     producer: str = "faustcoder.signal",
     ledger: object | None = None,
     policy: str = "signal",
+    task: Mapping[str, Any] | None = None,
 ) -> SignalCommit:
     """Store each DSPTestReceipt and take the signal edge.
 
@@ -1023,6 +1089,36 @@ def commit_signal_check(
         raise SignalHarnessError("signal check starts from COMPILE_CHECKED")
     if not suite.runs:
         raise SignalHarnessError("signal suite is empty")
+    # Preflight the whole suite before the first artifact write.
+    purposes = ["reward" if run.receipt is None else run.receipt.get("purpose") for run in suite.runs]
+    reward = "reward" in purposes
+    if reward:
+        from faustcoder.reward.grader import RewardProvenanceError, Ungraded, grade_receipt, task_digest_full
+        if any(purpose != "reward" for purpose in purposes):
+            raise SignalHarnessError("a reward-graded suite cannot mix diagnostic receipts")
+        task = _validated_reward_task(task)
+        for run in suite.runs:
+            if run.reward_task_digest != task_digest_full(task):
+                raise RewardProvenanceError("reward run TaskSpec binding is missing or changed")
+            compiler_receipt = run.compilation.receipt
+            if (compiler_receipt.get("stderr_digest") != "sha256:" + hashlib.sha256(
+                    run.compilation.diagnostics.encode("utf-8")).hexdigest()
+                    or run.compilation.reproducible_digest != reproducible_receipt_digest(compiler_receipt)):
+                raise RewardProvenanceError("invalid reward compiler provenance")
+            if run.receipt is not None:
+                if run.receipt.get("source_sha256") != compiler_receipt.get("source_sha256"):
+                    raise RewardProvenanceError("reward signal and compiler source mismatch")
+                outcome = grade_receipt(build_envelope(
+                    schema_version=SIGNAL_SCHEMA_VERSION, created_at=created_at,
+                    producer=producer, parents=[], payload=run.receipt), task=task)
+                if isinstance(outcome, Ungraded):
+                    raise RewardProvenanceError("invalid reward signal provenance: " + outcome.reason)
+    for run in suite.runs:
+        validate(run.compilation.receipt, "compiler-receipt.schema.json")
+        if run.receipt is None and run.reward_failure not in {"compiler", "worker_crash", "harness_crash"}:
+            raise SignalHarnessError("signal run has no valid failure provenance")
+        if run.receipt is not None:
+            validate(run.receipt, _SCHEMA)
     artifact_ids: list[str] = []
     for run in suite.runs:
         compiler_id = store_compiler_receipt(
@@ -1086,6 +1182,8 @@ def commit_signal_check(
                         policy=policy,
                         queue=bound.queue,
                         rates=bound.rates,
+                        task=task,
+                        native=run.native_match,
                     )
                 )
                 if run.receipt is None:
@@ -1115,6 +1213,8 @@ def commit_signal_check(
                         policy=policy,
                         queue=bound.queue,
                         rates=bound.rates,
+                        task=task,
+                        native=run.native_match,
                     )
                 )
                 continue
@@ -1124,6 +1224,8 @@ def commit_signal_check(
                     policy=policy,
                     queue=bound.queue,
                     rates=bound.rates,
+                    task=task,
+                    native=run.native_match,
                 )
             )
         outcomes = tuple(outcomes_list)
@@ -1296,6 +1398,8 @@ def _judge(
         failures.extend(stimulus_failures)
         if peak_error is not None and math.isfinite(peak_error):
             summary["max_abs_error_nano"] = to_nano(peak_error)
+    if profile.diagnostic_case is not None and profile.diagnostic_case.zero_companion is not None:
+        failures.append("diagnostic:companion_pending")
     failures = sorted(set(failures))
     if reward_graded:
         comparison = "reward-graded-signed-full"
@@ -1332,12 +1436,20 @@ def _judge(
         metrics["toolchain"] = toolchain
     if profile.suite is not None:
         metrics["suite"] = profile.suite
+    if profile.diagnostic_case is not None:
+        metrics["diagnostic_case"] = rendered["diagnostic_case"]
+        metrics["comparison"] = "diagnostic-signed-full"
+        metrics["diagnostic_case"]["compiler_digest"] = compiled.reproducible_digest
     metrics["compile_flags"] = list(compile_flags)
     if _suite_profile(profile):
         from faustcoder.signal_suite import stimulus_record
 
         metrics.update(stimulus_record(profile))
     harness = _harness_preimage()
+    if profile.diagnostic_case is not None:
+        harness["diagnostic_signal_sha256"] = _file_sha256(Path(__file__))
+        harness["diagnostic_python_sha256"] = _file_sha256(Path(__file__).with_name("diagnostic_cases.py"))
+        harness["diagnostic_worker_sha256"] = _file_sha256(worker_directory() / "diagnostic-cases.mjs")
     metrics["unshare_path"] = harness["unshare_path"]
     metrics["unshare_sha256"] = harness["unshare_sha256"]
     thresholds: dict[str, Any] = {
@@ -1364,7 +1476,7 @@ def _judge(
     if profile.require_reference:
         thresholds["require_reference"] = True
     thresholds["reward_graded"] = bool(reward_graded)
-    if profile.suite is not None:
+    if profile.suite is not None or profile.diagnostic_case is not None:
         thresholds["reward_allowlisted"] = False
     receipt: dict[str, Any] = {
         "source_sha256": hashlib.sha256(source.encode("utf-8")).hexdigest(),
@@ -1501,7 +1613,7 @@ def _measure_stimulus(
     # Reward grading signs the whole render, past head_frames included
     # (spec §23 A4). A suite profile signs every rendered frame. Other
     # runs keep the exact check on the head.
-    compared = profile.frames if reward_graded or _suite_profile(profile) else head
+    compared = profile.frames if reward_graded or _suite_profile(profile) or profile.diagnostic_case is not None else head
     summary["compared_frames"] = compared
     peak_error, token = compare_channels(
         [channel[:compared] for channel in quantized_candidate],
@@ -1713,7 +1825,10 @@ def _limits_for(profile: SignalProfile) -> ResourceLimits:
     outputs = profile.expected_channels if profile.expected_channels is not None else 2
     if outputs < 1:
         outputs = 1
-    needed = len(profile.stimuli) * profile.frames * 4 * (1 + outputs) + 1024 * 1024
+    routed_inputs = (len(profile.diagnostic_case.input_stimuli)
+                     if profile.diagnostic_case is not None
+                     and profile.diagnostic_case.input_stimuli is not None else 0)
+    needed = (len(profile.stimuli) * (1 + outputs) + routed_inputs) * profile.frames * 4 + 1024 * 1024
     default = 8 * 1024 * 1024
     if needed <= default:
         return ResourceLimits()
@@ -1773,7 +1888,8 @@ def _prepare_render(
             )
     if reward_graded:
         profile = replace(profile, reject_nonfinite=True, require_reference=True)
-    profile = _default_impulse_frames(profile)
+    if profile.diagnostic_case is None:
+        profile = _default_impulse_frames(profile)
     if reference is None:
         if _suite_profile(profile):
             profile = replace(profile, head_frames=profile.frames)
@@ -1972,19 +2088,20 @@ def _render(
         raise SandboxError(f"render worker is missing: {script}")
     libraries = share_directory()
     mono = stimuli_for(profile)
-    request = json.dumps(
-        {
-            "source": source,
-            "options": list(options),
-            "sample_rate": profile.sample_rate,
-            "block_size": profile.block_size,
-            "frames": profile.frames,
-            "stimuli": list(profile.stimuli),
-            "press_buttons_first_block": profile.press_buttons_first_block,
-        },
-        ensure_ascii=False,
-        separators=(",", ":"),
-    ).encode("utf-8")
+    request_body = {
+        "source": source, "options": list(options),
+        "sample_rate": profile.sample_rate, "block_size": profile.block_size,
+        "frames": profile.frames, "stimuli": list(profile.stimuli),
+        "press_buttons_first_block": profile.press_buttons_first_block,
+    }
+    diagnostic = None
+    if profile.diagnostic_case is not None:
+        from faustcoder.diagnostic_cases import input_buffers
+        diagnostic = profile.diagnostic_case
+        request_body["diagnostic_case"] = diagnostic.worker_payload()
+        for index, samples in enumerate(input_buffers(profile)):
+            mono[f"channel-{index}"] = samples
+    request = json.dumps(request_body, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
     with tempfile.TemporaryDirectory(prefix="faustcoder-signal-") as temporary:
         workdir = Path(temporary)
         _stage_runtime(workdir)
@@ -2031,6 +2148,9 @@ def _render(
             )
         samples = _read_outputs(workdir, body, profile)
         body["samples"] = samples
+        if diagnostic is not None:
+            from faustcoder.diagnostic_cases import validate_worker_result
+            body["diagnostic_case"] = validate_worker_result(profile, body, mono)
         return body
 
 

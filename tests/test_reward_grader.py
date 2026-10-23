@@ -1100,14 +1100,14 @@ def test_reward_graded_failures_are_held_on_the_ledger_or_refused(monkeypatch, t
     monkeypatch.setattr("faustcoder.signal.compile_source", lambda *_args, **_kwargs: compilation)
     profile = SignalProfile(sample_rate=48000, frames=64, block_size=64, stimuli=("impulse",))
     try:
-        run_signal("process = _;\n", profile, None, reward_graded=True)
+        run_signal("process = _;\n", profile, None, reward_graded=True, task=_linear_task())
     except RewardUseRefused as exc:
         assert "ledger" in str(exc)
     else:
         raise AssertionError("a reward failure with no ledger was scored")
     ledger = RewardLedger(tmp_path / "ledger")
     try:
-        run_signal("process = _;\n", profile, None, reward_graded=True, ledger=ledger)
+        run_signal("process = _;\n", profile, None, reward_graded=True, task=_linear_task(), ledger=ledger)
     except RewardOutcomeHeld as exc:
         assert isinstance(exc.grade, Ungraded)
         assert exc.grade.reason is UngradedReason.UNATTRIBUTED
@@ -1128,7 +1128,7 @@ def test_reward_graded_failures_are_held_on_the_ledger_or_refused(monkeypatch, t
 
     monkeypatch.setattr("faustcoder.signal._render", crash)
     try:
-        run_signal("process = _;\n", profile, None, reward_graded=True, ledger=ledger)
+        run_signal("process = _;\n", profile, None, reward_graded=True, task=_linear_task(), ledger=ledger)
     except RewardOutcomeHeld as exc:
         assert isinstance(exc.grade, Ungraded)
         assert exc.grade.reason is UngradedReason.UNATTRIBUTED
@@ -1153,7 +1153,9 @@ def test_commit_signal_check_grades_a_timeout_onto_the_store_ledger(store) -> No
         diagnostics="resource limit: memory\n",
     )["payload"]
     signal = allowlisted_reward_envelope(passed=True)["payload"]
+    from faustcoder.reward.grader import task_digest_full
     run = SignalRun(
+        reward_task_digest=task_digest_full(_linear_task()),
         compilation=Compilation(
             receipt=payload,
             diagnostics="resource limit: memory\n",
@@ -1169,6 +1171,7 @@ def test_commit_signal_check_grades_a_timeout_onto_the_store_ledger(store) -> No
         SignalSuite(runs=(run,)),
         state=CandidateState.COMPILE_CHECKED,
         created_at="2026-10-17T00:00:00Z",
+        task=_linear_task(),
     )
     assert committed.state is CandidateState.COMPILE_CHECKED
     assert any(isinstance(item, Ungraded) for item in committed.outcomes)
@@ -1184,7 +1187,7 @@ def test_rendered_reward_impulse_grades_as_rewardable() -> None:
 
     profile = reward_signal_profile("impulse-48000-v1")
     reference = impulse_reference(profile, lambda samples: samples)
-    run = run_signal("process = _;\n", profile, reference, reward_graded=True)
+    run = run_signal("process = _;\n", profile, reference, reward_graded=True, task=_linear_task())
     assert run.receipt["passed"] is True
     assert run.receipt["purpose"] == "reward"
     envelope = build_envelope(
@@ -1351,7 +1354,7 @@ def test_reward_suite_grades_timeout_and_crash_on_commit(monkeypatch, store, tmp
             sample_rates=(48000,),
             frames=64,
             block_size=64,
-            reward_graded=True,
+            reward_graded=True, task=_linear_task(),
         )
     except RewardUseRefused as exc:
         assert "ledger" in str(exc)
@@ -1376,7 +1379,7 @@ def test_reward_suite_grades_timeout_and_crash_on_commit(monkeypatch, store, tmp
         sample_rates=(48000,),
         frames=64,
         block_size=64,
-        reward_graded=True,
+        reward_graded=True, task=_linear_task(),
         ledger=ledger,
     )
     assert suite.runs[0].receipt is None
@@ -1386,6 +1389,7 @@ def test_reward_suite_grades_timeout_and_crash_on_commit(monkeypatch, store, tmp
         suite,
         state=CandidateState.COMPILE_CHECKED,
         created_at="2026-10-18T00:00:00Z",
+        task=_linear_task(),
     )
     assert committed.state is CandidateState.COMPILE_CHECKED
     assert len(committed.outcomes) == 1
@@ -1415,7 +1419,7 @@ def test_reward_suite_grades_timeout_and_crash_on_commit(monkeypatch, store, tmp
         sample_rates=(48000,),
         frames=64,
         block_size=64,
-        reward_graded=True,
+        reward_graded=True, task=_linear_task(),
         ledger=ledger,
     )
     assert crashed.runs[0].reward_failure == "worker_crash"
@@ -1424,6 +1428,7 @@ def test_reward_suite_grades_timeout_and_crash_on_commit(monkeypatch, store, tmp
         crashed,
         state=CandidateState.COMPILE_CHECKED,
         created_at="2026-10-18T00:00:00Z",
+        task=_linear_task(),
     )
     assert ledger.queue.count("signal") == 2
 
@@ -1438,7 +1443,7 @@ def test_reward_suite_grades_timeout_and_crash_on_commit(monkeypatch, store, tmp
             sample_rates=(48000,),
             frames=64,
             block_size=64,
-            reward_graded=True,
+            reward_graded=True, task=_linear_task(),
             ledger=ledger,
         )
     except RewardOutcomeHeld as exc:

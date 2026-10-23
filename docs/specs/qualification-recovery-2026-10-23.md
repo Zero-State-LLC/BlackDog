@@ -3,11 +3,13 @@
 Status: PROPOSED. Engineering planning only. No training, production admission, spending, or merges authorized by this document.
 
 ## Goal and invariants
+
 Unblock reproducible development without weakening the existing constitution, ADRs, immutable evidence DAG, frozen reward profiles, holdout isolation, or human approval gates. Existing qualification sprint S1-S7 remains authoritative. This plan decomposes blockers, not a replacement for its acceptance criteria.
 
 ## Journey -> workflow -> state -> contract -> acceptance -> task
 
 ### Q1: PR integration readiness
+
 Journey: maintainer reviews #112, #113, #114, #76, #73 and historical #33.
 Workflow: fetch latest main and heads -> diff/overlap map -> inspect reviews and checks -> rerun focused, full Linux and mutation tests -> record merge recommendations.
 States: DISCOVERED -> REVIEWED -> VERIFIED -> APPROVAL_REQUIRED -> MERGED; failure -> BLOCKED.
@@ -16,6 +18,7 @@ Acceptance: each PR has a hash-bound evidence record; #76 must validate TaskSpec
 Tasks: QR-01, QR-02.
 
 ### Q2: Source and dataset eligibility
+
 Journey: source reviewer can account for all 1,430 units, 110 packets, 510 blobs, 23 short groups and 19 collective sets, without silently admitting unresolved material.
 Workflow: inventory -> verify digest and provenance -> review licenses and transitive imports -> classify COPY/shared-lineage, NOT_COPY, BLOCKED -> family/split validation -> independent review -> admit or reject.
 States: INVENTORIED -> VERIFIED -> REVIEW_REQUIRED -> APPROVED_FOR_SCOPE -> QUALIFIED; unknown or conflicting -> BLOCKED.
@@ -24,6 +27,7 @@ Acceptance: reconciliation sums and uniqueness checks pass, unknown rights fail 
 Tasks: QR-03, QR-04.
 
 ### Q3: Two-host FLOOR and custody
+
 Journey: evaluator can produce leakage-resistant evidence with two cleared host projects, fixed gold and independent custody.
 Workflow: select hosts -> rights review -> freeze task/label protocol -> isolate families and private tasks -> execute two-project FLOOR -> independently audit -> qualification dossier.
 States: HOST_PENDING -> HOST_CLEARED -> GOLD_RATIFIED -> MEASURED -> REVIEWED; otherwise BLOCKED.
@@ -32,6 +36,7 @@ Acceptance: full denominator accounted, both hosts independently cleared, receip
 Tasks: QR-05, QR-06.
 
 ### Q4: Spark model qualification
+
 Journey: operator evaluates an isolated candidate without treating smoke success as permission to train.
 Workflow: preserve baseline -> verify repaired wheel provenance -> check host/workload -> approved local model -> inference and adapter probes -> checkpoint save/reload -> measure memory/throughput -> stack-pin decision.
 States: ENV_VERIFIED -> MODEL_APPROVED -> PROBED -> EVIDENCE_REVIEWED -> PIN_APPROVED; no model -> BLOCKED.
@@ -40,6 +45,7 @@ Acceptance: pip check, sparse/dense regression, representative probes and checkp
 Tasks: QR-07.
 
 ### Q5: Evaluation funnel
+
 Journey: reviewer can distinguish syntax, compiler, DSP signal, and independent qualification outcomes.
 Workflow: static eligibility -> pinned compiler -> deterministic signal checks -> adversarial/family-disjoint evaluation -> human evidence gate.
 States: SUBMITTED -> STATIC_PASS -> COMPILE_PASS -> SIGNAL_PASS -> QUALIFIED, with any failure terminal and attributable.
@@ -48,12 +54,15 @@ Acceptance: negative controls catch silent/incorrect output; compiler version pi
 Tasks: QR-08.
 
 ## Priority and dependencies
+
 P0: QR-01, QR-03, QR-04, QR-05, QR-06. P1: QR-02, QR-07, QR-08. Security follow-ups #62/#68/#69/#72 remain separate fail-closed work. QR-05 depends on QR-03/04; QR-06 on QR-05; reward admission depends on QR-02/08. No T07 freeze until all governing gates pass.
 
 ## Verification and rollout
+
 Implement ledger/reporting on feature branches with fixture-only data. Run schema validation, reconciliation, positive/negative tests, independent replay and Linux CI. Publish hash-bound evidence references without uploading restricted source or private tasks. Require human review before merges, corpus admission, stack pin, training or release.
 
 ## Research and decisions
+
 Investigate upstream ARM64 wheel compatibility only if the repaired isolated candidate fails representative probes. Do not bypass PyTorch's exact dependency pins. Prefer existing Faust compiler and DSP harness over proxy-only text metrics. Resolve host rights and custody through actual human approvals, not agent-generated attestations.
 
 ## QR-01 live PR reconciliation, 2026-10-23 PT
@@ -90,21 +99,79 @@ Next verification: inspect #113 latest-head CI jobs/logs, full #113/#76 signal.p
 Owner requests a practical path to training with minimal manual ceremony. This is a **proposed implementation policy** for reconciliation with canonical spec/constitution; it does not itself supersede higher-priority requirements or grant training admission.
 
 ### Three lanes
+
 1. **Green, automated engineering:** fixture generation, provenance extraction, license classification suggestions, dedup, lineage clustering, compiler/signal tests, PR checks, synthetic GPU training diagnostics, and evidence packet assembly. Run without per-item manual approval when read-only, reversible, and within existing resource permissions. Automated reports carry source hashes and failure explanations.
 2. **Amber, bounded batch review:** one consolidated review for ambiguous licenses/imports, external-host eligibility, frozen gold selection, private custody configuration, model/download or compute budget. Review only exceptions and final summaries, not every unit. Approve precise scopes, with expiration/change triggers; previously approved source decisions are reused, never repeatedly requested.
 3. **Red, explicit authorization:** external redistribution, restricted/private data disclosure, training on unqualified data, promotion/release, irreversible destructive actions, unbudgeted spending, or bypassing reward/holdout integrity. These cannot be automatically cleared by an agent.
 
 ### Fast training path
+
 - **Track A: synthetic dry run:** allow CPU/GPU smoke, generated DSP fixtures, synthetic training-step/checkpoint verification, and throughput benchmarking without a production corpus. Label outputs DIAGNOSTIC and prevent model admission.
 - **Track B: qualified small pilot:** prepare a tiny rights-cleared, family-disjoint dataset, pinned model and isolated environment. Automate receipts and gates. Submit a single bounded approval for actual pilot training only after canonical required conditions are met. No requirement to finish every broader corpus unit merely to run an independently qualified pilot, unless canonical spec expressly requires it.
 - **Track C: full corpus training:** retain complete source/notice/lineage accounting, two-host FLOOR and custody conditions wherever required by the governing specification. Automate batch processing and exception review.
 
 ### T07 and reward compatibility
+
 Preserve canonical spec 001's provisional T07 freeze route with documented leakage caveat and scheduled recheck. Do not claim P3 exit or final promotion until the required QH-02/FLOOR evidence. Keep reward TaskSpec binding and frozen-profile digest checks fail-closed. No unapproved modification of canonical normative requirements.
 
 ### Acceptance criteria
+
 One command produces a readiness report with machine-readable blockers, waiver-ineligible red gates, owner-action queue, evidence hashes, source/lineage counts and next safe executable action. No per-unit human approval for mechanically verifiable clean items. All ambiguous cases remain quarantined. Synthetic training diagnostics are not presented as qualified model training. A single owner review should cover a coherent batch of exceptions.
 
 ## QR-09 implementation slice
 
 Read-only `python -m faustcoder.readiness --repo-root . --json` inventories required documentation, SHA-256 hashes and unverified approval gates. Unit tests cover missing evidence and document-presence-not-approval. This is a first slice only: it does not ingest external receipts, validate rights, enumerate 1,430 units, execute tests or make an authorization decision. Run CI before claiming tests passed. Next implement a typed evidence manifest, immutable receipt verification, machine-readable exceptions and qualified pilot criteria under the canonical gates.
+
+## QR-09 manifest contract and implementation plan
+
+Journey: an operator supplies an external, scope-bound evidence index and gets
+one exception queue without copying source data into Git. Workflow: parse strict
+JSON -> validate schema -> open beneath an explicit evidence root without following
+symlinks -> verify SHA-256 -> classify missing, invalid, duplicate or wrong-scope
+references -> report next actions. States: UNVERIFIED -> INTEGRITY_VERIFIED ->
+SEMANTIC_REVIEW_REQUIRED; any invalid input -> BLOCKED. Integrity verification
+never transitions to AUTHORIZED. No manifest assertion can grant training.
+
+Contract: readiness-manifest.schema.json version 1, exact operating mode and
+SHA-256 scope binding, immutable receipt references with unique IDs, paths and
+content digests. Reject unknown fields, duplicate JSON keys, nonfinite numbers,
+absolute/traversal paths, symlinks, special files and oversized inputs. Every
+reference remains a claim until a gate-specific semantic/authority verifier is
+integrated. Missing evidence is NOT_VERIFIED; bad evidence is INVALID.
+
+Implementation: add typed frozen reference/manifest records and an fd-relative
+no-follow reader; integrate optional --manifest/--evidence-root/--scope-digest/
+--mode arguments into the existing read-only command. Emit exception-only output,
+receipt hashes and concrete actions. Do not expose private receipt bytes.
+Acceptance: positive integrity checks plus malformed, duplicate, tampering,
+symlink, traversal, wrong-scope, mode and self-declared PASS refusal tests.
+Task: QR-09. New contract is an advisory index, not an admission artifact.
+
+## QR-03 accounting slice plan
+
+Reuse the existing batch1_review output contract. Read its external binding by
+an operator-pinned exact-byte SHA-256, verify every indexed payload through the
+QR-09 no-follow reader, then reconcile unique candidate units, one packet per
+unit, blob identities, family IDs, short collision groups and collective support
+sets. Expected full scope is 1,430/110/510/23/19; disagreement blocks accounting.
+Produce a canonical advisory source ledger plus exceptions and receipt bindings.
+Keep all items quarantined pending gate-specific eligibility checks; intact batch
+bytes do not create rights or approval. Do not change historical dispositions.
+Tests use generated metadata only: wrong counts, duplicate units/packet members,
+missing packets, stale hashes and traversal must fail closed. QR-04 remains open.
+
+## QR-02 implementation contract
+
+Validate and snapshot TaskSpec before reward execution; diagnostic calls remain
+task-free. Bind the full task digest on each run, require the same digest during
+commit, and preflight all receipt schemas/purposes/provenance before the first
+artifact write. Reject mixed diagnostic/reward suites and malformed reward
+profiles. Pass sealed native matches through immediate and deferred compiler,
+crash and signal grading; absent or mismatched native evidence stays ungraded.
+Existing binary reward, quarantine and frozen profile rules remain unchanged.
+Tests cover no-write invalid requests, changed tasks, unallowlisted profiles,
+compiler 124/125/126, stack matches and raw/wrong-source evidence. A2-PATH/EVAL-SO
+remain integration-unverified until the pinned Linux sandbox suite passes.
+
+QR-10 recipe and estimates are in the execution runbook. Null snapshot/split
+bindings prevent treating that candidate as an approved runnable training plan.

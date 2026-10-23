@@ -8,6 +8,12 @@ See [docs/VERSIONING.md](docs/VERSIONING.md).
 
 ## [Unreleased]
 
+- Validate and bind reward TaskSpec before execution and before any signal-commit artifact writes; propagate sealed native evidence and reject malformed compiler/signal provenance. Fix diagnostic routed-input budgeting, mandatory clipping checks and explicit zero-input routing from PR #113 review. Frozen reward profiles remain unchanged.
+
+- Add strict, no-follow external readiness manifest verification and hash-bound batch accounting replay. Integrity never grants authorization; semantic adapters and real-batch replay remain pending. Add a bounded, unapproved Qwen pilot recipe and execution runbook.
+
+- Preserve the canonical provisional T07 freeze route in proposed Spec 002; require final leakage certification before P3 exit or promotion.
+
 - Record seven-span bounded compiler/signal validation: 28 positive runs, five negative controls, receipt locations and preservation results. Independent production approval, 958 missing ranges and T06/T07 qualification gates remain open; TOKEN_FLOOR stays 40/provisional and T07 unfrozen.
 
 - Document the unapproved seven-span production candidate, 958 missing spans, verified source blobs, receipt locations and remaining qualification gaps. Full-inventory validation still refuses incomplete coverage; TOKEN_FLOOR stays 40/provisional and T07 remains unfrozen.
