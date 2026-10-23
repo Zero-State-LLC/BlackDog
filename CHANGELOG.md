@@ -8,6 +8,8 @@ See [docs/VERSIONING.md](docs/VERSIONING.md).
 
 ## [Unreleased]
 
+- Document explicit TPT low-pass diagnostics, actual bargraph capture and proposed dependency-supplied targets while preserving default-path and end-to-end qualification failures.
+
 - Record exact analyzer/elliptic closures, fixed-tolerance signal diagnostics and expanded candidate qualification; retain boundary, sequence-length and admission blockers. Repair dead publisher citations.
 
 - Record previously implicit stream-family wrapper joins so emitted family evidence reconstructs unchanged assignments; document a separately bound Goertzel DC diagnostic repair.

@@ -194,3 +194,5 @@ external-member counts in advisory inventory replay; unknown metadata stays
 unknown. Keep canonical admission, complete closure and independent review separate.
 
 Record stream-component wrapper joins in graph evidence and replay full active/counterfactual populations. Test the Goertzel DC repair separately from original-source qualification.
+
+Explore a separately reviewed dependency-supplied instruction contract for oversized closures. Keep original full-closure rejection and canonical qualification gates unchanged. Isolate actual meter capture from filter numerical accuracy and keep instrumented diagnostics outside production readiness authority.

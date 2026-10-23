@@ -416,3 +416,5 @@ External dependency follow-through: [verified diagnostics and remaining blockers
 The [Goertzel/family resolution](../analysis/goertzel-family-resolution-2026-10-23.md) supersedes the prior unresolved reconstruction status. Keep the DC repair a distinct source candidate; the opt-in family result is not active split evidence.
 
 [Analyzer closure qualification](../analysis/analyzer-closure-qualification-2026-10-23.md) records 206 verified receipts, the low-pass boundary failure, oversize sequence rejections and actual readiness replay.
+
+[Low-pass/meter/size checkpoint](../analysis/lowpass-meter-size-checkpoint-2026-10-23.md) distinguishes the explicit TPT alternative, controlled meter validation, remaining end-to-end failures and proposed modular targets. None clears readiness.

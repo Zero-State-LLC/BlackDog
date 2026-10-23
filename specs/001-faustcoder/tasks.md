@@ -379,3 +379,11 @@ Parallel starts after T01: T02, T05 and T09. Lanes T17 to T19, T21 and T22 run i
 - [x] Execute independent fixed-tolerance signal references above/below/at the filter transition and preserve failures.
 - [ ] Resolve low-pass 2304-Hz boundary failure and verify spectral meter semantics.
 - [ ] Resolve sequence-length suitability, rights, independent family and signed qualification blockers.
+
+### QR-10 low-pass, meter and size follow-through
+
+- [x] Reproduce low-pass direct-form failure and test explicit TPT alternative across three cutoffs.
+- [x] Capture actual meters and verify controlled-band semantics with meter-only negative references.
+- [x] Bind proposed modular targets to full dependency harnesses and check pinned token counts.
+- [ ] Resolve original direct-form and end-to-end sine-meter discrepancies.
+- [ ] Review modular task contract, independent prompt semantics, rights and complete family bindings before qualification.

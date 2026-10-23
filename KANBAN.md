@@ -593,3 +593,7 @@ Missing wrapper join evidence fixed; full active graph replays without assignmen
 ## Analyzer closure checkpoint
 
 Four standalone closures compile; 81 omissions reject. 53/54 positive numerical checks pass with one low-pass boundary failure; all 54 wrong references reject. Goertzel fits 414 tokens but remains comparison-connected/unadmitted. Four larger closures exceed 512 tokens. See [qualification](docs/analysis/analyzer-closure-qualification-2026-10-23.md).
+
+## Low-pass and meter checkpoint
+
+132 receipts verified. Explicit TPT low-pass alternative passes the bounded sweep; default direct-form failure remains. Controlled-band meter chain passes meter-specific negatives; full sine-meter comparison remains blocked. Four modular target proposals fit 106–313 tokens but require a reviewed dependency-supplied contract.

@@ -413,3 +413,7 @@ helpers, missing metadata and incomplete external closures. No gate clears.
 ### QR-10 wrapper join evidence and numerical repair
 
 Record actual stream-family wrapper joins without changing assignments. Require complete structural replay and reject missing/malformed records. Keep authored Goertzel DC repair separate from pinned source, retain fixed tolerance and failed controls, and do not infer rights or evaluation admission.
+
+### Proposed dependency-supplied diagnostic contract
+
+A modular target may be reviewed separately with exact original target spans and a hash-bound complete dependency harness. This is a new task contract proposal, not an active exception to self-contained sequence bounds. Require independent prompt semantics, complete context/source/rights binding, negative controls and full-closure family screening. Smaller targets never create independent families.
