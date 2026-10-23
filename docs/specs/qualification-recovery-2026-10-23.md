@@ -70,3 +70,17 @@ Read-only GitHub metadata and changed-file inspection (not a test run):
 | #115 | 301efd965f1e45416d9ff96ffcec2a923e40987e | yes, draft | KANBAN overlap; documentation-only recovery plan |
 
 Recommended integration order: first review #112 and #114 independent content; then #113 harness with focused, full Linux and mutation evidence; reconcile and rebase #115 after those merges; treat #76 as a separate reward-security gate, rebasing onto accepted signal.py changes; resolve #73 normative naming before merge. Do not interpret the order as approval to merge. Each changed head requires refreshed CI, reviewer disposition and updated conflict analysis. Review submissions for #113 and #73 include automated COMMENTED reviews; no approving review was returned for the inspected PRs. Combined commit statuses, review threads, full patches and current test execution remain unverified.
+
+## QR-01 patch, review-thread and workflow evidence, 2026-10-23 PT
+
+Read-only patch and review-thread retrieval completed for #73, #76, #112, #113 and #114. GitHub Actions runs on the inspected head SHAs report successful docs/spec/workflow/secret-scan checks for #73/#76/#112/#114. These four checks are not evidence of full runtime-suite success. #113's latest-head workflow result was not returned by the inspected run lookup; its PR description reports eight successful CI checks and 860 tests at head de6e3b37, but independent current-head confirmation remains open.
+
+**Blocking finding #73:** unresolved, current inline review thread PRRT_kwDOVNCMgs6ufzBB on specs/002-model-quality-hardening/spec.md:17. Review notes the proposal would silently forbid spec 001's accepted provisional T07 freeze option. Repair: preserve provisional freeze with explicit leakage caveat and scheduled re-check; require QH-02/FLOOR before P3 exit/promotion. Update spec, tasks, and traceability, then seek fresh review. Do not resolve thread before verifying correction.
+
+**Blocking finding #76:** draft and not mergeable. Patch adds TaskSpec guard at commit_signal_check and propagates task into reward grading, but only a subset of callers/tests is updated. Require explicit reward/nonreward matrix, invalid/missing TaskSpec rejection before any artifact persistence, sealed native evidence propagation, full test-suite and mutation evidence. Rebase only after #113's accepted signal.py changes; do not merge now.
+
+**#113:** new diagnostic_cases.py and diagnostic-cases.mjs, changes to signal.py/render.mjs, ADR-0008 and test coverage. Verify compiler/runtime receipt binding, all-channel comparisons, nonzero companion execution and preserved legacy profile bytes. Existing COMMENTED automated review requires reading any findings against the current head; no approving review returned. No production/reward admission.
+
+**#112/#114:** bounded tests and approved-source documentation respectively, with no inline review threads returned. Both change KANBAN.md and therefore require conflict-aware integration with #113/#115. #114's historical disposition and new approvals must remain distinct.
+
+Next verification: inspect #113 latest-head CI jobs/logs, full #113/#76 signal.py overlap, #73 exact provisional-freeze wording, and source receipts outside Git where authorized. This audit is not a substitute for executing tests.
