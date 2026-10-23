@@ -39,7 +39,9 @@ any redistributed library-source bundle; it is not included in this receipt.
 Next: review closure/host and family/split eligibility, resolve broader notice
 scope and any required native path trace, establish two cleared host repositories
 and fixed gold/labels, complete FLOOR and independent custody/development gates.
-No host or production admission. PR #110 unmerged; `TOKEN_FLOOR=40` provisional;
+No host or production admission. **OBSERVED:** PR #110 merged as `5f9986b5`;
+both `--idiom-filter-min-docs` and `--marginal-coverage` remain default-off
+(`diagnostics/batch1_review.py:528-537`); `TOKEN_FLOOR=40` provisional;
 T07 unfrozen. Prior approvals and immutable evidence remain preserved.
 
 ## Filter pair human approval recorded
@@ -55,7 +57,9 @@ Next: bind the decision into family/split review; resolve remaining source/notic
 and dependency scope; complete independent behavior qualification, full-pool and
 two-project FLOOR evidence, and independent private author/storage/access/review
 confirmation. Existing approvals are preserved; this decision grants no
-production admission. PR #110 stays unmerged; idiom filtering stays default-off,
+production admission. **OBSERVED:** PR #110 merged as `5f9986b5`; both
+`--idiom-filter-min-docs` and `--marginal-coverage` remain default-off
+(`diagnostics/batch1_review.py:528-537`),
 `TOKEN_FLOOR=40` stays provisional and T07 stays unfrozen.
 
 ## Seven files approved NOT_COPY and repository-level MIT
