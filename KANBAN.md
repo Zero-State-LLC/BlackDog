@@ -1,5 +1,21 @@
 # BlackDog implementation backlog
 
+## Qualification recovery workstream (proposed 2026-10-23)
+
+Governing spec: [qualification recovery](docs/specs/qualification-recovery-2026-10-23.md). These are planning tasks, not evidence of completion or training approval. Preserve S1-S7 and existing historical dispositions.
+
+| ID | Priority | Task | Depends on | Exit evidence | Status |
+| --- | --- | --- | --- | --- | --- |
+| QR-01 | P0 | Reconcile PR #112/#113/#114/#76/#73 and review #33; inspect overlap, review threads, SHA-bound CI and merge order | current main | PR matrix, regression and mutation results | Backlog |
+| QR-02 | P1 | Complete reward TaskSpec boundary and negative tests for #76 | QR-01 | reward/diagnostic separation and frozen profile verification | Backlog |
+| QR-03 | P0 | Generate canonical source-eligibility ledger and full 1,430-unit accounting | S1/S2 receipts | checksum, unique-unit and denominator reconciliation | Backlog |
+| QR-04 | P0 | Resolve remaining dependency/notice closures and family/leakage splits | QR-03 | independent scoped approvals and reproducible negative checks | Blocked: rights/review |
+| QR-05 | P0 | Clear two host projects and ratify fixed gold/FLOOR protocol | QR-03, QR-04 | host rights, disjoint families, gold/label receipt | Blocked: host approvals |
+| QR-06 | P0 | Establish independent private author and custody; execute FLOOR; assemble S7 dossier | QR-05 | human-only access proof, both-host metrics, PASS/FAIL/BLOCKED | Blocked: human custody |
+| QR-07 | P1 | Qualify repaired isolated Spark candidate with approved local model and checkpoint probes | operator/model approval | pinned provenance, VRAM/throughput and restore receipts | Blocked: model approval |
+| QR-08 | P1 | Implement tiered static/compiler/signal/independent evaluation reporting | QR-01, QR-02 | mutation-backed guards and immutable stage receipts | Backlog |
+
+
 ## Current milestone: qualification sprint
 
 [Ten-working-day sprint](docs/runbooks/qualification-sprint.md): one consolidated
