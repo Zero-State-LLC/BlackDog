@@ -97,3 +97,20 @@ and current public custody commitments, independently replayed T08 baseline,
 representative Spark receipts, and the exact qualified pilot snapshot. Assemble
 those hashes with this bounded recipe into one pilot decision package. Request
 actual training authorization only after technical validation; never invent it.
+
+## Diagnostic evaluation funnel
+
+`faustcoder.evaluation_funnel.evaluate` accepts one public whole-file unit from
+the canonical pinned inventory, its notice, source bytes, TaskSpec and explicit
+analytical reference provider. It verifies blob eligibility before compiling,
+then runs full-window diagnostic comparisons at 44.1/48 kHz and persists chained
+EvaluationRun stage views plus compiler/signal evidence in the caller's external
+ArtifactStore. No private holdouts are loaded. Bad source, compiler failure or
+signal failure prevents later stages; infrastructure failures are BLOCKED.
+
+The fourth stage is always `independent_replay_not_verified` until an independent
+adapter is implemented and verified. This entry point evaluates admitted public
+source-unit diagnostics, not arbitrary model-generated candidates or function
+units. It grants no reward, training permission, promotion or corpus admission.
+The fixture tests establish early-stop/lineage contracts; they do not establish
+real-corpus performance or independently replayed quality.

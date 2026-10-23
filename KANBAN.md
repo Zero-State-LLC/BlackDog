@@ -13,7 +13,7 @@ Governing spec: [qualification recovery](docs/specs/qualification-recovery-2026-
 | QR-05 | P0 | Clear two host projects and ratify fixed gold/FLOOR protocol | QR-03, QR-04 | host rights, disjoint families, gold/label receipt | Blocked: host approvals |
 | QR-06 | P0 | Establish independent private author and custody; execute FLOOR; assemble S7 dossier | QR-05 | human-only access proof, both-host metrics, PASS/FAIL/BLOCKED | Blocked: human custody |
 | QR-07 | P1 | Qualify repaired isolated Spark candidate with approved local model and checkpoint probes | operator/model approval | pinned provenance, VRAM/throughput and restore receipts | Blocked: model approval |
-| QR-08 | P1 | Implement tiered static/compiler/signal/independent evaluation reporting | QR-01, QR-02 | mutation-backed guards and immutable stage receipts | Backlog |
+| QR-08 | P1 | Implement tiered static/compiler/signal/independent evaluation reporting | QR-01, QR-02 | mutation-backed guards and immutable stage receipts | In progress: canonical rights/blob, compiler and both-rate diagnostic stages emit chained receipts and fail early; independent replay adapter and real sandbox execution pending |
 | QR-09 | P0 | Implement automated readiness report and exception-only owner queue; preserve fail-closed red gates | QR-03 | one-command evidence/blocked-action report with hashes | In progress: strict typed manifest, safe paths, scope/hash/duplicate validation and exception reporting implemented; semantic/authority adapters remain pending |
 | QR-10 | P1 | Define synthetic diagnostic and small rights-cleared pilot training lanes; reconcile canonical training gates | QR-07, QR-09 | bounded pilot plan, isolation tests and one approval packet | In progress: bounded Qwen recipe, estimates, diagnostic probe command and rollback documented; qualified snapshot/signed split and training launcher not yet supplied |
 
@@ -36,8 +36,10 @@ conflicts. No PR was merged into main. See
 - Off-host batch/approval payloads and Spark are unavailable here. The real
   denominator, qualification dossier, approved snapshot, signed T07, T08,
   representative model qualification and pilot authorization remain unverified.
-- QR-04/05/06 and the QR-08 staged reporter remain open. Harness fixes do not
-  constitute a complete evaluation funnel or an independent evaluation result.
+- QR-04/05/06 remain open. QR-08 now has a diagnostic staged reporter; the
+  independent adapter remains blocked, so it is not a qualified evaluation result.
+- QR-08 follow-up: 135 focused tests passed (one sandbox integration deselected);
+  all three funnel guard-removal mutants killed. Independent replay remains blocked.
 - Actual training: technical readiness NOT VERIFIED, authorization NOT VERIFIED.
   A recipe with null dataset/split bindings is not permission or an executable
   production training configuration. No model downloads or training ran here.

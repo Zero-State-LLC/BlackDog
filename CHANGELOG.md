@@ -8,6 +8,8 @@ See [docs/VERSIONING.md](docs/VERSIONING.md).
 
 ## [Unreleased]
 
+- Add a fail-early whole-file diagnostic evaluation funnel using canonical inventory/notice, pinned compiler and both-rate signal contracts. Chain attributable stage receipts; independent replay remains explicitly blocked and no training or promotion is granted.
+
 - Validate and bind reward TaskSpec before execution and before any signal-commit artifact writes; propagate sealed native evidence and reject malformed compiler/signal provenance. Fix diagnostic routed-input budgeting, mandatory clipping checks and explicit zero-input routing from PR #113 review. Frozen reward profiles remain unchanged.
 
 - Add strict, no-follow external readiness manifest verification and hash-bound batch accounting replay. Integrity never grants authorization; semantic adapters and real-batch replay remain pending. Add a bounded, unapproved Qwen pilot recipe and execution runbook.

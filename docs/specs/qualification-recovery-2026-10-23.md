@@ -175,3 +175,24 @@ remain integration-unverified until the pinned Linux sandbox suite passes.
 
 QR-10 recipe and estimates are in the execution runbook. Null snapshot/split
 bindings prevent treating that candidate as an approved runnable training plan.
+
+## QR-08 staged evaluator plan
+
+Journey: evaluator submits a public, rights-cleared whole-file unit and validated
+TaskSpec with explicit analytical references. Workflow: canonical pinned inventory
+and notice parsing plus blob verification -> pinned compiler -> both-rate signed
+signal diagnostics -> independent replay gate. States: SUBMITTED -> STATIC_PASS
+-> COMPILE_PASS -> SIGNAL_PASS -> INDEPENDENT_PENDING; any failure is terminal.
+No stage result authorizes training or promotes a candidate.
+
+Reuse parse_corpus, compile_source, run_signal_suite and ArtifactStore. Store one
+EvaluationRun view per executed stage, chained by immutable parents, with source,
+task and reference digests, producer/source identity, timing and failure tokens.
+No raw source or private task content enters stage summaries. A compiler failure
+must prevent rendering; a signal failure must prevent the independent stage.
+Stage four is BLOCKED until an independently verified evaluator adapter exists;
+a caller-provided PASS is never accepted. Function units remain blocked until
+reviewed-span bindings are supported by this entry point. Tests cover each early
+stop, canonical rights refusal, blob mismatch, compiler identity, both rates,
+reference failure, and missing independent replay. QR-08 remains partial until
+actual sandbox and independent evidence runs pass.
