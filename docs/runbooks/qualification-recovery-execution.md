@@ -414,3 +414,5 @@ remain outside Git, separately from the canonical recorded family graph.
 External dependency follow-through: [verified diagnostics and remaining blockers](../analysis/external-dependency-readiness-2026-10-23.md). Whole-library interface compilation does not qualify a minimal closure. Preserve failed Goertzel N=16 numerical checks and unverified marginal-family reconstruction; neither permits a readiness override.
 
 The [Goertzel/family resolution](../analysis/goertzel-family-resolution-2026-10-23.md) supersedes the prior unresolved reconstruction status. Keep the DC repair a distinct source candidate; the opt-in family result is not active split evidence.
+
+[Analyzer closure qualification](../analysis/analyzer-closure-qualification-2026-10-23.md) records 206 verified receipts, the low-pass boundary failure, oversize sequence rejections and actual readiness replay.

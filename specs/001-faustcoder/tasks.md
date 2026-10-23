@@ -371,3 +371,11 @@ Parallel starts after T01: T02, T05 and T09. Lanes T17 to T19, T21 and T22 run i
 - [x] Reproduce original Goertzel failure and validate separate stable-DC repair with fixed-tolerance negative controls.
 - [x] Emit missing wrapper join evidence, test rejection controls, and replay full active/counterfactual graphs.
 - [ ] Qualify repaired-source rights, instruction and family bindings; complete analyzer/elliptic minimal closures and numerical references.
+
+### QR-10 analyzer closure checkpoint
+
+- [x] Assemble exact-span standalone analyzer/elliptic closures and verify dual-backend compilation plus all-member omission controls.
+- [x] Screen full repaired/assembled closures and run pinned tokenizer checks without truncation.
+- [x] Execute independent fixed-tolerance signal references above/below/at the filter transition and preserve failures.
+- [ ] Resolve low-pass 2304-Hz boundary failure and verify spectral meter semantics.
+- [ ] Resolve sequence-length suitability, rights, independent family and signed qualification blockers.

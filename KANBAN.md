@@ -589,3 +589,7 @@ TOKEN_FLOOR=40 provisional; T07 unfrozen. Experimental evidence stays outside Gi
 ## Numerical and graph checkpoint
 
 Missing wrapper join evidence fixed; full active graph replays without assignment changes. Authored Goertzel DC repair passes 18 positive and 18 wrong-reference controls; original failure preserved. Source admission, analyzer/elliptic closures and reviewed split policy remain blocked.
+
+## Analyzer closure checkpoint
+
+Four standalone closures compile; 81 omissions reject. 53/54 positive numerical checks pass with one low-pass boundary failure; all 54 wrong references reject. Goertzel fits 414 tokens but remains comparison-connected/unadmitted. Four larger closures exceed 512 tokens. See [qualification](docs/analysis/analyzer-closure-qualification-2026-10-23.md).

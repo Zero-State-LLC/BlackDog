@@ -8,6 +8,8 @@ See [docs/VERSIONING.md](docs/VERSIONING.md).
 
 ## [Unreleased]
 
+- Record exact analyzer/elliptic closures, fixed-tolerance signal diagnostics and expanded candidate qualification; retain boundary, sequence-length and admission blockers. Repair dead publisher citations.
+
 - Record previously implicit stream-family wrapper joins so emitted family evidence reconstructs unchanged assignments; document a separately bound Goertzel DC diagnostic repair.
 
 - Intersect recorded dependency permissions in outside-family readiness and expose unresolved metadata; preserve numerical and family-reconstruction failures in external-dependency diagnostics.
