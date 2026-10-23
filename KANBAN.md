@@ -18,11 +18,43 @@ separately, and T07/T10 remain Backlog.
 | Sprint card | Status | Exit |
 | --- | --- | --- |
 | Batch 1 evidence and hash-format review | Done: #99, `ce8087a` | Eight CI checks; 771 tests passed |
-| S1 scope and owner assignment | Technical preparation complete; confirmations pending | 1,430 units / 110 packets / 510 blobs verified; packet/bindings verified; Prabu is an AI agent; seven-contract reviewer/custodian named; remaining assignments, kickoff, coverage and private custody pending |
-| S2 source/leakage and S3 closure/behavior | Owner approved R2/closure packets as presented; Danny approved seven contracts. Seven exact R3b files approved NOT_COPY/repository-MIT; exact filter pair approved COPY/shared lineage; .default/gain imported-notice handling approved (no host admission); bounded dependency/behavior checks pass; historical R2: 18 REJECT / 156 BLOCKED / 0 retained; no production admission | Hash-bound per-unit decisions, approved closures/contracts and reproducible positive/negative receipts |
+| S1 scope and owner assignment | Technical preparation complete; confirmations pending | 1,430 units / 110 packets / 510 blobs verified; packet/bindings verified; Prabu is an AI agent; seven-contract reviewer/custodian named; custody arrangements and owner independence waiver recorded; remaining coverage and separate-task evidence pending |
+| S2 source/leakage and S3 closure/behavior | Owner approved R2/closure packets as presented; Danny approved seven contracts. Seven exact R3b files approved NOT_COPY/repository-MIT; exact filter pair approved COPY/shared lineage; .default/gain imported-notice handling and both bounded imported closures approved; 7 accepted bounded closures / 167 unresolved, not retained units; bounded dependency/behavior checks pass; historical R2: 18 REJECT / 156 BLOCKED / 0 retained; no production admission | Hash-bound per-unit decisions, approved closures/contracts and reproducible positive/negative receipts |
 | S4 two-project hosts and S5 FLOOR | Blocked on approved inputs | Ratified gold/label protocol and complete measurement result |
-| S6 development/custody | Danny named human custodian/task reviewer; independent author, actual storage and human-only access pending | Document private custody/review channel; disjoint reviewed tasks and custody commitments still required |
+| S6 development/custody | Owner-attested sole-human iPhone custody/access and independence waiver recorded (not independent); separate-task creation/review NOT_ESTABLISHED | Preserve recorded custody arrangements and waiver; disjoint reviewed tasks and permitted public exclusion evidence still required |
 | S7 qualification dossier | Planned after S2–S6 | One reviewed delivery; explicit pass or blocked milestone decision |
+
+## Two bounded imported closures approved; qualification remains blocked
+
+**Done: exact closure decision receipts. S4/S5 remain blocked on reviewed inputs.**
+Danny directly approved `.default.dsp` and `gain.dsp` bounded closures, including
+the pinned compiler import in the tested configurations.
+[Exact bindings, evidence and remaining gates](docs/runbooks/qualification-sprint.md#two-bounded-imported-closures-approved--2026-10-22).
+
+Receipt outside Git:
+`/Users/appliedalchemylabs/Documents/Codex/blackdog-s2-backups/two-imported-closure-approval-20261023T035922Z/`.
+Manifest SHA-256:
+`6a2be59588f63f5cb78a5e787195a365d2d1b17efb32055cfaecd2ce400a94b3`.
+Three payloads and matching local backup verified; no new off-host verification.
+Preserve original packets, declared imports and existing notices.
+
+Closure overlay: **7 accepted / 167 unresolved** of 174 (five owner-confirmed
+delegated-agent source-local reviews, two direct-owner imported approvals).
+Original 18 REJECT / 156 BLOCKED source dispositions are unchanged; these counts
+are not retention or independent-review counts.
+
+Next: exact retained-unit selection and remaining applicable closures; full
+1,430-unit / 23-short-group / 19-collective-set source/family adjudication;
+reviewed two-project hosts, windows and fixed gold labels; ratified FLOOR;
+disjoint development/candidate-split checks, separate-task public evidence and
+final integration. Custody arrangements and the owner waiver stand; independence
+is waived, not passed. The seven public-contract reviews are not separate tasks.
+No experimental collective variant is adopted.
+
+**No host, gold, retention or production admission; TOKEN_FLOOR=40 provisional;
+T07 unfrozen.** This card supersedes older pending closure/native-trace/custody
+wording below. PR #110 is already squash-merged at
+`5f9986b5f4be8cc77719050085673df6603a80ac`; older unmerged references are historical.
 
 ## Imported-notice handling approved; host gates remain open
 
