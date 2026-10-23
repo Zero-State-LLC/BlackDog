@@ -8,6 +8,8 @@ See [docs/VERSIONING.md](docs/VERSIONING.md).
 
 ## [Unreleased]
 
+- Replay saved public signal evidence inside readiness with exact bindings, bounded affine checks and preserved admission blockers.
+
 - Add CPU-only, exact-Qwen-tokenizer preflight for public instruction candidates, with pinned assets, canonical loss-mask encoding and readiness replay. Tokenizer success clears no admission or training gates.
 
 - Replay bounded public source/behavior/closure/notice receipts in readiness and derive provenance-bound instruction candidates. Preserve import corrections and separate MIT/LGPL notices; keep pair qualification and training authorization blocked pending canonical evidence.

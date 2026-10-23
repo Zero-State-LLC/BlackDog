@@ -170,3 +170,10 @@ Implement ADR-0010 using the strict public-pair-tokenizer descriptor and optiona
 CPU tokenizer dependency. Reuse the canonical completion-only encoder and pin
 existing approved Qwen assets. Re-execute from readiness, keep raw text out of
 reports, and remove only the tokenizer subcheck after exact binding verification.
+
+### Saved public signal evidence
+
+QR-03: add a bounded affine sample replayer with an explicit strict descriptor,
+paired to the original public-pair bundle and executed closure-contract hashes.
+Use no-follow reads and no archived execution. Feed advisory results into
+readiness without clearing compiler qualification or admission requirements.

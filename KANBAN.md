@@ -546,3 +546,11 @@ expected-zero cases guarded by runner-executed nonzero companions. Legacy reward
 profile digests remain frozen; enabled cases are diagnostic-only. Validation and
 remaining CI status belong to the separate review PR. No host/production admission;
 TOKEN_FLOOR=40 provisional; T07 unfrozen. Experimental evidence stays outside Git.
+
+## QR-03 saved-signal adapter
+
+- Implemented strict public sample descriptors and advisory readiness replay.
+- Reverified 98 cases / 554 states / 14 mutant rejections from 506 referenced
+  payloads; source archives and samples remain outside Git.
+- Compiler provenance, independent semantics, canonical admission and signed
+  partitions remain pending; no training authorization.

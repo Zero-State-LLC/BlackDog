@@ -332,3 +332,9 @@ Parallel starts after T01: T02, T05 and T09. Lanes T17 to T19, T21 and T22 run i
   with the existing offline Spark Transformers tokenizer.
 - [ ] Bind remaining runtime and prompt qualification to canonical admitted
   Examples and signed disjoint partitions before training.
+
+### QR-03 saved-signal replay
+
+- [x] Add schema, synthetic valid/invalid fixtures and bounded affine replay.
+- [x] Connect replay to readiness while preserving qualification blockers.
+- [x] Test binding, coverage, numerical and formula failures; replay public evidence.

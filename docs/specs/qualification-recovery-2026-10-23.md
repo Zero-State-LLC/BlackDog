@@ -340,3 +340,28 @@ encoding digests and runtime version, never raw tokens, source or personal data.
 The readiness adapter re-executes preflight instead of trusting a PASS claim.
 Task: QR-10; ship optional tokenizer dependency, CLI, readiness integration and
 negative/mutation tests. No training gate is cleared by this preflight.
+
+## QR-03 saved-signal replay adapter
+
+Journey: make preserved public numerical evidence reproducible inside readiness.
+Workflow: replay the public-pair bundle, bind each executed contract to its local
+closure and approved prompt fields, verify explicit plan/WASM/input/output refs,
+and recompute affine formulas over finite little-endian float32 saved samples.
+States: UNVERIFIED -> SAVED_SIGNAL_VERIFIED_NOT_QUALIFIED; malformed or mismatching
+inputs -> INVALID. No compiler, WASM, archived script or formula code executes.
+
+Contract: `public-pair-signal.schema.json` binds scope, public-pair descriptor and
+explicit case references. Require every selected unit at both approved rates,
+three sweep probes, three initialization probes and one rejected mutant probe.
+Reject duplicates, missing coverage, non-finite or oversized data, unsafe paths,
+unknown units, changed contracts, nonlinear formulas and weakened tolerances.
+Each state has 4,096 frames; compare with abs 2e-6 plus rel 1e-5 and reject a
+wrong-reference offset of 0.03125. Reports include hashes and aggregate counts,
+never raw samples, source or personal receipt contents. Saved numerical evidence
+does not authenticate compiler execution, establish independent semantics,
+qualify a pair, clear readiness gates or authorize training.
+
+Acceptance: positive and mutant fixtures; missing/duplicate coverage; changed
+samples, bindings, scope and formulas; NaN/Inf; unsafe formula syntax and paths;
+readiness must replay evidence and retain admission/compiler/authorization blocks.
+Real replay must reproduce the preserved 98 cases and 554 states outside Git.

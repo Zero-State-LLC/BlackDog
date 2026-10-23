@@ -133,6 +133,21 @@ def verify_manifest(manifest: EvidenceManifest, root: Path, *, mode: Mode,
         verified.append({'receipt_id': ref.receipt_id, 'gate': ref.gate,
                          'sha256': ref.sha256, 'scope_digest': ref.scope_digest,
                          'status': 'INTEGRITY_VERIFIED'})
+        if ref.gate == 'public_instruction_pair_signal':
+            from faustcoder.pair_signal import replay
+            try:
+                report = replay(data, root, scope_digest=scope_digest)
+            except (ArtifactStoreError, OSError, ValueError, TypeError, KeyError,
+                    RecursionError, SyntaxError, OverflowError):
+                blockers.append({'gate': 'instruction_pair_contract', 'receipt_id': ref.receipt_id,
+                                 'status': 'INVALID', 'code': 'invalid_saved_signal',
+                                 'next_action': 'Restore exact bound public sample evidence and complete coverage'})
+                continue
+            public_reviews.append({**report, 'receipt_id': ref.receipt_id})
+            blockers.append({'gate': 'instruction_pair_contract', 'receipt_id': ref.receipt_id,
+                             'status': 'REVIEW_REQUIRED', 'code': 'saved_signal_not_qualification',
+                             'next_action': 'Complete compiler provenance, semantic review and signed admission'})
+            continue
         if ref.gate == 'public_instruction_pair_tokenizer':
             from faustcoder.pair_preflight import preflight, TokenizerRuntimeUnavailable
             try:

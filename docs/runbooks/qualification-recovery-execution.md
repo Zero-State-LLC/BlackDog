@@ -323,3 +323,30 @@ and invalid public-pair-review schema fixtures found by CI. Both new schemas now
 have fixtures. All seven targeted tokenizer mutants were detected. Spec Kit and
 changed-document Markdown lint passed. Full Linux compiler CI remains required;
 the local macOS checkout lacks the installed Faust worker and Linux sandbox.
+
+## Saved-signal readiness replay
+
+Reference `public-pair-signal.schema.json` with gate
+`public_instruction_pair_signal` in the existing readiness manifest. It binds the
+original public-pair descriptor and explicit plan, corrected contract, WASM,
+input/output float32 and (for negative cases) mutant-source files. Keep these
+public payloads outside Git. The adapter does not extract archives or run code.
+
+Required coverage per unit: two rates, three sweep probes, three initialization
+probes and one mutant alternating probe. Plans must retain identical states
+across rates/probes within each category. Fixed-size finite samples are compared
+against the approved affine formula, with unchanged tolerances and a deliberately
+wrong reference. A caller-supplied PASS never substitutes for replay.
+
+Result `SAVED_SIGNAL_VERIFIED_NOT_QUALIFIED` is advisory: it preserves every
+admission, compiler/signal qualification, semantic and authorization blocker.
+WASM/source hashes establish bindings, not proof of execution. Labels in plans
+remain recorded claims. The existing default import correction uses its exact
+preserved executed-contract wording and closure hash; original files stay intact.
+
+OBSERVED: the readiness adapter reproduced 98 cases, 554 states and all 14 mutant
+rejections, rechecking 506 explicitly referenced payloads after archive integrity
+verification. The local report is `blackdog-signal-readiness.json`, outside Git.
+255 focused regression checks and all schema metaschemas/mirrors passed. All
+eight targeted mutations were caught, including altered formula/source bindings,
+numerical outcomes, wrong-reference rejection, nonfinite data and duplicate cases.
