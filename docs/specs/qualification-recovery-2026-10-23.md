@@ -365,3 +365,22 @@ Acceptance: positive and mutant fixtures; missing/duplicate coverage; changed
 samples, bindings, scope and formulas; NaN/Inf; unsafe formula syntax and paths;
 readiness must replay evidence and retain admission/compiler/authorization blocks.
 Real replay must reproduce the preserved 98 cases and 554 states outside Git.
+
+## QR-03/QR-10 recorded-family feasibility
+
+Journey: distinguish missing signed membership from an impossible partition of
+selected candidates. Workflow: replay public-pair bindings, hash-check the recorded
+accounting binding, full ledger, family map and joining edges, reconstruct every
+supplied connected component, and match selected source hashes and family labels.
+State: UNVERIFIED -> RECORDED_GRAPH_REPLAYED -> PARTITION_INFEASIBLE when selected
+units occupy fewer than two families, otherwise PARTITION_UNRESOLVED. Neither
+state clears signed, project/lineage or admission requirements.
+
+Contract: `public-pair-family.schema.json` references explicit public files with
+the same scope. Reject missing/duplicate identities, unknown edge endpoints,
+changed selected sources, inconsistent family labels, mismatched components,
+unsafe paths and unbounded graphs. Structural replay does not rerun similarity
+measurements or approve graph edits. A collective join is not a COPY judgment.
+Report selected groups and outside-family inventory counts without proposing
+unauthorized partitions. Tests cover forged splits, missing joins, graph bounds,
+source drift and readiness preserving all qualification and authorization gates.

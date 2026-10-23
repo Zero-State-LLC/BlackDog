@@ -8,6 +8,8 @@ See [docs/VERSIONING.md](docs/VERSIONING.md).
 
 ## [Unreleased]
 
+- Reconstruct recorded public family joins in readiness and report infeasible single-family partitions without granting admission.
+
 - Replay saved public signal evidence inside readiness with exact bindings, bounded affine checks and preserved admission blockers.
 
 - Add CPU-only, exact-Qwen-tokenizer preflight for public instruction candidates, with pinned assets, canonical loss-mask encoding and readiness replay. Tokenizer success clears no admission or training gates.

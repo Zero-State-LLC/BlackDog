@@ -133,6 +133,21 @@ def verify_manifest(manifest: EvidenceManifest, root: Path, *, mode: Mode,
         verified.append({'receipt_id': ref.receipt_id, 'gate': ref.gate,
                          'sha256': ref.sha256, 'scope_digest': ref.scope_digest,
                          'status': 'INTEGRITY_VERIFIED'})
+        if ref.gate == 'public_instruction_pair_family':
+            from faustcoder.pair_family import review
+            try:
+                report = review(data, root, scope_digest=scope_digest)
+            except (ArtifactStoreError, OSError, ValueError, TypeError, KeyError, RecursionError):
+                blockers.append({'gate': 'family_disjoint_split', 'receipt_id': ref.receipt_id,
+                                 'status': 'INVALID', 'code': 'invalid_recorded_family_graph',
+                                 'next_action': 'Restore exact graph, ledger and source bindings'})
+                continue
+            public_reviews.append({**report, 'receipt_id': ref.receipt_id})
+            blockers.append({'gate': 'family_disjoint_split', 'receipt_id': ref.receipt_id,
+                             'status': 'BLOCKED' if report['status'] == 'PARTITION_INFEASIBLE' else 'REVIEW_REQUIRED',
+                             'code': 'single_recorded_family' if report['status'] == 'PARTITION_INFEASIBLE' else 'unsigned_partition',
+                             'next_action': 'Qualify additional independent project/family sources; preserve existing joins and obtain signed membership'})
+            continue
         if ref.gate == 'public_instruction_pair_signal':
             from faustcoder.pair_signal import replay
             try:

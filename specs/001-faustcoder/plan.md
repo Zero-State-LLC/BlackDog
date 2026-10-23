@@ -177,3 +177,10 @@ QR-03: add a bounded affine sample replayer with an explicit strict descriptor,
 paired to the original public-pair bundle and executed closure-contract hashes.
 Use no-follow reads and no archived execution. Feed advisory results into
 readiness without clearing compiler qualification or admission requirements.
+
+### Recorded-family feasibility
+
+Replay the complete supplied joining forest and collective hyperedges, bind its
+identities to the recorded source hashes and selected public pairs, then surface
+single-family infeasibility inside readiness. Never edit detector defaults or
+interpret source NOT_COPY decisions as permission to remove lineage joins.

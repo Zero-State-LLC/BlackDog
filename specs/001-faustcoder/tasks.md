@@ -338,3 +338,9 @@ Parallel starts after T01: T02, T05 and T09. Lanes T17 to T19, T21 and T22 run i
 - [x] Add schema, synthetic valid/invalid fixtures and bounded affine replay.
 - [x] Connect replay to readiness while preserving qualification blockers.
 - [x] Test binding, coverage, numerical and formula failures; replay public evidence.
+
+### QR-03 family feasibility
+
+- [x] Add strict descriptor, component reconstruction and negative tests.
+- [x] Wire a specific partition blocker into readiness and replay public evidence.
+- [x] Record fresh isolated Spark diagnostics and the remaining admission inputs.

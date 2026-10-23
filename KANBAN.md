@@ -554,3 +554,12 @@ TOKEN_FLOOR=40 provisional; T07 unfrozen. Experimental evidence stays outside Gi
   payloads; source archives and samples remain outside Git.
 - Compiler provenance, independent semantics, canonical admission and signed
   partitions remain pending; no training authorization.
+
+## QR-03 recorded-family feasibility
+
+- Reconstructed all 1,449 recorded identities and 12 components; seven selected
+  candidates occupy one family. Readiness now reports the specific split blocker.
+- Fresh Spark checks passed seven native compiles, 42 positive runs and 14
+  wrong-reference controls; 63 receipt hashes verified locally.
+- 117 outside-family inventory units remain unqualified. No admission, signed
+  partition, independent semantic approval or training authorization inferred.

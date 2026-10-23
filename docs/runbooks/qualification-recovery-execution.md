@@ -350,3 +350,26 @@ verification. The local report is `blackdog-signal-readiness.json`, outside Git.
 255 focused regression checks and all schema metaschemas/mirrors passed. All
 eight targeted mutations were caught, including altered formula/source bindings,
 numerical outcomes, wrong-reference rejection, nonfinite data and duplicate cases.
+
+## Recorded family and fresh diagnostic follow-through
+
+The family descriptor binds the public pair bundle, accounting binding, full
+ledger, family map and recorded edges. Readiness reconstructs the graph and emits
+`single_recorded_family` when selected candidates cannot occupy disjoint families.
+Do not delete collective joins to make a split possible. The preserved accounting
+replays 1,449 identities, 1,430 candidates and 12 components; the seven selected
+units occupy one family. The 117 other inventory units require separate source,
+rights, semantic and behavioral qualification before partition consideration.
+
+Fresh isolated Spark diagnostics at implementation revision `43aaa6a` passed
+seven native compiles, 42 positive signal runs and 14 wrong-reference rejection
+controls at both rates. All 63 receipt files were hash-verified locally; signal
+reproducibility digests and compiler receipt schemas were checked. This bounded
+active/default/transition coverage is not complete contract coverage or an
+independent semantic approval. Evidence and raw public sources remain outside Git.
+
+Remaining inputs are canonical T05 admission, independently qualified prompt
+semantics, additional independent project/family candidates and signed T07
+membership, followed by the applicable baseline, task-bound reward and environment
+readiness evidence. Existing owner direction remains no admission, provisional
+TOKEN_FLOOR=40 and T07 unfrozen. Diagnostics do not authorize training.
