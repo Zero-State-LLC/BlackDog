@@ -254,3 +254,26 @@ malformed JSON, bounds, source binding, no overwrite and symlink refusals.
 Task: QR-10 preparation only. Source/closure semantic qualification, compiler and
 signal receipts, instruction-pair definition, baseline, environment, model and
 owner authorization are still required before an actual training launcher runs.
+
+## QR-10 completion-only batch contract
+
+Journey: turn explicitly supplied prompt/target pairs into bounded causal-model
+batches. Workflow: validate immutable pair bindings, tokenize prompt and target
+separately without automatic special tokens, append one EOS, then right-pad
+independent example rows. State: pair to encoded diagnostic input, with no
+training state transition or semantic/rights approval.
+
+Contract: `faustcoder.sft_batch` masks all prompt and padding labels with -100;
+target tokens and EOS remain supervised. Labels use the causal-model unshifted
+convention, so the model shifts labels once internally. No packing, truncation,
+implicit chat template or cross-example concatenation is permitted. Every row
+requires nonempty prompt/target token sequences, in-vocabulary integer IDs and
+matching SHA-256 target binding. Bounds are at most 512 tokens and 28 examples,
+matching the bounded pilot recipe. EOS in content and any tokenizer automatic
+special-token insertion are refused or explicitly disabled.
+
+Acceptance: `tests/test_sft_batch.py` covers the actual shifted-loss positions,
+EOS-as-padding, independent rows, no silent target truncation, tampering, invalid
+IDs/special tokens, malformed examples, determinism and batch/sequence bounds.
+Task: QR-10 infrastructure, synthetic fixtures only. The encoder validates
+representation, not the correctness or permission of an instruction pair.

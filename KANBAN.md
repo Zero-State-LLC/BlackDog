@@ -15,7 +15,7 @@ Governing spec: [qualification recovery](docs/specs/qualification-recovery-2026-
 | QR-07 | P1 | Qualify repaired isolated Spark candidate with approved local model and checkpoint probes | operator/model approval | pinned provenance, VRAM/throughput and restore receipts | Blocked: Spark unavailable here; approved pinned Qwen candidate recorded, formal representative replay pending |
 | QR-08 | P1 | Implement tiered static/compiler/signal/independent evaluation reporting | QR-01, QR-02 | mutation-backed guards and immutable stage receipts | In progress: canonical rights/blob, compiler and both-rate diagnostic stages emit chained receipts and fail early; independent replay adapter and real sandbox execution pending |
 | QR-09 | P0 | Implement automated readiness report and exception-only owner queue; preserve fail-closed red gates | QR-03 | one-command evidence/blocked-action report with hashes | In progress: typed integrity checks plus canonical signed-snapshot replay/export implemented; T07/family gates require an external trusted key and exact scope; other semantic/authority adapters remain pending |
-| QR-10 | P1 | Define synthetic diagnostic and small rights-cleared pilot training lanes; reconcile canonical training gates | QR-07, QR-09 | bounded pilot plan, isolation tests and one approval packet | In progress: bounded Qwen recipe and signed-snapshot train/development preparation implemented; real qualified snapshot, instruction-pair contract and authorized training launcher remain pending |
+| QR-10 | P1 | Define synthetic diagnostic and small rights-cleared pilot training lanes; reconcile canonical training gates | QR-07, QR-09 | bounded pilot plan, isolation tests and one approval packet | In progress: bounded recipe, signed-snapshot source preparation and completion-only batch encoder implemented; qualified instruction pairs, real snapshot/model replay and authorized launcher remain pending |
 
 ## Recovery implementation checkpoint
 
@@ -66,6 +66,18 @@ Spec Kit and changed-document lint pass. Fresh-head CI remains required after
 publication. No real off-host source snapshot was consumed and no training ran.
 The preparation manifest reports remaining qualification/authorization blockers;
 source-only JSONL does not supply the pending instruction-pair contract.
+
+## Completion-only batch checkpoint
+
+OBSERVED: completion-only encoding passed 252 related regressions, then 45
+final focused checks after adding defensive tokenizer-buffer copying. Eight
+targeted mutants were killed across masking, EOS, target integrity, length,
+special-token, duplicate-ID and causal-boundary guards. Spec Kit and changed-doc
+lint pass. The bounded proposal now declares the encoding, right padding,
+no packing and rejection of oversized examples. No model was loaded or trained;
+semantic instruction-pair qualification and training authorization remain open.
+Published preparation head `40dbba7` passed the complete CI runtime suite:
+1,026 tests in 236.82 seconds. Fresh encoding-head CI is still required.
 
 ## Current milestone: qualification sprint
 

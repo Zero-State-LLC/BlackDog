@@ -199,3 +199,38 @@ preparation unused; no upstream evidence, source, model or environment is modifi
 Published semantic head `0cc1a0c` passed all four workflow runs, including 1,000
 runtime tests in 391.14 seconds. This is engineering CI evidence, not source
 admission or permission for an actual training run.
+
+## Completion-only batch encoding
+
+`faustcoder.sft_batch.encode_batch` implements the recipe's `completion-only.v1`
+encoding for explicit `SupervisedExample` values: example_id, prompt, target and
+the exact UTF-8 target's `sha256:` digest. It uses an explicitly supplied local
+tokenizer, with `add_special_tokens=False`, and tokenizes prompt and target
+separately. The resulting token boundary is part of the contract, even when
+tokenizing the concatenated strings would produce different IDs. No implicit
+chat template is applied; this codec targets the pilot's base-model prompts.
+
+The immutable result supplies input_ids, attention_mask and labels. A causal
+model receives labels unchanged and shifts them once internally. Prompt and
+right-padding labels are -100; target and final EOS labels are supervised. EOS
+may also be the explicitly configured padding ID, but genuine EOS labels remain
+supervised. EOS/padding IDs inside content are refused. Vocabulary, tokenizer
+and model identity must be verified through the caller's model manifest.
+
+The builder never packs examples, truncates prompts/targets, invents an
+instruction or checks semantic correctness. It rejects sequences over 512 tokens
+and batches over 28 examples. The recipe's microbatch remains one. A production
+pair must separately bind its prompt provenance and qualified target Example,
+and pass compiler/signal checks. A matching target hash proves integrity only.
+The source-preparation command still reports `instruction_pair_contract` because
+this representation codec cannot establish those semantic/provenance facts.
+
+Run the portable synthetic representation checks without Torch or model access:
+
+```bash
+python -m pytest tests/test_sft_batch.py
+```
+
+These checks cover labels and masking only. They do not establish model
+compatibility, loss convergence, GPU memory use, checkpoint equality or training
+authorization. Reuse the preserved Spark environment for those later probes.

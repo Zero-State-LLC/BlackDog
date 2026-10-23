@@ -8,6 +8,8 @@ See [docs/VERSIONING.md](docs/VERSIONING.md).
 
 ## [Unreleased]
 
+- Add immutable completion-only causal-model batches with prompt/padding loss masking, explicit EOS, target hash binding, fixed pilot bounds and no truncation or packing. Synthetic tests verify shifted label positions; production pair qualification and training remain gated.
+
 - Prepare reproducible bounded pilot source partitions from externally trusted signed public snapshots. Preserve notices/provenance, exclude holdout examples, refuse truncation and overwrites, and retain explicit qualification/training blockers.
 
 - Replay canonical signed-snapshot semantics in readiness through a bounded, read-only public artifact view and independently supplied custodian public key. Add strict run-scope/bundle contracts and an exporter that preflights existing signatures and emits the next replay command. Only signed T07 and family-separation gates can clear; training authorization stays separate.
