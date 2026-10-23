@@ -1,0 +1,4 @@
+# Public Qwen tokenizer asset SHA-256 digests, not credentials.
+# Exact historical findings only; retain generic-api-key detection elsewhere.
+78f73e475ba8faa119a8d6aab194b177afe0c029:faustcoder/pair_preflight.py:generic-api-key:21
+78f73e475ba8faa119a8d6aab194b177afe0c029:faustcoder/pair_preflight.py:generic-api-key:22
