@@ -563,3 +563,12 @@ TOKEN_FLOOR=40 provisional; T07 unfrozen. Experimental evidence stays outside Gi
   wrong-reference controls; 63 receipt hashes verified locally.
 - 117 outside-family inventory units remain unqualified. No admission, signed
   partition, independent semantic approval or training authorization inferred.
+
+## QR-10 outside-family inventory
+
+- Replayed all 117 source hashes and the accounting-bound candidate ledger.
+- Twelve self-contained definitions passed bounded diagnostics and tokenization;
+  one attempted helper alias failed native compilation and remains blocked.
+- All four evaluation-eligible aliases have proposed large-family dependencies;
+  113 inventory rows remain training-only. Readiness reports inventory qualification
+  separately from the selected-family split blocker. No admission or T07 freeze.

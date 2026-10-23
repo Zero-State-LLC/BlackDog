@@ -344,3 +344,9 @@ Parallel starts after T01: T02, T05 and T09. Lanes T17 to T19, T21 and T22 run i
 - [x] Add strict descriptor, component reconstruction and negative tests.
 - [x] Wire a specific partition blocker into readiness and replay public evidence.
 - [x] Record fresh isolated Spark diagnostics and the remaining admission inputs.
+
+### QR-10 outside-family review
+
+- [x] Bind complete inventory and outside-family source bytes to accounting.
+- [x] Test source/population tampering and preserve eligibility boundaries.
+- [x] Record bounded diagnostics and tokenizer checks for self-contained definitions.

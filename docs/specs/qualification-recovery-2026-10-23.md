@@ -384,3 +384,17 @@ measurements or approve graph edits. A collective join is not a COPY judgment.
 Report selected groups and outside-family inventory counts without proposing
 unauthorized partitions. Tests cover forged splits, missing joins, graph bounds,
 source drift and readiness preserving all qualification and authorization gates.
+
+## QR-10 outside-family inventory triage
+
+Extend the family descriptor with an optional complete candidate inventory and
+explicit outside-family source references. Require the inventory bytes to match
+the existing accounting binding and its population/source hashes to match the
+full ledger. Every outside-family source must be supplied exactly once. Classify
+only simple literal definitions, primitive aliases, namespace aliases and other
+aliases; unsupported definitions remain unresolved. Record inventory eligibility
+separately from admission and flag proposed dependencies in selected families.
+Dependency lists remain unverified overapproximations, not new family edges.
+Never promote training-only definitions into evaluation or infer qualification
+from a short source, successful diagnostic, or lack of recorded dependencies.
+Tests must reject rebound inventories, altered sources and incomplete selections.

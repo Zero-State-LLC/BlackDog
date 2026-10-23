@@ -17,3 +17,15 @@ similarity measurements or canonical family digest derivation. Collective joins
 remain intact and do not imply COPY adjudication. Outside-family inventory is
 not qualified data. Multiple components alone do not establish project/lineage
 separation, admission or signed partition membership. No readiness gate clears.
+
+## Outside-family inventory follow-through
+
+An optional descriptor extension binds the complete candidate ledger to its
+original accounting hash, with exact source references for every outside-family
+unit. Inventory bytes may be supplied as at most four ordered bounded parts;
+the concatenated bytes must match the original hash. Individual file limits
+remain unchanged. Replay verifies all candidate identities and source hashes,
+then reports definition categories and recorded eligibility. Proposed dependency
+memberships are flagged without promoting them into verified closure or new
+family edges. `frac` is not in the narrow primitive allowlist: its standalone
+native diagnostic produced `unbound_symbol`, consistent with a library helper.

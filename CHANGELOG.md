@@ -8,6 +8,8 @@ See [docs/VERSIONING.md](docs/VERSIONING.md).
 
 ## [Unreleased]
 
+- Bind outside-family inventory and source definitions to readiness; expose training-only eligibility and unresolved alias dependencies without granting admission.
+
 - Reconstruct recorded public family joins in readiness and report infeasible single-family partitions without granting admission.
 
 - Replay saved public signal evidence inside readiness with exact bindings, bounded affine checks and preserved admission blockers.

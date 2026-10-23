@@ -143,6 +143,10 @@ def verify_manifest(manifest: EvidenceManifest, root: Path, *, mode: Mode,
                                  'next_action': 'Restore exact graph, ledger and source bindings'})
                 continue
             public_reviews.append({**report, 'receipt_id': ref.receipt_id})
+            if 'outside_inventory' in report:
+                blockers.append({'gate': 'instruction_pair_contract', 'receipt_id': ref.receipt_id,
+                                 'status': 'REVIEW_REQUIRED', 'code': 'outside_inventory_not_qualified',
+                                 'next_action': 'Review dependency closures and prompt semantics; preserve inventory eligibility and qualify independent evaluation sources'})
             blockers.append({'gate': 'family_disjoint_split', 'receipt_id': ref.receipt_id,
                              'status': 'BLOCKED' if report['status'] == 'PARTITION_INFEASIBLE' else 'REVIEW_REQUIRED',
                              'code': 'single_recorded_family' if report['status'] == 'PARTITION_INFEASIBLE' else 'unsigned_partition',

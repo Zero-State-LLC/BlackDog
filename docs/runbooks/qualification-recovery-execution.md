@@ -373,3 +373,29 @@ semantics, additional independent project/family candidates and signed T07
 membership, followed by the applicable baseline, task-bound reward and environment
 readiness evidence. Existing owner direction remains no admission, provisional
 TOKEN_FLOOR=40 and T07 unfrozen. Diagnostics do not authorize training.
+
+### Outside-family inventory findings
+
+All 117 original source hashes were recovered and matched. Reserializing the
+archived candidate ledger reproduced the later accounting input hash exactly;
+no metadata changes were needed. The optional inventory adapter replays that
+bound ledger and all 117 sources. Do not substitute the earlier source-index
+file: its bytes did not match the later accounting hash and it is not used by
+this extension.
+
+The pool contains nine literal definitions, three primitive aliases, 77 dependency
+aliases and 28 namespace aliases. Inventory marks 113 training-only and four
+eligible for evaluation. All four evaluation candidates have proposed dependencies
+in the selected large family; these alias spans do not establish independent
+implementation lineage. In total, 70 rows have such proposed dependencies.
+
+An isolated Spark run exercised 13 proposed simple definitions in explicit
+synthetic harnesses. Twelve passed native compilation, 24 positive signal runs
+and 24 wrong-reference rejection controls. `decimal = frac` failed native
+compilation with `unbound_symbol` and remains dependency-blocked. All 61 receipt
+hashes were checked locally, along with receipt schemas and signal digests.
+The twelve passing draft instruction pairs fit the pinned tokenizer limit
+(maximum 81 tokens including EOS). Targets preserve original source bytes;
+harness hashes are recorded separately. Nine are trivial constants: these checks
+do not establish useful dataset diversity, independent semantic approval or
+canonical admission. Training-only eligibility remains unchanged.

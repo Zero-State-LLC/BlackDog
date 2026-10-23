@@ -108,6 +108,15 @@ def review(data: bytes, root: Path, *, scope_digest: str) -> dict:
         require(uid in ledger and 'sha256:' + hashes[uid] == pair['target_digest'], 'selected source mismatch')
         selected.setdefault(families[uid], []).append(uid)
     outside = sum(row['family'] not in selected for row in ledger.values())
+    inventory_review = None
+    if 'outside_inventory' in value:
+        extra = value['outside_inventory']
+        raw = b''.join(read(ref) for ref in extra['inventory_parts'])
+        require(digest(raw) == binding.get('input_hashes', {}).get('candidate-ledger.json'),
+                'inventory differs from accounting binding')
+        source_refs = unique_rows(extra['sources'])
+        inventory_review = inspect_inventory(loads_strict(raw), families, hashes, set(selected),
+                                             {uid: read(row['source']) for uid, row in source_refs.items()})
     infeasible = len(selected) < 2
     return {**public, 'kind': 'public-pair-family.v1', 'descriptor_sha256': digest(data),
             'public_pair_descriptor_sha256': digest(pair_raw),
@@ -120,7 +129,56 @@ def review(data: bytes, root: Path, *, scope_digest: str) -> dict:
                               'family_map_sha256': value['families']['sha256'],
                               'binding_sha256': value['binding']['sha256']},
             'partition_assigned': False,
+            **({'outside_inventory': inventory_review} if inventory_review is not None else {}),
             'limitations': ['Recorded graph reconstruction only; similarity measurements not rerun',
                             'Collective membership is not a COPY adjudication',
                             'Outside-family inventory is not qualified data',
                             'Project/lineage separation, admission and signed membership remain required']}
+
+
+def inspect_inventory(inventory: dict, families: dict, hashes: dict,
+                      selected_families: set, sources: dict[str, bytes]) -> dict:
+    """Triage recorded metadata and exact definitions; never approve closures."""
+    rows = unique_rows(inventory['units'])
+    require(set(rows) == {k for k in families if not k.startswith('comparison:')},
+            'inventory population differs from graph')
+    outside = {k for k in rows if families[k] not in selected_families}
+    require(set(sources) == outside, 'outside source population mismatch')
+    for uid, row in rows.items():
+        require(row.get('source_sha256') == 'sha256:' + hashes[uid], 'inventory source mismatch')
+    result = []
+    counts = {}
+    for uid in sorted(outside):
+        row, raw = rows[uid], sources[uid]
+        require(digest(raw) == hashes[uid], 'outside source digest mismatch')
+        text = raw.decode('utf-8')
+        match = re.fullmatch(r'\s*([A-Za-z_]\w*)\s*=\s*([A-Za-z_]\w*(?:\.[A-Za-z_]\w*)*|\d+(?:\.\d+)?)\s*;\s*', text)
+        category = 'unresolved_definition'
+        if match:
+            require(match[1] == row.get('function'), 'definition name mismatch')
+            rhs = match[2]
+            category = ('literal' if re.fullmatch(r'\d+(?:\.\d+)?', rhs) else
+                        'primitive_alias' if rhs in ('abs', 'min', 'max') else
+                        'namespace_alias' if row.get('path') == 'sf.lib' and rhs == 'sf' else
+                        'dependency_alias')
+        counts[category] = counts.get(category, 0) + 1
+        eligible = row.get('eligible_for')
+        require(isinstance(eligible, list) and all(x in ('train','eval','redistribute') for x in eligible),
+                'invalid inventory eligibility')
+        deps = row.get('dependency_closure_unit_ids')
+        require(isinstance(deps, list) and len(deps) <= 10000
+                and all(isinstance(x, str) and x in rows for x in deps)
+                and len(set(deps)) == len(deps), 'invalid recorded dependency population')
+        connected = sorted(x for x in deps if families[x] in selected_families)
+        result.append({'unit_id': uid, 'source_sha256': hashes[uid], 'family': families[uid],
+                       'category': category, 'recorded_eligible_for': eligible,
+                       'proposed_dependency_count': len(deps),
+                       'proposed_dependencies_in_selected_families': connected,
+                       'evaluation_eligibility_recorded': 'eval' in eligible,
+                       'admission': 'NOT_GRANTED', 'qualified': False})
+    return {'status': 'INVENTORY_TRIAGED_NOT_QUALIFIED', 'units': len(result),
+            'categories': counts, 'recorded_evaluation_eligible': sum(r['evaluation_eligibility_recorded'] for r in result),
+            'evaluation_candidates_with_selected_family_dependencies': sum(r['evaluation_eligibility_recorded'] and bool(r['proposed_dependencies_in_selected_families']) for r in result),
+            'rows': result, 'limitations': ['Eligibility is recorded inventory, not canonical rights admission',
+            'Dependencies are proposed overapproximations; no new family joins or closure approval',
+            'Primitive classification is limited to abs/min/max; other names need resolution']}

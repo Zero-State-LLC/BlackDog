@@ -184,3 +184,7 @@ Replay the complete supplied joining forest and collective hyperedges, bind its
 identities to the recorded source hashes and selected public pairs, then surface
 single-family infeasibility inside readiness. Never edit detector defaults or
 interpret source NOT_COPY decisions as permission to remove lineage joins.
+
+QR-10 follow-through: add optional bound inventory/source triage to family replay,
+retain complete population checks and report eligibility/closure obstacles without
+changing family assignments. Validate 117 preserved source definitions outside Git.
