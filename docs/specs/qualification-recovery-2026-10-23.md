@@ -84,3 +84,23 @@ Read-only patch and review-thread retrieval completed for #73, #76, #112, #113 a
 **#112/#114:** bounded tests and approved-source documentation respectively, with no inline review threads returned. Both change KANBAN.md and therefore require conflict-aware integration with #113/#115. #114's historical disposition and new approvals must remain distinct.
 
 Next verification: inspect #113 latest-head CI jobs/logs, full #113/#76 signal.py overlap, #73 exact provisional-freeze wording, and source receipts outside Git where authorized. This audit is not a substitute for executing tests.
+
+## Owner direction: automation-first, minimal-handwork governance (2026-10-23 PT)
+
+Owner requests a practical path to training with minimal manual ceremony. This is a **proposed implementation policy** for reconciliation with canonical spec/constitution; it does not itself supersede higher-priority requirements or grant training admission.
+
+### Three lanes
+1. **Green, automated engineering:** fixture generation, provenance extraction, license classification suggestions, dedup, lineage clustering, compiler/signal tests, PR checks, synthetic GPU training diagnostics, and evidence packet assembly. Run without per-item manual approval when read-only, reversible, and within existing resource permissions. Automated reports carry source hashes and failure explanations.
+2. **Amber, bounded batch review:** one consolidated review for ambiguous licenses/imports, external-host eligibility, frozen gold selection, private custody configuration, model/download or compute budget. Review only exceptions and final summaries, not every unit. Approve precise scopes, with expiration/change triggers; previously approved source decisions are reused, never repeatedly requested.
+3. **Red, explicit authorization:** external redistribution, restricted/private data disclosure, training on unqualified data, promotion/release, irreversible destructive actions, unbudgeted spending, or bypassing reward/holdout integrity. These cannot be automatically cleared by an agent.
+
+### Fast training path
+- **Track A: synthetic dry run:** allow CPU/GPU smoke, generated DSP fixtures, synthetic training-step/checkpoint verification, and throughput benchmarking without a production corpus. Label outputs DIAGNOSTIC and prevent model admission.
+- **Track B: qualified small pilot:** prepare a tiny rights-cleared, family-disjoint dataset, pinned model and isolated environment. Automate receipts and gates. Submit a single bounded approval for actual pilot training only after canonical required conditions are met. No requirement to finish every broader corpus unit merely to run an independently qualified pilot, unless canonical spec expressly requires it.
+- **Track C: full corpus training:** retain complete source/notice/lineage accounting, two-host FLOOR and custody conditions wherever required by the governing specification. Automate batch processing and exception review.
+
+### T07 and reward compatibility
+Preserve canonical spec 001's provisional T07 freeze route with documented leakage caveat and scheduled recheck. Do not claim P3 exit or final promotion until the required QH-02/FLOOR evidence. Keep reward TaskSpec binding and frozen-profile digest checks fail-closed. No unapproved modification of canonical normative requirements.
+
+### Acceptance criteria
+One command produces a readiness report with machine-readable blockers, waiver-ineligible red gates, owner-action queue, evidence hashes, source/lineage counts and next safe executable action. No per-unit human approval for mechanically verifiable clean items. All ambiguous cases remain quarantined. Synthetic training diagnostics are not presented as qualified model training. A single owner review should cover a coherent batch of exceptions.
