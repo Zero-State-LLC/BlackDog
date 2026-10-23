@@ -8,6 +8,8 @@ See [docs/VERSIONING.md](docs/VERSIONING.md).
 
 ## [Unreleased]
 
+- Localize spectral middle-band float32 discrepancies, reject section-order repairs, and bind two inferred helper notices to byte-identical licensed predecessors; fix checkpoint Markdown lint.
+
 - Record float32 ladder and bounded modular semantic diagnostics; complete five pinned notices while retaining unresolved rights, spectral, family and signed-readiness blockers.
 
 - Add bounded structural replay for dependency-supplied modular targets without admission authority; document original-source double-precision diagnostics while retaining production float32 blockers.

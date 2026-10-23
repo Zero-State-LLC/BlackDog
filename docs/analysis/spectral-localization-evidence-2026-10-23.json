@@ -1,0 +1,12 @@
+{
+  "kind": "diagnostic-checkpoint.v1",
+  "artifacts": {
+    "blackdog-meter-error-verification.json": "09f4021fe95bc8a7eef0788e00edb8104e5bc68295ebb3d9efa32e7b28cbe7ba",
+    "blackdog-meter-order-verification.json": "e43a228e9a3e391d5f90424eb591451abb6593c3a5e3b0e16d972f13eb1376ee",
+    "blackdog-spectral-channel-analysis.json": "e1c39aac7964e9f09fe756abcb6c29a30fadae1402fe5e0f1e74172a1e4d3be6",
+    "blackdog-helper-lineage-review.json": "af39567496c16c71f8873f8f9b7fae6370b488aaa4cd8e6f73729798d2fda36c",
+    "blackdog-current-readiness.json": "3ca0db7ab619ffbd14172275bd1a0a1dd140cba50829118a1d189d5b34e6c0e9",
+    "blackdog-current-modular-rights.json": "40225e6d228c26e41e222b3d3b8119426ee6b0ed99c9fd18e35391bcb1be8f2c"
+  },
+  "admission": "NOT_GRANTED"
+}

@@ -422,3 +422,5 @@ The [Goertzel/family resolution](../analysis/goertzel-family-resolution-2026-10-
 [Precision diagnosis and modular contracts](../analysis/precision-modular-contracts-2026-10-23.md): modular_pairs.review requires the expected full harness digest from independently verified compiler evidence. It is a structural diagnostic, not a readiness authority adapter. Double diagnostics do not enable production double mode.
 
 [Float32 ladder and modular semantics](../analysis/float32-modular-semantics-2026-10-23.md): 455 new diagnostic receipts verified, including preserved failures. Controlled helper semantics and low-pass ladder sweeps do not clear production spectral behavior or signed admission. See the adjacent evidence index for local report hashes.
+
+[Spectral localization and helper lineage](../analysis/spectral-localization-2026-10-23.md) records 104 additional verified diagnostic receipts and 48 sample captures. License derivation evidence is separate from admission and does not remove training-only closure restrictions.

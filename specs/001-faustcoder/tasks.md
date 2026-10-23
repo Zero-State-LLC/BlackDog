@@ -402,3 +402,11 @@ Parallel starts after T01: T02, T05 and T09. Lanes T17 to T19, T21 and T22 run i
 - [x] Verify 15 bounded modular semantic configurations and re-tokenize clarified prompts.
 - [x] Reconcile 43 rights spans, add five notices, and screen full ladder families.
 - [ ] Resolve real spectral numerical behavior, remaining helper rights, independent families and exact-scope signed readiness evidence.
+
+### QR-12 spectral localization and helper lineage
+
+- [x] Bind per-channel capture bytes to verified receipts; localize spectral middle-band error.
+- [x] Reject six unsuccessful section-order candidates at unchanged tolerances.
+- [x] Verify exact STK source lineage and complete two inferred helper notices.
+- [x] Correct checkpoint Markdown lint error.
+- [ ] Resolve spectral float32 behavior, two remaining helper licenses, independent families and signed readiness.

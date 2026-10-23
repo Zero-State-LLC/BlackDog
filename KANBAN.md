@@ -605,3 +605,7 @@ Original low-pass/spectral definitions pass isolated double diagnostics; product
 ## Float32 and modular semantics checkpoint
 
 Separate ladder low-pass candidate passes 18 positive/18 wrong-reference cases in production float32; spectral sine failures persist. Fifteen controlled modular fixtures pass 90 positive/90 negative cases. Five notices added, four internal helper rights unresolved. Both ladder closures remain comparison-connected. Readiness gates remain unverified; see docs/analysis/float32-modular-semantics-2026-10-23.md.
+
+## Spectral localization checkpoint
+
+Middle-band float32 error localized with 48 hash-verified captures; all six section orders still fail. Exact predecessor-body identity resolves two elliptic helper notices; `fi._tanhalf` and `fi._tpt_df` remain unresolved. Readiness remains blocked. See docs/analysis/spectral-localization-2026-10-23.md.

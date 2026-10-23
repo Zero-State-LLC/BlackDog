@@ -1,0 +1,76 @@
+{
+  "status": "EXACT_LICENSED_SOURCE_LINEAGE_VERIFIED_NOT_ADMITTED",
+  "rows": [
+    {
+      "member": "fi._lowpass6e",
+      "source_sha256": "b3b56e614f7d4ffa24d0db66e3c88d5a511a8f1afe26d8f55aa3bfdeaeec1aab",
+      "source_blob_sha": "0af91c8e5d9029bd24c099abd65928fa4d250beb",
+      "source_pin": "2edec0537f536eaa130d42c354884d7db971663c",
+      "parent": "25e5f9317ecf5567c9b1cf3bcad57b9edd47db3b",
+      "parent_blob_sha": "7ef14eee77f1e4829c1b5bcb2208fdb3efc6dd3e",
+      "parent_definition_sha256": "8079d1f90cbddd9304d023c0fc5c3eaf6bb4ff83bdeb9ca6e4f024d52f97d230",
+      "extraction_commit": "37ac4eec79e5e8e4965aa7ad01e2f2fc465df204",
+      "source_url": "https://github.com/grame-cncm/faustlibraries/commit/37ac4eec79e5e8e4965aa7ad01e2f2fc465df204",
+      "transformations": [
+        "Replace helper signature with original signature",
+        "Replace section parameter t2 calls with original tf2s calls"
+      ],
+      "byte_identity_verified": true,
+      "declarations": {
+        "author": [
+          "Julius O. Smith III"
+        ],
+        "copyright": [
+          "Copyright (C) 2003-2019 by Julius O. Smith III <jos@ccrma.stanford.edu>"
+        ],
+        "license": [
+          "LicenseRef-STK-4.3"
+        ]
+      },
+      "license": "STK-4.3",
+      "evidence_label": "INFERRED",
+      "reviewer": "Codex under delegated ADR-0003 D-013",
+      "scope": "Exact definition derived from explicitly STK-licensed predecessor; not neighboring-declaration inheritance",
+      "admission": "NOT_GRANTED"
+    },
+    {
+      "member": "fi._highpass6e",
+      "source_sha256": "aa3cac757c2917cca09cd83f49372cc79d202d8d17b14e11a22529f81e38900b",
+      "source_blob_sha": "0af91c8e5d9029bd24c099abd65928fa4d250beb",
+      "source_pin": "2edec0537f536eaa130d42c354884d7db971663c",
+      "parent": "25e5f9317ecf5567c9b1cf3bcad57b9edd47db3b",
+      "parent_blob_sha": "7ef14eee77f1e4829c1b5bcb2208fdb3efc6dd3e",
+      "parent_definition_sha256": "2e0d9f968426ee1927377997b96dec91f9d8e7e8c8f1b3f17a5761f225be83a1",
+      "extraction_commit": "37ac4eec79e5e8e4965aa7ad01e2f2fc465df204",
+      "source_url": "https://github.com/grame-cncm/faustlibraries/commit/37ac4eec79e5e8e4965aa7ad01e2f2fc465df204",
+      "transformations": [
+        "Replace helper signature with original signature",
+        "Replace section parameter t2 calls with original tf2s calls"
+      ],
+      "byte_identity_verified": true,
+      "declarations": {
+        "author": [
+          "Julius O. Smith III"
+        ],
+        "copyright": [
+          "Copyright (C) 2003-2019 by Julius O. Smith III <jos@ccrma.stanford.edu>"
+        ],
+        "license": [
+          "LicenseRef-STK-4.3"
+        ]
+      },
+      "license": "STK-4.3",
+      "evidence_label": "INFERRED",
+      "reviewer": "Codex under delegated ADR-0003 D-013",
+      "scope": "Exact definition derived from explicitly STK-licensed predecessor; not neighboring-declaration inheritance",
+      "admission": "NOT_GRANTED"
+    }
+  ],
+  "notice_manifest_sha256": "abbf8565869283db0957b88c3fdae41a82f0a96e2cd561fdc9fc83f2618008ba",
+  "remaining_unresolved": [
+    "fi._tanhalf",
+    "fi._tpt_df"
+  ],
+  "closure_evaluation_cleared": false,
+  "reason": "Training-only maths/platform dependencies remain; missing helper licenses remain unresolved."
+}
