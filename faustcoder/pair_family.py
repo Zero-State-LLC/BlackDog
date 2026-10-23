@@ -170,11 +170,33 @@ def inspect_inventory(inventory: dict, families: dict, hashes: dict,
                 and all(isinstance(x, str) and x in rows for x in deps)
                 and len(set(deps)) == len(deps), 'invalid recorded dependency population')
         connected = sorted(x for x in deps if families[x] in selected_families)
+        member_eligibility = []
+        unknown_members = []
+        external_count = 0
+        unknown_external_metadata = []
+        for member_id in [uid, *deps]:
+            member = rows[member_id]
+            permissions = member.get('eligible_for')
+            if not isinstance(permissions, list) or any(x not in ('train','eval','redistribute') for x in permissions):
+                unknown_members.append(member_id)
+            else:
+                member_eligibility.append(set(permissions))
+            external = member.get('unresolved_external_members')
+            if not isinstance(external, list):
+                unknown_external_metadata.append(member_id)
+            else:
+                external_count += len(external)
+        intersection = [] if unknown_members else sorted(set.intersection(*member_eligibility))
         result.append({'unit_id': uid, 'source_sha256': hashes[uid], 'family': families[uid],
                        'category': category, 'recorded_eligible_for': eligible,
                        'proposed_dependency_count': len(deps),
                        'proposed_dependencies_in_selected_families': connected,
                        'evaluation_eligibility_recorded': 'eval' in eligible,
+                       'recorded_member_eligibility_intersection': intersection,
+                       'unknown_member_eligibility': unknown_members,
+                       'recorded_unresolved_external_member_count': external_count,
+                       'unknown_external_member_metadata': unknown_external_metadata,
+                       'dependency_closure_verified': False,
                        'admission': 'NOT_GRANTED', 'qualified': False})
     return {'status': 'INVENTORY_TRIAGED_NOT_QUALIFIED', 'units': len(result),
             'categories': counts, 'recorded_evaluation_eligible': sum(r['evaluation_eligibility_recorded'] for r in result),

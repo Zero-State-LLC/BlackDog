@@ -8,6 +8,8 @@ See [docs/VERSIONING.md](docs/VERSIONING.md).
 
 ## [Unreleased]
 
+- Intersect recorded dependency permissions in outside-family readiness and expose unresolved metadata; preserve numerical and family-reconstruction failures in external-dependency diagnostics.
+
 - Record resolved decimal helper diagnostics and a pinned independent-source search; retain family and admission blocks for every new candidate.
 
 - Bind outside-family inventory and source definitions to readiness; expose training-only eligibility and unresolved alias dependencies without granting admission.

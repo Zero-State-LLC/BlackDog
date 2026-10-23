@@ -222,3 +222,27 @@ def test_readiness_inventory_does_not_clear_pair_gate(inventory):
     r=assess(root,manifest_path=root/'manifest.json',evidence_root=root,scope_digest=SCOPE)
     assert not r['training_authorized'] and not r['pilot_ready']
     assert any(b['code']=='outside_inventory_not_qualified' for b in r['receipt_verification']['blockers'])
+
+
+def test_training_only_helper_removes_recorded_eval_permission():
+    from faustcoder.pair_family import inspect_inventory
+    from faustcoder.public_pairs import digest
+    raw=b'n = helper;';h=digest(raw)
+    root={'unit_id':'n','function':'n','path':'test.lib','source_sha256':'sha256:'+h,
+          'eligible_for':['train','eval','redistribute'],'dependency_closure_unit_ids':['helper'],
+          'unresolved_external_members':[]}
+    helper={'unit_id':'helper','source_sha256':'sha256:'+'a'*64,
+            'eligible_for':['train'],'unresolved_external_members':[{'expression':'external.member'}]}
+    def check():return inspect_inventory({'units':[root,helper]}, {'n':G,'helper':F},
+                        {'n':h,'helper':'a'*64},{F},{'n':raw})['rows'][0]
+    r=check()
+    assert r['evaluation_eligibility_recorded']
+    assert r['recorded_member_eligibility_intersection']==['train']
+    assert r['recorded_unresolved_external_member_count']==1
+    assert not r['dependency_closure_verified'] and not r['qualified']
+    helper.pop('eligible_for')
+    r=check()
+    assert r['recorded_member_eligibility_intersection']==[]
+    assert r['unknown_member_eligibility']==['helper']
+    helper.pop('unresolved_external_members')
+    assert check()['unknown_external_member_metadata']==['helper']

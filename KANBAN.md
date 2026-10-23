@@ -581,3 +581,7 @@ TOKEN_FLOOR=40 provisional; T07 unfrozen. Experimental evidence stays outside Gi
   closure frontiers. Five new public candidates passed bounded diagnostics but
   remain comparison-connected in the unchanged detector's expanded screen.
 - No independent evaluation candidate established; no admission or T07 freeze.
+
+## External dependency checkpoint
+
+62 diagnostic receipts verified; peak-envelope and N=64 Goertzel checks passed, N=16 failed fixed tolerance. 13 interfaces compile on both backends. Member eligibility now intersects dependencies. Rights, minimal analyzer/elliptic closures, independent family evidence and signed readiness remain blocked. See [review](docs/analysis/external-dependency-readiness-2026-10-23.md).

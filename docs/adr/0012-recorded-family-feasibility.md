@@ -29,3 +29,5 @@ then reports definition categories and recorded eligibility. Proposed dependency
 memberships are flagged without promoting them into verified closure or new
 family edges. `frac` is not in the narrow primitive allowlist: its standalone
 native diagnostic produced `unbound_symbol`, consistent with a library helper.
+
+Recorded member permission intersections are conservative inventory observations, not closure or admission proofs. Unknown metadata remains explicit and dependency_closure_verified stays false. See [external checks](../analysis/external-dependency-readiness-2026-10-23.md).

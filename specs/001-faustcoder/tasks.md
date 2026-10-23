@@ -359,3 +359,9 @@ Parallel starts after T01: T02, T05 and T09. Lanes T17 to T19, T21 and T22 run i
 - [ ] Complete external member source/rights closure and independent semantics.
 - [ ] Establish independent evaluation candidates and signed membership; no
   admission or detector exemptions inferred from this exploratory screen.
+
+### QR-10 external-member checks
+
+- [x] Test exact peak-envelope and Goertzel helper closures and omission controls.
+- [x] Expose conservative recorded member eligibility in readiness inventory.
+- [x] Preserve numerical boundary failures and unresolved elliptic-filter coverage.

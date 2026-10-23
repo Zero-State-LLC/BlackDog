@@ -398,3 +398,14 @@ Dependency lists remain unverified overapproximations, not new family edges.
 Never promote training-only definitions into evaluation or infer qualification
 from a short source, successful diagnostic, or lack of recorded dependencies.
 Tests must reject rebound inventories, altered sources and incomplete selections.
+
+## QR-10 dependency eligibility visibility
+
+For each outside-family inventory row, report the intersection of recorded
+eligibility across the row and its listed dependency members. Missing member
+eligibility is unknown and must produce no inferred permissions. Also expose
+unresolved external-member counts across that recorded closure. This is a
+conservative recorded-list calculation, not a rights ruling or closure proof.
+The root's evaluation eligibility must never be presented as the executable
+closure's evaluation eligibility. Tests cover permissive roots with training-only
+helpers, missing metadata and incomplete external closures. No gate clears.

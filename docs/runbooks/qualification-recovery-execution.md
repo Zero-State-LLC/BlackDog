@@ -410,3 +410,5 @@ establish family independence under the unchanged shipping detector. Preserve
 that distinction and the initial harness failure; do not clear signed membership
 or rights gates from runtime success. Raw evidence and expanded screening graphs
 remain outside Git, separately from the canonical recorded family graph.
+
+External dependency follow-through: [verified diagnostics and remaining blockers](../analysis/external-dependency-readiness-2026-10-23.md). Whole-library interface compilation does not qualify a minimal closure. Preserve failed Goertzel N=16 numerical checks and unverified marginal-family reconstruction; neither permits a readiness override.
