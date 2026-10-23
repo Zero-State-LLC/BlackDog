@@ -394,3 +394,11 @@ Parallel starts after T01: T02, T05 and T09. Lanes T17 to T19, T21 and T22 run i
 - [x] Implement bounded modular structural reviewer and mutation tests.
 - [x] Replay four real compiled harnesses, full-closure lineage and explicit-interface tokenization.
 - [ ] Resolve production float32 qualification and independently review modular semantics, rights and split evidence.
+
+### QR-11 float32 ladder and modular semantics
+
+- [x] Verify a separate float32 low-pass ladder candidate across three cutoffs and both rates.
+- [x] Preserve unresolved spectral sine failures and all initial fixture clipping failures.
+- [x] Verify 15 bounded modular semantic configurations and re-tokenize clarified prompts.
+- [x] Reconcile 43 rights spans, add five notices, and screen full ladder families.
+- [ ] Resolve real spectral numerical behavior, remaining helper rights, independent families and exact-scope signed readiness evidence.

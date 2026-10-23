@@ -8,6 +8,8 @@ See [docs/VERSIONING.md](docs/VERSIONING.md).
 
 ## [Unreleased]
 
+- Record float32 ladder and bounded modular semantic diagnostics; complete five pinned notices while retaining unresolved rights, spectral, family and signed-readiness blockers.
+
 - Add bounded structural replay for dependency-supplied modular targets without admission authority; document original-source double-precision diagnostics while retaining production float32 blockers.
 
 - Document explicit TPT low-pass diagnostics, actual bargraph capture and proposed dependency-supplied targets while preserving default-path and end-to-end qualification failures.

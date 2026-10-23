@@ -21279,6 +21279,57 @@
       "copyright": "(c) 2018 Pierre Guillot",
       "license": "MIT",
       "evidence_label": "OBSERVED"
+    },
+    {
+      "repo": "grame-cncm/faustlibraries",
+      "commit": "2edec0537f536eaa130d42c354884d7db971663c",
+      "path": "filters.lib",
+      "blob_sha": "0af91c8e5d9029bd24c099abd65928fa4d250beb",
+      "function": "fir",
+      "copyright": "Copyright (C) 2003-2019 by Julius O. Smith III <jos@ccrma.stanford.edu>",
+      "license": "STK-4.3",
+      "evidence_label": "OBSERVED",
+      "license_notice": "Redistribution bundles the STK-4.3 permission notice recorded in license_texts."
+    },
+    {
+      "repo": "grame-cncm/faustlibraries",
+      "commit": "2edec0537f536eaa130d42c354884d7db971663c",
+      "path": "filters.lib",
+      "blob_sha": "0af91c8e5d9029bd24c099abd65928fa4d250beb",
+      "function": "tpt_df_fmin",
+      "copyright": "Julius O. Smith III",
+      "license": "MIT",
+      "evidence_label": "OBSERVED"
+    },
+    {
+      "repo": "grame-cncm/faustlibraries",
+      "commit": "2edec0537f536eaa130d42c354884d7db971663c",
+      "path": "maths.lib",
+      "blob_sha": "bdaca8b89c2b1ce246916cfc466a744b3c8b7696",
+      "function": "EPSILON",
+      "copyright": "Copyright (C) 2003-2016 GRAME, Centre National de Creation Musicale",
+      "license": "LGPL-2.1-or-later",
+      "evidence_label": "OBSERVED"
+    },
+    {
+      "repo": "grame-cncm/faustlibraries",
+      "commit": "2edec0537f536eaa130d42c354884d7db971663c",
+      "path": "maths.lib",
+      "blob_sha": "bdaca8b89c2b1ce246916cfc466a744b3c8b7696",
+      "function": "MIN",
+      "copyright": "Copyright (C) 2003-2016 GRAME, Centre National de Creation Musicale",
+      "license": "LGPL-2.1-or-later",
+      "evidence_label": "OBSERVED"
+    },
+    {
+      "repo": "grame-cncm/faustlibraries",
+      "commit": "2edec0537f536eaa130d42c354884d7db971663c",
+      "path": "maths.lib",
+      "blob_sha": "bdaca8b89c2b1ce246916cfc466a744b3c8b7696",
+      "function": "MAX",
+      "copyright": "Copyright (C) 2003-2016 GRAME, Centre National de Creation Musicale",
+      "license": "LGPL-2.1-or-later",
+      "evidence_label": "OBSERVED"
     }
   ]
 }

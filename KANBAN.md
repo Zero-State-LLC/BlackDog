@@ -601,3 +601,7 @@ Four standalone closures compile; 81 omissions reject. 53/54 positive numerical 
 ## Precision and modular replay checkpoint
 
 Original low-pass/spectral definitions pass isolated double diagnostics; production float32 failures remain. Four modular contracts structurally replay their compiled harnesses and fit 154–355 tokens with explicit interfaces. 318 focused tests pass. Rights, independent semantics/families and signed readiness remain blocked.
+
+## Float32 and modular semantics checkpoint
+
+Separate ladder low-pass candidate passes 18 positive/18 wrong-reference cases in production float32; spectral sine failures persist. Fifteen controlled modular fixtures pass 90 positive/90 negative cases. Five notices added, four internal helper rights unresolved. Both ladder closures remain comparison-connected. Readiness gates remain unverified; see docs/analysis/float32-modular-semantics-2026-10-23.md.
