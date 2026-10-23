@@ -323,3 +323,12 @@ Parallel starts after T01: T02, T05 and T09. Lanes T17 to T19, T21 and T22 run i
   escalation; preserve separate instruction-pair and training blockers.
 - [ ] Complete runtime/prompt qualification and canonical signed-partition admission
   before consuming any candidate as a training example.
+
+## Recovery tokenizer preflight
+
+- [x] Define exact-tokenizer descriptor, local adapter and read-only CLI.
+- [x] Integrate readiness replay, negative tests and bounded sequence checks.
+- [x] Verify the seven candidates against the pinned tokenizer and compare IDs
+  with the existing offline Spark Transformers tokenizer.
+- [ ] Bind remaining runtime and prompt qualification to canonical admitted
+  Examples and signed disjoint partitions before training.

@@ -271,3 +271,55 @@ prompt semantic validation, compiler/signal replay and the real pinned tokenizer
 512-token bound. A seven-source public review does not establish seven independent
 families. Do not divide related units across training and development to fill the
 pilot recipe. Preserve their existing family/lineage constraints.
+
+## Exact-tokenizer preflight
+
+Install the optional `tokenizer` extra only in an isolated tooling environment;
+it is not needed for plain receipt verification. The adapter supports the already
+approved `Qwen/Qwen2.5-Coder-1.5B` revision
+`df3ce67c0e24480f20468b6ef2894622d69eb73b`. Supply the existing tokenizer.json,
+tokenizer_config.json, vocab.json and merges.txt; their exact approved hashes are
+compiled into the adapter. No model weights or remote model resolution are used.
+
+Create a strict `public-pair-tokenizer.schema.json` descriptor with the same public
+review scope, a hash-bound reference to the original public-pair bundle and the
+four relative tokenizer file references. Run the CPU-only check:
+
+```bash
+python -m faustcoder.pair_preflight \
+  --bundle /absolute/public-bundle/preflight.json \
+  --bundle-sha256 <exact-descriptor-sha256> \
+  --evidence-root /absolute/public-bundle \
+  --scope-digest <exact-public-review-scope-sha256>
+```
+
+Or reference the descriptor in readiness with gate
+`public_instruction_pair_tokenizer`. Readiness re-executes the check; a PASS claim
+cannot substitute for asset or pair verification. Missing tokenizer runtime is
+NOT_VERIFIED; altered evidence is INVALID; invalid/oversize encodings remain
+rejected. Exit zero means only `TOKENIZER_VERIFIED_NOT_QUALIFIED`.
+
+OBSERVED: all seven prepared public candidates fit at 130, 190, 157, 289, 273,
+196 and 379 tokens including EOS. The local tokenizers 0.23.3 backend and Spark's
+existing Transformers 5.16.1/tokenizers 0.23.1 produced identical prompt/target
+IDs for all seven. Spark was verified as spark-af42; the comparison used offline
+CPU tokenizer loading, with no model load, training or remote file writes.
+Evidence is outside Git in the local tokenizer-preflight and comparison reports.
+This removes only the tokenizer subcheck; the pairs remain unqualified.
+
+Additional local numerical replay verified 1,129 preserved public archive
+payloads and recomputed all 98 archived cases/554 states: 84 positive cases passed
+and all 14 compiled-mutant cases disagreed with the approved formulas. Replay
+checked exact source/contract/WASM hashes and rejected offset references using
+unchanged tolerances. It executed no archived scripts, compiler or WASM. The
+later negative archive supplies the default-state/substitution evidence missing
+from the earlier positive report; original receipts stay unchanged. This bounded
+numerical replay is not fresh compiler execution, canonical Example admission,
+independent human review or permission to train.
+
+Validation for this slice: 242 related regressions passed, followed by 156
+schema/preflight/public-pair/readiness checks after repairing the missing valid
+and invalid public-pair-review schema fixtures found by CI. Both new schemas now
+have fixtures. All seven targeted tokenizer mutants were detected. Spec Kit and
+changed-document Markdown lint passed. Full Linux compiler CI remains required;
+the local macOS checkout lacks the installed Faust worker and Linux sandbox.

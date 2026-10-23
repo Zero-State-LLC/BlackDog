@@ -94,6 +94,19 @@ Qualified pairs: zero. Remaining work: canonical Example admission, signed
 partition membership, prompt semantic validation, compiler/signal replay and
 real-tokenizer bounds. Existing family restrictions remain; no training ran.
 
+## Exact-tokenizer and bounded runtime replay checkpoint
+
+OBSERVED: all seven public candidates pass the pinned Qwen tokenizer preflight
+at 130-379 tokens, with no truncation or implicit formatting. Their token IDs
+match the existing offline Spark Transformers tokenizer exactly. Readiness now
+replays this check and removes only the tokenizer subcheck, not admission gates.
+
+Local numerical replay verified 1,129 archive payloads and recomputed 98 preserved
+cases/554 states, including rejection of all 14 compiled-mutant cases. This is
+bounded raw-sample replay, not fresh compiler execution or independent human
+review. Canonical Example admission, signed partition membership and complete
+prompt/runtime qualification remain pending; qualified pairs remain zero.
+
 ## Current milestone: qualification sprint
 
 [Ten-working-day sprint](docs/runbooks/qualification-sprint.md): one consolidated

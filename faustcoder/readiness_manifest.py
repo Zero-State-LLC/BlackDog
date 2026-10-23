@@ -133,6 +133,26 @@ def verify_manifest(manifest: EvidenceManifest, root: Path, *, mode: Mode,
         verified.append({'receipt_id': ref.receipt_id, 'gate': ref.gate,
                          'sha256': ref.sha256, 'scope_digest': ref.scope_digest,
                          'status': 'INTEGRITY_VERIFIED'})
+        if ref.gate == 'public_instruction_pair_tokenizer':
+            from faustcoder.pair_preflight import preflight, TokenizerRuntimeUnavailable
+            try:
+                report = preflight(data, root, scope_digest=scope_digest)
+            except TokenizerRuntimeUnavailable:
+                blockers.append({'gate': 'instruction_pair_contract', 'receipt_id': ref.receipt_id,
+                                 'status': 'NOT_VERIFIED', 'code': 'tokenizer_runtime_required',
+                                 'next_action': 'Use an isolated environment with the tokenizer extra'})
+                continue
+            except (ArtifactStoreError, OSError, ValueError, TypeError, KeyError, RecursionError):
+                blockers.append({'gate': 'instruction_pair_contract', 'receipt_id': ref.receipt_id,
+                                 'status': 'INVALID', 'code': 'invalid_pair_preflight',
+                                 'next_action': 'Restore exact scope-bound public pairs and pinned tokenizer assets'})
+                continue
+            public_reviews.append({**report, 'receipt_id': ref.receipt_id})
+            blockers.append({'gate': 'instruction_pair_contract', 'receipt_id': ref.receipt_id,
+                             'status': 'REVIEW_REQUIRED',
+                             'code': 'tokenizer_rejected' if report['tokenizer']['rejected_encodings'] else 'public_pairs_not_qualified',
+                             'next_action': 'Resolve remaining pair qualifications without truncating or changing approved targets'})
+            continue
         if ref.gate == 'public_instruction_pairs':
             from faustcoder.public_pairs import review_bundle
             try:

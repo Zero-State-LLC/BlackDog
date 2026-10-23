@@ -314,3 +314,29 @@ semantic validation, canonical Example/snapshot admission and signed disjoint
 partitions remain prerequisites before any pair is qualified for training.
 Tasks: implement schema and adapter, wire advisory results into readiness, replay
 public bundles, run focused/regression/mutation checks, record remaining gaps.
+
+## QR-10 exact-tokenizer preflight
+
+Journey: check the prepared candidates against the already approved Qwen tokenizer
+without downloading or loading model weights. Workflow: replay public pair bindings,
+verify the four locally supplied tokenizer assets against the approved pinned
+revision and exact hashes, instantiate only the tokenizer backend, and run the
+canonical completion-only encoder. No network or model execution occurs.
+
+States: PUBLIC_BINDINGS_VERIFIED -> TOKENIZER_VERIFIED_NOT_QUALIFIED; oversize
+or invalid encodings -> TOKENIZER_REJECTED. Source admission, prompt semantics,
+compiler/signal qualification and signed partitions remain pending in either case.
+Contract: strict `public-pair-tokenizer.schema.json` binds scope, original pair
+bundle and exact tokenizer asset references. The first implementation supports
+only the existing approved Qwen2.5-Coder-1.5B revision, not caller-enrolled models.
+Tokenizer padding/truncation configurations must be disabled; EOS and padding
+must resolve from the pinned configuration. Encode separate prompt/target strings
+with special insertion off; do not truncate, pack or apply a chat template.
+
+Acceptance: tests cover file and pair tampering, wrong scope/model/revision,
+unsafe paths, unknown fields, hidden truncation/padding, missing runtime and
+oversize examples. Real approved-tokenizer execution records per-pair lengths,
+encoding digests and runtime version, never raw tokens, source or personal data.
+The readiness adapter re-executes preflight instead of trusting a PASS claim.
+Task: QR-10; ship optional tokenizer dependency, CLI, readiness integration and
+negative/mutation tests. No training gate is cleared by this preflight.

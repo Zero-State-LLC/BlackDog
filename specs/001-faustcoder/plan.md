@@ -163,3 +163,10 @@ receipt joins, derive candidate prompts with separately recorded corrections, an
 integrate advisory results into readiness. No readiness gate is cleared and no
 training transition is added. Contract/negative/mutation tests precede real public
 receipt replay; actual data and approval payloads remain outside Git.
+
+## Candidate tokenizer verification
+
+Implement ADR-0010 using the strict public-pair-tokenizer descriptor and optional
+CPU tokenizer dependency. Reuse the canonical completion-only encoder and pin
+existing approved Qwen assets. Re-execute from readiness, keep raw text out of
+reports, and remove only the tokenizer subcheck after exact binding verification.
