@@ -192,3 +192,5 @@ changing family assignments. Validate 117 preserved source definitions outside G
 QR-10: expose recorded dependency eligibility intersections and unresolved
 external-member counts in advisory inventory replay; unknown metadata stays
 unknown. Keep canonical admission, complete closure and independent review separate.
+
+Record stream-component wrapper joins in graph evidence and replay full active/counterfactual populations. Test the Goertzel DC repair separately from original-source qualification.

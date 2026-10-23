@@ -38,8 +38,12 @@ def reconstruct(families: dict, edges: list) -> dict:
                 and edge.get('stream') in ('raw', 'canonical'), 'invalid recorded graph policy')
         if 'left' in edge or 'right' in edge:
             require(edge.get('reason') in ('exact', 'token_jaccard', 'short_character_match',
-                    'reverse_containment', 'forward_containment', 'verbatim_run', 'collective_union'),
+                    'reverse_containment', 'forward_containment', 'verbatim_run', 'collective_union', 'stream_component'),
                     'unsupported pairwise edge')
+            if edge['reason'] == 'stream_component':
+                require(isinstance(edge.get('component_family'), str) and
+                        re.fullmatch(r'sha256:[0-9a-f]{64}', edge['component_family']),
+                        'invalid stream component identity')
             require('contributors' not in edge, 'ambiguous graph edge')
             join(edge['left'], edge['right'])
             joins += 1

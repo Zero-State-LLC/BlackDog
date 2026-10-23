@@ -1,0 +1,11 @@
+--- original/goertzelOpt.dsp
++++ diagnostic/goertzelOpt.dsp
+@@ -2,7 +2,7 @@
+ with {
+   // magnitude; max(0, .) since rounding can make the sum slightly negative,
+   // e.g. (eq - eq')^2 in float at the dc bin (k = 0, c = 2):
+-  mg = sqrt(max(0, eq^2 + eq'^2-eq*eq'*c)) : ba.sAndH(reset0);
++  mg = select2(k == 0, sqrt(max(0, eq^2 + eq'^2-eq*eq'*c)), abs(eq-eq')) : ba.sAndH(reset0);
+   cnt = ba.time%n; // counter for windowing
+   reset0 = cnt == (n-1); // reset when end of window
+   reset1 = 1-(cnt == 0); // reset when beginning of window

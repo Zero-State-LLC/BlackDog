@@ -31,3 +31,5 @@ family edges. `frac` is not in the narrow primitive allowlist: its standalone
 native diagnostic produced `unbound_symbol`, consistent with a library helper.
 
 Recorded member permission intersections are conservative inventory observations, not closure or admission proofs. Unknown metadata remains explicit and dependency_closure_verified stays false. See [external checks](../analysis/external-dependency-readiness-2026-10-23.md).
+
+Stream-family wrapper joins must be emitted explicitly as stream_component records, including equal digest-set identities that have no underlying stream edge. Structural replay validates their identity syntax; this does not adjudicate canonical equivalence. Active assignments remain unchanged. See [resolution](../analysis/goertzel-family-resolution-2026-10-23.md).

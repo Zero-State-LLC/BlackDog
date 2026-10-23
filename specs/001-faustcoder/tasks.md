@@ -365,3 +365,9 @@ Parallel starts after T01: T02, T05 and T09. Lanes T17 to T19, T21 and T22 run i
 - [x] Test exact peak-envelope and Goertzel helper closures and omission controls.
 - [x] Expose conservative recorded member eligibility in readiness inventory.
 - [x] Preserve numerical boundary failures and unresolved elliptic-filter coverage.
+
+### QR-10 numerical and graph resolution
+
+- [x] Reproduce original Goertzel failure and validate separate stable-DC repair with fixed-tolerance negative controls.
+- [x] Emit missing wrapper join evidence, test rejection controls, and replay full active/counterfactual graphs.
+- [ ] Qualify repaired-source rights, instruction and family bindings; complete analyzer/elliptic minimal closures and numerical references.

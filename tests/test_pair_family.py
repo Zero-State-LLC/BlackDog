@@ -246,3 +246,23 @@ def test_training_only_helper_removes_recorded_eval_permission():
     assert r['unknown_member_eligibility']==['helper']
     helper.pop('unresolved_external_members')
     assert check()['unknown_external_member_metadata']==['helper']
+
+
+def test_stream_identity_joins_are_recorded_without_changing_assignments():
+    from faustcoder.neardup import cluster_families
+    # Different raw expressions collapse to the same medium-length canonical
+    # stream identity. The wrapper joins those identities even when the stream
+    # pass emits no exact edge for this token-count range.
+    items = [('a', 'A = min(192000.0, max(50.0, fconstant(int rate, <math.h>)));'),
+             ('b', 'B = min(16384.0, max(1.0, fvariable(int count, <math.h>)));')]
+    for marginal in (False, True):
+        edges = []
+        families = cluster_families(items, evidence=edges, marginal_coverage=marginal)
+        assert families == cluster_families(items, marginal_coverage=marginal)
+        assert reconstruct(families, edges)['components'] == 1
+        assert any(e['reason'] == 'stream_component' for e in edges)
+        with pytest.raises(ManifestError, match='disconnected identities'):
+            reconstruct(families, [e for e in edges if e['reason'] != 'stream_component'])
+        bad = [dict(e, component_family='invalid') for e in edges]
+        with pytest.raises(ManifestError, match='invalid stream component'):
+            reconstruct(families, bad)

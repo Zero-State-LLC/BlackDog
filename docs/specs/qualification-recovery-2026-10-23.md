@@ -409,3 +409,7 @@ conservative recorded-list calculation, not a rights ruling or closure proof.
 The root's evaluation eligibility must never be presented as the executable
 closure's evaluation eligibility. Tests cover permissive roots with training-only
 helpers, missing metadata and incomplete external closures. No gate clears.
+
+### QR-10 wrapper join evidence and numerical repair
+
+Record actual stream-family wrapper joins without changing assignments. Require complete structural replay and reject missing/malformed records. Keep authored Goertzel DC repair separate from pinned source, retain fixed tolerance and failed controls, and do not infer rights or evaluation admission.

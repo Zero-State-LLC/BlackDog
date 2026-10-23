@@ -585,3 +585,7 @@ TOKEN_FLOOR=40 provisional; T07 unfrozen. Experimental evidence stays outside Gi
 ## External dependency checkpoint
 
 62 diagnostic receipts verified; peak-envelope and N=64 Goertzel checks passed, N=16 failed fixed tolerance. 13 interfaces compile on both backends. Member eligibility now intersects dependencies. Rights, minimal analyzer/elliptic closures, independent family evidence and signed readiness remain blocked. See [review](docs/analysis/external-dependency-readiness-2026-10-23.md).
+
+## Numerical and graph checkpoint
+
+Missing wrapper join evidence fixed; full active graph replays without assignment changes. Authored Goertzel DC repair passes 18 positive and 18 wrong-reference controls; original failure preserved. Source admission, analyzer/elliptic closures and reviewed split policy remain blocked.
