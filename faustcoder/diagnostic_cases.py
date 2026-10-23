@@ -185,7 +185,11 @@ def run_diagnostic_cases(source: str, profiles: Sequence[Any], references: Seque
         if companion is not None:
             if companion not in indexed or indexed[companion][0].diagnostic_case.zero_companion is not None:
                 raise ValueError("missing, cyclic or expected-zero companion")
-            other = indexed[companion][0]
+            other, other_ref = indexed[companion]
+            if any(math.sqrt(math.fsum(float(v)**2 for ch in channels for v in ch)
+                             / sum(len(ch) for ch in channels)) < other.silence_rms
+                   for channels in other_ref.samples.values()):
+                raise ValueError("companion requires a non-silent reference for every stimulus")
             if (p.sample_rate, p.block_size, p.seed, p.frames) != (other.sample_rate, other.block_size, other.seed, other.frames):
                 raise ValueError("companion render setup mismatch")
             if any(float(v) != 0 for chs in ref.samples.values() for ch in chs for v in ch):

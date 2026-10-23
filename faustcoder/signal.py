@@ -1360,6 +1360,7 @@ def _judge(
         metrics.update(stimulus_record(profile))
     harness = _harness_preimage()
     if profile.diagnostic_case is not None:
+        harness["diagnostic_signal_sha256"] = _file_sha256(Path(__file__))
         harness["diagnostic_python_sha256"] = _file_sha256(Path(__file__).with_name("diagnostic_cases.py"))
         harness["diagnostic_worker_sha256"] = _file_sha256(worker_directory() / "diagnostic-cases.mjs")
     metrics["unshare_path"] = harness["unshare_path"]

@@ -190,3 +190,31 @@ def test_legacy_request_bytes_have_no_extension(monkeypatch):
 def test_diagnostic_render_dimensions_fail_closed(kwargs):
     with pytest.raises(ValueError):
         SignalProfile(48000,diagnostic_case=DiagnosticCase("bad"),**kwargs)
+
+
+def test_companion_reference_must_itself_be_nonzero():
+    live=profile(DiagnosticCase("live"))
+    zero=profile(DiagnosticCase("zero",zero_companion="live"))
+    with pytest.raises(ValueError,match="non-silent reference"):
+        run_diagnostic_cases("process=0;",[live,zero],[reference(live),reference(zero)])
+
+
+def test_diagnostic_harness_binds_all_new_code(monkeypatch):
+    import hashlib
+    import faustcoder.signal as signal
+    monkeypatch.setattr(signal,"_harness_preimage",lambda:{"unshare_path":"/stub","unshare_sha256":"a"*64})
+    p=profile(DiagnosticCase("case"))
+    samples=[.1 if i%2 else -.1 for i in range(p.frames)]
+    source="process=_;"
+    compilation=SimpleNamespace(receipt={"source_sha256":hashlib.sha256(source.encode()).hexdigest()},reproducible_digest="sha256:"+"b"*64)
+    body={"inputs":1,"outputs":1,"samples":{"sine":[samples]},"diagnostic_case":{}}
+    def judge():
+        return signal._judge(source,p,reference(p,samples),compilation,body,
+                             promotion_candidate=False,cpu_duration_ms=None,reward_graded=False)
+    baseline=judge().receipt
+    original=signal._file_sha256
+    for name in ("signal.py","diagnostic_cases.py","diagnostic-cases.mjs"):
+        monkeypatch.setattr(signal,"_file_sha256",lambda path,n=name: "c"*64 if path.name==n else original(path))
+        assert judge().receipt["harness_digest"] != baseline["harness_digest"]
+    assert baseline["thresholds"]["reward_allowlisted"] is False
+    assert baseline["metrics"]["diagnostic_case"]["compiler_digest"]==compilation.reproducible_digest
