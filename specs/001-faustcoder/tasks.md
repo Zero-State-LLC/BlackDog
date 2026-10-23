@@ -350,3 +350,12 @@ Parallel starts after T01: T02, T05 and T09. Lanes T17 to T19, T21 and T22 run i
 - [x] Bind complete inventory and outside-family source bytes to accounting.
 - [x] Test source/population tampering and preserve eligibility boundaries.
 - [x] Record bounded diagnostics and tokenizer checks for self-contained definitions.
+
+### QR-10 dependency and independent-source follow-through
+
+- [x] Resolve and test decimal/frac, including an omitted-helper negative control.
+- [x] Bind recorded local members for four evaluation aliases to original spans.
+- [x] Screen five pinned public candidates against the complete preserved graph.
+- [ ] Complete external member source/rights closure and independent semantics.
+- [ ] Establish independent evaluation candidates and signed membership; no
+  admission or detector exemptions inferred from this exploratory screen.

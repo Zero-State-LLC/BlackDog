@@ -572,3 +572,12 @@ TOKEN_FLOOR=40 provisional; T07 unfrozen. Experimental evidence stays outside Gi
 - All four evaluation-eligible aliases have proposed large-family dependencies;
   113 inventory rows remain training-only. Readiness reports inventory qualification
   separately from the selected-family split blocker. No admission or T07 freeze.
+
+## QR-10 closure and evaluation search
+
+- Decimal/frac now has a passing explicit diagnostic closure and omitted-helper
+  rejection; its training-only and family restrictions remain.
+- Four evaluation aliases have exact local-member bindings and named external
+  closure frontiers. Five new public candidates passed bounded diagnostics but
+  remain comparison-connected in the unchanged detector's expanded screen.
+- No independent evaluation candidate established; no admission or T07 freeze.

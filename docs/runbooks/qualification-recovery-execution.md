@@ -399,3 +399,14 @@ The twelve passing draft instruction pairs fit the pinned tokenizer limit
 harness hashes are recorded separately. Nine are trivial constants: these checks
 do not establish useful dataset diversity, independent semantic approval or
 canonical admission. Training-only eligibility remains unchanged.
+
+### Closure and evaluation search continuation
+
+The [closure follow-through](../analysis/outside-family-closure-followthrough-2026-10-23.md)
+records a resolved decimal/frac diagnostic closure, exact local-member bindings
+for the four evaluation aliases, and a five-candidate search in two additional
+MIT-noticed repositories. All five passed bounded diagnostics but failed to
+establish family independence under the unchanged shipping detector. Preserve
+that distinction and the initial harness failure; do not clear signed membership
+or rights gates from runtime success. Raw evidence and expanded screening graphs
+remain outside Git, separately from the canonical recorded family graph.

@@ -8,6 +8,8 @@ See [docs/VERSIONING.md](docs/VERSIONING.md).
 
 ## [Unreleased]
 
+- Record resolved decimal helper diagnostics and a pinned independent-source search; retain family and admission blocks for every new candidate.
+
 - Bind outside-family inventory and source definitions to readiness; expose training-only eligibility and unresolved alias dependencies without granting admission.
 
 - Reconstruct recorded public family joins in readiness and report infeasible single-family partitions without granting admission.
