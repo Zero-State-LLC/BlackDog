@@ -154,3 +154,12 @@ companions, an always-zero compiler mutant, full-frame reference comparison,
 receipt mutations and frozen legacy digests. Run sandboxed integration on Linux
 CI; do not weaken canaries for other platforms. See ADR-0008. No admission,
 FLOOR change, T07 freeze, detector default change or merge is authorized here.
+
+## Qualification recovery public pair bindings
+
+QR-03/QR-10 follows the recovery specification's public receipt and pair binding
+plan. Add the strict public-pair descriptor and ADR-0009, replay immutable R3b
+receipt joins, derive candidate prompts with separately recorded corrections, and
+integrate advisory results into readiness. No readiness gate is cleared and no
+training transition is added. Contract/negative/mutation tests precede real public
+receipt replay; actual data and approval payloads remain outside Git.

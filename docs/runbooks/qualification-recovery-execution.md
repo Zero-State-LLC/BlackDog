@@ -234,3 +234,40 @@ python -m pytest tests/test_sft_batch.py
 These checks cover labels and masking only. They do not establish model
 compatibility, loss convergence, GPU memory use, checkpoint equality or training
 authorization. Reuse the preserved Spark environment for those later probes.
+
+## Replay public source and instruction-pair bindings
+
+Use a `public-pair-review.schema.json` descriptor as a readiness manifest receipt
+with gate `public_instruction_pairs`, outcome `BLOCKED`, and an exact scope digest.
+The evidence root must contain only the explicitly selected public files. Pin the
+descriptor SHA-256 in the readiness manifest. This is a public review scope, not
+a replacement for the signed T07 run scope or a training dataset.
+
+The descriptor references eight preserved inputs: source rights approval, behavioral
+approval, local-closure decisions, owner delegation confirmation, later imported
+closure decisions, the full original MIT notice, imported-notice approval and
+preserved GRAME header/exception. Each selected unit references
+its exact source, original contract and dossier bytes. Paths are relative to the
+evidence root. The schema is strict; receipts retain their original formats.
+No private tasks, answers, credentials or holdout payloads belong in this bundle.
+
+The existing readiness CLI verifies the descriptor and reports per-unit content
+bindings under `receipt_verification.public_pair_reviews`. It does not print
+source, prompts or receipt contents. `faustcoder.public_pairs.review_bundle`
+returns the same summary and deterministic candidate pairs for local preparation.
+Keep those candidates outside Git, with private filesystem permissions. They are
+not train/development partitions and must not be fed to a training launcher.
+
+Candidate prompts are derived from behavioral fields, with the explicitly
+approved import correction applied as an overlay. Target bytes and notice remain
+unchanged. Prompt, target, pair, original contract and approval digests are retained.
+The derived wording has not acquired independent semantic approval by hashing it.
+A successful review reports `QUALIFICATION_PENDING`, zero qualified pairs and no
+cleared readiness gates. Pilot mode now explicitly reports the instruction
+pair contract independently of source rights and signed split verification.
+
+Remaining checks are canonical Example admission, signed partition membership,
+prompt semantic validation, compiler/signal replay and the real pinned tokenizer's
+512-token bound. A seven-source public review does not establish seven independent
+families. Do not divide related units across training and development to fill the
+pilot recipe. Preserve their existing family/lineage constraints.

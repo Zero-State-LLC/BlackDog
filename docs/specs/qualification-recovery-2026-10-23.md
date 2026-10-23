@@ -277,3 +277,40 @@ EOS-as-padding, independent rows, no silent target truncation, tampering, invali
 IDs/special tokens, malformed examples, determinism and batch/sequence bounds.
 Task: QR-10 infrastructure, synthetic fixtures only. The encoder validates
 representation, not the correctness or permission of an instruction pair.
+
+## QR-03/QR-10 public receipt and pair binding plan
+
+Journey: reuse the preserved public source, behavior and bounded-closure decisions
+without repeating review or mistaking them for dataset admission. Workflow: pin a
+strict public-pair bundle to the requested scope; verify explicit file references;
+join unit/source/dossier/revision/blob identities across original receipts; retain
+notice bytes; derive a deterministic prompt from approved behavior fields and the
+recorded import correction; bind it to the unchanged public target bytes.
+
+States: UNVERIFIED -> PUBLIC_BINDINGS_VERIFIED -> QUALIFICATION_PENDING.
+Malformed, missing, duplicate, conflicting or altered evidence -> INVALID.
+There is no transition to training readiness or authorization in this adapter.
+Original draft contracts remain immutable; approval overlays are separately bound.
+The initial contract handles the existing R3b public receipt formats only.
+
+Contract: `public-pair-review.schema.json`, version 1, contains exact scope digest,
+explicit references to original rights/behavior/local/imported closure receipts,
+owner confirmation, MIT notice, imported-notice approval and GRAME header,
+and at most 35 public source/contract/dossier
+triples. No discovery, archives, private tasks, keys or arbitrary prompt strings.
+Prompts retain input/output arity, controls, analytical formula, domain, cases,
+sample rates and effective declared imports. Source/notice hashes and Git blob
+identity are rechecked. Recorded approvals are evidence claims, not authenticated
+new authority; no gate is cleared. Derived pairs are candidates only and carry
+explicit prompt provenance and content digests.
+
+Acceptance: fixture tests cover cross-receipt identity drift, changed targets,
+notices/contracts, duplicate units, malformed/unknown fields, unsafe paths,
+missing closure coverage, required import correction and deterministic pairs.
+Reporter integration must preserve source-rights, signed-split and authorization
+blockers and report instruction-pair qualification separately. Real replay checks
+original public receipts outside Git. Runtime compiler/signal replay, prompt
+semantic validation, canonical Example/snapshot admission and signed disjoint
+partitions remain prerequisites before any pair is qualified for training.
+Tasks: implement schema and adapter, wire advisory results into readiness, replay
+public bundles, run focused/regression/mutation checks, record remaining gaps.

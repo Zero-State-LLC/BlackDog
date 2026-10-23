@@ -313,3 +313,13 @@ graph LR
 ```
 
 Parallel starts after T01: T02, T05 and T09. Lanes T17 to T19, T21 and T22 run in parallel with T10. From 0.3.5: GD-1 precedes T10, and A7-S precedes A2-T. From 0.3.7: D3-H1 blocks T10. D3-H2 precedes P3 and does not block P1 or P2. From 0.3.10: D3-H2-C precedes P3 and does not block P1 or P2.
+
+## Recovery public pair preparation
+
+- [x] Define public-pair-review schema and ADR-0009; bind exact source, contract,
+  dossier, notice and bounded approval references.
+- [x] Add deterministic candidate-pair preparation and readiness advisory adapter.
+- [x] Add negative tests for changed identity/content, unsafe inputs and scope
+  escalation; preserve separate instruction-pair and training blockers.
+- [ ] Complete runtime/prompt qualification and canonical signed-partition admission
+  before consuming any candidate as a training example.

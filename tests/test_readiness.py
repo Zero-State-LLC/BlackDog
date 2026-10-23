@@ -7,7 +7,7 @@ def test_missing_evidence_never_passes(tmp_path: Path):
     assert result["pilot_ready"] is False
     assert result["training_authorized"] is False
     assert all(row["status"] == "NOT_VERIFIED" for row in result["evidence"])
-    assert len(result["blockers"]) == 10
+    assert len(result["blockers"]) == 11
 
 
 def test_document_presence_is_not_approval(tmp_path: Path):

@@ -8,6 +8,8 @@ See [docs/VERSIONING.md](docs/VERSIONING.md).
 
 ## [Unreleased]
 
+- Replay bounded public source/behavior/closure/notice receipts in readiness and derive provenance-bound instruction candidates. Preserve import corrections and separate MIT/LGPL notices; keep pair qualification and training authorization blocked pending canonical evidence.
+
 - Add immutable completion-only causal-model batches with prompt/padding loss masking, explicit EOS, target hash binding, fixed pilot bounds and no truncation or packing. Synthetic tests verify shifted label positions; production pair qualification and training remain gated.
 
 - Prepare reproducible bounded pilot source partitions from externally trusted signed public snapshots. Preserve notices/provenance, exclude holdout examples, refuse truncation and overwrites, and retain explicit qualification/training blockers.

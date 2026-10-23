@@ -25,13 +25,14 @@ FULL_OWNER_GATES = ("approved_full_dataset", "approved_model", "full_training_au
 QUALIFICATION_GATES = ("source_rights", "family_disjoint_split", "two_host_floor", "private_custody")
 MODE_GATES = {
     "synthetic": ("environment_probe", "synthetic_checkpoint_probe"),
-    "pilot": ("source_rights", "family_disjoint_split", "t07_signed_split",
+    "pilot": ("instruction_pair_contract", "source_rights", "family_disjoint_split", "t07_signed_split",
               "t08_baseline", "a2_path_eval_so", "gd1_group_drop", "environment_probe",
               *OWNER_GATES),
     "full": (*QUALIFICATION_GATES, *FULL_OWNER_GATES, "t07_signed_split", "t08_baseline",
              "a2_path_eval_so", "gd1_group_drop", "environment_probe"),
 }
 GATE_ACTIONS = {
+    "instruction_pair_contract": "Verify prompt provenance, qualified targets, compiler/signal evidence and signed partition membership",
     "source_rights": "Verify the exact selected units against existing rights and closure receipts",
     "family_disjoint_split": "Replay project, family and lineage separation for the selected dataset",
     "t07_signed_split": "Verify signed T07 split, including any recorded provisional-floor caveat and recheck",

@@ -109,6 +109,7 @@ def verify_manifest(manifest: EvidenceManifest, root: Path, *, mode: Mode,
     blockers = []
     verified = []
     semantic = []
+    public_reviews = []
     if manifest.mode != mode or manifest.scope_digest != scope_digest:
         return {'verified': [], 'blockers': [{
             'gate': 'manifest_scope', 'status': 'INVALID', 'code': 'scope_mismatch',
@@ -132,6 +133,20 @@ def verify_manifest(manifest: EvidenceManifest, root: Path, *, mode: Mode,
         verified.append({'receipt_id': ref.receipt_id, 'gate': ref.gate,
                          'sha256': ref.sha256, 'scope_digest': ref.scope_digest,
                          'status': 'INTEGRITY_VERIFIED'})
+        if ref.gate == 'public_instruction_pairs':
+            from faustcoder.public_pairs import review_bundle
+            try:
+                report, _ = review_bundle(data, root, scope_digest=scope_digest)
+            except (ArtifactStoreError, OSError, ValueError, TypeError, KeyError, RecursionError):
+                blockers.append({'gate': 'instruction_pair_contract', 'receipt_id': ref.receipt_id,
+                                 'status': 'INVALID', 'code': 'public_pair_binding_failed',
+                                 'next_action': 'Restore exact public receipts and resolve conflicting bindings'})
+                continue
+            public_reviews.append({**report, 'receipt_id': ref.receipt_id})
+            blockers.append({'gate': 'instruction_pair_contract', 'receipt_id': ref.receipt_id,
+                             'status': 'REVIEW_REQUIRED', 'code': 'public_pairs_not_qualified',
+                             'next_action': 'Replay compiler/signal and prompt semantics, then bind admitted Examples to signed partitions'})
+            continue
         if ref.outcome == 'PASS' and ref.gate in {'t07_signed_split', 'family_disjoint_split'}:
             if scope is None or trusted_split_public_key is None:
                 blockers.append({'gate': ref.gate, 'receipt_id': ref.receipt_id,
@@ -155,5 +170,6 @@ def verify_manifest(manifest: EvidenceManifest, root: Path, *, mode: Mode,
                          'next_action': 'Validate receipt semantics and required authority with the gate-specific verifier'})
     blocked_gates = {row['gate'] for row in blockers}
     return {'verified': verified, 'semantic_verification': semantic,
+            'public_pair_reviews': public_reviews,
             'verified_gates': sorted({row['gate'] for row in semantic} - blocked_gates),
             'blockers': blockers}

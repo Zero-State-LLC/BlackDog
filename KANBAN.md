@@ -79,6 +79,21 @@ semantic instruction-pair qualification and training authorization remain open.
 Published preparation head `40dbba7` passed the complete CI runtime suite:
 1,026 tests in 236.82 seconds. Fresh encoding-head CI is still required.
 
+## Public receipt and instruction-pair checkpoint
+
+OBSERVED: public-pair readiness replay verifies 29 exact public payloads for
+seven candidate pairs. Source, original behavior contract, dossier, revision,
+Git blob, scoped closure decisions and MIT/imported notices are joined without
+rewriting historical receipts. The approved import correction is a separately
+bound prompt overlay. Candidate pairs remain outside Git and unpartitioned.
+
+The adapter passes 52 focused tests and catches all nine targeted mutants.
+All 213 related regressions passed; fresh current-head CI remains required.
+No source-rights, signed-split, dataset-admission or training gate is cleared.
+Qualified pairs: zero. Remaining work: canonical Example admission, signed
+partition membership, prompt semantic validation, compiler/signal replay and
+real-tokenizer bounds. Existing family restrictions remain; no training ran.
+
 ## Current milestone: qualification sprint
 
 [Ten-working-day sprint](docs/runbooks/qualification-sprint.md): one consolidated
