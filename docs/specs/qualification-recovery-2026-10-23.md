@@ -55,3 +55,18 @@ Implement ledger/reporting on feature branches with fixture-only data. Run schem
 
 ## Research and decisions
 Investigate upstream ARM64 wheel compatibility only if the repaired isolated candidate fails representative probes. Do not bypass PyTorch's exact dependency pins. Prefer existing Faust compiler and DSP harness over proxy-only text metrics. Resolve host rights and custody through actual human approvals, not agent-generated attestations.
+
+## QR-01 live PR reconciliation, 2026-10-23 PT
+
+Read-only GitHub metadata and changed-file inspection (not a test run):
+
+| PR | Head SHA | Mergeable reported | Overlap and disposition |
+| --- | --- | --- | --- |
+| #112 | e5833deff088a7b45797a996c103d2372cd712e7 | yes | KANBAN overlap with #113/#114/#115; review tests and source documentation |
+| #113 | de6e3b37a85d4854dc71053347f2a962e1f52c8b | yes | KANBAN overlap; signal.py overlaps draft #76; inspect Codex review and current-head CI |
+| #114 | ced2681c958fde9a198729bf622ae7b71324949e | yes | KANBAN overlap; verify approved source/notice receipt scope |
+| #76 | 829b9a7b4580dd1be58e7aafbfdb3d70689f7818 | no, draft | signal.py overlaps #113; TaskSpec completeness and tests required |
+| #73 | 8798cb24edca3e9ac4c1fb664ccce9d78910c7ee | yes | separate specs/002 subtree; reconcile canonical 001 and review notes |
+| #115 | 301efd965f1e45416d9ff96ffcec2a923e40987e | yes, draft | KANBAN overlap; documentation-only recovery plan |
+
+Recommended integration order: first review #112 and #114 independent content; then #113 harness with focused, full Linux and mutation evidence; reconcile and rebase #115 after those merges; treat #76 as a separate reward-security gate, rebasing onto accepted signal.py changes; resolve #73 normative naming before merge. Do not interpret the order as approval to merge. Each changed head requires refreshed CI, reviewer disposition and updated conflict analysis. Review submissions for #113 and #73 include automated COMMENTED reviews; no approving review was returned for the inspected PRs. Combined commit statuses, review threads, full patches and current test execution remain unverified.
