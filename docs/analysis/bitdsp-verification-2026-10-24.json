@@ -1,0 +1,26 @@
+{
+  "rows": [
+    {
+      "candidate": "full_adder",
+      "source_sha256": "8f73419b0ce88389b695b298904276f5bbd9534f9a3fe7ec8594ed306a6df75c",
+      "capture_sha256": "598fd7fab14f87a469b4d06dccfc52605f70c54d4a825b5af0239a7a739aec16",
+      "cases": 8,
+      "frames": 8,
+      "status": "BINARY_DOMAIN_ORACLE_PASS"
+    },
+    {
+      "candidate": "bitstream_adder",
+      "source_sha256": "9893102cd4ac8d28172ba9172c91cd883b6d35d712cb39b2fa5c822998da5413",
+      "capture_sha256": "ebbe4c6a809dd5eccd7037c0c0fe48f91b769effc2dc379ef64f61ff47fcd511",
+      "cases": 256,
+      "frames": 1024,
+      "status": "BINARY_DOMAIN_ORACLE_PASS"
+    }
+  ],
+  "admission": "NOT_GRANTED",
+  "scope": "Binary inputs only; 48k native; full-adder complete truth table and all four-frame two-input bitstream histories",
+  "independent_verification": {
+    "status": "PASS",
+    "archive_sha256": "1acaeb95cb348af8e1b78aecd07ef98ff4631b992446894f49d5abd4ed504ef6"
+  }
+}

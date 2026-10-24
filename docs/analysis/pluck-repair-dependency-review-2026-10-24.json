@@ -1,0 +1,262 @@
+{
+  "source_sha256": "30518db5152c8fb7de4ab2aa874e918ea1189e5868ca01b4d2d0cbead9ee04f8",
+  "library_pin": "2edec0537f536eaa130d42c354884d7db971663c",
+  "members": 26,
+  "spans": 27,
+  "records": [
+    {
+      "member": "ba.impulsify",
+      "file": "basics.lib",
+      "start_byte": 91308,
+      "end_byte": 91345,
+      "sha256": "ea5e658b76089e8cf9432441adacc9eb30da96d9e906f54eb58d954d36f57ba8",
+      "blob_sha": "c092fd6fdb9c4bd2371fd7fc610b8f7f13308da8",
+      "license": "STK-4.3"
+    },
+    {
+      "member": "de.delay",
+      "file": "delays.lib",
+      "start_byte": 3650,
+      "end_byte": 3686,
+      "sha256": "a1a50c781c78c1093a5653ae982b94905e1d4e29b47572b577723379c622d53b",
+      "blob_sha": "96f0d60297283bb4af4a6a001925c126f4b8780d",
+      "license": "LGPL-2.1-or-later"
+    },
+    {
+      "member": "de.fdelay4",
+      "file": "delays.lib",
+      "start_byte": 15924,
+      "end_byte": 15947,
+      "sha256": "882c1e76d1e146298d19ed6ffde107fa5773406c5ea062e8bf8022458309a6ae",
+      "blob_sha": "96f0d60297283bb4af4a6a001925c126f4b8780d",
+      "license": "LGPL-2.1-or-later"
+    },
+    {
+      "member": "de.fdelayltv",
+      "file": "delays.lib",
+      "start_byte": 13755,
+      "end_byte": 14326,
+      "sha256": "c134c7866d42c046e5110c59a0e3f76ec47991792c8eba3bb771670ea03e6880",
+      "blob_sha": "96f0d60297283bb4af4a6a001925c126f4b8780d",
+      "license": "LGPL-2.1-or-later"
+    },
+    {
+      "member": "ma.SR",
+      "file": "maths.lib",
+      "start_byte": 4128,
+      "end_byte": 4139,
+      "sha256": "5f93632249161d88f2b000bb4bcca10e6d5e49aeaf2375a8acdddc961ea746c2",
+      "blob_sha": "bdaca8b89c2b1ce246916cfc466a744b3c8b7696",
+      "license": "LGPL-2.1-or-later"
+    },
+    {
+      "member": "ma.frac",
+      "file": "maths.lib",
+      "start_byte": 32643,
+      "end_byte": 32666,
+      "sha256": "fbd243eb3075b0ce9da8247e90fa9a33686a086e53069348c76115ed4e9bc577",
+      "blob_sha": "bdaca8b89c2b1ce246916cfc466a744b3c8b7696",
+      "license": "LGPL-2.1-or-later"
+    },
+    {
+      "member": "pl.SR",
+      "file": "platform.lib",
+      "start_byte": 3071,
+      "end_byte": 3141,
+      "sha256": "a14037af7019e67bbfedeea8d145ef6f23a121c009d193ba252507c5dc4deb0e",
+      "blob_sha": "8d86e6940ac1e32edde54ec24b8475ed806dad41",
+      "license": "LGPL-2.1-or-later"
+    },
+    {
+      "member": "pm.chain",
+      "file": "physmodels.lib",
+      "start_byte": 9645,
+      "end_byte": 9756,
+      "sha256": "362fee7afe9a70da7fc7c4b5332bb298d957e2c3060499b60c8b2c6e516ea9fa",
+      "blob_sha": "4404aa62f889f23b662ae728f7151c362b8c8b03",
+      "license": "LGPL-2.1-or-later"
+    },
+    {
+      "member": "pm.chain",
+      "file": "physmodels.lib",
+      "start_byte": 9757,
+      "end_byte": 9770,
+      "sha256": "729c4f0caa0cb4d017f46b4fe233eec2cc16f027d48ffc1a7f1be5e3022e425f",
+      "blob_sha": "4404aa62f889f23b662ae728f7151c362b8c8b03",
+      "license": "LGPL-2.1-or-later"
+    },
+    {
+      "member": "pm.closeIns",
+      "file": "physmodels.lib",
+      "start_byte": 15603,
+      "end_byte": 15620,
+      "sha256": "0d5c389b47837f9b72d111d32afbeff0cb88e2853a0b6699531786219776a200",
+      "blob_sha": "4404aa62f889f23b662ae728f7151c362b8c8b03",
+      "license": "LGPL-2.1-or-later"
+    },
+    {
+      "member": "pm.closeOuts",
+      "file": "physmodels.lib",
+      "start_byte": 16080,
+      "end_byte": 16098,
+      "sha256": "3be86eea2a4abf7ef588ae3070aae245c6e9bf7c450bb7f10689a36b6507e65a",
+      "blob_sha": "4404aa62f889f23b662ae728f7151c362b8c8b03",
+      "license": "LGPL-2.1-or-later"
+    },
+    {
+      "member": "pm.endChain",
+      "file": "physmodels.lib",
+      "start_byte": 16638,
+      "end_byte": 16677,
+      "sha256": "0e93824c1f994790d1f4436cd8635e8a2784a9ca00be2fa27d5cb54b3f1a05a1",
+      "blob_sha": "4404aa62f889f23b662ae728f7151c362b8c8b03",
+      "license": "LGPL-2.1-or-later"
+    },
+    {
+      "member": "pm.f2l",
+      "file": "physmodels.lib",
+      "start_byte": 6753,
+      "end_byte": 6783,
+      "sha256": "bf4e6262605ba7f2bc523d07eb88e49616605524da471c7f3a2548c30a30b84b",
+      "blob_sha": "4404aa62f889f23b662ae728f7151c362b8c8b03",
+      "license": "LGPL-2.1-or-later"
+    },
+    {
+      "member": "pm.impulseExcitation",
+      "file": "physmodels.lib",
+      "start_byte": 106417,
+      "end_byte": 106469,
+      "sha256": "150a95ecce6b4eb987b88c41d39771ef343767c19ec160ef9f017a86d0d0383a",
+      "blob_sha": "4404aa62f889f23b662ae728f7151c362b8c8b03",
+      "license": "LGPL-2.1-or-later"
+    },
+    {
+      "member": "pm.in",
+      "file": "physmodels.lib",
+      "start_byte": 11266,
+      "end_byte": 11286,
+      "sha256": "a57fdd233837a1816b4330ccff806490ca850671ecac6f4f183bfc52c62ae4de",
+      "blob_sha": "4404aa62f889f23b662ae728f7151c362b8c8b03",
+      "license": "LGPL-2.1-or-later"
+    },
+    {
+      "member": "pm.ks",
+      "file": "physmodels.lib",
+      "start_byte": 39865,
+      "end_byte": 40236,
+      "sha256": "fdbc62d48012e1a47842eb8cd63078453abc13698f0a95554c7e5bd267516125",
+      "blob_sha": "4404aa62f889f23b662ae728f7151c362b8c8b03",
+      "license": "LGPL-2.1-or-later"
+    },
+    {
+      "member": "pm.ksReflexionFilter",
+      "file": "physmodels.lib",
+      "start_byte": 33662,
+      "end_byte": 33696,
+      "sha256": "5ecd3683bbfaeae82fdd75476afdfbf3b916150455a5c845b88775a54752817d",
+      "blob_sha": "4404aa62f889f23b662ae728f7151c362b8c8b03",
+      "license": "LGPL-2.1-or-later"
+    },
+    {
+      "member": "pm.l2s",
+      "file": "physmodels.lib",
+      "start_byte": 7442,
+      "end_byte": 7472,
+      "sha256": "902724b7832d436011ad51b4824f3270a154827d93d09e5f3d3cd3c18b7b9d6f",
+      "blob_sha": "4404aa62f889f23b662ae728f7151c362b8c8b03",
+      "license": "LGPL-2.1-or-later"
+    },
+    {
+      "member": "pm.maxLength",
+      "file": "physmodels.lib",
+      "start_byte": 6199,
+      "end_byte": 6213,
+      "sha256": "a9bcfea58f57202d378462b6a4bb1a01761c8ff1d25dfb137253d6b74050b606",
+      "blob_sha": "4404aa62f889f23b662ae728f7151c362b8c8b03",
+      "license": "LGPL-2.1-or-later"
+    },
+    {
+      "member": "pm.out",
+      "file": "physmodels.lib",
+      "start_byte": 12572,
+      "end_byte": 12595,
+      "sha256": "549b9141b7d70fbe8708283f74a0587114a479175ad91e160e5c34fce7bb6f98",
+      "blob_sha": "4404aa62f889f23b662ae728f7151c362b8c8b03",
+      "license": "LGPL-2.1-or-later"
+    },
+    {
+      "member": "pm.speedOfSound",
+      "file": "physmodels.lib",
+      "start_byte": 5885,
+      "end_byte": 5904,
+      "sha256": "5b4222c5d0cba556e3c11cc31b9c8fcdfccb217e2e6248d0662bcdc8a0e1eae7",
+      "blob_sha": "4404aa62f889f23b662ae728f7151c362b8c8b03",
+      "license": "LGPL-2.1-or-later"
+    },
+    {
+      "member": "pm.stringSegment",
+      "file": "physmodels.lib",
+      "start_byte": 23905,
+      "end_byte": 24018,
+      "sha256": "159729d6ed26f839361016cd1049292d743923cfedf3486700f430af8e493f8e",
+      "blob_sha": "4404aa62f889f23b662ae728f7151c362b8c8b03",
+      "license": "LGPL-2.1-or-later"
+    },
+    {
+      "member": "pm.terminations",
+      "file": "physmodels.lib",
+      "start_byte": 13507,
+      "end_byte": 13587,
+      "sha256": "af93659ef178599909ccc581380512d073bd91b9903924d29aa2548c4cb55bf7",
+      "blob_sha": "4404aa62f889f23b662ae728f7151c362b8c8b03",
+      "license": "LGPL-2.1-or-later"
+    },
+    {
+      "member": "pm.waveguide",
+      "file": "physmodels.lib",
+      "start_byte": 18917,
+      "end_byte": 18958,
+      "sha256": "ad5a25516d9e92dd7ee132ea030f31e7da6b3fdd71c2f4cea1e53887dfbf768e",
+      "blob_sha": "4404aa62f889f23b662ae728f7151c362b8c8b03",
+      "license": "LGPL-2.1-or-later"
+    },
+    {
+      "member": "pm.waveguideFd4",
+      "file": "physmodels.lib",
+      "start_byte": 18322,
+      "end_byte": 18375,
+      "sha256": "833857bdb5ade1859c8e03c901c0957ca3943922879142cb260d38686a5f339a",
+      "blob_sha": "4404aa62f889f23b662ae728f7151c362b8c8b03",
+      "license": "LGPL-2.1-or-later"
+    },
+    {
+      "member": "ro.crossNM",
+      "file": "routes.lib",
+      "start_byte": 6285,
+      "end_byte": 6351,
+      "sha256": "c5757a63eaa50a57f6a0bb0a3192c7515ead3a9eb2577d7a7f8d4f77260722c4",
+      "blob_sha": "b5e22c181d2f18e1a4548c735df05cddcdf490c9",
+      "license": "LGPL-2.1-or-later"
+    },
+    {
+      "member": "ro.crossnn",
+      "file": "routes.lib",
+      "start_byte": 4581,
+      "end_byte": 4607,
+      "sha256": "a42458d03f2c28094ec947b8150bc0256e5e2060bd65deaf434de753c7ae1253",
+      "blob_sha": "b5e22c181d2f18e1a4548c735df05cddcdf490c9",
+      "license": "LGPL-2.1-or-later"
+    }
+  ],
+  "member_overrides": {
+    "pm.maxLength": {
+      "original_text": "maxLength = 3;",
+      "derived_text": "maxLength = 17.05;",
+      "reason": "Cover original 20 Hz frequency endpoint without delay-capacity clipping",
+      "derived_sha256": "b1910f1abddbea90a58a3271a6d3581a955856b87a9799b9f14e86502e826382"
+    }
+  },
+  "unresolved_notices": [],
+  "admission": "NOT_GRANTED",
+  "policy": "D-013 source training-only restrictions retained; original span notices identify provenance, not unchanged derivative bytes"
+}

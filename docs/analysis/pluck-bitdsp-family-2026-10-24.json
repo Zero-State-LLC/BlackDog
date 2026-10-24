@@ -1,0 +1,32 @@
+{
+  "graph": {
+    "identities": 1548,
+    "components": 12,
+    "joining_operations": 30114
+  },
+  "rows": [
+    {
+      "candidate": "pluck_repair",
+      "unit_id": "new:pluck_repair",
+      "source_sha256": "30518db5152c8fb7de4ab2aa874e918ea1189e5868ca01b4d2d0cbead9ee04f8",
+      "family": "sha256:91d2a45baad8ac0e7cf6fa020ee8c345395bbe0d45eb7a8884d04c8964d1816f",
+      "comparison_connected": true
+    },
+    {
+      "candidate": "bitdsp_full_adder",
+      "unit_id": "new:bitdsp_full_adder",
+      "source_sha256": "8f73419b0ce88389b695b298904276f5bbd9534f9a3fe7ec8594ed306a6df75c",
+      "family": "sha256:91d2a45baad8ac0e7cf6fa020ee8c345395bbe0d45eb7a8884d04c8964d1816f",
+      "comparison_connected": true
+    },
+    {
+      "candidate": "bitdsp_bitstream_adder",
+      "unit_id": "new:bitdsp_bitstream_adder",
+      "source_sha256": "9893102cd4ac8d28172ba9172c91cd883b6d35d712cb39b2fa5c822998da5413",
+      "family": "sha256:91d2a45baad8ac0e7cf6fa020ee8c345395bbe0d45eb7a8884d04c8964d1816f",
+      "comparison_connected": true
+    }
+  ],
+  "admission": "NOT_GRANTED",
+  "policy": "unchanged floor40 provisional H1 collective"
+}
