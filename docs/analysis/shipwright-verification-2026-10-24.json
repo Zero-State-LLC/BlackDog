@@ -1,0 +1,461 @@
+{
+  "rows": [
+    {
+      "candidate": "saw_lead",
+      "variants": [
+        {
+          "variant": "original",
+          "source_sha256": "bfeea56d2fc5a7b44722c3396eea2243816b2443e1bdc98ce16e563d3206e3b8",
+          "compile": {
+            "returncode": 0,
+            "stderr": "",
+            "elapsed_ms": 26
+          },
+          "inputs": 0,
+          "outputs": 2,
+          "gcc": {
+            "returncode": 0,
+            "stderr": "",
+            "elapsed_ms": 237
+          },
+          "captures": [
+            {
+              "rate": 44100,
+              "sha256": "309b076e382d30c999574a7c5792ea2b0ac0d0b11c3e254f8e4fbaad085b6486",
+              "peak": 0.6504769325256348
+            },
+            {
+              "rate": 48000,
+              "sha256": "3108b43f7156a0d4ad8896ccd2534fef80315d585ba21a43e64a55810ee6dd9f",
+              "peak": 0.6506216526031494
+            },
+            {
+              "rate": 96000,
+              "sha256": "824bd92357ccd21bfadbd50e4878547e0658edacd8f26de208238b442fe6c969",
+              "peak": 0.6520221829414368
+            },
+            {
+              "rate": 192000,
+              "sha256": "400450caf6f62e4e77e16f18d57d7d25ce4844013d10de07895052cea159dae3",
+              "peak": 0.6523197889328003
+            }
+          ]
+        },
+        {
+          "variant": "closed",
+          "source_sha256": "860b8123f4c9e19d298ea580f38354bc2058c558c996802ae0226d94430c12b2",
+          "compile": {
+            "returncode": 0,
+            "stderr": "",
+            "elapsed_ms": 11
+          },
+          "inputs": 0,
+          "outputs": 2,
+          "gcc": {
+            "returncode": 0,
+            "stderr": "",
+            "elapsed_ms": 235
+          },
+          "captures": [
+            {
+              "rate": 44100,
+              "sha256": "309b076e382d30c999574a7c5792ea2b0ac0d0b11c3e254f8e4fbaad085b6486",
+              "peak": 0.6504769325256348
+            },
+            {
+              "rate": 48000,
+              "sha256": "3108b43f7156a0d4ad8896ccd2534fef80315d585ba21a43e64a55810ee6dd9f",
+              "peak": 0.6506216526031494
+            },
+            {
+              "rate": 96000,
+              "sha256": "824bd92357ccd21bfadbd50e4878547e0658edacd8f26de208238b442fe6c969",
+              "peak": 0.6520221829414368
+            },
+            {
+              "rate": 192000,
+              "sha256": "400450caf6f62e4e77e16f18d57d7d25ce4844013d10de07895052cea159dae3",
+              "peak": 0.6523197889328003
+            }
+          ]
+        }
+      ],
+      "admission": "NOT_GRANTED",
+      "status": "BOUNDED_AUDIO_EQUIVALENCE_PASS",
+      "negative_missing_platform": {
+        "returncode": 1,
+        "stderr": "/home/delphi/blackdog-pair-qualification-m8e1n43a/shipwright-check/saw_lead/missing-platform.dsp:74 : ERROR : undefined symbol : pl\n",
+        "elapsed_ms": 7
+      },
+      "instrument_interface_pass": true
+    },
+    {
+      "candidate": "soft_pad",
+      "variants": [
+        {
+          "variant": "original",
+          "source_sha256": "b88a4c97a484f025c9f6555a11974c2eb58824c6b95eba3a81183285b396dbc1",
+          "compile": {
+            "returncode": 0,
+            "stderr": "",
+            "elapsed_ms": 25
+          },
+          "inputs": 0,
+          "outputs": 2,
+          "gcc": {
+            "returncode": 0,
+            "stderr": "",
+            "elapsed_ms": 227
+          },
+          "captures": [
+            {
+              "rate": 44100,
+              "sha256": "6fd358f8a4e8e13eb8a8b1fbbe8d5b1ee61c03edf32ab3188fba62887d99ec61",
+              "peak": 0.07169699668884277
+            },
+            {
+              "rate": 48000,
+              "sha256": "9a7d2f7c1ee2b58c4e2be558f9fa919a5391b5f0113c1083a6253757e3a7b1c9",
+              "peak": 0.0647708922624588
+            },
+            {
+              "rate": 96000,
+              "sha256": "a98c7c334b8b9fe259afce8039d574640ae36ae2ded245f7b4e213beaecbb2a5",
+              "peak": 0.03654264658689499
+            },
+            {
+              "rate": 192000,
+              "sha256": "eeec064a6bbb57eddbe76f7393a119b8f96b5f8fdeaa21250596af25ef9f64fa",
+              "peak": 0.023516278713941574
+            }
+          ]
+        },
+        {
+          "variant": "closed",
+          "source_sha256": "310238c884fcc04459d60b07efb644cc10604456ef13261769ee1b4525e5f6ef",
+          "compile": {
+            "returncode": 0,
+            "stderr": "",
+            "elapsed_ms": 21
+          },
+          "inputs": 0,
+          "outputs": 2,
+          "gcc": {
+            "returncode": 0,
+            "stderr": "",
+            "elapsed_ms": 235
+          },
+          "captures": [
+            {
+              "rate": 44100,
+              "sha256": "6fd358f8a4e8e13eb8a8b1fbbe8d5b1ee61c03edf32ab3188fba62887d99ec61",
+              "peak": 0.07169699668884277
+            },
+            {
+              "rate": 48000,
+              "sha256": "9a7d2f7c1ee2b58c4e2be558f9fa919a5391b5f0113c1083a6253757e3a7b1c9",
+              "peak": 0.0647708922624588
+            },
+            {
+              "rate": 96000,
+              "sha256": "a98c7c334b8b9fe259afce8039d574640ae36ae2ded245f7b4e213beaecbb2a5",
+              "peak": 0.03654264658689499
+            },
+            {
+              "rate": 192000,
+              "sha256": "eeec064a6bbb57eddbe76f7393a119b8f96b5f8fdeaa21250596af25ef9f64fa",
+              "peak": 0.023516278713941574
+            }
+          ]
+        }
+      ],
+      "admission": "NOT_GRANTED",
+      "status": "BOUNDED_AUDIO_EQUIVALENCE_PASS",
+      "negative_missing_platform": {
+        "returncode": 1,
+        "stderr": "/home/delphi/blackdog-pair-qualification-m8e1n43a/shipwright-check/soft_pad/missing-platform.dsp:148 : ERROR : undefined symbol : pl\n",
+        "elapsed_ms": 7
+      },
+      "instrument_interface_pass": true
+    },
+    {
+      "candidate": "sub_bass",
+      "variants": [
+        {
+          "variant": "original",
+          "source_sha256": "51cfe4edc834bdb2f50e275a0bd328c2a4b73a1bf289d813f80bb6500e435a8a",
+          "compile": {
+            "returncode": 0,
+            "stderr": "",
+            "elapsed_ms": 31
+          },
+          "inputs": 0,
+          "outputs": 2,
+          "gcc": {
+            "returncode": 0,
+            "stderr": "",
+            "elapsed_ms": 239
+          },
+          "captures": [
+            {
+              "rate": 44100,
+              "sha256": "523620c08d4e97b7190194a7d11a38faad7d7b84478a12fe9fa46a23c02e85e3",
+              "peak": 0.36917611956596375
+            },
+            {
+              "rate": 48000,
+              "sha256": "caee1f43a471b971c463ed656141d83b34c62aeacc2737a3843b86d7ee32b39c",
+              "peak": 0.36905115842819214
+            },
+            {
+              "rate": 96000,
+              "sha256": "14e4b65b4ff93f06e477ec1a95d7f7cecf5db6bd04ef4cb7f6d5649ec2d60d61",
+              "peak": 0.3689587116241455
+            },
+            {
+              "rate": 192000,
+              "sha256": "cca434021e23dd69bb783611f13e378d6830ac4aaaf0d5f5bd1eedb34314acd2",
+              "peak": 0.36927393078804016
+            }
+          ]
+        },
+        {
+          "variant": "closed",
+          "source_sha256": "f0a16bb970f4dddf925f9e52ec7da09e549e0521621dd3ed6441d32737bc4205",
+          "compile": {
+            "returncode": 0,
+            "stderr": "",
+            "elapsed_ms": 15
+          },
+          "inputs": 0,
+          "outputs": 2,
+          "gcc": {
+            "returncode": 0,
+            "stderr": "",
+            "elapsed_ms": 226
+          },
+          "captures": [
+            {
+              "rate": 44100,
+              "sha256": "523620c08d4e97b7190194a7d11a38faad7d7b84478a12fe9fa46a23c02e85e3",
+              "peak": 0.36917611956596375
+            },
+            {
+              "rate": 48000,
+              "sha256": "caee1f43a471b971c463ed656141d83b34c62aeacc2737a3843b86d7ee32b39c",
+              "peak": 0.36905115842819214
+            },
+            {
+              "rate": 96000,
+              "sha256": "14e4b65b4ff93f06e477ec1a95d7f7cecf5db6bd04ef4cb7f6d5649ec2d60d61",
+              "peak": 0.3689587116241455
+            },
+            {
+              "rate": 192000,
+              "sha256": "cca434021e23dd69bb783611f13e378d6830ac4aaaf0d5f5bd1eedb34314acd2",
+              "peak": 0.36927393078804016
+            }
+          ]
+        }
+      ],
+      "admission": "NOT_GRANTED",
+      "status": "BOUNDED_AUDIO_EQUIVALENCE_PASS",
+      "negative_missing_platform": {
+        "returncode": 1,
+        "stderr": "/home/delphi/blackdog-pair-qualification-m8e1n43a/shipwright-check/sub_bass/missing-platform.dsp:172 : ERROR : undefined symbol : pl\n",
+        "elapsed_ms": 7
+      },
+      "instrument_interface_pass": true
+    },
+    {
+      "candidate": "pluck",
+      "variants": [
+        {
+          "variant": "original",
+          "source_sha256": "a15fef8086c17d4acf2136783ce9e5b61dbf1ff037e6265f8a938b05ec344125",
+          "compile": {
+            "returncode": 0,
+            "stderr": "",
+            "elapsed_ms": 68
+          },
+          "inputs": 1,
+          "outputs": 2,
+          "gcc": {
+            "returncode": 0,
+            "stderr": "",
+            "elapsed_ms": 228
+          },
+          "captures": [
+            {
+              "rate": 44100,
+              "sha256": "7d2e4efdcfaf27f30b942730e205df09939ed3775552ad6da1dde32e0c51c747",
+              "peak": 0.7037178874015808
+            },
+            {
+              "rate": 48000,
+              "sha256": "4c9af52b4dea163afa7e20cd04b55a916dbd425db4e55d625ad42d26b4eef1fa",
+              "peak": 0.7037179470062256
+            },
+            {
+              "rate": 96000,
+              "sha256": "532a7225d3f23945e5e56afe6b0ed835688883781ddb385a118a53e7468556ae",
+              "peak": 0.7037178874015808
+            },
+            {
+              "rate": 192000,
+              "sha256": "b84126854377a7b3bee32bffa9abc34872d03730412051f660978990447c2885",
+              "peak": 0.7037179470062256
+            }
+          ]
+        },
+        {
+          "variant": "closed",
+          "source_sha256": "09b3c95d9fad85e2fc43b39ed5010fad8a3b45a510e728dec54f469007913267",
+          "compile": {
+            "returncode": 0,
+            "stderr": "",
+            "elapsed_ms": 40
+          },
+          "inputs": 1,
+          "outputs": 2,
+          "gcc": {
+            "returncode": 0,
+            "stderr": "",
+            "elapsed_ms": 229
+          },
+          "captures": [
+            {
+              "rate": 44100,
+              "sha256": "7d2e4efdcfaf27f30b942730e205df09939ed3775552ad6da1dde32e0c51c747",
+              "peak": 0.7037178874015808
+            },
+            {
+              "rate": 48000,
+              "sha256": "4c9af52b4dea163afa7e20cd04b55a916dbd425db4e55d625ad42d26b4eef1fa",
+              "peak": 0.7037179470062256
+            },
+            {
+              "rate": 96000,
+              "sha256": "532a7225d3f23945e5e56afe6b0ed835688883781ddb385a118a53e7468556ae",
+              "peak": 0.7037178874015808
+            },
+            {
+              "rate": 192000,
+              "sha256": "b84126854377a7b3bee32bffa9abc34872d03730412051f660978990447c2885",
+              "peak": 0.7037179470062256
+            }
+          ]
+        }
+      ],
+      "admission": "NOT_GRANTED",
+      "status": "BOUNDED_AUDIO_EQUIVALENCE_PASS",
+      "negative_missing_platform": {
+        "returncode": 1,
+        "stderr": "/home/delphi/blackdog-pair-qualification-m8e1n43a/shipwright-check/pluck/missing-platform.dsp:19 : ERROR : undefined symbol : pl\n",
+        "elapsed_ms": 7
+      },
+      "instrument_interface_pass": false
+    },
+    {
+      "candidate": "reverb",
+      "variants": [
+        {
+          "variant": "original",
+          "source_sha256": "29abe9be2b72afebf344e26b6a00f6688fbbb4b3b95ee8d6e30b9c9c68b25cfb",
+          "compile": {
+            "returncode": 0,
+            "stderr": "",
+            "elapsed_ms": 33
+          },
+          "inputs": 2,
+          "outputs": 2,
+          "gcc": {
+            "returncode": 0,
+            "stderr": "",
+            "elapsed_ms": 282
+          },
+          "captures": [
+            {
+              "rate": 44100,
+              "sha256": "b9834266a674e7c7662d7a7ed70ca629ce835696327a2668ebcd465caa72c3fd",
+              "peak": 0.699999988079071
+            },
+            {
+              "rate": 48000,
+              "sha256": "0103ea03f109259339c9a32f937ee75c0c13e174d540224b268b786c89c198c1",
+              "peak": 0.699999988079071
+            },
+            {
+              "rate": 96000,
+              "sha256": "0b5090f2013941454d80364f413151da51bfb9ce9bb2b8ef71b3c177a8205e1d",
+              "peak": 0.699999988079071
+            },
+            {
+              "rate": 192000,
+              "sha256": "f39a2d98cc171d37ca976ec85c7da458851aefe0f737dfb62847f0393c072029",
+              "peak": 0.699999988079071
+            }
+          ]
+        },
+        {
+          "variant": "closed",
+          "source_sha256": "6905a0af83345cd16d79d4396905d78769f7da1dc601a50b3053a30b749abb79",
+          "compile": {
+            "returncode": 0,
+            "stderr": "",
+            "elapsed_ms": 23
+          },
+          "inputs": 2,
+          "outputs": 2,
+          "gcc": {
+            "returncode": 0,
+            "stderr": "",
+            "elapsed_ms": 269
+          },
+          "captures": [
+            {
+              "rate": 44100,
+              "sha256": "b9834266a674e7c7662d7a7ed70ca629ce835696327a2668ebcd465caa72c3fd",
+              "peak": 0.699999988079071
+            },
+            {
+              "rate": 48000,
+              "sha256": "0103ea03f109259339c9a32f937ee75c0c13e174d540224b268b786c89c198c1",
+              "peak": 0.699999988079071
+            },
+            {
+              "rate": 96000,
+              "sha256": "0b5090f2013941454d80364f413151da51bfb9ce9bb2b8ef71b3c177a8205e1d",
+              "peak": 0.699999988079071
+            },
+            {
+              "rate": 192000,
+              "sha256": "f39a2d98cc171d37ca976ec85c7da458851aefe0f737dfb62847f0393c072029",
+              "peak": 0.699999988079071
+            }
+          ]
+        }
+      ],
+      "admission": "NOT_GRANTED",
+      "status": "BOUNDED_AUDIO_EQUIVALENCE_PASS",
+      "negative_missing_platform": {
+        "returncode": 1,
+        "stderr": "/home/delphi/blackdog-pair-qualification-m8e1n43a/shipwright-check/reverb/missing-platform.dsp:8 : ERROR : undefined symbol : pl\n",
+        "elapsed_ms": 5
+      },
+      "instrument_interface_pass": true
+    }
+  ],
+  "runner_sha256": "69326a8b3e5a2d9b7506711c278369e04cb5a5023eaa3509f44f56d2c4695269",
+  "scope": "24000 frames, four sample rates; default sliders, gate on frame1/off12000; reverb impulse plus deterministic sine input; single/ftz0; native only",
+  "independent_verification": {
+    "status": "PASS",
+    "finite_nonzero_captures": 40,
+    "byte_equal_pairs": 20,
+    "negative_compile_rejections": 5,
+    "interface_blocked": [
+      "pluck"
+    ],
+    "archive_sha256": "56e87d1e27691377e0ada84615a88e1d12381988d685b4ccb3f8061f5669db6e"
+  }
+}

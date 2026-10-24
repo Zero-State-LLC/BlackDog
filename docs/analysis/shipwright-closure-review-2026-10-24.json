@@ -1,0 +1,1353 @@
+{
+  "rows": [
+    {
+      "candidate": "saw_lead",
+      "source_sha256": "860b8123f4c9e19d298ea580f38354bc2058c558c996802ae0226d94430c12b2",
+      "roots": [
+        "en.adsr",
+        "fi.resonlp",
+        "os.sawtooth"
+      ],
+      "members": 17,
+      "spans": 26,
+      "missing_dependencies": [],
+      "unresolved_notices": [],
+      "records": [
+        {
+          "member": "en.adsr",
+          "file": "envelopes.lib",
+          "start_byte": 7438,
+          "end_byte": 8275,
+          "sha256": "bb7e50396f48054adc9099e8a6d30754a0f2d27973bd73372f33d0d3debea839",
+          "blob_sha": "368b4124f8064b40ce8c31ad3ed9f5b986c45d10",
+          "license": "LGPL-2.1-or-later"
+        },
+        {
+          "member": "fi._tanhalf",
+          "file": "filters.lib",
+          "start_byte": 118028,
+          "end_byte": 118085,
+          "sha256": "0c89477593eced7da48c6773299000b714b02b3e082c7001342adee4614c83bf",
+          "blob_sha": "0af91c8e5d9029bd24c099abd65928fa4d250beb",
+          "license": "MIT"
+        },
+        {
+          "member": "fi.resonlp",
+          "file": "filters.lib",
+          "start_byte": 141630,
+          "end_byte": 141776,
+          "sha256": "fbc0dd1a4ea5db2e2dc7e908f2ac032ccc8dd5572b1141462d95a1239675cf12",
+          "blob_sha": "0af91c8e5d9029bd24c099abd65928fa4d250beb",
+          "license": "STK-4.3"
+        },
+        {
+          "member": "fi.tf2s",
+          "file": "filters.lib",
+          "start_byte": 104264,
+          "end_byte": 104845,
+          "sha256": "10887b0c3a0dcb9e44bce498cb06ac0a94996ff8daaf661c4bd2c583e9bfaa50",
+          "blob_sha": "0af91c8e5d9029bd24c099abd65928fa4d250beb",
+          "license": "STK-4.3"
+        },
+        {
+          "member": "ma.EPSILON",
+          "file": "maths.lib",
+          "start_byte": 7434,
+          "end_byte": 7476,
+          "sha256": "43447e181ae82df321c32119ea2e5db9450192c325bef6c9ba6f9b91adbcb125",
+          "blob_sha": "bdaca8b89c2b1ce246916cfc466a744b3c8b7696",
+          "license": "LGPL-2.1-or-later"
+        },
+        {
+          "member": "ma.EPSILON",
+          "file": "maths.lib",
+          "start_byte": 7477,
+          "end_byte": 7527,
+          "sha256": "a46474b7a12029661b69163afecac276df4b6898a08fdd4101742c5e04116917",
+          "blob_sha": "bdaca8b89c2b1ce246916cfc466a744b3c8b7696",
+          "license": "LGPL-2.1-or-later"
+        },
+        {
+          "member": "ma.EPSILON",
+          "file": "maths.lib",
+          "start_byte": 7528,
+          "end_byte": 7584,
+          "sha256": "250f36faa708a953f4b6a7e1d0c7deea5cc5ab250948066c37b909629be20f49",
+          "blob_sha": "bdaca8b89c2b1ce246916cfc466a744b3c8b7696",
+          "license": "LGPL-2.1-or-later"
+        },
+        {
+          "member": "ma.EPSILON",
+          "file": "maths.lib",
+          "start_byte": 7585,
+          "end_byte": 7639,
+          "sha256": "39aee16bcf161203590db5e3f350f4c4ad79e1619e45921d72ad4bc17874d891",
+          "blob_sha": "bdaca8b89c2b1ce246916cfc466a744b3c8b7696",
+          "license": "LGPL-2.1-or-later"
+        },
+        {
+          "member": "ma.MAX",
+          "file": "maths.lib",
+          "start_byte": 8740,
+          "end_byte": 8778,
+          "sha256": "ce6fbde56ba1b688d90b05c4bd448e0c52a50fcd9c6506b8e184114e37de2fc7",
+          "blob_sha": "bdaca8b89c2b1ce246916cfc466a744b3c8b7696",
+          "license": "LGPL-2.1-or-later"
+        },
+        {
+          "member": "ma.MAX",
+          "file": "maths.lib",
+          "start_byte": 8779,
+          "end_byte": 8825,
+          "sha256": "13204d4cc626fddf71e1704b9532a580b2bcc346b1b209858e95f3ac45c8255a",
+          "blob_sha": "bdaca8b89c2b1ce246916cfc466a744b3c8b7696",
+          "license": "LGPL-2.1-or-later"
+        },
+        {
+          "member": "ma.MAX",
+          "file": "maths.lib",
+          "start_byte": 8826,
+          "end_byte": 8870,
+          "sha256": "4e965e0640c10e0450dcacfde9ead960373dcaead5524c35a474b7996eb1745e",
+          "blob_sha": "bdaca8b89c2b1ce246916cfc466a744b3c8b7696",
+          "license": "LGPL-2.1-or-later"
+        },
+        {
+          "member": "ma.MAX",
+          "file": "maths.lib",
+          "start_byte": 8871,
+          "end_byte": 8921,
+          "sha256": "0cc638ac5e19358ef56c6e98878a7abb22708ad4f4607128b3cdd7508bf1b9ff",
+          "blob_sha": "bdaca8b89c2b1ce246916cfc466a744b3c8b7696",
+          "license": "LGPL-2.1-or-later"
+        },
+        {
+          "member": "ma.PI",
+          "file": "maths.lib",
+          "start_byte": 5434,
+          "end_byte": 5462,
+          "sha256": "6bd98d96e6803b039673963c8b8194bb7027778c7fe3c6fb832acad6319292c3",
+          "blob_sha": "bdaca8b89c2b1ce246916cfc466a744b3c8b7696",
+          "license": "LGPL-2.1-or-later"
+        },
+        {
+          "member": "ma.SR",
+          "file": "maths.lib",
+          "start_byte": 4128,
+          "end_byte": 4139,
+          "sha256": "5f93632249161d88f2b000bb4bcca10e6d5e49aeaf2375a8acdddc961ea746c2",
+          "blob_sha": "bdaca8b89c2b1ce246916cfc466a744b3c8b7696",
+          "license": "LGPL-2.1-or-later"
+        },
+        {
+          "member": "ma.decimal",
+          "file": "maths.lib",
+          "start_byte": 33182,
+          "end_byte": 33197,
+          "sha256": "1482f4b52c6cc717acc2c4968b4c09957a17c36973bc5534360a82615d64f42b",
+          "blob_sha": "bdaca8b89c2b1ce246916cfc466a744b3c8b7696",
+          "license": "LGPL-2.1-or-later"
+        },
+        {
+          "member": "ma.frac",
+          "file": "maths.lib",
+          "start_byte": 32643,
+          "end_byte": 32666,
+          "sha256": "fbd243eb3075b0ce9da8247e90fa9a33686a086e53069348c76115ed4e9bc577",
+          "blob_sha": "bdaca8b89c2b1ce246916cfc466a744b3c8b7696",
+          "license": "LGPL-2.1-or-later"
+        },
+        {
+          "member": "os._fixpt",
+          "file": "oscillators.lib",
+          "start_byte": 10241,
+          "end_byte": 10749,
+          "sha256": "e94dd898aab3badffe49f87c1162aed190879866766efe319d047b0d4d6ceeff",
+          "blob_sha": "64bb5871522c191cb97741271a41dbe4bc6b1c11",
+          "license": "LGPL-2.1-or-later"
+        },
+        {
+          "member": "os._saw2ptr_fix",
+          "file": "oscillators.lib",
+          "start_byte": 50391,
+          "end_byte": 50943,
+          "sha256": "260dda42bf2ec5df51af306999718986428a21ef7bf30ec861159233592e9783",
+          "blob_sha": "64bb5871522c191cb97741271a41dbe4bc6b1c11",
+          "license": "STK-4.3"
+        },
+        {
+          "member": "os._saw2ptr_flt",
+          "file": "oscillators.lib",
+          "start_byte": 49496,
+          "end_byte": 49907,
+          "sha256": "c9bff18166a5b59520d34ff5a8f2f4bf4fa94e2edb562d5a9b25d66da99c3d8b",
+          "blob_sha": "64bb5871522c191cb97741271a41dbe4bc6b1c11",
+          "license": "STK-4.3"
+        },
+        {
+          "member": "os.saw2",
+          "file": "oscillators.lib",
+          "start_byte": 46353,
+          "end_byte": 46368,
+          "sha256": "5ea45d8c09ee91840e413508ff9aae3cb8cb888f0548c06c1c0c00a97d9d9569",
+          "blob_sha": "64bb5871522c191cb97741271a41dbe4bc6b1c11",
+          "license": "STK-4.3"
+        },
+        {
+          "member": "os.saw2ptr",
+          "file": "oscillators.lib",
+          "start_byte": 49254,
+          "end_byte": 49297,
+          "sha256": "aeb2266d65c9a5191ca387c05c1f5fe964237d925ef2babad897b590ce3a47e1",
+          "blob_sha": "64bb5871522c191cb97741271a41dbe4bc6b1c11",
+          "license": "STK-4.3"
+        },
+        {
+          "member": "os.saw2ptr",
+          "file": "oscillators.lib",
+          "start_byte": 49298,
+          "end_byte": 49341,
+          "sha256": "2c417f8ddd90bdb662894d989bd61d21819b63088b562e79cfb27405fe6b1f12",
+          "blob_sha": "64bb5871522c191cb97741271a41dbe4bc6b1c11",
+          "license": "STK-4.3"
+        },
+        {
+          "member": "os.saw2ptr",
+          "file": "oscillators.lib",
+          "start_byte": 49342,
+          "end_byte": 49385,
+          "sha256": "6252168f63b812b12351935c3164c3ed001e8747565e8e1b872c8038e3d87a39",
+          "blob_sha": "64bb5871522c191cb97741271a41dbe4bc6b1c11",
+          "license": "STK-4.3"
+        },
+        {
+          "member": "os.saw2ptr",
+          "file": "oscillators.lib",
+          "start_byte": 49386,
+          "end_byte": 49429,
+          "sha256": "8e52dc11dfc255252e0664e63537689ca6a9af56408f333828de87de41c93eb7",
+          "blob_sha": "64bb5871522c191cb97741271a41dbe4bc6b1c11",
+          "license": "STK-4.3"
+        },
+        {
+          "member": "os.sawtooth",
+          "file": "oscillators.lib",
+          "start_byte": 52598,
+          "end_byte": 52614,
+          "sha256": "ffc77b9250a2490245e93e2285223052e03e4a8f1ef2a97ae157468b60e1fc8e",
+          "blob_sha": "64bb5871522c191cb97741271a41dbe4bc6b1c11",
+          "license": "STK-4.3"
+        },
+        {
+          "member": "pl.SR",
+          "file": "platform.lib",
+          "start_byte": 3071,
+          "end_byte": 3141,
+          "sha256": "a14037af7019e67bbfedeea8d145ef6f23a121c009d193ba252507c5dc4deb0e",
+          "blob_sha": "8d86e6940ac1e32edde54ec24b8475ed806dad41",
+          "license": "LGPL-2.1-or-later"
+        }
+      ],
+      "admission": "NOT_GRANTED",
+      "teacher_provenance": "UNVERIFIED",
+      "library_pin": "2edec0537f536eaa130d42c354884d7db971663c"
+    },
+    {
+      "candidate": "soft_pad",
+      "source_sha256": "310238c884fcc04459d60b07efb644cc10604456ef13261769ee1b4525e5f6ef",
+      "roots": [
+        "en.adsr",
+        "fi.lowpass",
+        "os.sawtooth"
+      ],
+      "members": 21,
+      "spans": 31,
+      "missing_dependencies": [],
+      "unresolved_notices": [],
+      "records": [
+        {
+          "member": "en.adsr",
+          "file": "envelopes.lib",
+          "start_byte": 7438,
+          "end_byte": 8275,
+          "sha256": "bb7e50396f48054adc9099e8a6d30754a0f2d27973bd73372f33d0d3debea839",
+          "blob_sha": "368b4124f8064b40ce8c31ad3ed9f5b986c45d10",
+          "license": "LGPL-2.1-or-later"
+        },
+        {
+          "member": "fi._tanhalf",
+          "file": "filters.lib",
+          "start_byte": 118028,
+          "end_byte": 118085,
+          "sha256": "0c89477593eced7da48c6773299000b714b02b3e082c7001342adee4614c83bf",
+          "blob_sha": "0af91c8e5d9029bd24c099abd65928fa4d250beb",
+          "license": "MIT"
+        },
+        {
+          "member": "fi.lowpass",
+          "file": "filters.lib",
+          "start_byte": 147307,
+          "end_byte": 147350,
+          "sha256": "51ffded860fd56d9bacbf1ac84713fea23e93aac0880974b01f7c053481edef7",
+          "blob_sha": "0af91c8e5d9029bd24c099abd65928fa4d250beb",
+          "license": "STK-4.3"
+        },
+        {
+          "member": "fi.lowpass0_highpass1",
+          "file": "filters.lib",
+          "start_byte": 151161,
+          "end_byte": 151875,
+          "sha256": "c6b1bcc4e8db379ddfbeeae8a6629da9f264d5957b0d3ebe646adc5ee357168f",
+          "blob_sha": "0af91c8e5d9029bd24c099abd65928fa4d250beb",
+          "license": "STK-4.3"
+        },
+        {
+          "member": "fi.svf",
+          "file": "filters.lib",
+          "start_byte": 254692,
+          "end_byte": 256910,
+          "sha256": "73140f3983c9e5c8b184f85ec614e54f8c18042575d485b1f58730f18221deb9",
+          "blob_sha": "0af91c8e5d9029bd24c099abd65928fa4d250beb",
+          "license": "STK-4.3"
+        },
+        {
+          "member": "fi.tf1s",
+          "file": "filters.lib",
+          "start_byte": 116954,
+          "end_byte": 117598,
+          "sha256": "68f94653f0fa8031c9d579b63a53905dd50cb110cb590e0c8f256c0c4b8e0ab6",
+          "blob_sha": "0af91c8e5d9029bd24c099abd65928fa4d250beb",
+          "license": "STK-4.3"
+        },
+        {
+          "member": "ma.EPSILON",
+          "file": "maths.lib",
+          "start_byte": 7434,
+          "end_byte": 7476,
+          "sha256": "43447e181ae82df321c32119ea2e5db9450192c325bef6c9ba6f9b91adbcb125",
+          "blob_sha": "bdaca8b89c2b1ce246916cfc466a744b3c8b7696",
+          "license": "LGPL-2.1-or-later"
+        },
+        {
+          "member": "ma.EPSILON",
+          "file": "maths.lib",
+          "start_byte": 7477,
+          "end_byte": 7527,
+          "sha256": "a46474b7a12029661b69163afecac276df4b6898a08fdd4101742c5e04116917",
+          "blob_sha": "bdaca8b89c2b1ce246916cfc466a744b3c8b7696",
+          "license": "LGPL-2.1-or-later"
+        },
+        {
+          "member": "ma.EPSILON",
+          "file": "maths.lib",
+          "start_byte": 7528,
+          "end_byte": 7584,
+          "sha256": "250f36faa708a953f4b6a7e1d0c7deea5cc5ab250948066c37b909629be20f49",
+          "blob_sha": "bdaca8b89c2b1ce246916cfc466a744b3c8b7696",
+          "license": "LGPL-2.1-or-later"
+        },
+        {
+          "member": "ma.EPSILON",
+          "file": "maths.lib",
+          "start_byte": 7585,
+          "end_byte": 7639,
+          "sha256": "39aee16bcf161203590db5e3f350f4c4ad79e1619e45921d72ad4bc17874d891",
+          "blob_sha": "bdaca8b89c2b1ce246916cfc466a744b3c8b7696",
+          "license": "LGPL-2.1-or-later"
+        },
+        {
+          "member": "ma.MAX",
+          "file": "maths.lib",
+          "start_byte": 8740,
+          "end_byte": 8778,
+          "sha256": "ce6fbde56ba1b688d90b05c4bd448e0c52a50fcd9c6506b8e184114e37de2fc7",
+          "blob_sha": "bdaca8b89c2b1ce246916cfc466a744b3c8b7696",
+          "license": "LGPL-2.1-or-later"
+        },
+        {
+          "member": "ma.MAX",
+          "file": "maths.lib",
+          "start_byte": 8779,
+          "end_byte": 8825,
+          "sha256": "13204d4cc626fddf71e1704b9532a580b2bcc346b1b209858e95f3ac45c8255a",
+          "blob_sha": "bdaca8b89c2b1ce246916cfc466a744b3c8b7696",
+          "license": "LGPL-2.1-or-later"
+        },
+        {
+          "member": "ma.MAX",
+          "file": "maths.lib",
+          "start_byte": 8826,
+          "end_byte": 8870,
+          "sha256": "4e965e0640c10e0450dcacfde9ead960373dcaead5524c35a474b7996eb1745e",
+          "blob_sha": "bdaca8b89c2b1ce246916cfc466a744b3c8b7696",
+          "license": "LGPL-2.1-or-later"
+        },
+        {
+          "member": "ma.MAX",
+          "file": "maths.lib",
+          "start_byte": 8871,
+          "end_byte": 8921,
+          "sha256": "0cc638ac5e19358ef56c6e98878a7abb22708ad4f4607128b3cdd7508bf1b9ff",
+          "blob_sha": "bdaca8b89c2b1ce246916cfc466a744b3c8b7696",
+          "license": "LGPL-2.1-or-later"
+        },
+        {
+          "member": "ma.PI",
+          "file": "maths.lib",
+          "start_byte": 5434,
+          "end_byte": 5462,
+          "sha256": "6bd98d96e6803b039673963c8b8194bb7027778c7fe3c6fb832acad6319292c3",
+          "blob_sha": "bdaca8b89c2b1ce246916cfc466a744b3c8b7696",
+          "license": "LGPL-2.1-or-later"
+        },
+        {
+          "member": "ma.SR",
+          "file": "maths.lib",
+          "start_byte": 4128,
+          "end_byte": 4139,
+          "sha256": "5f93632249161d88f2b000bb4bcca10e6d5e49aeaf2375a8acdddc961ea746c2",
+          "blob_sha": "bdaca8b89c2b1ce246916cfc466a744b3c8b7696",
+          "license": "LGPL-2.1-or-later"
+        },
+        {
+          "member": "ma.decimal",
+          "file": "maths.lib",
+          "start_byte": 33182,
+          "end_byte": 33197,
+          "sha256": "1482f4b52c6cc717acc2c4968b4c09957a17c36973bc5534360a82615d64f42b",
+          "blob_sha": "bdaca8b89c2b1ce246916cfc466a744b3c8b7696",
+          "license": "LGPL-2.1-or-later"
+        },
+        {
+          "member": "ma.frac",
+          "file": "maths.lib",
+          "start_byte": 32643,
+          "end_byte": 32666,
+          "sha256": "fbd243eb3075b0ce9da8247e90fa9a33686a086e53069348c76115ed4e9bc577",
+          "blob_sha": "bdaca8b89c2b1ce246916cfc466a744b3c8b7696",
+          "license": "LGPL-2.1-or-later"
+        },
+        {
+          "member": "os._fixpt",
+          "file": "oscillators.lib",
+          "start_byte": 10241,
+          "end_byte": 10749,
+          "sha256": "e94dd898aab3badffe49f87c1162aed190879866766efe319d047b0d4d6ceeff",
+          "blob_sha": "64bb5871522c191cb97741271a41dbe4bc6b1c11",
+          "license": "LGPL-2.1-or-later"
+        },
+        {
+          "member": "os._saw2ptr_fix",
+          "file": "oscillators.lib",
+          "start_byte": 50391,
+          "end_byte": 50943,
+          "sha256": "260dda42bf2ec5df51af306999718986428a21ef7bf30ec861159233592e9783",
+          "blob_sha": "64bb5871522c191cb97741271a41dbe4bc6b1c11",
+          "license": "STK-4.3"
+        },
+        {
+          "member": "os._saw2ptr_flt",
+          "file": "oscillators.lib",
+          "start_byte": 49496,
+          "end_byte": 49907,
+          "sha256": "c9bff18166a5b59520d34ff5a8f2f4bf4fa94e2edb562d5a9b25d66da99c3d8b",
+          "blob_sha": "64bb5871522c191cb97741271a41dbe4bc6b1c11",
+          "license": "STK-4.3"
+        },
+        {
+          "member": "os.saw2",
+          "file": "oscillators.lib",
+          "start_byte": 46353,
+          "end_byte": 46368,
+          "sha256": "5ea45d8c09ee91840e413508ff9aae3cb8cb888f0548c06c1c0c00a97d9d9569",
+          "blob_sha": "64bb5871522c191cb97741271a41dbe4bc6b1c11",
+          "license": "STK-4.3"
+        },
+        {
+          "member": "os.saw2ptr",
+          "file": "oscillators.lib",
+          "start_byte": 49254,
+          "end_byte": 49297,
+          "sha256": "aeb2266d65c9a5191ca387c05c1f5fe964237d925ef2babad897b590ce3a47e1",
+          "blob_sha": "64bb5871522c191cb97741271a41dbe4bc6b1c11",
+          "license": "STK-4.3"
+        },
+        {
+          "member": "os.saw2ptr",
+          "file": "oscillators.lib",
+          "start_byte": 49298,
+          "end_byte": 49341,
+          "sha256": "2c417f8ddd90bdb662894d989bd61d21819b63088b562e79cfb27405fe6b1f12",
+          "blob_sha": "64bb5871522c191cb97741271a41dbe4bc6b1c11",
+          "license": "STK-4.3"
+        },
+        {
+          "member": "os.saw2ptr",
+          "file": "oscillators.lib",
+          "start_byte": 49342,
+          "end_byte": 49385,
+          "sha256": "6252168f63b812b12351935c3164c3ed001e8747565e8e1b872c8038e3d87a39",
+          "blob_sha": "64bb5871522c191cb97741271a41dbe4bc6b1c11",
+          "license": "STK-4.3"
+        },
+        {
+          "member": "os.saw2ptr",
+          "file": "oscillators.lib",
+          "start_byte": 49386,
+          "end_byte": 49429,
+          "sha256": "8e52dc11dfc255252e0664e63537689ca6a9af56408f333828de87de41c93eb7",
+          "blob_sha": "64bb5871522c191cb97741271a41dbe4bc6b1c11",
+          "license": "STK-4.3"
+        },
+        {
+          "member": "os.sawtooth",
+          "file": "oscillators.lib",
+          "start_byte": 52598,
+          "end_byte": 52614,
+          "sha256": "ffc77b9250a2490245e93e2285223052e03e4a8f1ef2a97ae157468b60e1fc8e",
+          "blob_sha": "64bb5871522c191cb97741271a41dbe4bc6b1c11",
+          "license": "STK-4.3"
+        },
+        {
+          "member": "pl.SR",
+          "file": "platform.lib",
+          "start_byte": 3071,
+          "end_byte": 3141,
+          "sha256": "a14037af7019e67bbfedeea8d145ef6f23a121c009d193ba252507c5dc4deb0e",
+          "blob_sha": "8d86e6940ac1e32edde54ec24b8475ed806dad41",
+          "license": "LGPL-2.1-or-later"
+        },
+        {
+          "member": "ro.interleave",
+          "file": "routes.lib",
+          "start_byte": 7230,
+          "end_byte": 7252,
+          "sha256": "3efb111135e53a459d3ef24572814f7112cce115b09dfc072958c34685aed160",
+          "blob_sha": "b5e22c181d2f18e1a4548c735df05cddcdf490c9",
+          "license": "LGPL-2.1-or-later"
+        },
+        {
+          "member": "ro.interleave",
+          "file": "routes.lib",
+          "start_byte": 7253,
+          "end_byte": 7331,
+          "sha256": "f0d6776ff78f4b9606b8d02d0fcd0935041ede3ae467a7055badbfd9871badac",
+          "blob_sha": "b5e22c181d2f18e1a4548c735df05cddcdf490c9",
+          "license": "LGPL-2.1-or-later"
+        },
+        {
+          "member": "si.dot",
+          "file": "signals.lib",
+          "start_byte": 9578,
+          "end_byte": 9624,
+          "sha256": "aaca6df03ef60fe42d7c12af1498c4c0f59738f49d4c0c463c9fb6f3da3379a0",
+          "blob_sha": "25679491349e746ee528d11a1cae23635a0524b3",
+          "license": "LGPL-2.1-or-later"
+        }
+      ],
+      "admission": "NOT_GRANTED",
+      "teacher_provenance": "UNVERIFIED",
+      "library_pin": "2edec0537f536eaa130d42c354884d7db971663c"
+    },
+    {
+      "candidate": "sub_bass",
+      "source_sha256": "f0a16bb970f4dddf925f9e52ec7da09e549e0521621dd3ed6441d32737bc4205",
+      "roots": [
+        "en.adsr",
+        "os.osc",
+        "os.triangle"
+      ],
+      "members": 34,
+      "spans": 53,
+      "missing_dependencies": [],
+      "unresolved_notices": [],
+      "records": [
+        {
+          "member": "ba.if",
+          "file": "basics.lib",
+          "start_byte": 70875,
+          "end_byte": 70920,
+          "sha256": "7a9e262917433a607b90d10ff3e937e3bb9204cce254d9edb58f09f109413c42",
+          "blob_sha": "c092fd6fdb9c4bd2371fd7fc610b8f7f13308da8",
+          "license": "STK-4.3"
+        },
+        {
+          "member": "ba.period",
+          "file": "basics.lib",
+          "start_byte": 18185,
+          "end_byte": 18213,
+          "sha256": "71e8e085603dcddf84ee07f19f8d37c163b53dd6f8c9eb32274e40ce6f376218",
+          "blob_sha": "c092fd6fdb9c4bd2371fd7fc610b8f7f13308da8",
+          "license": "STK-4.3"
+        },
+        {
+          "member": "en.adsr",
+          "file": "envelopes.lib",
+          "start_byte": 7438,
+          "end_byte": 8275,
+          "sha256": "bb7e50396f48054adc9099e8a6d30754a0f2d27973bd73372f33d0d3debea839",
+          "blob_sha": "368b4124f8064b40ce8c31ad3ed9f5b986c45d10",
+          "license": "LGPL-2.1-or-later"
+        },
+        {
+          "member": "fi.pole",
+          "file": "filters.lib",
+          "start_byte": 5697,
+          "end_byte": 5716,
+          "sha256": "af8f4de43c38d19258e93aefdf5c74b51c161e3b6155d74d56058448edf77447",
+          "blob_sha": "0af91c8e5d9029bd24c099abd65928fa4d250beb",
+          "license": "STK-4.3"
+        },
+        {
+          "member": "ma.EPSILON",
+          "file": "maths.lib",
+          "start_byte": 7434,
+          "end_byte": 7476,
+          "sha256": "43447e181ae82df321c32119ea2e5db9450192c325bef6c9ba6f9b91adbcb125",
+          "blob_sha": "bdaca8b89c2b1ce246916cfc466a744b3c8b7696",
+          "license": "LGPL-2.1-or-later"
+        },
+        {
+          "member": "ma.EPSILON",
+          "file": "maths.lib",
+          "start_byte": 7477,
+          "end_byte": 7527,
+          "sha256": "a46474b7a12029661b69163afecac276df4b6898a08fdd4101742c5e04116917",
+          "blob_sha": "bdaca8b89c2b1ce246916cfc466a744b3c8b7696",
+          "license": "LGPL-2.1-or-later"
+        },
+        {
+          "member": "ma.EPSILON",
+          "file": "maths.lib",
+          "start_byte": 7528,
+          "end_byte": 7584,
+          "sha256": "250f36faa708a953f4b6a7e1d0c7deea5cc5ab250948066c37b909629be20f49",
+          "blob_sha": "bdaca8b89c2b1ce246916cfc466a744b3c8b7696",
+          "license": "LGPL-2.1-or-later"
+        },
+        {
+          "member": "ma.EPSILON",
+          "file": "maths.lib",
+          "start_byte": 7585,
+          "end_byte": 7639,
+          "sha256": "39aee16bcf161203590db5e3f350f4c4ad79e1619e45921d72ad4bc17874d891",
+          "blob_sha": "bdaca8b89c2b1ce246916cfc466a744b3c8b7696",
+          "license": "LGPL-2.1-or-later"
+        },
+        {
+          "member": "ma.MAX",
+          "file": "maths.lib",
+          "start_byte": 8740,
+          "end_byte": 8778,
+          "sha256": "ce6fbde56ba1b688d90b05c4bd448e0c52a50fcd9c6506b8e184114e37de2fc7",
+          "blob_sha": "bdaca8b89c2b1ce246916cfc466a744b3c8b7696",
+          "license": "LGPL-2.1-or-later"
+        },
+        {
+          "member": "ma.MAX",
+          "file": "maths.lib",
+          "start_byte": 8779,
+          "end_byte": 8825,
+          "sha256": "13204d4cc626fddf71e1704b9532a580b2bcc346b1b209858e95f3ac45c8255a",
+          "blob_sha": "bdaca8b89c2b1ce246916cfc466a744b3c8b7696",
+          "license": "LGPL-2.1-or-later"
+        },
+        {
+          "member": "ma.MAX",
+          "file": "maths.lib",
+          "start_byte": 8826,
+          "end_byte": 8870,
+          "sha256": "4e965e0640c10e0450dcacfde9ead960373dcaead5524c35a474b7996eb1745e",
+          "blob_sha": "bdaca8b89c2b1ce246916cfc466a744b3c8b7696",
+          "license": "LGPL-2.1-or-later"
+        },
+        {
+          "member": "ma.MAX",
+          "file": "maths.lib",
+          "start_byte": 8871,
+          "end_byte": 8921,
+          "sha256": "0cc638ac5e19358ef56c6e98878a7abb22708ad4f4607128b3cdd7508bf1b9ff",
+          "blob_sha": "bdaca8b89c2b1ce246916cfc466a744b3c8b7696",
+          "license": "LGPL-2.1-or-later"
+        },
+        {
+          "member": "ma.PI",
+          "file": "maths.lib",
+          "start_byte": 5434,
+          "end_byte": 5462,
+          "sha256": "6bd98d96e6803b039673963c8b8194bb7027778c7fe3c6fb832acad6319292c3",
+          "blob_sha": "bdaca8b89c2b1ce246916cfc466a744b3c8b7696",
+          "license": "LGPL-2.1-or-later"
+        },
+        {
+          "member": "ma.SR",
+          "file": "maths.lib",
+          "start_byte": 4128,
+          "end_byte": 4139,
+          "sha256": "5f93632249161d88f2b000bb4bcca10e6d5e49aeaf2375a8acdddc961ea746c2",
+          "blob_sha": "bdaca8b89c2b1ce246916cfc466a744b3c8b7696",
+          "license": "LGPL-2.1-or-later"
+        },
+        {
+          "member": "ma.decimal",
+          "file": "maths.lib",
+          "start_byte": 33182,
+          "end_byte": 33197,
+          "sha256": "1482f4b52c6cc717acc2c4968b4c09957a17c36973bc5534360a82615d64f42b",
+          "blob_sha": "bdaca8b89c2b1ce246916cfc466a744b3c8b7696",
+          "license": "LGPL-2.1-or-later"
+        },
+        {
+          "member": "ma.frac",
+          "file": "maths.lib",
+          "start_byte": 32643,
+          "end_byte": 32666,
+          "sha256": "fbd243eb3075b0ce9da8247e90fa9a33686a086e53069348c76115ed4e9bc577",
+          "blob_sha": "bdaca8b89c2b1ce246916cfc466a744b3c8b7696",
+          "license": "LGPL-2.1-or-later"
+        },
+        {
+          "member": "os.MAX_SAW_ORDER",
+          "file": "oscillators.lib",
+          "start_byte": 38169,
+          "end_byte": 38187,
+          "sha256": "77bfc50f535fedae938dbc716773110adf45355d35fd016ac5568324979f5549",
+          "blob_sha": "64bb5871522c191cb97741271a41dbe4bc6b1c11",
+          "license": "STK-4.3"
+        },
+        {
+          "member": "os.SAFE",
+          "file": "oscillators.lib",
+          "start_byte": 6379,
+          "end_byte": 6388,
+          "sha256": "d5128a83894c77dfdfee05bccbbe339b4b519caf8ce840d58661ec4c36079b41",
+          "blob_sha": "64bb5871522c191cb97741271a41dbe4bc6b1c11",
+          "license": "LGPL-2.1-or-later"
+        },
+        {
+          "member": "os._fixpt",
+          "file": "oscillators.lib",
+          "start_byte": 10241,
+          "end_byte": 10749,
+          "sha256": "e94dd898aab3badffe49f87c1162aed190879866766efe319d047b0d4d6ceeff",
+          "blob_sha": "64bb5871522c191cb97741271a41dbe4bc6b1c11",
+          "license": "LGPL-2.1-or-later"
+        },
+        {
+          "member": "os._phasor_fix",
+          "file": "oscillators.lib",
+          "start_byte": 9222,
+          "end_byte": 9365,
+          "sha256": "8260223af6fe9f0b2f8dfdf503e756ccc0b420d6a71ec643458969964696acec",
+          "blob_sha": "64bb5871522c191cb97741271a41dbe4bc6b1c11",
+          "license": "LGPL-2.1-or-later"
+        },
+        {
+          "member": "os._phasor_fix_counts",
+          "file": "oscillators.lib",
+          "start_byte": 9443,
+          "end_byte": 10031,
+          "sha256": "ce9673872f3612c2c2ee6210f3eb35b1bf677be6c4edda712cb1d2e27abe470c",
+          "blob_sha": "64bb5871522c191cb97741271a41dbe4bc6b1c11",
+          "license": "LGPL-2.1-or-later"
+        },
+        {
+          "member": "os._phasor_flt",
+          "file": "oscillators.lib",
+          "start_byte": 10805,
+          "end_byte": 11412,
+          "sha256": "13ab742f32c9d2654675cd00cba8a740960f5aa8a2a139715e5a2545dc7d8969",
+          "blob_sha": "64bb5871522c191cb97741271a41dbe4bc6b1c11",
+          "license": "LGPL-2.1-or-later"
+        },
+        {
+          "member": "os._phasor_imp",
+          "file": "oscillators.lib",
+          "start_byte": 8415,
+          "end_byte": 8461,
+          "sha256": "40b2aa9ee2f888b3716ceb8bc555763de0db9e8c49a700cc5294fee02682d64c",
+          "blob_sha": "64bb5871522c191cb97741271a41dbe4bc6b1c11",
+          "license": "LGPL-2.1-or-later"
+        },
+        {
+          "member": "os._phasor_imp",
+          "file": "oscillators.lib",
+          "start_byte": 8462,
+          "end_byte": 8508,
+          "sha256": "2b22c68353d7a0fece8f85d60cdb94d3a983902ae42f4a0bda64bfca05f262b2",
+          "blob_sha": "64bb5871522c191cb97741271a41dbe4bc6b1c11",
+          "license": "LGPL-2.1-or-later"
+        },
+        {
+          "member": "os._phasor_imp",
+          "file": "oscillators.lib",
+          "start_byte": 8509,
+          "end_byte": 8555,
+          "sha256": "e820375a866c13713767fb5bfb6e87b40cebf12c7882316c1c2a9e5471d8ca21",
+          "blob_sha": "64bb5871522c191cb97741271a41dbe4bc6b1c11",
+          "license": "LGPL-2.1-or-later"
+        },
+        {
+          "member": "os._phasor_imp",
+          "file": "oscillators.lib",
+          "start_byte": 8556,
+          "end_byte": 8602,
+          "sha256": "ea04b630aa3983f79c923eb0f57805dc54125d57df91ce3e32caa4bfdbd7a3bd",
+          "blob_sha": "64bb5871522c191cb97741271a41dbe4bc6b1c11",
+          "license": "LGPL-2.1-or-later"
+        },
+        {
+          "member": "os._phasor_table",
+          "file": "oscillators.lib",
+          "start_byte": 11577,
+          "end_byte": 11678,
+          "sha256": "1ebf63c1d779966e53551b5f658a343d950349b3aed325560a7f9ada758985c7",
+          "blob_sha": "64bb5871522c191cb97741271a41dbe4bc6b1c11",
+          "license": "LGPL-2.1-or-later"
+        },
+        {
+          "member": "os._sawN_fix",
+          "file": "oscillators.lib",
+          "start_byte": 40555,
+          "end_byte": 40593,
+          "sha256": "5fae27ad147478a1a03d2ecbc52d0fb7b5c25dea60048429451d21ce1ca8370d",
+          "blob_sha": "64bb5871522c191cb97741271a41dbe4bc6b1c11",
+          "license": "STK-4.3"
+        },
+        {
+          "member": "os._sawN_fix",
+          "file": "oscillators.lib",
+          "start_byte": 40594,
+          "end_byte": 40632,
+          "sha256": "f2c75de5a16f408791d48d6ce31e86e58e5bee4befb8b8a70d8fe2900ef5e48a",
+          "blob_sha": "64bb5871522c191cb97741271a41dbe4bc6b1c11",
+          "license": "STK-4.3"
+        },
+        {
+          "member": "os._sawN_fix",
+          "file": "oscillators.lib",
+          "start_byte": 40633,
+          "end_byte": 42147,
+          "sha256": "d008b3becc946a519de8c08caf89b40974133579a1b50a310bb2fa8e4cf59384",
+          "blob_sha": "64bb5871522c191cb97741271a41dbe4bc6b1c11",
+          "license": "STK-4.3"
+        },
+        {
+          "member": "os._sawN_flt",
+          "file": "oscillators.lib",
+          "start_byte": 38826,
+          "end_byte": 39422,
+          "sha256": "7b1026e86f34f1a9119f547d37aa406c3c3169d5aab1b93b18b3404b5bc8be09",
+          "blob_sha": "64bb5871522c191cb97741271a41dbe4bc6b1c11",
+          "license": "STK-4.3"
+        },
+        {
+          "member": "os._sawN_imp",
+          "file": "oscillators.lib",
+          "start_byte": 38494,
+          "end_byte": 38536,
+          "sha256": "6910c3651a534f2c22227abc6be2387225781d9acc7a83ab88413bae74596674",
+          "blob_sha": "64bb5871522c191cb97741271a41dbe4bc6b1c11",
+          "license": "STK-4.3"
+        },
+        {
+          "member": "os._sawN_imp",
+          "file": "oscillators.lib",
+          "start_byte": 38537,
+          "end_byte": 38579,
+          "sha256": "ef3f99fc336550b2c24e5928d1c5f439fbeaa65c3c72e91e542774a4332db105",
+          "blob_sha": "64bb5871522c191cb97741271a41dbe4bc6b1c11",
+          "license": "STK-4.3"
+        },
+        {
+          "member": "os._sawN_imp",
+          "file": "oscillators.lib",
+          "start_byte": 38580,
+          "end_byte": 38622,
+          "sha256": "82b7fea184841ff2d590477f240ccb9b6ac177c5b49cb2be329772c39a6bf616",
+          "blob_sha": "64bb5871522c191cb97741271a41dbe4bc6b1c11",
+          "license": "STK-4.3"
+        },
+        {
+          "member": "os._sawN_imp",
+          "file": "oscillators.lib",
+          "start_byte": 38623,
+          "end_byte": 38665,
+          "sha256": "cafd8bdb7a248b1715bbaeb574a488c49176baf77a751d7a3cd18e7735ee885b",
+          "blob_sha": "64bb5871522c191cb97741271a41dbe4bc6b1c11",
+          "license": "STK-4.3"
+        },
+        {
+          "member": "os._sawN_poly",
+          "file": "oscillators.lib",
+          "start_byte": 42202,
+          "end_byte": 42222,
+          "sha256": "69cdad619631d3804b841d8521b3c813ae65aa1c8061dcc89b74008080d346c3",
+          "blob_sha": "64bb5871522c191cb97741271a41dbe4bc6b1c11",
+          "license": "STK-4.3"
+        },
+        {
+          "member": "os._sawN_poly",
+          "file": "oscillators.lib",
+          "start_byte": 42223,
+          "end_byte": 42245,
+          "sha256": "4a5a5b965729ecb0a7026fd6adae6358a3edb67ef2fcd81395a389e2d84794a3",
+          "blob_sha": "64bb5871522c191cb97741271a41dbe4bc6b1c11",
+          "license": "STK-4.3"
+        },
+        {
+          "member": "os._sawN_poly",
+          "file": "oscillators.lib",
+          "start_byte": 42246,
+          "end_byte": 42274,
+          "sha256": "c50bd0369f170e56f6e7cfa88475205c9b623c964a841432ffb1dc83b32b5e2c",
+          "blob_sha": "64bb5871522c191cb97741271a41dbe4bc6b1c11",
+          "license": "STK-4.3"
+        },
+        {
+          "member": "os._sawN_poly",
+          "file": "oscillators.lib",
+          "start_byte": 42275,
+          "end_byte": 42309,
+          "sha256": "fc8139d5a7701d1163fc05d9ac19989423df30249fecf52714cbc594934c9401",
+          "blob_sha": "64bb5871522c191cb97741271a41dbe4bc6b1c11",
+          "license": "STK-4.3"
+        },
+        {
+          "member": "os._sawN_poly",
+          "file": "oscillators.lib",
+          "start_byte": 42310,
+          "end_byte": 42362,
+          "sha256": "5731455614f9853238c5597314b2e35c5710ce1604f4de0f62d298c53b056cda",
+          "blob_sha": "64bb5871522c191cb97741271a41dbe4bc6b1c11",
+          "license": "STK-4.3"
+        },
+        {
+          "member": "os._sawN_poly",
+          "file": "oscillators.lib",
+          "start_byte": 42363,
+          "end_byte": 42410,
+          "sha256": "d145c008ccf4cb1b8f882733390973afb3ec27ff33226aef0cdd9c4cc8a20399",
+          "blob_sha": "64bb5871522c191cb97741271a41dbe4bc6b1c11",
+          "license": "STK-4.3"
+        },
+        {
+          "member": "os.lf_sawpos",
+          "file": "oscillators.lib",
+          "start_byte": 31585,
+          "end_byte": 31627,
+          "sha256": "23c81fd54da9a3b53b4748315b9376c2bd6a2e1caf74936374ec7109b92593fb",
+          "blob_sha": "64bb5871522c191cb97741271a41dbe4bc6b1c11",
+          "license": "STK-4.3"
+        },
+        {
+          "member": "os.osc",
+          "file": "oscillators.lib",
+          "start_byte": 18541,
+          "end_byte": 18554,
+          "sha256": "cf83d1ca6372637c7e725038404423618446cf2e35e2af672cfe0c5abfccce4f",
+          "blob_sha": "64bb5871522c191cb97741271a41dbe4bc6b1c11",
+          "license": "LGPL-2.1-or-later"
+        },
+        {
+          "member": "os.oscsin",
+          "file": "oscillators.lib",
+          "start_byte": 14779,
+          "end_byte": 14905,
+          "sha256": "61a0195d35873b67ff03182a727866505fee41595a011b3dcd2ba1010ef0fae4",
+          "blob_sha": "64bb5871522c191cb97741271a41dbe4bc6b1c11",
+          "license": "LGPL-2.1-or-later"
+        },
+        {
+          "member": "os.phasor",
+          "file": "oscillators.lib",
+          "start_byte": 12596,
+          "end_byte": 12659,
+          "sha256": "f20f51d2d80a55421ee81398f93054903f94dea87174d257b8d5a89d47876e43",
+          "blob_sha": "64bb5871522c191cb97741271a41dbe4bc6b1c11",
+          "license": "LGPL-2.1-or-later"
+        },
+        {
+          "member": "os.pulsetrainN",
+          "file": "oscillators.lib",
+          "start_byte": 57290,
+          "end_byte": 58307,
+          "sha256": "58bad5687e0c377fbfa9a8903908f7a57765ab3111b71219bd542b408cf0d408",
+          "blob_sha": "64bb5871522c191cb97741271a41dbe4bc6b1c11",
+          "license": "STK-4.3"
+        },
+        {
+          "member": "os.sawN",
+          "file": "oscillators.lib",
+          "start_byte": 38261,
+          "end_byte": 38320,
+          "sha256": "4a430b0a85a9d0831626375a94a7e5d9d5088830eeb2222939eb9ac76f96e33d",
+          "blob_sha": "64bb5871522c191cb97741271a41dbe4bc6b1c11",
+          "license": "STK-4.3"
+        },
+        {
+          "member": "os.sinwaveform",
+          "file": "oscillators.lib",
+          "start_byte": 6847,
+          "end_byte": 6944,
+          "sha256": "7f734f795cf923088bde4bbe5a7079654d994dcb9f528ee541b163fc9c59335c",
+          "blob_sha": "64bb5871522c191cb97741271a41dbe4bc6b1c11",
+          "license": "LGPL-2.1-or-later"
+        },
+        {
+          "member": "os.squareN",
+          "file": "oscillators.lib",
+          "start_byte": 59341,
+          "end_byte": 59383,
+          "sha256": "1c686c1ba88ac96bed656b3859bdeccebdcca8c549a67e5f933c56624fbeb5aa",
+          "blob_sha": "64bb5871522c191cb97741271a41dbe4bc6b1c11",
+          "license": "STK-4.3"
+        },
+        {
+          "member": "os.triangle",
+          "file": "oscillators.lib",
+          "start_byte": 62280,
+          "end_byte": 62304,
+          "sha256": "5f658b62783f642db32fac9cdcb00c51e72718090433e0321dd23d220b2d1025",
+          "blob_sha": "64bb5871522c191cb97741271a41dbe4bc6b1c11",
+          "license": "STK-4.3"
+        },
+        {
+          "member": "os.triangleN",
+          "file": "oscillators.lib",
+          "start_byte": 61625,
+          "end_byte": 61831,
+          "sha256": "04db0a777037bf3c945e1c0cb49ee69ae2ca0f6aad37df1807efd44f81281c76",
+          "blob_sha": "64bb5871522c191cb97741271a41dbe4bc6b1c11",
+          "license": "STK-4.3"
+        },
+        {
+          "member": "pl.SR",
+          "file": "platform.lib",
+          "start_byte": 3071,
+          "end_byte": 3141,
+          "sha256": "a14037af7019e67bbfedeea8d145ef6f23a121c009d193ba252507c5dc4deb0e",
+          "blob_sha": "8d86e6940ac1e32edde54ec24b8475ed806dad41",
+          "license": "LGPL-2.1-or-later"
+        },
+        {
+          "member": "pl.tablesize",
+          "file": "platform.lib",
+          "start_byte": 3907,
+          "end_byte": 3927,
+          "sha256": "95ed6ffb936a7af0c6fdbda64cf9b253d1723404603b2e2e3ba226f2e7949c61",
+          "blob_sha": "8d86e6940ac1e32edde54ec24b8475ed806dad41",
+          "license": "LGPL-2.1-or-later"
+        }
+      ],
+      "admission": "NOT_GRANTED",
+      "teacher_provenance": "UNVERIFIED",
+      "library_pin": "2edec0537f536eaa130d42c354884d7db971663c"
+    },
+    {
+      "candidate": "pluck",
+      "source_sha256": "09b3c95d9fad85e2fc43b39ed5010fad8a3b45a510e728dec54f469007913267",
+      "roots": [
+        "pm.ks"
+      ],
+      "members": 23,
+      "spans": 24,
+      "missing_dependencies": [],
+      "unresolved_notices": [],
+      "records": [
+        {
+          "member": "de.delay",
+          "file": "delays.lib",
+          "start_byte": 3650,
+          "end_byte": 3686,
+          "sha256": "a1a50c781c78c1093a5653ae982b94905e1d4e29b47572b577723379c622d53b",
+          "blob_sha": "96f0d60297283bb4af4a6a001925c126f4b8780d",
+          "license": "LGPL-2.1-or-later"
+        },
+        {
+          "member": "de.fdelay4",
+          "file": "delays.lib",
+          "start_byte": 15924,
+          "end_byte": 15947,
+          "sha256": "882c1e76d1e146298d19ed6ffde107fa5773406c5ea062e8bf8022458309a6ae",
+          "blob_sha": "96f0d60297283bb4af4a6a001925c126f4b8780d",
+          "license": "LGPL-2.1-or-later"
+        },
+        {
+          "member": "de.fdelayltv",
+          "file": "delays.lib",
+          "start_byte": 13755,
+          "end_byte": 14326,
+          "sha256": "c134c7866d42c046e5110c59a0e3f76ec47991792c8eba3bb771670ea03e6880",
+          "blob_sha": "96f0d60297283bb4af4a6a001925c126f4b8780d",
+          "license": "LGPL-2.1-or-later"
+        },
+        {
+          "member": "ma.SR",
+          "file": "maths.lib",
+          "start_byte": 4128,
+          "end_byte": 4139,
+          "sha256": "5f93632249161d88f2b000bb4bcca10e6d5e49aeaf2375a8acdddc961ea746c2",
+          "blob_sha": "bdaca8b89c2b1ce246916cfc466a744b3c8b7696",
+          "license": "LGPL-2.1-or-later"
+        },
+        {
+          "member": "ma.frac",
+          "file": "maths.lib",
+          "start_byte": 32643,
+          "end_byte": 32666,
+          "sha256": "fbd243eb3075b0ce9da8247e90fa9a33686a086e53069348c76115ed4e9bc577",
+          "blob_sha": "bdaca8b89c2b1ce246916cfc466a744b3c8b7696",
+          "license": "LGPL-2.1-or-later"
+        },
+        {
+          "member": "pl.SR",
+          "file": "platform.lib",
+          "start_byte": 3071,
+          "end_byte": 3141,
+          "sha256": "a14037af7019e67bbfedeea8d145ef6f23a121c009d193ba252507c5dc4deb0e",
+          "blob_sha": "8d86e6940ac1e32edde54ec24b8475ed806dad41",
+          "license": "LGPL-2.1-or-later"
+        },
+        {
+          "member": "pm.chain",
+          "file": "physmodels.lib",
+          "start_byte": 9645,
+          "end_byte": 9756,
+          "sha256": "362fee7afe9a70da7fc7c4b5332bb298d957e2c3060499b60c8b2c6e516ea9fa",
+          "blob_sha": "4404aa62f889f23b662ae728f7151c362b8c8b03",
+          "license": "LGPL-2.1-or-later"
+        },
+        {
+          "member": "pm.chain",
+          "file": "physmodels.lib",
+          "start_byte": 9757,
+          "end_byte": 9770,
+          "sha256": "729c4f0caa0cb4d017f46b4fe233eec2cc16f027d48ffc1a7f1be5e3022e425f",
+          "blob_sha": "4404aa62f889f23b662ae728f7151c362b8c8b03",
+          "license": "LGPL-2.1-or-later"
+        },
+        {
+          "member": "pm.closeIns",
+          "file": "physmodels.lib",
+          "start_byte": 15603,
+          "end_byte": 15620,
+          "sha256": "0d5c389b47837f9b72d111d32afbeff0cb88e2853a0b6699531786219776a200",
+          "blob_sha": "4404aa62f889f23b662ae728f7151c362b8c8b03",
+          "license": "LGPL-2.1-or-later"
+        },
+        {
+          "member": "pm.closeOuts",
+          "file": "physmodels.lib",
+          "start_byte": 16080,
+          "end_byte": 16098,
+          "sha256": "3be86eea2a4abf7ef588ae3070aae245c6e9bf7c450bb7f10689a36b6507e65a",
+          "blob_sha": "4404aa62f889f23b662ae728f7151c362b8c8b03",
+          "license": "LGPL-2.1-or-later"
+        },
+        {
+          "member": "pm.endChain",
+          "file": "physmodels.lib",
+          "start_byte": 16638,
+          "end_byte": 16677,
+          "sha256": "0e93824c1f994790d1f4436cd8635e8a2784a9ca00be2fa27d5cb54b3f1a05a1",
+          "blob_sha": "4404aa62f889f23b662ae728f7151c362b8c8b03",
+          "license": "LGPL-2.1-or-later"
+        },
+        {
+          "member": "pm.in",
+          "file": "physmodels.lib",
+          "start_byte": 11266,
+          "end_byte": 11286,
+          "sha256": "a57fdd233837a1816b4330ccff806490ca850671ecac6f4f183bfc52c62ae4de",
+          "blob_sha": "4404aa62f889f23b662ae728f7151c362b8c8b03",
+          "license": "LGPL-2.1-or-later"
+        },
+        {
+          "member": "pm.ks",
+          "file": "physmodels.lib",
+          "start_byte": 39865,
+          "end_byte": 40236,
+          "sha256": "fdbc62d48012e1a47842eb8cd63078453abc13698f0a95554c7e5bd267516125",
+          "blob_sha": "4404aa62f889f23b662ae728f7151c362b8c8b03",
+          "license": "LGPL-2.1-or-later"
+        },
+        {
+          "member": "pm.ksReflexionFilter",
+          "file": "physmodels.lib",
+          "start_byte": 33662,
+          "end_byte": 33696,
+          "sha256": "5ecd3683bbfaeae82fdd75476afdfbf3b916150455a5c845b88775a54752817d",
+          "blob_sha": "4404aa62f889f23b662ae728f7151c362b8c8b03",
+          "license": "LGPL-2.1-or-later"
+        },
+        {
+          "member": "pm.l2s",
+          "file": "physmodels.lib",
+          "start_byte": 7442,
+          "end_byte": 7472,
+          "sha256": "902724b7832d436011ad51b4824f3270a154827d93d09e5f3d3cd3c18b7b9d6f",
+          "blob_sha": "4404aa62f889f23b662ae728f7151c362b8c8b03",
+          "license": "LGPL-2.1-or-later"
+        },
+        {
+          "member": "pm.maxLength",
+          "file": "physmodels.lib",
+          "start_byte": 6199,
+          "end_byte": 6213,
+          "sha256": "a9bcfea58f57202d378462b6a4bb1a01761c8ff1d25dfb137253d6b74050b606",
+          "blob_sha": "4404aa62f889f23b662ae728f7151c362b8c8b03",
+          "license": "LGPL-2.1-or-later"
+        },
+        {
+          "member": "pm.out",
+          "file": "physmodels.lib",
+          "start_byte": 12572,
+          "end_byte": 12595,
+          "sha256": "549b9141b7d70fbe8708283f74a0587114a479175ad91e160e5c34fce7bb6f98",
+          "blob_sha": "4404aa62f889f23b662ae728f7151c362b8c8b03",
+          "license": "LGPL-2.1-or-later"
+        },
+        {
+          "member": "pm.speedOfSound",
+          "file": "physmodels.lib",
+          "start_byte": 5885,
+          "end_byte": 5904,
+          "sha256": "5b4222c5d0cba556e3c11cc31b9c8fcdfccb217e2e6248d0662bcdc8a0e1eae7",
+          "blob_sha": "4404aa62f889f23b662ae728f7151c362b8c8b03",
+          "license": "LGPL-2.1-or-later"
+        },
+        {
+          "member": "pm.stringSegment",
+          "file": "physmodels.lib",
+          "start_byte": 23905,
+          "end_byte": 24018,
+          "sha256": "159729d6ed26f839361016cd1049292d743923cfedf3486700f430af8e493f8e",
+          "blob_sha": "4404aa62f889f23b662ae728f7151c362b8c8b03",
+          "license": "LGPL-2.1-or-later"
+        },
+        {
+          "member": "pm.terminations",
+          "file": "physmodels.lib",
+          "start_byte": 13507,
+          "end_byte": 13587,
+          "sha256": "af93659ef178599909ccc581380512d073bd91b9903924d29aa2548c4cb55bf7",
+          "blob_sha": "4404aa62f889f23b662ae728f7151c362b8c8b03",
+          "license": "LGPL-2.1-or-later"
+        },
+        {
+          "member": "pm.waveguide",
+          "file": "physmodels.lib",
+          "start_byte": 18917,
+          "end_byte": 18958,
+          "sha256": "ad5a25516d9e92dd7ee132ea030f31e7da6b3fdd71c2f4cea1e53887dfbf768e",
+          "blob_sha": "4404aa62f889f23b662ae728f7151c362b8c8b03",
+          "license": "LGPL-2.1-or-later"
+        },
+        {
+          "member": "pm.waveguideFd4",
+          "file": "physmodels.lib",
+          "start_byte": 18322,
+          "end_byte": 18375,
+          "sha256": "833857bdb5ade1859c8e03c901c0957ca3943922879142cb260d38686a5f339a",
+          "blob_sha": "4404aa62f889f23b662ae728f7151c362b8c8b03",
+          "license": "LGPL-2.1-or-later"
+        },
+        {
+          "member": "ro.crossNM",
+          "file": "routes.lib",
+          "start_byte": 6285,
+          "end_byte": 6351,
+          "sha256": "c5757a63eaa50a57f6a0bb0a3192c7515ead3a9eb2577d7a7f8d4f77260722c4",
+          "blob_sha": "b5e22c181d2f18e1a4548c735df05cddcdf490c9",
+          "license": "LGPL-2.1-or-later"
+        },
+        {
+          "member": "ro.crossnn",
+          "file": "routes.lib",
+          "start_byte": 4581,
+          "end_byte": 4607,
+          "sha256": "a42458d03f2c28094ec947b8150bc0256e5e2060bd65deaf434de753c7ae1253",
+          "blob_sha": "b5e22c181d2f18e1a4548c735df05cddcdf490c9",
+          "license": "LGPL-2.1-or-later"
+        }
+      ],
+      "admission": "NOT_GRANTED",
+      "teacher_provenance": "UNVERIFIED",
+      "library_pin": "2edec0537f536eaa130d42c354884d7db971663c"
+    },
+    {
+      "candidate": "reverb",
+      "source_sha256": "6905a0af83345cd16d79d4396905d78769f7da1dc601a50b3053a30b749abb79",
+      "roots": [
+        "re.stereo_freeverb"
+      ],
+      "members": 6,
+      "spans": 6,
+      "missing_dependencies": [],
+      "unresolved_notices": [],
+      "records": [
+        {
+          "member": "de.delay",
+          "file": "delays.lib",
+          "start_byte": 3650,
+          "end_byte": 3686,
+          "sha256": "a1a50c781c78c1093a5653ae982b94905e1d4e29b47572b577723379c622d53b",
+          "blob_sha": "96f0d60297283bb4af4a6a001925c126f4b8780d",
+          "license": "LGPL-2.1-or-later"
+        },
+        {
+          "member": "fi.allpass_comb",
+          "file": "filters.lib",
+          "start_byte": 29628,
+          "end_byte": 29711,
+          "sha256": "c8f4c6432554749b184b4650b73a03eba6de6335a61a58489df1901208f185ed",
+          "blob_sha": "0af91c8e5d9029bd24c099abd65928fa4d250beb",
+          "license": "STK-4.3"
+        },
+        {
+          "member": "ma.SR",
+          "file": "maths.lib",
+          "start_byte": 4128,
+          "end_byte": 4139,
+          "sha256": "5f93632249161d88f2b000bb4bcca10e6d5e49aeaf2375a8acdddc961ea746c2",
+          "blob_sha": "bdaca8b89c2b1ce246916cfc466a744b3c8b7696",
+          "license": "LGPL-2.1-or-later"
+        },
+        {
+          "member": "pl.SR",
+          "file": "platform.lib",
+          "start_byte": 3071,
+          "end_byte": 3141,
+          "sha256": "a14037af7019e67bbfedeea8d145ef6f23a121c009d193ba252507c5dc4deb0e",
+          "blob_sha": "8d86e6940ac1e32edde54ec24b8475ed806dad41",
+          "license": "LGPL-2.1-or-later"
+        },
+        {
+          "member": "re.mono_freeverb",
+          "file": "reverbs.lib",
+          "start_byte": 40364,
+          "end_byte": 41903,
+          "sha256": "85fcf531b1590f360aa0a181f0fa0a1cd95329a66fa2dd6ea76919630b67fa35",
+          "blob_sha": "17cfcc6b93848338e623383bb283e51326be8156",
+          "license": "LGPL-2.1-or-later"
+        },
+        {
+          "member": "re.stereo_freeverb",
+          "file": "reverbs.lib",
+          "start_byte": 42951,
+          "end_byte": 43070,
+          "sha256": "604f5d0e2b69de049a76727302646a54e856ebe798e5fa8dfe35ccbfe6fb8463",
+          "blob_sha": "17cfcc6b93848338e623383bb283e51326be8156",
+          "license": "LGPL-2.1-or-later"
+        }
+      ],
+      "admission": "NOT_GRANTED",
+      "teacher_provenance": "UNVERIFIED",
+      "library_pin": "2edec0537f536eaa130d42c354884d7db971663c"
+    }
+  ],
+  "origin_commit": "eef7b31e2b82974172d8c562412069624861950a",
+  "origin_blob": "bbb0a0d2fe0256de0ebedc1c42c715f734250d63",
+  "scope": "Default Python arguments, statically extracted without executing upstream code; explicit diagnostic library pin, not claimed original environment"
+}

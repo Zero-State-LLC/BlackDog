@@ -21428,6 +21428,26 @@
       "license": "STK-4.3",
       "evidence_label": "OBSERVED",
       "license_notice": "Redistribution bundles the STK-4.3 permission notice recorded in license_texts."
+    },
+    {
+      "repo": "grame-cncm/faustlibraries",
+      "commit": "2edec0537f536eaa130d42c354884d7db971663c",
+      "path": "routes.lib",
+      "blob_sha": "b5e22c181d2f18e1a4548c735df05cddcdf490c9",
+      "function": "interleave",
+      "copyright": "Copyright (C) 2003-2019 GRAME, Centre National de Creation Musicale",
+      "license": "LGPL-2.1-or-later",
+      "evidence_label": "OBSERVED"
+    },
+    {
+      "repo": "grame-cncm/faustlibraries",
+      "commit": "2edec0537f536eaa130d42c354884d7db971663c",
+      "path": "physmodels.lib",
+      "blob_sha": "4404aa62f889f23b662ae728f7151c362b8c8b03",
+      "function": "chain",
+      "copyright": "Except where noted otherwise, Copyright (C) 2016-2026 by GRAME,",
+      "license": "LGPL-2.1-or-later",
+      "evidence_label": "OBSERVED"
     }
   ]
 }
