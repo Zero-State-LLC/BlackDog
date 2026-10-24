@@ -1,0 +1,11 @@
+from pathlib import Path
+import json,hashlib
+import numpy as np
+p=Path('work/pluck-mapping-evidence');r=json.loads((p/'report.json').read_text());sha=lambda b:hashlib.sha256(b).hexdigest();assert r['source_sha256']==sha(Path('work/pluck-reset-loop.dsp').read_bytes());assert r['runner_sha256']==sha(Path('work/qualify_pluck_mapping.py').read_bytes());assert r['dense_report_sha256']==sha(Path('work/pluck-dense-evidence/report.json').read_bytes());seen=set();summary=[]
+for row in r['rows']:
+ sr,n=row['sample_rate'],row['pitch'];assert sr in (44100,48000,96000,192000) and n in range(16,120) and (sr,n) not in seen;seen.add((sr,n));assert row['frequency_hz']==440.0*2**((n-69)/12) and row['alignment_samples']==int(.01*sr)
+ raw=(p/row['file']).read_bytes();old=Path(f'work/pluck-dense-evidence/{sr}-{n}-127.bin').read_bytes();assert sha(raw)==row['direct_capture_sha256'] and sha(old)==row['midi_capture_sha256'];x=np.frombuffer(raw,dtype='<f4').reshape(-1,2);y=np.frombuffer(old,dtype='<f4').reshape(-1,2);assert x.shape==y.shape==(sr//2,2) and np.isfinite(x).all() and np.array_equal(x[:,0],x[:,1]);offset=row['alignment_samples'];a=x[:-offset];b=y[offset:];error=float(np.max(np.abs(a-b)));passed=bool(np.all(np.abs(a-b)<=r['tolerance']['absolute']+r['tolerance']['relative']*np.abs(b)));assert row['max_abs_error']==error and row['pass_tolerance']==passed
+assert len(seen)==416
+for sr in (44100,48000,96000,192000):
+ rows=[x for x in r['rows'] if x['sample_rate']==sr];summary.append(dict(sample_rate=sr,cases=len(rows),failures=sum(not x['pass_tolerance'] for x in rows),max_abs_error=max(x['max_abs_error'] for x in rows)))
+result={k:r[k] for k in ('source_sha256','runner_sha256','dense_report_sha256','scope','admission','tolerance')};result.update(status='PASS' if all(x['pass_tolerance'] for x in r['rows']) else 'DIFFERENCES_REQUIRE_DIAGNOSIS',report_sha256=sha((p/'report.json').read_bytes()),rates=summary,verification_scope='Same-workflow capture verification, not independent semantic approval');Path('outputs/blackdog-pluck-mapping-verification.json').write_text(json.dumps(result,indent=2)+'\n');print(json.dumps(result,indent=2))
