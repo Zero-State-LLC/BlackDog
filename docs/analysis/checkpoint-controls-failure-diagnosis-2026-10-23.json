@@ -1,0 +1,32 @@
+{
+  "wasm_vs_native_paired_ratio": 0.028043806519721357,
+  "native_paired_vs_stock_ratio": 2.1063280534763926,
+  "first_chunk_ratio": 2.1063280534763926,
+  "stock": {
+    "wasm_ratio": 2.1063280534763926,
+    "stock_max_absolute_difference": 0.0
+  },
+  "rounded_lower": {
+    "wasm_ratio": 1.452649532676189,
+    "stock_max_absolute_difference": 8.702278137207031e-06
+  },
+  "capture_sha256": {
+    "chirped-sweep-44100-sine-0.bin": "c632d78d971f03f31d43ad982d6e8470471996b05588e334128de458ebbb7dba",
+    "chirped-sweep-44100-sine-1.bin": "c7a9a29d3e18e765fe44843ae3e6016a7d8d6eaff45ebdd01a659fc9cd091206",
+    "chirped-sweep-44100-sine-3.bin": "f3b3818fd4c7607a93f828ce262e5e008a20f8450672107e45fedf265c652c44",
+    "chirped-sweep-44100-sine-input.bin": "c1dad030e38e732eac5981b3336a11b65ef6efa500bf14d2a51503ad6da5438a",
+    "chirped-sweep-44100-sine-2.bin": "8a6dc2f266e62e004850667bde9b280497d799dc6a0f7ec2beb015b0832b81dd",
+    "chirped-sweep-44100-sine-4.bin": "52dde9a30b8943603a950883e75e95eac0f12e9dd3c357e4806bd50e1991fee4",
+    "chirped-sweep-44100-sine-stock.bin": "9cb15a7e213b321f48d151c94d10b48301b1d8e66749b2e0df170daab319fb00",
+    "chirped-sweep-44100-sine-native-paired.bin": "944579a3ffaa360eee34f9f6c41660bbd6f7d20b07ec3f174564738d4c3813a0",
+    "chirped-sweep-44100-sine-reset.bin": "44129e7eb8de4745eb781938bf8c5d1e8b400ed80d92b45af6f21b292debc7e0"
+  },
+  "failing_meter_samples": 55,
+  "failing_channels": [
+    1
+  ],
+  "worst_block": 1217,
+  "worst_channel": 1,
+  "checkpoint_restore_precedes_worst": false,
+  "repair_qualified": false
+}

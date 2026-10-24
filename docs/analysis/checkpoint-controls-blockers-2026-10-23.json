@@ -1,0 +1,186 @@
+{
+  "checked_at": "2026-10-24T06:37:16.259969+00:00",
+  "new_numerical_failures": [
+    {
+      "schedule": "chirped-sweep",
+      "rate": 44100,
+      "stimulus": "sine",
+      "max_tolerance_ratio": 2.1063280534763926
+    },
+    {
+      "schedule": "chirped-sweep",
+      "rate": 48000,
+      "stimulus": "sine",
+      "max_tolerance_ratio": 1.9488356123076778
+    }
+  ],
+  "numerical_diagnosis": {
+    "wasm_vs_native_paired_ratio": 0.028043806519721357,
+    "native_paired_vs_stock_ratio": 2.1063280534763926,
+    "first_chunk_ratio": 2.1063280534763926,
+    "stock": {
+      "wasm_ratio": 2.1063280534763926,
+      "stock_max_absolute_difference": 0.0
+    },
+    "rounded_lower": {
+      "wasm_ratio": 1.452649532676189,
+      "stock_max_absolute_difference": 8.702278137207031e-06
+    },
+    "capture_sha256": {
+      "chirped-sweep-44100-sine-0.bin": "c632d78d971f03f31d43ad982d6e8470471996b05588e334128de458ebbb7dba",
+      "chirped-sweep-44100-sine-1.bin": "c7a9a29d3e18e765fe44843ae3e6016a7d8d6eaff45ebdd01a659fc9cd091206",
+      "chirped-sweep-44100-sine-3.bin": "f3b3818fd4c7607a93f828ce262e5e008a20f8450672107e45fedf265c652c44",
+      "chirped-sweep-44100-sine-input.bin": "c1dad030e38e732eac5981b3336a11b65ef6efa500bf14d2a51503ad6da5438a",
+      "chirped-sweep-44100-sine-2.bin": "8a6dc2f266e62e004850667bde9b280497d799dc6a0f7ec2beb015b0832b81dd",
+      "chirped-sweep-44100-sine-4.bin": "52dde9a30b8943603a950883e75e95eac0f12e9dd3c357e4806bd50e1991fee4",
+      "chirped-sweep-44100-sine-stock.bin": "9cb15a7e213b321f48d151c94d10b48301b1d8e66749b2e0df170daab319fb00",
+      "chirped-sweep-44100-sine-native-paired.bin": "944579a3ffaa360eee34f9f6c41660bbd6f7d20b07ec3f174564738d4c3813a0",
+      "chirped-sweep-44100-sine-reset.bin": "44129e7eb8de4745eb781938bf8c5d1e8b400ed80d92b45af6f21b292debc7e0"
+    },
+    "failing_meter_samples": 55,
+    "failing_channels": [
+      1
+    ],
+    "worst_block": 1217,
+    "worst_channel": 1,
+    "checkpoint_restore_precedes_worst": false,
+    "repair_qualified": false
+  },
+  "helper_licenses": {
+    "issue": "https://github.com/grame-cncm/faustlibraries/issues/321",
+    "state": "open",
+    "comments": 0,
+    "updated_at": "2026-10-24T00:23:48Z",
+    "helper_specific_declarations": [],
+    "checked_helpers": [
+      "_tanhalf",
+      "_tpt_df"
+    ],
+    "resolution": "UNRESOLVED"
+  },
+  "public_custody": {
+    "sha256": "abe6d64818e92045320a4220dc5276e56371bef6dd0cffa73930233f5349bd25",
+    "unchanged_from_previous": true,
+    "notion_url": "https://app.notion.com/p/4013e8ba2f5c8181a601f96a9cf82860",
+    "finding": "Active custodian record; no signed T07 snapshot or authenticated public-key binding found",
+    "gmail_focused_search_results": 0
+  },
+  "family": {
+    "identities": 1524,
+    "components": 12,
+    "joining_operations": 28456
+  },
+  "independent_candidates_added": 0,
+  "scope_digest": "08fb16b587cd5b23f7a5be12b234dc89ae24e18ef943b3449e61ed39f4c19516",
+  "pilot_ready": false,
+  "training_authorized": false,
+  "verified_gates": [],
+  "blockers": [
+    {
+      "gate": "instruction_pair_contract",
+      "status": "NOT_VERIFIED",
+      "code": "missing_validated_evidence",
+      "reason": "No scoped approval or validated receipt supplied",
+      "next_action": "Verify prompt provenance, qualified targets, compiler/signal evidence and signed partition membership"
+    },
+    {
+      "gate": "source_rights",
+      "status": "NOT_VERIFIED",
+      "code": "missing_validated_evidence",
+      "reason": "No scoped approval or validated receipt supplied",
+      "next_action": "Verify the exact selected units against existing rights and closure receipts"
+    },
+    {
+      "gate": "family_disjoint_split",
+      "status": "NOT_VERIFIED",
+      "code": "missing_validated_evidence",
+      "reason": "No scoped approval or validated receipt supplied",
+      "next_action": "Replay project, family and lineage separation for the selected dataset"
+    },
+    {
+      "gate": "t07_signed_split",
+      "status": "NOT_VERIFIED",
+      "code": "missing_validated_evidence",
+      "reason": "No scoped approval or validated receipt supplied",
+      "next_action": "Verify signed T07 split, including any recorded provisional-floor caveat and recheck"
+    },
+    {
+      "gate": "t08_baseline",
+      "status": "NOT_VERIFIED",
+      "code": "missing_validated_evidence",
+      "reason": "No scoped approval or validated receipt supplied",
+      "next_action": "Run and independently replay the pinned baseline on the development suite"
+    },
+    {
+      "gate": "a2_path_eval_so",
+      "status": "NOT_VERIFIED",
+      "code": "missing_validated_evidence",
+      "reason": "No scoped approval or validated receipt supplied",
+      "next_action": "Verify task-bound reward integration tests on the pinned Linux compiler"
+    },
+    {
+      "gate": "gd1_group_drop",
+      "status": "NOT_VERIFIED",
+      "code": "missing_validated_evidence",
+      "reason": "No scoped approval or validated receipt supplied",
+      "next_action": "Verify whole-group quarantine/drop tests and declared halt policy"
+    },
+    {
+      "gate": "environment_probe",
+      "status": "NOT_VERIFIED",
+      "code": "missing_validated_evidence",
+      "reason": "No scoped approval or validated receipt supplied",
+      "next_action": "Verify the preserved Spark candidate and representative model probe receipts"
+    },
+    {
+      "gate": "approved_pilot_dataset",
+      "status": "NOT_VERIFIED",
+      "code": "missing_validated_evidence",
+      "reason": "No scoped approval or validated receipt supplied",
+      "next_action": "Bind the minimum qualified dataset to one bounded pilot proposal"
+    },
+    {
+      "gate": "approved_model",
+      "status": "NOT_VERIFIED",
+      "code": "missing_validated_evidence",
+      "reason": "No scoped approval or validated receipt supplied",
+      "next_action": "Reuse the exact approved local model revision and verify its model manifest"
+    },
+    {
+      "gate": "pilot_training_authorization",
+      "status": "NOT_VERIFIED",
+      "code": "missing_validated_evidence",
+      "reason": "No scoped approval or validated receipt supplied",
+      "next_action": "Obtain one scoped human decision on the complete bounded pilot package"
+    },
+    {
+      "gate": "instruction_pair_contract",
+      "receipt_id": "tokenizer-preflight",
+      "status": "REVIEW_REQUIRED",
+      "code": "public_pairs_not_qualified",
+      "next_action": "Resolve remaining pair qualifications without truncating or changing approved targets"
+    },
+    {
+      "gate": "instruction_pair_contract",
+      "receipt_id": "saved-signal",
+      "status": "REVIEW_REQUIRED",
+      "code": "saved_signal_not_qualification",
+      "next_action": "Complete compiler provenance, semantic review and signed admission"
+    },
+    {
+      "gate": "instruction_pair_contract",
+      "receipt_id": "recorded-family",
+      "status": "REVIEW_REQUIRED",
+      "code": "outside_inventory_not_qualified",
+      "next_action": "Review dependency closures and prompt semantics; preserve inventory eligibility and qualify independent evaluation sources"
+    },
+    {
+      "gate": "family_disjoint_split",
+      "receipt_id": "recorded-family",
+      "status": "BLOCKED",
+      "code": "single_recorded_family",
+      "next_action": "Qualify additional independent project/family sources; preserve existing joins and obtain signed membership"
+    }
+  ],
+  "admission": "NOT_GRANTED"
+}
