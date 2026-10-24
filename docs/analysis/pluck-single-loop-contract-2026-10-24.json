@@ -1,5 +1,5 @@
 {
-  "status": "BOUNDED_NATIVE_INTERFACE_PASS_PITCH_REVIEW_PENDING",
+  "status": "BOUNDED_NATIVE_AND_WASM_PASS_SEMANTIC_REVIEW_PENDING",
   "source_sha256": "ddb0f318fd77ce19c025ee0525bf41f6086f017ad670405898ea5a6b92e8767b",
   "range_hz": [
     20,
@@ -21,11 +21,15 @@
   "admission": "NOT_GRANTED",
   "coefficient_archive_sha256": "24a873bb1de6f817e72491b6f9d90f404ac42e65ebfde7b256480e8bbaa25700",
   "remaining": [
-    "dense and live-control qualification",
-    "compiled audio pitch estimator validation",
-    "WASM",
-    "polyphonic host integration",
-    "independent semantic review",
-    "canonical rights and admission"
+    "Dense frequency and broader live-history qualification",
+    "Perceptual and tuning acceptance criteria",
+    "Polyphonic host integration",
+    "Independent semantic review",
+    "Canonical rights and admission"
+  ],
+  "new_evidence": [
+    "pluck-live-verification-2026-10-24.json",
+    "pluck-audio-model-comparison-2026-10-24.json",
+    "pluck-wasm-verification-2026-10-24.json"
   ]
 }

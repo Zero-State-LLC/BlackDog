@@ -1,0 +1,286 @@
+{
+  "status": "DIAGNOSTIC_REFERENCE_COMPARISON",
+  "scope": "First0.5seconds of each static-frequency capture; independent double recurrence using probed float32 n/a; feedback0.998 modeled mathematically; not perceptual or full-production acceptance",
+  "rows": [
+    {
+      "sample_rate": 44100,
+      "frequency": 20,
+      "frames": 22050,
+      "max_absolute_error": 4.542384288153123e-08,
+      "worst_frame": 15433,
+      "rms_error": 9.207087906069356e-10,
+      "relative_rms_error": 1.4752575160503176e-07,
+      "capture_sha256": "9a60bca519ac403d3bb40cc0712dcf64f8b34f13a0a4f9c54cc35b64ef5eb76d"
+    },
+    {
+      "sample_rate": 44100,
+      "frequency": 50,
+      "frames": 22050,
+      "max_absolute_error": 5.138489100886545e-08,
+      "worst_frame": 22049,
+      "rms_error": 2.5405570023272652e-09,
+      "relative_rms_error": 3.2449581423836236e-07,
+      "capture_sha256": "a7b65b964e58d0e23e1c57d4e60cfb602d337071a03c2f472ad4cb9bc4042265"
+    },
+    {
+      "sample_rate": 44100,
+      "frequency": 110,
+      "frames": 22050,
+      "max_absolute_error": 7.484888434050596e-08,
+      "worst_frame": 20444,
+      "rms_error": 6.112804387028195e-09,
+      "relative_rms_error": 6.516346470301249e-07,
+      "capture_sha256": "3ac6bb3cfbd3269620cf7543923c09f6a20dbcad589471f6cbdaccbeb1c99dbe"
+    },
+    {
+      "sample_rate": 44100,
+      "frequency": 440,
+      "frames": 22050,
+      "max_absolute_error": 9.592761348459211e-08,
+      "worst_frame": 22046,
+      "rms_error": 2.59472646828644e-08,
+      "relative_rms_error": 2.146162472498196e-06,
+      "capture_sha256": "fb4fe34a42fc3c1b3567a9f0c05a99d67a3c63ea6e5c2f6b51872ea61cbbb053"
+    },
+    {
+      "sample_rate": 44100,
+      "frequency": 1000,
+      "frames": 22050,
+      "max_absolute_error": 9.201190247914992e-08,
+      "worst_frame": 10009,
+      "rms_error": 4.7053143744928685e-08,
+      "relative_rms_error": 3.594107046252842e-06,
+      "capture_sha256": "aed8a1068375b5d77aab7f0733fcce8fd31aa8643f9d013141d18dc4c919a256"
+    },
+    {
+      "sample_rate": 44100,
+      "frequency": 4000,
+      "frames": 22050,
+      "max_absolute_error": 2.385860985998356e-07,
+      "worst_frame": 5339,
+      "rms_error": 1.522446406292065e-07,
+      "relative_rms_error": 8.847410330032561e-06,
+      "capture_sha256": "5cc1b26cf77b3dcfe065e2d78cf3ed5fefad88b52d76d1266368fdefa256f7d4"
+    },
+    {
+      "sample_rate": 44100,
+      "frequency": 8000,
+      "frames": 22050,
+      "max_absolute_error": 4.146177185471167e-07,
+      "worst_frame": 2330,
+      "rms_error": 1.9855544747548735e-07,
+      "relative_rms_error": 8.588988900190113e-06,
+      "capture_sha256": "031dd121361b265429c7729bf97bddf1f8e7600b27c47c43b38afc87772e0caf"
+    },
+    {
+      "sample_rate": 48000,
+      "frequency": 20,
+      "frames": 24000,
+      "max_absolute_error": 4.8695520671326875e-08,
+      "worst_frame": 14398,
+      "rms_error": 9.89907395926542e-10,
+      "relative_rms_error": 1.654784461461573e-07,
+      "capture_sha256": "ef1395214739d67774fa0ef7bb469ec3b1696b03c88285003831ae2faa8bc8ab"
+    },
+    {
+      "sample_rate": 48000,
+      "frequency": 50,
+      "frames": 24000,
+      "max_absolute_error": 5.731958745147647e-08,
+      "worst_frame": 22078,
+      "rms_error": 2.3129972250494477e-09,
+      "relative_rms_error": 3.0821698835820613e-07,
+      "capture_sha256": "29d113c7565169bfb3e34e08fdb32b386bc71c6d345a178c936cdad6716dd489"
+    },
+    {
+      "sample_rate": 48000,
+      "frequency": 110,
+      "frames": 24000,
+      "max_absolute_error": 4.3999131144056847e-08,
+      "worst_frame": 20069,
+      "rms_error": 3.859848070504036e-09,
+      "relative_rms_error": 4.290729239276432e-07,
+      "capture_sha256": "b78fc4b8bc2f1ea5e4b7f8fae374ca5754e446097f5839e75b990b981e58ff07"
+    },
+    {
+      "sample_rate": 48000,
+      "frequency": 440,
+      "frames": 24000,
+      "max_absolute_error": 1.001421435983807e-07,
+      "worst_frame": 23562,
+      "rms_error": 2.484357181361049e-08,
+      "relative_rms_error": 2.1438430775502817e-06,
+      "capture_sha256": "d631283802ebcfe1ab670dfddb8e7c6dd9591c55ae5d0d8cb09f54e4bbbcd49e"
+    },
+    {
+      "sample_rate": 48000,
+      "frequency": 1000,
+      "frames": 24000,
+      "max_absolute_error": 1.0245488357187027e-07,
+      "worst_frame": 14687,
+      "rms_error": 4.9477092879102584e-08,
+      "relative_rms_error": 3.944231937688835e-06,
+      "capture_sha256": "3df54843d1294b25f1009513f156dcbeaf5cb817488b8eac6d979bf57e3a1a5a"
+    },
+    {
+      "sample_rate": 48000,
+      "frequency": 4000,
+      "frames": 24000,
+      "max_absolute_error": 2.0229038902308538e-07,
+      "worst_frame": 5848,
+      "rms_error": 1.3481636008971094e-07,
+      "relative_rms_error": 8.420404121493196e-06,
+      "capture_sha256": "780d6666e6c66dd9dca42d6be3db9e6fe033a7db93ee2612bc0b1749e674834f"
+    },
+    {
+      "sample_rate": 48000,
+      "frequency": 8000,
+      "frames": 24000,
+      "max_absolute_error": 3.9024475848026263e-07,
+      "worst_frame": 2793,
+      "rms_error": 1.8506285987033116e-07,
+      "relative_rms_error": 8.833799151268867e-06,
+      "capture_sha256": "c25f3f6272d6362e857a6ec95e042a0170830040c115a8392387f2db86a8ee44"
+    },
+    {
+      "sample_rate": 96000,
+      "frequency": 20,
+      "frames": 48000,
+      "max_absolute_error": 3.5122912786511584e-08,
+      "worst_frame": 43198,
+      "rms_error": 5.635365411518304e-10,
+      "relative_rms_error": 1.332244475071139e-07,
+      "capture_sha256": "150dcd6e8b7164bfe454f2051c7c4298db9c8a051d40776cea9f3f885a274257"
+    },
+    {
+      "sample_rate": 96000,
+      "frequency": 50,
+      "frames": 48000,
+      "max_absolute_error": 6.83563609327198e-08,
+      "worst_frame": 46078,
+      "rms_error": 1.9508172605883482e-09,
+      "relative_rms_error": 3.6763171225692773e-07,
+      "capture_sha256": "4c82fb4f985816d168e5f86a63a83fec0f744a71a9cd5e7e02c7753c6d29a480"
+    },
+    {
+      "sample_rate": 96000,
+      "frequency": 110,
+      "frames": 48000,
+      "max_absolute_error": 7.040742512620657e-08,
+      "worst_frame": 47999,
+      "rms_error": 3.765676313601354e-09,
+      "relative_rms_error": 5.92409787911122e-07,
+      "capture_sha256": "f2b394ed464a0446aa1086c07467c00e7922566fb22f274b98da7e752758ed3b"
+    },
+    {
+      "sample_rate": 96000,
+      "frequency": 440,
+      "frames": 48000,
+      "max_absolute_error": 9.36892480332685e-08,
+      "worst_frame": 43633,
+      "rms_error": 1.6660755190970378e-08,
+      "relative_rms_error": 2.033205989476515e-06,
+      "capture_sha256": "cd1f4efde184f426e8c8699ce6fb4aa59e0def6436d8c9100879bdd65558dac0"
+    },
+    {
+      "sample_rate": 96000,
+      "frequency": 1000,
+      "frames": 48000,
+      "max_absolute_error": 1.010601489888352e-07,
+      "worst_frame": 20254,
+      "rms_error": 3.369138126634084e-08,
+      "relative_rms_error": 3.7992517071609282e-06,
+      "capture_sha256": "634fb8f7bad2de6df5293fc25c0ee37b92cbe7c548162e81aaf1f3484e8cb865"
+    },
+    {
+      "sample_rate": 96000,
+      "frequency": 4000,
+      "frames": 48000,
+      "max_absolute_error": 1.1100009973848135e-07,
+      "worst_frame": 8807,
+      "rms_error": 6.940056883611062e-08,
+      "relative_rms_error": 7.289098132215175e-06,
+      "capture_sha256": "0601c6c97d4fb59e85963f4b76f25c78d537a3323379eea54518b86529593eef"
+    },
+    {
+      "sample_rate": 96000,
+      "frequency": 8000,
+      "frames": 48000,
+      "max_absolute_error": 2.0229038902308538e-07,
+      "worst_frame": 5848,
+      "rms_error": 9.605724972248603e-08,
+      "relative_rms_error": 8.483449790833692e-06,
+      "capture_sha256": "c6c91f473a4719064c49755a65f51ec64fee050c7918da1ba9187ebbb1c70b13"
+    },
+    {
+      "sample_rate": 192000,
+      "frequency": 20,
+      "frames": 96000,
+      "max_absolute_error": 2.748676056207877e-08,
+      "worst_frame": 95999,
+      "rms_error": 2.702167049263826e-10,
+      "relative_rms_error": 9.034186116948353e-08,
+      "capture_sha256": "1adc5e69a2e38b947a6b507fa0d663d0fe8ea4674beaf20c0e75383332d3c917"
+    },
+    {
+      "sample_rate": 192000,
+      "frequency": 50,
+      "frames": 96000,
+      "max_absolute_error": 5.6422831573588184e-08,
+      "worst_frame": 95998,
+      "rms_error": 1.0697343169472575e-09,
+      "relative_rms_error": 2.8509347922842243e-07,
+      "capture_sha256": "b7ebba9562fbb64c01e1950f4ad5d7794c36adb4e0644ef602bbbe2e2252cc80"
+    },
+    {
+      "sample_rate": 192000,
+      "frequency": 110,
+      "frames": 96000,
+      "max_absolute_error": 6.049885996339821e-08,
+      "worst_frame": 95996,
+      "rms_error": 2.9482090652987023e-09,
+      "relative_rms_error": 6.55419137207908e-07,
+      "capture_sha256": "a580a9b0517ed30fd9e64e1fc94fdaf02d4fa6cc61877c40eb305e2b78bfe0cf"
+    },
+    {
+      "sample_rate": 192000,
+      "frequency": 440,
+      "frames": 96000,
+      "max_absolute_error": 8.860441466640445e-08,
+      "worst_frame": 93815,
+      "rms_error": 1.1057350515878606e-08,
+      "relative_rms_error": 1.908279132310183e-06,
+      "capture_sha256": "46520cb7fcb60a0f7bc8d549b3a05935a0532ee416fbcec3813e6f5ef0ba5094"
+    },
+    {
+      "sample_rate": 192000,
+      "frequency": 1000,
+      "frames": 96000,
+      "max_absolute_error": 1.0149641182025104e-07,
+      "worst_frame": 41663,
+      "rms_error": 2.4360658284894108e-08,
+      "relative_rms_error": 3.884925269220458e-06,
+      "capture_sha256": "873399a62baead770210a5c1036457e1ab57654e35f217fa6011a69391657147"
+    },
+    {
+      "sample_rate": 192000,
+      "frequency": 4000,
+      "frames": 96000,
+      "max_absolute_error": 1.0245488357187027e-07,
+      "worst_frame": 14687,
+      "rms_error": 3.7835671648746405e-08,
+      "relative_rms_error": 5.8816715527178605e-06,
+      "capture_sha256": "397f949f07c9fcbbc73504caa2bbab27dfb75a5d869e751afbcf132a3737104c"
+    },
+    {
+      "sample_rate": 192000,
+      "frequency": 8000,
+      "frames": 96000,
+      "max_absolute_error": 1.1100009973848135e-07,
+      "worst_frame": 8807,
+      "rms_error": 4.94013157390258e-08,
+      "relative_rms_error": 7.337038249526976e-06,
+      "capture_sha256": "680b25722215e83495fe0e13428ed40381f5462a78c8320cb197a5df8a21e435"
+    }
+  ]
+}

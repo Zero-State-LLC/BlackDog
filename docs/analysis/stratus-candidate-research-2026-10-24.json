@@ -1,0 +1,16 @@
+{
+  "repository": "bassmanitram/faust-stratus",
+  "commit": "abb029e46b0ce23c8583ca958fff71aa9bab79d6",
+  "path": "tests/tester.dsp",
+  "blob": "de744540f1b9f3be7e06fb57fe2cd59911cefe8b",
+  "root_license_blob": "261eeb9e9f8b2b4b0d119366dda99c6fd7d35c64",
+  "root_license": "Apache-2.0",
+  "finding": "Interface fixture: affine input scaling and offset using four controls, no imports; not yet a qualified instruction pair",
+  "status": "UNQUALIFIED_LEAD",
+  "remaining": [
+    "Exact target/context token-floor and task-semantic screening",
+    "Source-specific rights/provenance review",
+    "Full family replay if eligible"
+  ],
+  "admission": "NOT_GRANTED"
+}
