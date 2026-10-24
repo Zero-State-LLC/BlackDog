@@ -65,9 +65,12 @@
   "reset_archive_sha256": "b7943a98a5517f523f6b5afc5e17ff475d14156ca58fb42d42522d21df274751",
   "input_preflight": {
     "adapter": "diagnostics/pluck_host_contract.py",
-    "sha256": "d8994755574e1ef822382c0583a68fbd3f2caa37a2fef573f5ea8d86360c16c9",
-    "tests": 20,
-    "scope": "Diagnostic adapter only; upstream Shipwright and canonical admission unchanged."
+    "sha256": "376c3770f357a4ecab784a671d1a8f521c6d625cbf24b5e08434b8bb6af09c51",
+    "tests": 40,
+    "scope": "Diagnostic adapter only; upstream Shipwright and canonical admission unchanged.",
+    "sample_offsets": "DawDreamer double arithmetic: on=start*rate; off=on+duration*rate. Require off < 2**31 and int(off)>int(on).",
+    "audio_regression": "60 captures byte-identical to prior adapter",
+    "archive_sha256": "ff6561ea29a1cc577cc209ef89a043f3d0a8bfd3694e4d4edb5ddd58fd0de9d3"
   },
   "voice_exhaustion": {
     "captures": 60,

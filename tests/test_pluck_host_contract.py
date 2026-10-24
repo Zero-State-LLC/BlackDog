@@ -55,3 +55,33 @@ def test_adapter_installs_natural_release_policy_and_exact_note_order():
     assert processor.num_voices == 8 and processor.dynamic_voices is False
     assert processor.source == SOURCE
     assert engine.graph == [(processor, [])]
+
+
+@pytest.mark.parametrize("rate", [44100, 48000, 96000, 192000])
+@pytest.mark.parametrize("kind", ["overflow", "huge", "subsample", "rounding"])
+def test_host_sample_offsets_rejected_before_allocation(rate, kind):
+    cases = {
+        "overflow": (0, 2**31 / rate, 69, 100),
+        "huge": (1e308, 1, 69, 100),
+        "subsample": (0, 0.25 / rate, 69, 100),
+        "rounding": (100, 1e-20, 69, 100),
+    }
+    calls = []
+    with pytest.raises(ValueError):
+        create_pluck_graph(lambda *args: calls.append(args), SOURCE,
+                          [(0, 1, 69, 100), cases[kind]], rate)
+    assert calls == []
+
+
+@pytest.mark.parametrize("rate", [44100, 48000, 96000, 192000])
+def test_representable_sample_boundary_reaches_host_factory(rate):
+    class ReachedFactory(Exception):
+        pass
+    def factory(*args):
+        raise ReachedFactory
+    # A one-sample event and an end near the largest signed sample offset
+    # must remain valid. No giant audio allocation is needed for this check.
+    with pytest.raises(ReachedFactory):
+        create_pluck_graph(factory, SOURCE,
+                          [(0, 1 / rate, 69, 100),
+                           (0, (2**31 - 1) / rate, 69, 100)], rate)

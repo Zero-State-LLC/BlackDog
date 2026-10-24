@@ -1,0 +1,448 @@
+{
+  "rows": [
+    {
+      "label": "solo0",
+      "sample_rate": 44100,
+      "voices": 8,
+      "sha256": "54863783f2909ce3665a27cd3b540ed603b1c59ad51ade4e0867e802ba05112d",
+      "peak": 0.7867005467414856
+    },
+    {
+      "label": "solo1",
+      "sample_rate": 44100,
+      "voices": 8,
+      "sha256": "89ceb7690432179adbe7a15961693fe0e725588f9baa496a6d10cd0c82172609",
+      "peak": 0.7453380823135376
+    },
+    {
+      "label": "solo2",
+      "sample_rate": 44100,
+      "voices": 8,
+      "sha256": "b1e82683211065773e919ba697cb46b08faed3089da6bdf46ee704a5d495d492",
+      "peak": 0.7376342415809631
+    },
+    {
+      "label": "solo3",
+      "sample_rate": 44100,
+      "voices": 8,
+      "sha256": "e180880e77f0a3a046406fd6f93d22811b7e4b3f03abdf3aede0e968a7ae7a03",
+      "peak": 0.7781681418418884
+    },
+    {
+      "label": "solo4",
+      "sample_rate": 44100,
+      "voices": 8,
+      "sha256": "b34b653f143a0e8204ec45371fbbcc1f9573ddc09bddfbd6cb0ccc22dafb8a70",
+      "peak": 0.7749629020690918
+    },
+    {
+      "label": "solo5",
+      "sample_rate": 44100,
+      "voices": 8,
+      "sha256": "b34c66cec016863c12d4368333dfcbb8299b92f8a8843ed9a86d0813079a3ba9",
+      "peak": 0.7255016565322876
+    },
+    {
+      "label": "solo6",
+      "sample_rate": 44100,
+      "voices": 8,
+      "sha256": "707a0e0cede93bebfdc0c9640e7f18c5e16e50c83acd7e6eb781d5ed85e9d9b4",
+      "peak": 0.7354028224945068
+    },
+    {
+      "label": "solo7",
+      "sample_rate": 44100,
+      "voices": 8,
+      "sha256": "0c9254a69d5bfb40b63aa86cac64a527f95696ad3f22ce66f1fde7300219bd10",
+      "peak": 0.7874011993408203
+    },
+    {
+      "label": "solo8",
+      "sample_rate": 44100,
+      "voices": 8,
+      "sha256": "fba1899cade108ecd301a553d1431e8de1acb2da64b67c7e177498ad7ffb9bda",
+      "peak": 0.735817015171051
+    },
+    {
+      "label": "solo9",
+      "sample_rate": 44100,
+      "voices": 8,
+      "sha256": "976d338a4fc9d0245ff47af361639588513fe3ee403a3372ad33df67b6597ded",
+      "peak": 0.7312817573547363
+    },
+    {
+      "label": "solo10",
+      "sample_rate": 44100,
+      "voices": 8,
+      "sha256": "2cbf7fa097f58d6f539410f0a28b69a2a328c078b8995453889b84931f85ee6d",
+      "peak": 0.7855461239814758
+    },
+    {
+      "label": "solo11",
+      "sample_rate": 44100,
+      "voices": 8,
+      "sha256": "55d1cb3954ad6f740aeae72dc4d251f98d868a2414e033b9a283980fe0d568c7",
+      "peak": 0.7238133549690247
+    },
+    {
+      "label": "eight",
+      "sample_rate": 44100,
+      "voices": 8,
+      "sha256": "1ace30cf525e35f88ffe5c02945dee123f531975af73c41466d04d91251a3661",
+      "peak": 0.7888689041137695,
+      "difference_from_unstolen": 0.7854307889938354,
+      "repeat_exact": true
+    },
+    {
+      "label": "sixteen",
+      "sample_rate": 44100,
+      "voices": 16,
+      "sha256": "293ed05298f576523508710f4bdc0df0691d2499615e1ed97a738f4d26cb26ea",
+      "peak": 0.7888689041137695,
+      "superposition_error": 0.0
+    },
+    {
+      "label": "eight-repeat",
+      "sample_rate": 44100,
+      "voices": 8,
+      "sha256": "1ace30cf525e35f88ffe5c02945dee123f531975af73c41466d04d91251a3661",
+      "peak": 0.7888689041137695
+    },
+    {
+      "label": "solo0",
+      "sample_rate": 48000,
+      "voices": 8,
+      "sha256": "95e1625d8f9d5ed8b244407a1b0026392c24719913a10222efab1cae68ab9e1f",
+      "peak": 0.7035463452339172
+    },
+    {
+      "label": "solo1",
+      "sample_rate": 48000,
+      "voices": 8,
+      "sha256": "272ec1e4aae905fd547831c799e239c2ee9778822de8bd5927acb288e112f53c",
+      "peak": 0.7376683354377747
+    },
+    {
+      "label": "solo2",
+      "sample_rate": 48000,
+      "voices": 8,
+      "sha256": "87ce6c9a22f54ea03de4c9258441c9e2a87697451735fe7da49ed18fb646aa86",
+      "peak": 0.7054676413536072
+    },
+    {
+      "label": "solo3",
+      "sample_rate": 48000,
+      "voices": 8,
+      "sha256": "50a11dc5f15063922489ab71527791d131e33f71d0bfa869778d639c707ba010",
+      "peak": 0.7256006002426147
+    },
+    {
+      "label": "solo4",
+      "sample_rate": 48000,
+      "voices": 8,
+      "sha256": "828b6c82d5d03dc3d2ae75ed0adf01aadc2836214b486780fec9916267d36a57",
+      "peak": 0.7849205732345581
+    },
+    {
+      "label": "solo5",
+      "sample_rate": 48000,
+      "voices": 8,
+      "sha256": "d964d37c7bb8dc976d5beb622807d1ccbed0567c2f20923055dfe08553fd35ea",
+      "peak": 0.7061084508895874
+    },
+    {
+      "label": "solo6",
+      "sample_rate": 48000,
+      "voices": 8,
+      "sha256": "d15b332d2730c6b8960dcef624da1b5edf67aff9243c012481ebcf9fa7b8c0dc",
+      "peak": 0.7789066433906555
+    },
+    {
+      "label": "solo7",
+      "sample_rate": 48000,
+      "voices": 8,
+      "sha256": "0064ca3040a6621fea2776312be02d3dc383b007e55473e4420dc9e8c66d5d04",
+      "peak": 0.7055557370185852
+    },
+    {
+      "label": "solo8",
+      "sample_rate": 48000,
+      "voices": 8,
+      "sha256": "a6c995dc34329ff7987c222fbd756371fe1fbf1072eed2d8cb1a00b04e176044",
+      "peak": 0.786296546459198
+    },
+    {
+      "label": "solo9",
+      "sample_rate": 48000,
+      "voices": 8,
+      "sha256": "776c16a55c56bce9e14daa24c91cb48aa6101a290a7a9f25d18da7ab79d1cc86",
+      "peak": 0.7463716268539429
+    },
+    {
+      "label": "solo10",
+      "sample_rate": 48000,
+      "voices": 8,
+      "sha256": "715ee35b66b738457f5ae33a53c81f2994fe845540b183a8f68c2c93800dd0d6",
+      "peak": 0.7590254545211792
+    },
+    {
+      "label": "solo11",
+      "sample_rate": 48000,
+      "voices": 8,
+      "sha256": "ff8bc74a6916c138a88d5637e57295ba3b257a9c8e4ddaba736106d093ef880d",
+      "peak": 0.7355898022651672
+    },
+    {
+      "label": "eight",
+      "sample_rate": 48000,
+      "voices": 8,
+      "sha256": "e7c7bccd07eedf4ba57f2a8d0fb29b6e01b8f0dc7a141d0673ebeb76fbefb882",
+      "peak": 0.7863588333129883,
+      "difference_from_unstolen": 0.786296546459198,
+      "repeat_exact": true
+    },
+    {
+      "label": "sixteen",
+      "sample_rate": 48000,
+      "voices": 16,
+      "sha256": "abe3393c4d80f762442aae707329fcb046c3f7cec31c312340fd124db3e41c89",
+      "peak": 0.7922886610031128,
+      "superposition_error": 0.0
+    },
+    {
+      "label": "eight-repeat",
+      "sample_rate": 48000,
+      "voices": 8,
+      "sha256": "e7c7bccd07eedf4ba57f2a8d0fb29b6e01b8f0dc7a141d0673ebeb76fbefb882",
+      "peak": 0.7863588333129883
+    },
+    {
+      "label": "solo0",
+      "sample_rate": 96000,
+      "voices": 8,
+      "sha256": "0ec5a54fc9c7683ad11a5f0712e815e45f6132f537d80c618a83f420aaed0839",
+      "peak": 0.7621184587478638
+    },
+    {
+      "label": "solo1",
+      "sample_rate": 96000,
+      "voices": 8,
+      "sha256": "7f71c21f025fec7b3b7fde87d09e92e37aee102a5743fdab0f369f950a507e2c",
+      "peak": 0.7182642817497253
+    },
+    {
+      "label": "solo2",
+      "sample_rate": 96000,
+      "voices": 8,
+      "sha256": "04a05df2006eb04dfe5b2f03803188d8c18ed8d048535d4a323691ddb6308cf9",
+      "peak": 0.7652166485786438
+    },
+    {
+      "label": "solo3",
+      "sample_rate": 96000,
+      "voices": 8,
+      "sha256": "1e6513763d8be9763b1c7b17531481a029a75e496cc66623496807bb3dc607cb",
+      "peak": 0.7868235111236572
+    },
+    {
+      "label": "solo4",
+      "sample_rate": 96000,
+      "voices": 8,
+      "sha256": "edf882e47b96ef8639da02c024361abefdbd5a568b1dbc693c6dc81d700dd5de",
+      "peak": 0.7302035093307495
+    },
+    {
+      "label": "solo5",
+      "sample_rate": 96000,
+      "voices": 8,
+      "sha256": "614cc8cf4a8e78cc82e6904fb0dff07006d53f4907cbe33f9518edfcdc4c7ae3",
+      "peak": 0.766263484954834
+    },
+    {
+      "label": "solo6",
+      "sample_rate": 96000,
+      "voices": 8,
+      "sha256": "952658d2dc64fff566aac18bb1e6f62863e92608e82ec1662f6bb78c7a84ff27",
+      "peak": 0.7041518688201904
+    },
+    {
+      "label": "solo7",
+      "sample_rate": 96000,
+      "voices": 8,
+      "sha256": "3d22b2e1e516a6d7b308c181706c76ee8b82455c83857329f75267b48b37aea4",
+      "peak": 0.7654479742050171
+    },
+    {
+      "label": "solo8",
+      "sample_rate": 96000,
+      "voices": 8,
+      "sha256": "c7da5d2cccff5dd0651dc1e50ad0aa44a2d4662bf555566f10d182b4ac426d03",
+      "peak": 0.739392876625061
+    },
+    {
+      "label": "solo9",
+      "sample_rate": 96000,
+      "voices": 8,
+      "sha256": "d7e8effea3785007167ebc8b92b36e1c05dca2ec8f4767d80311c0650ea3846d",
+      "peak": 0.7364823222160339
+    },
+    {
+      "label": "solo10",
+      "sample_rate": 96000,
+      "voices": 8,
+      "sha256": "8785ee57b85c34a07662d80ec112a1fd6af9c475b7588a71073c41201e77a8bc",
+      "peak": 0.7621455192565918
+    },
+    {
+      "label": "solo11",
+      "sample_rate": 96000,
+      "voices": 8,
+      "sha256": "b19b5bd11f993ceafff8af448648e4cf087d5e97b6c205cca0623a8f033aa5e7",
+      "peak": 0.7140822410583496
+    },
+    {
+      "label": "eight",
+      "sample_rate": 96000,
+      "voices": 8,
+      "sha256": "0561af3684656dc6caef76355b08d07bee417118a51dd78b521f109fe0a4fe71",
+      "peak": 0.7868188619613647,
+      "difference_from_unstolen": 0.7621455192565918,
+      "repeat_exact": true
+    },
+    {
+      "label": "sixteen",
+      "sample_rate": 96000,
+      "voices": 16,
+      "sha256": "1fccdee77177f4f710a6d2cefc490626faa80a5f37686485582238d119251f2b",
+      "peak": 0.7868188619613647,
+      "superposition_error": 0.0
+    },
+    {
+      "label": "eight-repeat",
+      "sample_rate": 96000,
+      "voices": 8,
+      "sha256": "0561af3684656dc6caef76355b08d07bee417118a51dd78b521f109fe0a4fe71",
+      "peak": 0.7868188619613647
+    },
+    {
+      "label": "solo0",
+      "sample_rate": 192000,
+      "voices": 8,
+      "sha256": "60a4437c418d902e2d2d3a9cf44d0ab20250a2f9203a3ab4be37c76b83a588bc",
+      "peak": 0.7679316401481628
+    },
+    {
+      "label": "solo1",
+      "sample_rate": 192000,
+      "voices": 8,
+      "sha256": "a0d583c1c79f958f8766148802befa10e3bd46208d32a3ff1160ad5256e3cf33",
+      "peak": 0.7818045020103455
+    },
+    {
+      "label": "solo2",
+      "sample_rate": 192000,
+      "voices": 8,
+      "sha256": "1e5056b4378e61713ef7cf3fb1706ce6e2ae7b8dc8f837d6072558ede5ec439c",
+      "peak": 0.7734760046005249
+    },
+    {
+      "label": "solo3",
+      "sample_rate": 192000,
+      "voices": 8,
+      "sha256": "fd70dd28517519dc05a6664a2cac1d8d0f899e0a8f25b802720b12b92580b353",
+      "peak": 0.7442384362220764
+    },
+    {
+      "label": "solo4",
+      "sample_rate": 192000,
+      "voices": 8,
+      "sha256": "45fdc34bafd2ae9835c6533a256dfb4b3783943b815f83562c682a0384f807ac",
+      "peak": 0.7027537822723389
+    },
+    {
+      "label": "solo5",
+      "sample_rate": 192000,
+      "voices": 8,
+      "sha256": "8396789e4e6af220e074e9c5714e66c95a1e2dfc850ac29b7fadb7bd05e1c478",
+      "peak": 0.7752498388290405
+    },
+    {
+      "label": "solo6",
+      "sample_rate": 192000,
+      "voices": 8,
+      "sha256": "ba775ee9f814b6578d6efd8e6b991ff54ccc4a2a8cfd224b1823ba0821f6bb93",
+      "peak": 0.7630494236946106
+    },
+    {
+      "label": "solo7",
+      "sample_rate": 192000,
+      "voices": 8,
+      "sha256": "2022d3ef20a7d0c97938282e0e0f4495dfc773ba97535670c508a605803b398f",
+      "peak": 0.7738771438598633
+    },
+    {
+      "label": "solo8",
+      "sample_rate": 192000,
+      "voices": 8,
+      "sha256": "13f805f473ca27a7e5f29e0e554c80125447bce3b352fd86cf37e31a5887e4d1",
+      "peak": 0.7218311429023743
+    },
+    {
+      "label": "solo9",
+      "sample_rate": 192000,
+      "voices": 8,
+      "sha256": "be1b50ba7ba28a2af8b2120f49de2e35e8d8abb779f61f4589dff26179f8f10b",
+      "peak": 0.7157729864120483
+    },
+    {
+      "label": "solo10",
+      "sample_rate": 192000,
+      "voices": 8,
+      "sha256": "92c097bf2a19b986ca42d939fa2e539bb293bde549dcf8563b77a45bfa53ea4d",
+      "peak": 0.7679945826530457
+    },
+    {
+      "label": "solo11",
+      "sample_rate": 192000,
+      "voices": 8,
+      "sha256": "60bbd4cbb711770956c80a95efaf68ce79a982acaa15faf383760a300481f625",
+      "peak": 0.7772755026817322
+    },
+    {
+      "label": "eight",
+      "sample_rate": 192000,
+      "voices": 8,
+      "sha256": "02d4398477acd801b1910c56630e13e496af0837ebc766406bd6be5e513e3201",
+      "peak": 0.7818045020103455,
+      "difference_from_unstolen": 0.7772755026817322,
+      "repeat_exact": true
+    },
+    {
+      "label": "sixteen",
+      "sample_rate": 192000,
+      "voices": 16,
+      "sha256": "3ea324e84e40ae75266a0b3cfd2c0057feab216b93732f7b92ac2ce46a85fd40",
+      "peak": 0.7818045020103455,
+      "superposition_error": 0.0
+    },
+    {
+      "label": "eight-repeat",
+      "sample_rate": 192000,
+      "voices": 8,
+      "sha256": "02d4398477acd801b1910c56630e13e496af0837ebc766406bd6be5e513e3201",
+      "peak": 0.7818045020103455
+    }
+  ],
+  "source_sha256": "83cd856eaf46228903180244b2e5002e139f87decb39d2235a6df980d0b85ab8",
+  "runner_sha256": "f8658f5509317cbd19040475be6e665bd5948feef3cb8778e82a5fbb7f5693ff",
+  "adapter_sha256": "376c3770f357a4ecab784a671d1a8f521c6d625cbf24b5e08434b8bb6af09c51",
+  "scope": "12 distinct short MIDI notes; eight voices compared with 16-voice diagnostic reference and independent solo sum; 1.5seconds; dynamic_voices=False",
+  "conclusion": "Eight-voice stealing is deterministic and changes tails; 16-voice reference agrees with solo superposition",
+  "admission": "NOT_GRANTED",
+  "verification": {
+    "captures": 60,
+    "byte_identical_to_previous_adapter": true,
+    "scope": "Accepted schedule behavior unchanged; new host sample-offset boundary rejection covered by 40 adapter tests."
+  },
+  "archive_sha256": "ff6561ea29a1cc577cc209ef89a043f3d0a8bfd3694e4d4edb5ddd58fd0de9d3"
+}

@@ -11,3 +11,9 @@ The evidence archive is `work/pluck-exhaustion-evidence.tar.gz` in the recovery 
 The Designing Sound provenance issue remains open with zero comments at this check: https://github.com/materializepath/designing-sound-experiments/issues/1 . No teacher provenance has been inferred from silence.
 
 No canonical pair was admitted and no evaluation family was declared independent. Longer tails, rapid retrigger histories, epoch-counter lifetime, upstream integration, independent semantic decisions, family independence and authenticated signed readiness artifacts remain open.
+
+## Sample-offset boundary correction
+
+Finite seconds alone were insufficient: DawDreamer 0.9.0 converts `start*rate` and `start*rate+duration*rate` to signed integer sample offsets. The adapter now rejects overflow and durations whose on/off offsets collapse into the same sample before allocating the host. The check uses the host's operation order. Twenty additional rate/boundary tests pass (40 adapter tests total), including representable upper boundaries and one-sample durations. All 60 accepted-schedule captures were rerendered with the changed adapter and match the prior bytes exactly. This does not claim long-duration audio validation.
+
+Source evidence: https://github.com/DBraun/DawDreamer/blob/v0.9.0/Source/FaustProcessor.cpp#L1249-L1284 . Prior capture receipts retain their original adapter hashes; the new receipt binds the corrected adapter.

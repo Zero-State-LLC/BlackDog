@@ -45,6 +45,15 @@ def create_pluck_graph(engine_factory, source: str, notes, sample_rate: int):
     if hashlib.sha256(source.encode()).hexdigest() != SOURCE_SHA256:
         raise ValueError("source does not match the reset-pluck contract")
     checked = validate_notes(notes)
+    # DawDreamer 0.9.0 addMidiNote computes these doubles separately, then
+    # casts each timestamp to a signed 32-bit sample offset. Match that order.
+    for index, (start, duration, _, _) in enumerate(checked):
+        on = start * sample_rate
+        off = on + duration * sample_rate
+        if not math.isfinite(off) or off >= 2**31:
+            raise ValueError(f"note {index}: time exceeds host sample-offset range")
+        if int(off) <= int(on):
+            raise ValueError(f"note {index}: duration collapses at host sample resolution")
     engine = engine_factory(sample_rate, 64)
     processor = engine.make_faust_processor("pluck")
     processor.set_dsp_string(source)
