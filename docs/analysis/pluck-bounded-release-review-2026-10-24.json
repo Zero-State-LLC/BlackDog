@@ -1,0 +1,40 @@
+{
+  "source_sha256": "74f7aef25b5c12a0e077bb407ddf491ea920fa015e3a20eef2884aacdf2a56fe",
+  "adapter_sha256": "7a6c57ab54ae8c8aab6dbd2ab96def2b7486d672a322173d6f03bf00bda4ec6f",
+  "rows": [
+    {
+      "source_sha256": "74f7aef25b5c12a0e077bb407ddf491ea920fa015e3a20eef2884aacdf2a56fe",
+      "adapter_sha256": "7a6c57ab54ae8c8aab6dbd2ab96def2b7486d672a322173d6f03bf00bda4ec6f",
+      "runner_sha256": "f7b0467a63be0d2b9c4656a8b3a6d271e676df158d8f662bfcc0924f7f5b3965",
+      "host_version": "0.9.0",
+      "dynamic_voices": true,
+      "rows": [
+        {
+          "label": "solo0",
+          "sample_rate": 48000,
+          "capture_sha256": "cd33e2a05dff84fe0282ec80502b8a2b66bfd107180c434d69918f1e49329d8d",
+          "peak": 0.7463716268539429
+        }
+      ],
+      "admission": "NOT_GRANTED"
+    },
+    {
+      "source_sha256": "74f7aef25b5c12a0e077bb407ddf491ea920fa015e3a20eef2884aacdf2a56fe",
+      "adapter_sha256": "7a6c57ab54ae8c8aab6dbd2ab96def2b7486d672a322173d6f03bf00bda4ec6f",
+      "runner_sha256": "f7b0467a63be0d2b9c4656a8b3a6d271e676df158d8f662bfcc0924f7f5b3965",
+      "host_version": "0.9.0",
+      "dynamic_voices": false,
+      "rows": [
+        {
+          "label": "solo0",
+          "sample_rate": 48000,
+          "capture_sha256": "827379f8fd5225631ff7aa42d79141b0e1282a89e5f3bf759262de036ca0ea9a",
+          "peak": 0.7463716268539429
+        }
+      ],
+      "admission": "NOT_GRANTED"
+    }
+  ],
+  "scope": "Fresh exact-source48kHz mono-note host comparison; listening preparation, not independent semantic approval",
+  "admission": "NOT_GRANTED"
+}
