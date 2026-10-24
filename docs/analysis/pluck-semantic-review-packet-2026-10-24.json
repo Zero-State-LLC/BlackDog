@@ -1,0 +1,83 @@
+{
+  "status": "AWAITING_INDEPENDENT_SEMANTIC_REVIEW",
+  "source_sha256": "83cd856eaf46228903180244b2e5002e139f87decb39d2235a6df980d0b85ab8",
+  "adapter_sha256": "376c3770f357a4ecab784a671d1a8f521c6d625cbf24b5e08434b8bb6af09c51",
+  "contract_sha256": "48e7bc58b7b02193e0f2551569dad8a88b7d564fdfe03c4983ee5eba85942004",
+  "samples": [
+    {
+      "name": "release-current",
+      "file": "release-current.wav",
+      "wav_sha256": "0cb0c338e9e8f629c0c48923553a44c253e23d4c9867ffd50e1f3e1855d6f13a",
+      "original_capture_sha256": "cd33e2a05dff84fe0282ec80502b8a2b66bfd107180c434d69918f1e49329d8d",
+      "receipt_sha256": "9d6d1c630f2c769d3ca459f7cd6cd2b45a823e328bb90235aafd3e5b946b6a6a",
+      "duration_seconds": 1.0,
+      "encoding": "PCM16 stereo 48kHz; nearest rounding, no normalization, gain or clipping",
+      "max_encoding_error": 1.5258774539007348e-05
+    },
+    {
+      "name": "release-natural",
+      "file": "release-natural.wav",
+      "wav_sha256": "eeedb11064984e9f55bd920cd8e6f84533712dc57d0e4a1b5be0d632a58864fd",
+      "original_capture_sha256": "827379f8fd5225631ff7aa42d79141b0e1282a89e5f3bf759262de036ca0ea9a",
+      "receipt_sha256": "66f1da384cb24b5457213dd49d8c81ee01fa5dc8adc1f0efb0b1e40f3144a2c6",
+      "duration_seconds": 1.0,
+      "encoding": "PCM16 stereo 48kHz; nearest rounding, no normalization, gain or clipping",
+      "max_encoding_error": 1.5258794690170205e-05
+    },
+    {
+      "name": "capacity-eight",
+      "file": "capacity-eight.wav",
+      "wav_sha256": "f3768b53a46e12999333baf3e75f4a7d486f267a4d552906ada6f3ab07db2179",
+      "original_capture_sha256": "e7c7bccd07eedf4ba57f2a8d0fb29b6e01b8f0dc7a141d0673ebeb76fbefb882",
+      "receipt_sha256": "b722b0657249bb688fcd709329ca5aa569fbfb5ae66c924f056e3e2258a06752",
+      "duration_seconds": 1.5,
+      "encoding": "PCM16 stereo 48kHz; nearest rounding, no normalization, gain or clipping",
+      "max_encoding_error": 1.5258835448145325e-05
+    },
+    {
+      "name": "capacity-sixteen-reference",
+      "file": "capacity-sixteen-reference.wav",
+      "wav_sha256": "2ce17cb33561bcd17dacf639fa5dc00cdd7304933099e370a1f3792e39be692a",
+      "original_capture_sha256": "abe3393c4d80f762442aae707329fcb046c3f7cec31c312340fd124db3e41c89",
+      "receipt_sha256": "b722b0657249bb688fcd709329ca5aa569fbfb5ae66c924f056e3e2258a06752",
+      "duration_seconds": 1.5,
+      "encoding": "PCM16 stereo 48kHz; nearest rounding, no normalization, gain or clipping",
+      "max_encoding_error": 1.525882351066654e-05
+    },
+    {
+      "name": "low-tail",
+      "file": "low-tail.wav",
+      "wav_sha256": "41da314f0dea8d73405b64a8f4baaeae02e72f0eec099b349fcfd58adbc8e81c",
+      "original_capture_sha256": "6dafbc0b3286e38fe0484e5dbbf48b6448ab6be47b6e32ba96898816fe3aa17f",
+      "receipt_sha256": "28815068006eb7c219a86a3b875d4cd6e3d7b296decf5f419d333d2545b33467",
+      "duration_seconds": 12.0,
+      "encoding": "PCM16 stereo 48kHz; nearest rounding, no normalization, gain or clipping",
+      "max_encoding_error": 1.5255526335427975e-05
+    },
+    {
+      "name": "rapid-history",
+      "file": "rapid-history.wav",
+      "wav_sha256": "7db9a34632516dfdc40d6b1bc98963f688fdb56d4013e5cadfbd5ebf2ddda3ba",
+      "original_capture_sha256": "9317b31f063dd1361a563fe9ed35cd9689a8b1eb430f0a228e6548ff9b72afb8",
+      "receipt_sha256": "28815068006eb7c219a86a3b875d4cd6e3d7b296decf5f419d333d2545b33467",
+      "duration_seconds": 12.0,
+      "encoding": "PCM16 stereo 48kHz; nearest rounding, no normalization, gain or clipping",
+      "max_encoding_error": 1.5259251028852325e-05
+    }
+  ],
+  "decisions": {
+    "release_and_retrigger": null,
+    "voice_capacity_policy": null,
+    "pitch_and_timbre": null,
+    "integer_note_input_contract": null
+  },
+  "reviewer": null,
+  "admission": "NOT_GRANTED",
+  "pilot_ready": false,
+  "training_authorized": false,
+  "review_bundle": {
+    "local_path": "outputs/pluck-semantic-review.zip",
+    "sha256": "53ceab637eec1607f7d46e56552020c22e56e5bddd65a97883104fde5279e274",
+    "note": "Audio derivatives are in the local review bundle, not in the repository."
+  }
+}
