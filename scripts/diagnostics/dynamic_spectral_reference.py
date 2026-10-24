@@ -23,7 +23,7 @@ def coefficients(rate, fc, high):
     return values
 
 
-def reference(samples, bank, events, block_size, *, reset_on_change=False, sample_bank_indices=None):
+def reference(samples, bank, events, block_size, *, reset_on_change=False, sample_bank_indices=None, coefficient_trajectory=None):
     if type(block_size) is not int or block_size < 1 or not samples or len(samples) % block_size:
         raise ValueError('samples must contain whole positive blocks')
     if not bank or any(not math.isfinite(x) for x in samples):
@@ -48,6 +48,7 @@ def reference(samples, bank, events, block_size, *, reset_on_change=False, sampl
     for config in bank:
         cutoffs = [config['top_hz']*2**(-i/config['bands_per_octave']) for i in range(bands-1)]
         tables.append([[coefficients(rate,fc,high) for high in (False,True)] for fc in cutoffs])
+    current_tables = tables[0]
     state = {}
     meter = [0.0]*bands
     channels = [list(samples)] + [[] for _ in range(bands)]
@@ -55,7 +56,7 @@ def reference(samples, bank, events, block_size, *, reset_on_change=False, sampl
     active = 0
 
     def filt(x, crossover, high):
-        for section, (b0,b1,b2,a1,a2) in enumerate(tables[active][crossover][int(high)]):
+        for section, (b0,b1,b2,a1,a2) in enumerate(current_tables[crossover][int(high)]):
             key = (crossover,high,section)
             x1,x2,y1,y2 = state.get(key,(0,0,0,0))
             y = b0*x+b1*x1+b2*x2-a1*y1-a2*y2
@@ -72,6 +73,7 @@ def reference(samples, bank, events, block_size, *, reset_on_change=False, sampl
                 meter = [0.0]*bands
         if sample_bank_indices is not None:
             active = sample_bank_indices[n]
+        current_tables = coefficient_trajectory(n) if coefficient_trajectory is not None else tables[active]
         config = bank[active]
         pole = math.exp(-1/(config['tau']*rate))
         values = []

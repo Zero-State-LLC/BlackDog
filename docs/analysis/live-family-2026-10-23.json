@@ -1,0 +1,32 @@
+{
+  "graph": {
+    "identities": 1507,
+    "components": 12,
+    "joining_operations": 28113
+  },
+  "rows": [
+    {
+      "unit_id": "repair:live-pair-48000",
+      "source_sha256": "134c2e1761774b1a85f01ad2c498e8592553a2fdf886d197d2d89419ef24c79b",
+      "closure_sha256": "15b1df4a7ada2d858c80a46af445296b67010c47fd5249a32745e7de5613379c",
+      "family": "sha256:edc0438f34cfe6200b3545f5c1fda0aa853050412dfa752b43c71a58c0914cdd",
+      "comparison_connected": true
+    },
+    {
+      "unit_id": "repair:live-pair-44100",
+      "source_sha256": "fcff0f95b23597ca1393e72891bdce18bcc88e3e9a00f8c0edb898149884c86b",
+      "closure_sha256": "4d913be73551ba41c6972b77b3beb0187a182a02ec564255092b5cb2f9e17be7",
+      "family": "sha256:edc0438f34cfe6200b3545f5c1fda0aa853050412dfa752b43c71a58c0914cdd",
+      "comparison_connected": true
+    },
+    {
+      "unit_id": "repair:live-pair-192000",
+      "source_sha256": "e4fca097271b1137cecf3230a92603ef9ce4e402319500e3436bd729e15f9ec2",
+      "closure_sha256": "1af5e48f6b46d61e4243f909ad20012ccd5a1dd68bfb7cb8c9c3bfe76630e337",
+      "family": "sha256:edc0438f34cfe6200b3545f5c1fda0aa853050412dfa752b43c71a58c0914cdd",
+      "comparison_connected": true
+    }
+  ],
+  "admission": "NOT_GRANTED",
+  "policy": "unchanged floor40 provisional H1 collective"
+}

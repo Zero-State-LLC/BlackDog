@@ -1,0 +1,48 @@
+{
+  "rows": [
+    {
+      "stimulus": "noise",
+      "comparison": "tpt versus df",
+      "max_meter_error_db": 2.0044416949528743,
+      "tolerance_ratio": 1964.9769564501212,
+      "equivalent": false
+    },
+    {
+      "stimulus": "noise",
+      "comparison": "default versus df",
+      "max_meter_error_db": 1.3878013082782692,
+      "tolerance_ratio": 1715.8377788463674,
+      "equivalent": false
+    },
+    {
+      "stimulus": "impulse",
+      "comparison": "tpt versus df",
+      "max_meter_error_db": 2.7541574814370584,
+      "tolerance_ratio": 2882.6413248992612,
+      "equivalent": false
+    },
+    {
+      "stimulus": "impulse",
+      "comparison": "default versus df",
+      "max_meter_error_db": 0.9070624501888558,
+      "tolerance_ratio": 935.5765102975802,
+      "equivalent": false
+    },
+    {
+      "stimulus": "sine",
+      "comparison": "tpt versus df",
+      "max_meter_error_db": 16.59684828521718,
+      "tolerance_ratio": 17331.03885035372,
+      "equivalent": false
+    },
+    {
+      "stimulus": "sine",
+      "comparison": "default versus df",
+      "max_meter_error_db": 4.330778154081727,
+      "tolerance_ratio": 3650.6039869861856,
+      "equivalent": false
+    }
+  ],
+  "scope": "Matched native double sources, identical live control arithmetic and inputs, EPSILON meter floor fixed to float32 floor.",
+  "admission": "NOT_GRANTED"
+}
