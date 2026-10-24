@@ -53,7 +53,7 @@ family. A newly pinned dependency-free nested maxN helper from
 also joins that family. No independent evaluation candidate was qualified.
 
 The latest filters.lib blob remains 28cf26f1c45c5397b4433959b74e25d320e8234d,
-with no explicit license declaration naming _tanhalf or _tpt_df.
+with no explicit license declaration naming `_tanhalf` or `_tpt_df`.
 [Issue #321](https://github.com/grame-cncm/faustlibraries/issues/321) still has
 zero comments. Neither helper is cleared.
 

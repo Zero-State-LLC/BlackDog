@@ -26,9 +26,9 @@ Rounding the lower crossover in a diagnostic Python oracle reduces the mismatch 
 
 Two complete MIT-declared reverse-delay closures, phasor_phase and indexphasor, include the pinned os.lf_rawsaw helper. Both compile successfully, but both connect to comparison families under the unchanged raw/canonical and collective H1 policy. Full reconstruction: 1524 identities, 12 components, 28456 joining operations. No independent evaluation candidate was admitted. Per-unit rights and semantic qualification remain separate from compilation.
 
-Source: https://gist.github.com/tomoyanonymous/d527fca58e929de6a021565505589406/bb635c138ecc738273745ba13a0ee9f8872c606f
+Source: <https://gist.github.com/tomoyanonymous/d527fca58e929de6a021565505589406/bb635c138ecc738273745ba13a0ee9f8872c606f>
 
-The helper clarification issue https://github.com/grame-cncm/faustlibraries/issues/321 remains open with zero comments. No exact _tanhalf or _tpt_df declaration was found in the fetched filters.lib. Both helper rights remain unresolved.
+The helper clarification issue <https://github.com/grame-cncm/faustlibraries/issues/321> remains open with zero comments. No exact `_tanhalf` or `_tpt_df` declaration was found in the fetched filters.lib. Both helper rights remain unresolved.
 
 Public Spark custody metadata is byte-identical to the previous check; the focused Gmail query found no artifacts, and the active Notion record still identifies Danny as custodian without supplying a signed split or trusted public-key binding. Checkpoint hashes are integrity records, not custodian signatures.
 

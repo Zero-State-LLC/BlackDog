@@ -37,7 +37,7 @@ Replay and independent reconstruction agree at 1517 identities, 12 components an
 
 ## Helper rights and signed readiness
 
-[Helper issue #321](https://github.com/grame-cncm/faustlibraries/issues/321) remains open with zero comments. Current filters.lib blob is unchanged at 28cf26f1c45c5397b4433959b74e25d320e8234d; neither _tanhalf nor _tpt_df has a new helper-specific license declaration. Both blockers remain.
+[Helper issue #321](https://github.com/grame-cncm/faustlibraries/issues/321) remains open with zero comments. Current filters.lib blob is unchanged at 28cf26f1c45c5397b4433959b74e25d320e8234d; neither `_tanhalf` nor `_tpt_df` has a new helper-specific license declaration. Both blockers remain.
 
 The active [Notion custody record](https://app.notion.com/p/4013e8ba2f5c8181a601f96a9cf82860) supersedes the older task-author-on-hold note: Danny authors, reviews and holds the private tasks on the iPhone; only checksums go to Spark. This clarifies roles but supplies no signed snapshot or authenticated public-key binding. Fourteen known public Spark records are unchanged, and focused Gmail research found no matching signing messages. This was a bounded search; no private task or signing key was accessed.
 

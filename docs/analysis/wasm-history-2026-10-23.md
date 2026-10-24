@@ -37,7 +37,7 @@ Two complete closures from [JPC's pinned SmallStone source](https://gist.github.
 
 An initial helper extraction matched a documentation example; it was rejected and replaced with anchored definition extraction plus exact-text assertions. The active receipts bind the corrected closures. Replay and reconstruction agree at 1522 identities, 12 components and 28418 joining operations. The same 117 raw aliases remain outside the comparison family; no new independent evaluation member qualifies.
 
-[Helper issue #321](https://github.com/grame-cncm/faustlibraries/issues/321) still has no comments. The filters.lib blob remains 28cf26f1c45c5397b4433959b74e25d320e8234d, without new helper-specific license declarations for _tanhalf or _tpt_df. Both blockers remain.
+[Helper issue #321](https://github.com/grame-cncm/faustlibraries/issues/321) still has no comments. The filters.lib blob remains 28cf26f1c45c5397b4433959b74e25d320e8234d, without new helper-specific license declarations for `_tanhalf` or `_tpt_df`. Both blockers remain.
 
 Known public Spark custody records are unchanged. Focused Gmail research found no signing messages, and active Notion records returned only the existing Danny/iPhone custody arrangement. No signed snapshot or authenticated public-key binding was found in this bounded recheck; no private tasks or signing keys were accessed.
 

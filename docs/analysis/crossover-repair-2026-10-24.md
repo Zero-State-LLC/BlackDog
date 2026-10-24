@@ -35,11 +35,11 @@ Reference archive SHA-256: f1ee6a5ba5ae752eaff377d7ccee769e2b14ceee15e1e3d55eeb0
 
 ## Candidate and signed-readiness research
 
-Two additional complete closures, crossmix and atandist, were pinned from https://gist.github.com/SpotlightKid/7ec098b497818d40acdb7f45a9b85683/775a594ebafe7901737cf78847373548d880decb. Both compile, but both join comparison families under the unchanged raw/canonical and collective H1 policy. Reconstruction agrees at 1526 identities, 12 components, and 28498 joining operations. Root MIT declarations are source evidence, not completed per-unit rights review; atandist also cites an external MusicDSP formula. No independent evaluation member was admitted.
+Two additional complete closures, crossmix and atandist, were pinned from <https://gist.github.com/SpotlightKid/7ec098b497818d40acdb7f45a9b85683/775a594ebafe7901737cf78847373548d880decb>. Both compile, but both join comparison families under the unchanged raw/canonical and collective H1 policy. Reconstruction agrees at 1526 identities, 12 components, and 28498 joining operations. Root MIT declarations are source evidence, not completed per-unit rights review; atandist also cites an external MusicDSP formula. No independent evaluation member was admitted.
 
 Candidate archive SHA-256: 06f63d0f3901273cd8b2c2b4fe4d962ea971afc3bc2877d90fb8fd0b51e562ad.
 
-The helper-license issue https://github.com/grame-cncm/faustlibraries/issues/321 remains open with zero comments. The fetched filters.lib contains no exact license declaration for _tanhalf or _tpt_df. Both remain unresolved.
+The helper-license issue <https://github.com/grame-cncm/faustlibraries/issues/321> remains open with zero comments. The fetched filters.lib contains no exact license declaration for `_tanhalf` or `_tpt_df`. Both remain unresolved.
 
 The bounded public Spark metadata check is byte-identical to the preceding check. Focused Gmail search returned zero messages; Notion still supplies the active Danny custody record without signed snapshot/key artifacts. No private task material or signing keys were accessed. No maintainer follow-up was sent.
 

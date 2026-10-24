@@ -37,7 +37,7 @@ Three complete dependency-free easing closures from [the author's AutoBreath exa
 
 Full replay and reconstruction agree at 1520 identities, 12 components and 28378 joining operations. The same 117 raw aliases remain outside the comparison family, and no new independent evaluation member qualifies. The source HTML, extracted code, closure hashes and joining evidence are preserved in work/autobreath-family-evidence.tar.gz (SHA-256 cf2dad6c28974977c3c9667cf7aeb8209b311f1088c23c4d32f5bc0904f72050).
 
-[Helper issue #321](https://github.com/grame-cncm/faustlibraries/issues/321) remains open with zero comments. The filters.lib blob is still 28cf26f1c45c5397b4433959b74e25d320e8234d, with no new helper-specific declaration for _tanhalf or _tpt_df. Both rights blockers remain.
+[Helper issue #321](https://github.com/grame-cncm/faustlibraries/issues/321) remains open with zero comments. The filters.lib blob is still 28cf26f1c45c5397b4433959b74e25d320e8234d, with no new helper-specific declaration for `_tanhalf` or `_tpt_df`. Both rights blockers remain.
 
 The 14 known public Spark custody records are unchanged. Focused Gmail research found no signing messages; querying active Notion records returned only the existing Danny/iPhone custody arrangement. A bounded filename search of the local work artifacts found no public snapshot, split or verification-key bundle. No private task or signing key was accessed.
 

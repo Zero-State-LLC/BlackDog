@@ -16,7 +16,7 @@ The first runtime check deliberately expected zero instrument inputs and rejecte
 
 The two missing per-function notices, ro.interleave and pm.chain, were added under existing D-013 delegation from the exact pinned LGPL library headers, covering all selected overloads. No unresolved library notice remains. Source eligibility stays training-only wherever LGPL applies; the compiled-code exception does not grant evaluation-source admission. Root MIT and unchanged dependency notices do not establish source-specific teacher provenance or canonical admission.
 
-The pinned README and the two returned path-history commits (c7556e3cad7d96eae10f21d77308881180103819 and 0f54c82be8c748e83a9ec3a7a33e1423ab0f7290) did not identify an exact contributing model/version. This limited search does not prove human-only authorship. The separate Designing Sound provenance issue remains open with zero comments: https://github.com/materializepath/designing-sound-experiments/issues/1.
+The pinned README and the two returned path-history commits (c7556e3cad7d96eae10f21d77308881180103819 and 0f54c82be8c748e83a9ec3a7a33e1423ab0f7290) did not identify an exact contributing model/version. This limited search does not prove human-only authorship. The separate Designing Sound provenance issue remains open with zero comments: <https://github.com/materializepath/designing-sound-experiments/issues/1>.
 
 Full family replay retained the earlier originals and repaired Bouncing Ball identity and added all five Shipwright full closures: 1545 identities, 12 components, 30047 joining operations under the unchanged policy. All five are comparison-connected. None is eligible as an independent evaluation candidate.
 
