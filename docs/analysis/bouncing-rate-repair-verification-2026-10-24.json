@@ -1,0 +1,631 @@
+{
+  "status": "BOUNDED_RATE_REPAIR_PASS",
+  "original_closed_sha256": "93b1b97b5ea1890596199d02723a6c382495dc3b1941836dc1f651c18a7e0fc3",
+  "fixed_closed_sha256": "2ed148fea9ca7caf634e6d3fbdfe5dfebd170e83f5e75b9a02ec1ad4a3e21bde",
+  "change": "Replace fixed 48000 divisor with existing ma.SR; no new dependency",
+  "rows": [
+    {
+      "variant": "original",
+      "sample_rate": 44100,
+      "requested_rate": 0.5,
+      "float32_control": 0.5,
+      "frames": 192002,
+      "interval": 96000,
+      "observed_hz": 0.459375,
+      "ideal_period_frames": 88200.0,
+      "rate_contract_pass": false,
+      "capture_sha256": "4434c378b24cc3e545633be65a83fa7577640b0c510cb8351f4c78ef87bb7a26",
+      "positions": [
+        0,
+        96000,
+        192000
+      ],
+      "probe_source_sha256": "b8c15d967cbc35deb3a3a4561d65461648d146762dbdf5b32a47dc1f4afa21be"
+    },
+    {
+      "variant": "original",
+      "sample_rate": 44100,
+      "requested_rate": 4.0,
+      "float32_control": 4.0,
+      "frames": 24002,
+      "interval": 12000,
+      "observed_hz": 3.675,
+      "ideal_period_frames": 11025.0,
+      "rate_contract_pass": false,
+      "capture_sha256": "e119e0be58a87c09b2b3958057610542ee0c926e878527dbf6694dc04427cca0",
+      "positions": [
+        0,
+        12000,
+        24000
+      ],
+      "probe_source_sha256": "b8c15d967cbc35deb3a3a4561d65461648d146762dbdf5b32a47dc1f4afa21be"
+    },
+    {
+      "variant": "original",
+      "sample_rate": 44100,
+      "requested_rate": 7.3,
+      "float32_control": 7.300000190734863,
+      "frames": 13152,
+      "interval": 6575,
+      "observed_hz": 6.7072243346007605,
+      "ideal_period_frames": 6041.095732568826,
+      "rate_contract_pass": false,
+      "capture_sha256": "7d28396cd3a24a3c2aca845e770bdf51501fe13d602df7fb220d09dc971bcef6",
+      "positions": [
+        0,
+        6575,
+        13150
+      ],
+      "probe_source_sha256": "b8c15d967cbc35deb3a3a4561d65461648d146762dbdf5b32a47dc1f4afa21be"
+    },
+    {
+      "variant": "original",
+      "sample_rate": 44100,
+      "requested_rate": 15.0,
+      "float32_control": 15.0,
+      "frames": 6402,
+      "interval": 3200,
+      "observed_hz": 13.78125,
+      "ideal_period_frames": 2940.0,
+      "rate_contract_pass": false,
+      "capture_sha256": "e0f3942026de7f6b59ee4ad1ecd8be6220d9875bc049cf0e144bff54ef5f67b6",
+      "positions": [
+        0,
+        3200,
+        6400
+      ],
+      "probe_source_sha256": "b8c15d967cbc35deb3a3a4561d65461648d146762dbdf5b32a47dc1f4afa21be"
+    },
+    {
+      "variant": "original",
+      "sample_rate": 48000,
+      "requested_rate": 0.5,
+      "float32_control": 0.5,
+      "frames": 192002,
+      "interval": 96000,
+      "observed_hz": 0.5,
+      "ideal_period_frames": 96000.0,
+      "rate_contract_pass": true,
+      "capture_sha256": "4434c378b24cc3e545633be65a83fa7577640b0c510cb8351f4c78ef87bb7a26",
+      "positions": [
+        0,
+        96000,
+        192000
+      ],
+      "probe_source_sha256": "b8c15d967cbc35deb3a3a4561d65461648d146762dbdf5b32a47dc1f4afa21be"
+    },
+    {
+      "variant": "original",
+      "sample_rate": 48000,
+      "requested_rate": 4.0,
+      "float32_control": 4.0,
+      "frames": 24002,
+      "interval": 12000,
+      "observed_hz": 4.0,
+      "ideal_period_frames": 12000.0,
+      "rate_contract_pass": true,
+      "capture_sha256": "e119e0be58a87c09b2b3958057610542ee0c926e878527dbf6694dc04427cca0",
+      "positions": [
+        0,
+        12000,
+        24000
+      ],
+      "probe_source_sha256": "b8c15d967cbc35deb3a3a4561d65461648d146762dbdf5b32a47dc1f4afa21be"
+    },
+    {
+      "variant": "original",
+      "sample_rate": 48000,
+      "requested_rate": 7.3,
+      "float32_control": 7.300000190734863,
+      "frames": 13152,
+      "interval": 6575,
+      "observed_hz": 7.300380228136882,
+      "ideal_period_frames": 6575.3422939524635,
+      "rate_contract_pass": true,
+      "capture_sha256": "7d28396cd3a24a3c2aca845e770bdf51501fe13d602df7fb220d09dc971bcef6",
+      "positions": [
+        0,
+        6575,
+        13150
+      ],
+      "probe_source_sha256": "b8c15d967cbc35deb3a3a4561d65461648d146762dbdf5b32a47dc1f4afa21be"
+    },
+    {
+      "variant": "original",
+      "sample_rate": 48000,
+      "requested_rate": 15.0,
+      "float32_control": 15.0,
+      "frames": 6402,
+      "interval": 3200,
+      "observed_hz": 15.0,
+      "ideal_period_frames": 3200.0,
+      "rate_contract_pass": true,
+      "capture_sha256": "e0f3942026de7f6b59ee4ad1ecd8be6220d9875bc049cf0e144bff54ef5f67b6",
+      "positions": [
+        0,
+        3200,
+        6400
+      ],
+      "probe_source_sha256": "b8c15d967cbc35deb3a3a4561d65461648d146762dbdf5b32a47dc1f4afa21be"
+    },
+    {
+      "variant": "original",
+      "sample_rate": 96000,
+      "requested_rate": 0.5,
+      "float32_control": 0.5,
+      "frames": 384002,
+      "interval": 96000,
+      "observed_hz": 1.0,
+      "ideal_period_frames": 192000.0,
+      "rate_contract_pass": false,
+      "capture_sha256": "e7c541665fdafa8b6d4d9bfb36f5c414b69df1d4af8a1813cc87625fee516c10",
+      "positions": [
+        0,
+        96000,
+        192000,
+        288000,
+        384000
+      ],
+      "probe_source_sha256": "b8c15d967cbc35deb3a3a4561d65461648d146762dbdf5b32a47dc1f4afa21be"
+    },
+    {
+      "variant": "original",
+      "sample_rate": 96000,
+      "requested_rate": 4.0,
+      "float32_control": 4.0,
+      "frames": 48002,
+      "interval": 12000,
+      "observed_hz": 8.0,
+      "ideal_period_frames": 24000.0,
+      "rate_contract_pass": false,
+      "capture_sha256": "d0d63a4f6393ec468efdb77599cb73f80e73c97a4e9fd4e49c2d4048da8f2c0d",
+      "positions": [
+        0,
+        12000,
+        24000,
+        36000,
+        48000
+      ],
+      "probe_source_sha256": "b8c15d967cbc35deb3a3a4561d65461648d146762dbdf5b32a47dc1f4afa21be"
+    },
+    {
+      "variant": "original",
+      "sample_rate": 96000,
+      "requested_rate": 7.3,
+      "float32_control": 7.300000190734863,
+      "frames": 26302,
+      "interval": 6575,
+      "observed_hz": 14.600760456273765,
+      "ideal_period_frames": 13150.684587904927,
+      "rate_contract_pass": false,
+      "capture_sha256": "e1f61e34bdd052117a6caa0f3c7f8ba32160cc2c48a27eac481701d19d5e1728",
+      "positions": [
+        0,
+        6575,
+        13150,
+        19725,
+        26300
+      ],
+      "probe_source_sha256": "b8c15d967cbc35deb3a3a4561d65461648d146762dbdf5b32a47dc1f4afa21be"
+    },
+    {
+      "variant": "original",
+      "sample_rate": 96000,
+      "requested_rate": 15.0,
+      "float32_control": 15.0,
+      "frames": 12802,
+      "interval": 3200,
+      "observed_hz": 30.0,
+      "ideal_period_frames": 6400.0,
+      "rate_contract_pass": false,
+      "capture_sha256": "e6963ec4f9fe9ffa6aa1398612013519d8e9edaadce2fce74008310da2252e4e",
+      "positions": [
+        0,
+        3200,
+        6400,
+        9600,
+        12800
+      ],
+      "probe_source_sha256": "b8c15d967cbc35deb3a3a4561d65461648d146762dbdf5b32a47dc1f4afa21be"
+    },
+    {
+      "variant": "original",
+      "sample_rate": 192000,
+      "requested_rate": 0.5,
+      "float32_control": 0.5,
+      "frames": 768002,
+      "interval": 96000,
+      "observed_hz": 2.0,
+      "ideal_period_frames": 384000.0,
+      "rate_contract_pass": false,
+      "capture_sha256": "66c3643d5d98a03c48ec097922826d2e2f005e13564b38515a6cbf35213907e0",
+      "positions": [
+        0,
+        96000,
+        192000,
+        288000,
+        384000,
+        480000,
+        576000,
+        672000,
+        768000
+      ],
+      "probe_source_sha256": "b8c15d967cbc35deb3a3a4561d65461648d146762dbdf5b32a47dc1f4afa21be"
+    },
+    {
+      "variant": "original",
+      "sample_rate": 192000,
+      "requested_rate": 4.0,
+      "float32_control": 4.0,
+      "frames": 96002,
+      "interval": 12000,
+      "observed_hz": 16.0,
+      "ideal_period_frames": 48000.0,
+      "rate_contract_pass": false,
+      "capture_sha256": "4477b8c1023acc65194466ca35e17f27d21dc22247fa0a6becdbf51acab93257",
+      "positions": [
+        0,
+        12000,
+        24000,
+        36000,
+        48000,
+        60000,
+        72000,
+        84000,
+        96000
+      ],
+      "probe_source_sha256": "b8c15d967cbc35deb3a3a4561d65461648d146762dbdf5b32a47dc1f4afa21be"
+    },
+    {
+      "variant": "original",
+      "sample_rate": 192000,
+      "requested_rate": 7.3,
+      "float32_control": 7.300000190734863,
+      "frames": 52604,
+      "interval": 6575,
+      "observed_hz": 29.20152091254753,
+      "ideal_period_frames": 26301.369175809854,
+      "rate_contract_pass": false,
+      "capture_sha256": "33ca3a3acf79b434eedf902ecd3b854778ef62dec5b235b62eb899d4a5d4b849",
+      "positions": [
+        0,
+        6575,
+        13150,
+        19725,
+        26300,
+        32875,
+        39450,
+        46025,
+        52600
+      ],
+      "probe_source_sha256": "b8c15d967cbc35deb3a3a4561d65461648d146762dbdf5b32a47dc1f4afa21be"
+    },
+    {
+      "variant": "original",
+      "sample_rate": 192000,
+      "requested_rate": 15.0,
+      "float32_control": 15.0,
+      "frames": 25602,
+      "interval": 3200,
+      "observed_hz": 60.0,
+      "ideal_period_frames": 12800.0,
+      "rate_contract_pass": false,
+      "capture_sha256": "d2d2e7c9e9d7e5e714f559499da577e5870e84644eca4d0712125efffe1766e0",
+      "positions": [
+        0,
+        3200,
+        6400,
+        9600,
+        12800,
+        16000,
+        19200,
+        22400,
+        25600
+      ],
+      "probe_source_sha256": "b8c15d967cbc35deb3a3a4561d65461648d146762dbdf5b32a47dc1f4afa21be"
+    },
+    {
+      "variant": "fixed",
+      "sample_rate": 44100,
+      "requested_rate": 0.5,
+      "float32_control": 0.5,
+      "frames": 192002,
+      "interval": 88200,
+      "observed_hz": 0.5,
+      "ideal_period_frames": 88200.0,
+      "rate_contract_pass": true,
+      "capture_sha256": "879807746a2b958333f4f47ccfc0d0a1632db42151b2669c178b2b9606787fd7",
+      "positions": [
+        0,
+        88200,
+        176400
+      ],
+      "probe_source_sha256": "dd0786784a8f1a5daff9cf80cd7ca2b41c181599f3bead649b2f54ee4f15990b"
+    },
+    {
+      "variant": "fixed",
+      "sample_rate": 44100,
+      "requested_rate": 4.0,
+      "float32_control": 4.0,
+      "frames": 24002,
+      "interval": 11025,
+      "observed_hz": 4.0,
+      "ideal_period_frames": 11025.0,
+      "rate_contract_pass": true,
+      "capture_sha256": "9ea9a14f504247f8323475a487fe9fa5740388461c63886c6b13bafb8d9940de",
+      "positions": [
+        0,
+        11025,
+        22050
+      ],
+      "probe_source_sha256": "dd0786784a8f1a5daff9cf80cd7ca2b41c181599f3bead649b2f54ee4f15990b"
+    },
+    {
+      "variant": "fixed",
+      "sample_rate": 44100,
+      "requested_rate": 7.3,
+      "float32_control": 7.300000190734863,
+      "frames": 13152,
+      "interval": 6041,
+      "observed_hz": 7.300115874855156,
+      "ideal_period_frames": 6041.095732568826,
+      "rate_contract_pass": true,
+      "capture_sha256": "3853d626c974fcd5b42878e2769ed5bcfdff4c052dcd180cdef83519a8262aa1",
+      "positions": [
+        0,
+        6041,
+        12082
+      ],
+      "probe_source_sha256": "dd0786784a8f1a5daff9cf80cd7ca2b41c181599f3bead649b2f54ee4f15990b"
+    },
+    {
+      "variant": "fixed",
+      "sample_rate": 44100,
+      "requested_rate": 15.0,
+      "float32_control": 15.0,
+      "frames": 6402,
+      "interval": 2940,
+      "observed_hz": 15.0,
+      "ideal_period_frames": 2940.0,
+      "rate_contract_pass": true,
+      "capture_sha256": "dda19616ad488d495c4f80f2a0eb2335812b306286e31a11cc25308bd7963393",
+      "positions": [
+        0,
+        2940,
+        5880
+      ],
+      "probe_source_sha256": "dd0786784a8f1a5daff9cf80cd7ca2b41c181599f3bead649b2f54ee4f15990b"
+    },
+    {
+      "variant": "fixed",
+      "sample_rate": 48000,
+      "requested_rate": 0.5,
+      "float32_control": 0.5,
+      "frames": 192002,
+      "interval": 96000,
+      "observed_hz": 0.5,
+      "ideal_period_frames": 96000.0,
+      "rate_contract_pass": true,
+      "capture_sha256": "4434c378b24cc3e545633be65a83fa7577640b0c510cb8351f4c78ef87bb7a26",
+      "positions": [
+        0,
+        96000,
+        192000
+      ],
+      "probe_source_sha256": "dd0786784a8f1a5daff9cf80cd7ca2b41c181599f3bead649b2f54ee4f15990b"
+    },
+    {
+      "variant": "fixed",
+      "sample_rate": 48000,
+      "requested_rate": 4.0,
+      "float32_control": 4.0,
+      "frames": 24002,
+      "interval": 12000,
+      "observed_hz": 4.0,
+      "ideal_period_frames": 12000.0,
+      "rate_contract_pass": true,
+      "capture_sha256": "e119e0be58a87c09b2b3958057610542ee0c926e878527dbf6694dc04427cca0",
+      "positions": [
+        0,
+        12000,
+        24000
+      ],
+      "probe_source_sha256": "dd0786784a8f1a5daff9cf80cd7ca2b41c181599f3bead649b2f54ee4f15990b"
+    },
+    {
+      "variant": "fixed",
+      "sample_rate": 48000,
+      "requested_rate": 7.3,
+      "float32_control": 7.300000190734863,
+      "frames": 13152,
+      "interval": 6575,
+      "observed_hz": 7.300380228136882,
+      "ideal_period_frames": 6575.3422939524635,
+      "rate_contract_pass": true,
+      "capture_sha256": "7d28396cd3a24a3c2aca845e770bdf51501fe13d602df7fb220d09dc971bcef6",
+      "positions": [
+        0,
+        6575,
+        13150
+      ],
+      "probe_source_sha256": "dd0786784a8f1a5daff9cf80cd7ca2b41c181599f3bead649b2f54ee4f15990b"
+    },
+    {
+      "variant": "fixed",
+      "sample_rate": 48000,
+      "requested_rate": 15.0,
+      "float32_control": 15.0,
+      "frames": 6402,
+      "interval": 3200,
+      "observed_hz": 15.0,
+      "ideal_period_frames": 3200.0,
+      "rate_contract_pass": true,
+      "capture_sha256": "e0f3942026de7f6b59ee4ad1ecd8be6220d9875bc049cf0e144bff54ef5f67b6",
+      "positions": [
+        0,
+        3200,
+        6400
+      ],
+      "probe_source_sha256": "dd0786784a8f1a5daff9cf80cd7ca2b41c181599f3bead649b2f54ee4f15990b"
+    },
+    {
+      "variant": "fixed",
+      "sample_rate": 96000,
+      "requested_rate": 0.5,
+      "float32_control": 0.5,
+      "frames": 384002,
+      "interval": 192000,
+      "observed_hz": 0.5,
+      "ideal_period_frames": 192000.0,
+      "rate_contract_pass": true,
+      "capture_sha256": "33e4a484ba901bdfa8f75a90d6341c21680b25d86c2c155a452b57116bd53a2e",
+      "positions": [
+        0,
+        192000,
+        384000
+      ],
+      "probe_source_sha256": "dd0786784a8f1a5daff9cf80cd7ca2b41c181599f3bead649b2f54ee4f15990b"
+    },
+    {
+      "variant": "fixed",
+      "sample_rate": 96000,
+      "requested_rate": 4.0,
+      "float32_control": 4.0,
+      "frames": 48002,
+      "interval": 24000,
+      "observed_hz": 4.0,
+      "ideal_period_frames": 24000.0,
+      "rate_contract_pass": true,
+      "capture_sha256": "e9f265170b1412040ba251152a32343bee3ac1fe3e81170ce07e65528336bd98",
+      "positions": [
+        0,
+        24000,
+        48000
+      ],
+      "probe_source_sha256": "dd0786784a8f1a5daff9cf80cd7ca2b41c181599f3bead649b2f54ee4f15990b"
+    },
+    {
+      "variant": "fixed",
+      "sample_rate": 96000,
+      "requested_rate": 7.3,
+      "float32_control": 7.300000190734863,
+      "frames": 26302,
+      "interval": 13150,
+      "observed_hz": 7.300380228136882,
+      "ideal_period_frames": 13150.684587904927,
+      "rate_contract_pass": true,
+      "capture_sha256": "eee166af4ad9e01a59200b168855696f30c6456836950e717bb5112108c9197b",
+      "positions": [
+        0,
+        13150,
+        26300
+      ],
+      "probe_source_sha256": "dd0786784a8f1a5daff9cf80cd7ca2b41c181599f3bead649b2f54ee4f15990b"
+    },
+    {
+      "variant": "fixed",
+      "sample_rate": 96000,
+      "requested_rate": 15.0,
+      "float32_control": 15.0,
+      "frames": 12802,
+      "interval": 6400,
+      "observed_hz": 15.0,
+      "ideal_period_frames": 6400.0,
+      "rate_contract_pass": true,
+      "capture_sha256": "140d8a97320e37ce50a98bf7b1a4d6d507a14db7d3785e133864222e726bfe6c",
+      "positions": [
+        0,
+        6400,
+        12800
+      ],
+      "probe_source_sha256": "dd0786784a8f1a5daff9cf80cd7ca2b41c181599f3bead649b2f54ee4f15990b"
+    },
+    {
+      "variant": "fixed",
+      "sample_rate": 192000,
+      "requested_rate": 0.5,
+      "float32_control": 0.5,
+      "frames": 768002,
+      "interval": 384000,
+      "observed_hz": 0.5,
+      "ideal_period_frames": 384000.0,
+      "rate_contract_pass": true,
+      "capture_sha256": "db6331c579d7c72c366991293fbf6e8eb3f507ed56b9ceafe4c71c544f108867",
+      "positions": [
+        0,
+        384000,
+        768000
+      ],
+      "probe_source_sha256": "dd0786784a8f1a5daff9cf80cd7ca2b41c181599f3bead649b2f54ee4f15990b"
+    },
+    {
+      "variant": "fixed",
+      "sample_rate": 192000,
+      "requested_rate": 4.0,
+      "float32_control": 4.0,
+      "frames": 96002,
+      "interval": 48000,
+      "observed_hz": 4.0,
+      "ideal_period_frames": 48000.0,
+      "rate_contract_pass": true,
+      "capture_sha256": "7192febcd0b68aa372627932051246cda4a3954eebd866be82ed8f8c5a68c746",
+      "positions": [
+        0,
+        48000,
+        96000
+      ],
+      "probe_source_sha256": "dd0786784a8f1a5daff9cf80cd7ca2b41c181599f3bead649b2f54ee4f15990b"
+    },
+    {
+      "variant": "fixed",
+      "sample_rate": 192000,
+      "requested_rate": 7.3,
+      "float32_control": 7.300000190734863,
+      "frames": 52604,
+      "interval": 26301,
+      "observed_hz": 7.300102657693624,
+      "ideal_period_frames": 26301.369175809854,
+      "rate_contract_pass": true,
+      "capture_sha256": "db58f5e960c2669fdd2a63c9eb3e7c20c94c876b39dc4c396442e0709a5ed1a0",
+      "positions": [
+        0,
+        26301,
+        52602
+      ],
+      "probe_source_sha256": "dd0786784a8f1a5daff9cf80cd7ca2b41c181599f3bead649b2f54ee4f15990b"
+    },
+    {
+      "variant": "fixed",
+      "sample_rate": 192000,
+      "requested_rate": 15.0,
+      "float32_control": 15.0,
+      "frames": 25602,
+      "interval": 12800,
+      "observed_hz": 15.0,
+      "ideal_period_frames": 12800.0,
+      "rate_contract_pass": true,
+      "capture_sha256": "9c517f5e14a864856380fecf800c7de7f353a47ddd0a81d6504f071d29d54ddc",
+      "positions": [
+        0,
+        12800,
+        25600
+      ],
+      "probe_source_sha256": "dd0786784a8f1a5daff9cf80cd7ca2b41c181599f3bead649b2f54ee4f15990b"
+    }
+  ],
+  "runner_sha256": "8f6147bcfeafc8c3ee47f31fbc73e93da3ee657184905d398601b930b21a5cd7",
+  "scope": "Static controls .5,4,7.3,15 Hz at four sample rates; interval within one sample of ideal; derivative trigger output",
+  "admission": "NOT_GRANTED",
+  "limitations": [
+    "No live-control history guarantee",
+    "Original source identity preserved separately; repaired variant is a different target/context",
+    "Does not resolve teacher provenance, full audio semantics or family independence"
+  ],
+  "independent_verification": {
+    "captures": 32,
+    "repaired_passes": 16,
+    "original_passes": 4,
+    "original_rejections": 12,
+    "archive_sha256": "0977ecd1693667d29a6efdccf6c1d08334302daedff82fb4aa17ac26433dbb9e"
+  }
+}
