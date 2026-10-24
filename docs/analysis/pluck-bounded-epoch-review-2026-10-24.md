@@ -1,0 +1,13 @@
+# Bounded epoch counter candidate
+
+Candidate source SHA-256: `74f7aef25b5c12a0e077bb407ddf491ea920fa015e3a20eef2884aacdf2a56fe`. The sole DSP change masks the note epoch to 16 bits after each increment. The current qualified source remains `83cd856eaf46228903180244b2e5002e139f87decb39d2235a6df980d0b85ab8`; its adapter and semantic-review packet have not been repinned.
+
+For finite frequency in [20,8000] Hz, sample rate at most192000 Hz, and binary gate, the integer delay is at most9597 samples. Rising edges are separated by at least two samples, so at most4799 epoch increments can separate a delayed tag and its current tag. Because4799<65536, equality modulo65536 is equivalent to equality without wrapping over the retained history. Each counter addition is at most65536 before masking and cannot overflow signed32-bit arithmetic. This bound depends on those control-domain assumptions; it is not a proof for arbitrary out-of-range controls or every compiler transformation.
+
+An accelerated first-sample seed starts the instrumented audio counter near rollover. Twelve old/new audio pairs across four rates and three frequencies are byte-identical (24 captures;16 nonzero and8 silent). The low-frequency rapid-reset cases are silent because reset spacing is shorter than their delay; they are not counted as nonzero audio evidence. A separate unseeded counter probe runs131200 samples; every output equals the integer oracle, including the65535-to-zero transition at index131071.
+
+The uninstrumented candidate was then rendered directly for all104 supported MIDI-equivalent frequencies at four rates. All416 direct captures are byte-identical to the previous source's direct captures, and all comparisons against saved full-velocity MIDI captures pass the2e-6 absolute plus1e-5 relative tolerance. The maximum MIDI/direct difference remains1.713634e-7. These are same-runtime regression checks, not independent semantic approval.
+
+The local archive `work/pluck-bounded-epoch-evidence.tar.gz` contains the new source, probes, captures, reports, runners and verifiers. Its hash is bound in both receipts. The prior direct and MIDI archives remain separate dependencies for reproducing their comparisons.
+
+Status: candidate only. Still required before replacing the current proposal: exact new-source polyphonic host and live-control qualification, native/WASM equivalence, dependency/family replay, updated rights and semantic-review binding, and canonical admission. Independent evaluation families and authenticated signed readiness artifacts remain unresolved. No prior-source validation has been copied to the candidate and no readiness gate is granted.
