@@ -1,0 +1,58 @@
+{
+  "status": "SOURCE_RATE_MISMATCH_CONFIRMED",
+  "original_closed_source_sha256": "93b1b97b5ea1890596199d02723a6c382495dc3b1941836dc1f651c18a7e0fc3",
+  "probe_source_sha256": "b8c15d967cbc35deb3a3a4561d65461648d146762dbdf5b32a47dc1f4afa21be",
+  "rows": [
+    {
+      "rate": 44100,
+      "positions": [
+        0,
+        12000
+      ],
+      "interval_frames": 12000,
+      "observed_hz": 3.675,
+      "declared_default_rate_hz": 4,
+      "source_rate_semantics_match": false,
+      "capture_sha256": "6a684b73474520ebdd2b2bd5c5892d447df279255a48af82bffe90ea9a1caf57"
+    },
+    {
+      "rate": 48000,
+      "positions": [
+        0,
+        12000
+      ],
+      "interval_frames": 12000,
+      "observed_hz": 4.0,
+      "declared_default_rate_hz": 4,
+      "source_rate_semantics_match": true,
+      "capture_sha256": "6a684b73474520ebdd2b2bd5c5892d447df279255a48af82bffe90ea9a1caf57"
+    },
+    {
+      "rate": 96000,
+      "positions": [
+        0,
+        12000
+      ],
+      "interval_frames": 12000,
+      "observed_hz": 8.0,
+      "declared_default_rate_hz": 4,
+      "source_rate_semantics_match": false,
+      "capture_sha256": "6a684b73474520ebdd2b2bd5c5892d447df279255a48af82bffe90ea9a1caf57"
+    },
+    {
+      "rate": 192000,
+      "positions": [
+        0,
+        12000
+      ],
+      "interval_frames": 12000,
+      "observed_hz": 16.0,
+      "declared_default_rate_hz": 4,
+      "source_rate_semantics_match": false,
+      "capture_sha256": "6a684b73474520ebdd2b2bd5c5892d447df279255a48af82bffe90ea9a1caf57"
+    }
+  ],
+  "scope": "Default 4 Hz control; derivative diagnostic exports existing trig signal, without modifying candidate source",
+  "admission": "NOT_GRANTED",
+  "local_capture_replay": "PASS"
+}

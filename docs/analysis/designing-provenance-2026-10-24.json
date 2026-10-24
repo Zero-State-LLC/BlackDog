@@ -1,0 +1,41 @@
+{
+  "repository": "materializepath/designing-sound-experiments",
+  "pin": "dacffbddca08a3b16e247fc1453657939be7049e",
+  "source_history_commit": "7a9e41ec882ec2e54f4a1074bac64efaf49d3e38",
+  "history_scope": "GitHub path history at the pin, page size 20; each of the two DSP paths returned the same sole initial commit",
+  "source_author_declaration": "Agent Cooper + Robert",
+  "root_license": "MIT",
+  "root_license_blob": "b831f658be9e2dc2cf3f47952a49d3a8579b276d",
+  "context_files": [
+    {
+      "path": "AGENTS.md",
+      "sha256": "e5355f7d15894c1c93c7e93cdcab1e2b34e9784f48eba4dfa636a991cd8432b1",
+      "blob_sha": "f827d5bf2655475f75dba10416151c0b1b582e2e"
+    },
+    {
+      "path": "CLAUDE.md",
+      "sha256": "58cbff30ee914790a0fbd451eab115b658acfdb44796aba06f9bf585560cc252",
+      "blob_sha": "d5bf111faffb1031dea5bbed25ee1721f3f21a1b"
+    },
+    {
+      "path": "docs/PLANNING.md",
+      "sha256": "b4be2165e0fe2e32a226f2b8f2ea39d98bf97a1dca025c427167fa309f0f7815",
+      "blob_sha": "e6a3abac3c024d1457f21ed6d36e67ee4b36caad"
+    },
+    {
+      "path": "docs/ARCHITECTURE.md",
+      "sha256": "9456f6d68b80df67efd32ddd6499ea04a9479322e9b497cd22388f16013434f1",
+      "blob_sha": "268387598e4a3c10e43bcc67ddda1fee5e2a2306"
+    }
+  ],
+  "findings": [
+    "Initial commit describes Designing Sound demonstrations and lists agent context files",
+    "Agent-specific context files document project workflows; they do not identify the model responsible for either DSP file",
+    "Planning/architecture text examined supplies no exact teacher model ID or source-specific model-use receipt",
+    "Book-technique attribution alone is not evidence of copied code"
+  ],
+  "exact_teacher_model_id": null,
+  "teacher_use_rights_verified": false,
+  "independent_source_lineage_qualified": false,
+  "admission": "NOT_GRANTED"
+}
