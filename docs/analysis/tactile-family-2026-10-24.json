@@ -1,0 +1,49 @@
+{
+  "graph": {
+    "identities": 1559,
+    "components": 12,
+    "joining_operations": 30360
+  },
+  "rows": [
+    {
+      "candidate": "tactile_bell",
+      "unit_id": "new:tactile_bell",
+      "source_sha256": "0a2e649a116e1d8e8fe6658b7d31a892b11dda62e2dd8ee4d6fdd3ecb0bcfb53",
+      "admission": "NOT_GRANTED",
+      "family": "sha256:bad0186b5ed69d4a290fd4787e4616c4b759ca7aa47ff5a7a7368be1f8f438ba",
+      "comparison_connected": true,
+      "joining_evidence_count": 24,
+      "joining_evidence": [
+        {
+          "left": "new:tactile_bell",
+          "right": "comparison:0af91c8e5d9029bd24c099abd65928fa4d250beb",
+          "reason": "verbatim_run",
+          "stream": "raw",
+          "floor": 40,
+          "intersection": 126,
+          "denominator": 1733
+        },
+        {
+          "left": "new:tactile_bell",
+          "right": "comparison:65cf96a824d949eac2b08c1c80267f490b2a8c22",
+          "reason": "verbatim_run",
+          "stream": "raw",
+          "floor": 40,
+          "intersection": 304,
+          "denominator": 1733
+        },
+        {
+          "reason": "collective_support",
+          "group_id": "sha256:cac0e6e238ae8a01216e4e7170ac68a6c93027ec96b82a0a56e876539eb54e60",
+          "comparison": "comparison:64bb5871522c191cb97741271a41dbe4bc6b1c11",
+          "covered": 2343,
+          "denominator": 4672,
+          "stream": "raw",
+          "floor": 40
+        }
+      ]
+    }
+  ],
+  "admission": "NOT_GRANTED",
+  "policy": "unchanged floor40 provisional H1 collective"
+}
