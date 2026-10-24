@@ -1,0 +1,253 @@
+{
+  "status": "BOUNDED_FINITE_LIVE_CONTROLS",
+  "rows": [
+    {
+      "sample_rate": 44100,
+      "schedule": 0,
+      "active": 0,
+      "frames": 176400,
+      "capture_sha256": "7a9c38df5318a026bd6fe76ebcb52bc8b125a56579b4b6dd913818b19f920957",
+      "finite_stereo": true,
+      "peak": 0.0,
+      "silence_pass": true
+    },
+    {
+      "sample_rate": 44100,
+      "schedule": 0,
+      "active": 1,
+      "frames": 176400,
+      "capture_sha256": "0ab8abd6cabdc18ea16249d0f6b1c2fc95a2072f232972c88f123c150c9ae195",
+      "finite_stereo": true,
+      "peak": 0.49998903274536133,
+      "silence_pass": true
+    },
+    {
+      "sample_rate": 44100,
+      "schedule": 1,
+      "active": 0,
+      "frames": 176400,
+      "capture_sha256": "7a9c38df5318a026bd6fe76ebcb52bc8b125a56579b4b6dd913818b19f920957",
+      "finite_stereo": true,
+      "peak": 0.0,
+      "silence_pass": true
+    },
+    {
+      "sample_rate": 44100,
+      "schedule": 1,
+      "active": 1,
+      "frames": 176400,
+      "capture_sha256": "293c33c38d6331ccc7b059e3e6f16f63cebdc457de071015bd335be83c3f948c",
+      "finite_stereo": true,
+      "peak": 0.4999694526195526,
+      "silence_pass": true
+    },
+    {
+      "sample_rate": 44100,
+      "schedule": 2,
+      "active": 0,
+      "frames": 176400,
+      "capture_sha256": "7a9c38df5318a026bd6fe76ebcb52bc8b125a56579b4b6dd913818b19f920957",
+      "finite_stereo": true,
+      "peak": 0.0,
+      "silence_pass": true
+    },
+    {
+      "sample_rate": 44100,
+      "schedule": 2,
+      "active": 1,
+      "frames": 176400,
+      "capture_sha256": "cdbebd9291dde5a18a27aa72282829952e370bf463a33fe7db6e848ac4166309",
+      "finite_stereo": true,
+      "peak": 0.4999597668647766,
+      "silence_pass": true
+    },
+    {
+      "sample_rate": 48000,
+      "schedule": 0,
+      "active": 0,
+      "frames": 192000,
+      "capture_sha256": "626db8bea999709c8faead0ec9d60025604676fcc44130abe6c1168b90989b3b",
+      "finite_stereo": true,
+      "peak": 0.0,
+      "silence_pass": true
+    },
+    {
+      "sample_rate": 48000,
+      "schedule": 0,
+      "active": 1,
+      "frames": 192000,
+      "capture_sha256": "4dfbf3d695196bb4be359000778a4c23b62bd84c9b457604f17d54a4736ef041",
+      "finite_stereo": true,
+      "peak": 0.4999987781047821,
+      "silence_pass": true
+    },
+    {
+      "sample_rate": 48000,
+      "schedule": 1,
+      "active": 0,
+      "frames": 192000,
+      "capture_sha256": "626db8bea999709c8faead0ec9d60025604676fcc44130abe6c1168b90989b3b",
+      "finite_stereo": true,
+      "peak": 0.0,
+      "silence_pass": true
+    },
+    {
+      "sample_rate": 48000,
+      "schedule": 1,
+      "active": 1,
+      "frames": 192000,
+      "capture_sha256": "3d352749900e1a43fd4f029ea56c62fa65b6adbe3f1b36cca8dcea972c0506c8",
+      "finite_stereo": true,
+      "peak": 0.47999992966651917,
+      "silence_pass": true
+    },
+    {
+      "sample_rate": 48000,
+      "schedule": 2,
+      "active": 0,
+      "frames": 192000,
+      "capture_sha256": "626db8bea999709c8faead0ec9d60025604676fcc44130abe6c1168b90989b3b",
+      "finite_stereo": true,
+      "peak": 0.0,
+      "silence_pass": true
+    },
+    {
+      "sample_rate": 48000,
+      "schedule": 2,
+      "active": 1,
+      "frames": 192000,
+      "capture_sha256": "f0491704f927c899ea4b3da34e699ad926c2cc0ed3006d725d0474b55611e451",
+      "finite_stereo": true,
+      "peak": 0.48257556557655334,
+      "silence_pass": true
+    },
+    {
+      "sample_rate": 96000,
+      "schedule": 0,
+      "active": 0,
+      "frames": 384000,
+      "capture_sha256": "76ed5c9c326ba62322d464a22d3fcf7b76c7352c6d33badc36ccea7a33325e97",
+      "finite_stereo": true,
+      "peak": 0.0,
+      "silence_pass": true
+    },
+    {
+      "sample_rate": 96000,
+      "schedule": 0,
+      "active": 1,
+      "frames": 384000,
+      "capture_sha256": "54ee74d0c4eefc7b638ee6bbfbbd28198e29da9fa47c5d0e7b5813e8440904b3",
+      "finite_stereo": true,
+      "peak": 0.49942103028297424,
+      "silence_pass": true
+    },
+    {
+      "sample_rate": 96000,
+      "schedule": 1,
+      "active": 0,
+      "frames": 384000,
+      "capture_sha256": "76ed5c9c326ba62322d464a22d3fcf7b76c7352c6d33badc36ccea7a33325e97",
+      "finite_stereo": true,
+      "peak": 0.0,
+      "silence_pass": true
+    },
+    {
+      "sample_rate": 96000,
+      "schedule": 1,
+      "active": 1,
+      "frames": 384000,
+      "capture_sha256": "7c6dcbd2fa6f496f23adf66e50358f3860ab37f7e02c799926d8650c43c8ea02",
+      "finite_stereo": true,
+      "peak": 0.47999998927116394,
+      "silence_pass": true
+    },
+    {
+      "sample_rate": 96000,
+      "schedule": 2,
+      "active": 0,
+      "frames": 384000,
+      "capture_sha256": "76ed5c9c326ba62322d464a22d3fcf7b76c7352c6d33badc36ccea7a33325e97",
+      "finite_stereo": true,
+      "peak": 0.0,
+      "silence_pass": true
+    },
+    {
+      "sample_rate": 96000,
+      "schedule": 2,
+      "active": 1,
+      "frames": 384000,
+      "capture_sha256": "96ff5475d20b34ad241e449b7011f584f4c69b78ca367ef90e0e828ede2a9c56",
+      "finite_stereo": true,
+      "peak": 0.4993639290332794,
+      "silence_pass": true
+    },
+    {
+      "sample_rate": 192000,
+      "schedule": 0,
+      "active": 0,
+      "frames": 768000,
+      "capture_sha256": "b15b79e1f79b625b7be660d31da74943bff98b94eee89544d233aabfbb91d51a",
+      "finite_stereo": true,
+      "peak": 0.0,
+      "silence_pass": true
+    },
+    {
+      "sample_rate": 192000,
+      "schedule": 0,
+      "active": 1,
+      "frames": 768000,
+      "capture_sha256": "b941efae7793fabad077f6342892cdd7a0d92fd59efee8409aaa01e8708579ef",
+      "finite_stereo": true,
+      "peak": 0.499922513961792,
+      "silence_pass": true
+    },
+    {
+      "sample_rate": 192000,
+      "schedule": 1,
+      "active": 0,
+      "frames": 768000,
+      "capture_sha256": "b15b79e1f79b625b7be660d31da74943bff98b94eee89544d233aabfbb91d51a",
+      "finite_stereo": true,
+      "peak": 0.0,
+      "silence_pass": true
+    },
+    {
+      "sample_rate": 192000,
+      "schedule": 1,
+      "active": 1,
+      "frames": 768000,
+      "capture_sha256": "b005e7a417dad9b1d4d7681fd1b67a67a6647526bcd2f1f6b54a737845fbb5b8",
+      "finite_stereo": true,
+      "peak": 0.47999998927116394,
+      "silence_pass": true
+    },
+    {
+      "sample_rate": 192000,
+      "schedule": 2,
+      "active": 0,
+      "frames": 768000,
+      "capture_sha256": "b15b79e1f79b625b7be660d31da74943bff98b94eee89544d233aabfbb91d51a",
+      "finite_stereo": true,
+      "peak": 0.0,
+      "silence_pass": true
+    },
+    {
+      "sample_rate": 192000,
+      "schedule": 2,
+      "active": 1,
+      "frames": 768000,
+      "capture_sha256": "0f6078339552dcd38e51b3011767b98e716c87b1ec54cc5fdf1f1095f9c1c951",
+      "finite_stereo": true,
+      "peak": 0.4999603033065796,
+      "silence_pass": true
+    }
+  ],
+  "source_sha256": "74f7aef25b5c12a0e077bb407ddf491ea920fa015e3a20eef2884aacdf2a56fe",
+  "runner_sha256": "eb0a55410d80d9b17f355f390a704210b8488653cc412fdfa76d6ee96ca04b3d",
+  "scope": "4-second log sweep, 10Hz endpoint switching and 5Hz triangle sweep; per-sample controls; approximate8Hz repeated gates and silent controls; no global stability or perceptual guarantee",
+  "admission": "NOT_GRANTED",
+  "capture_verification": {
+    "status": "PASS",
+    "archive_sha256": "bc43bc3df0af60d8fd72e69ff49835537796fea4e0a927c94168a53629bf50e4"
+  }
+}

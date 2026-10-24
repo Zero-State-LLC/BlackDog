@@ -1,0 +1,113 @@
+{
+  "status": "BOUNDED_CANDIDATE_HOST_NATIVE_WASM_PASS_SEMANTIC_REVIEW_PENDING",
+  "source_sha256": "74f7aef25b5c12a0e077bb407ddf491ea920fa015e3a20eef2884aacdf2a56fe",
+  "host_policy": {
+    "num_voices": 8,
+    "dynamic_voices": false,
+    "note_off": "Proposed natural decay after note-off; user requested recommendation, independent semantic decision pending",
+    "note_on": "Invalidate delay/filter state on rising gate with bounded16-bit epoch tags"
+  },
+  "host_pin": {
+    "dawdreamer": "0.9.0",
+    "python": "3.12",
+    "platform": "macOS arm64",
+    "packages": [
+      {
+        "name": "dawdreamer",
+        "version": "0.9.0",
+        "url": "https://files.pythonhosted.org/packages/7e/95/93114482c9dbcab39d6e5b844bd6a96a919d5864e913c966abba0d67f0d5/dawdreamer-0.9.0-cp312-cp312-macosx_11_0_arm64.whl",
+        "archive_info": {
+          "hash": "sha256=cd53384a505918f11182c81113bb782e4a34baa4d5f53c089fa3919fb1deb991",
+          "hashes": {
+            "sha256": "cd53384a505918f11182c81113bb782e4a34baa4d5f53c089fa3919fb1deb991"
+          }
+        }
+      },
+      {
+        "name": "numpy",
+        "version": "2.3.5",
+        "url": "https://files.pythonhosted.org/packages/5b/e1/1ee06e70eb2136797abe847d386e7c0e830b67ad1d43f364dd04fa50d338/numpy-2.3.5-cp312-cp312-macosx_14_0_arm64.whl",
+        "archive_info": {
+          "hash": "sha256=612a95a17655e213502f60cfb9bf9408efdc9eb1d5f50535cc6eb365d11b42b5",
+          "hashes": {
+            "sha256": "612a95a17655e213502f60cfb9bf9408efdc9eb1d5f50535cc6eb365d11b42b5"
+          }
+        }
+      }
+    ]
+  },
+  "source_controls": {
+    "frequency_hz": [
+      20,
+      8000
+    ],
+    "gain": [
+      0,
+      1
+    ],
+    "gate": [
+      0,
+      1
+    ]
+  },
+  "host_note_constraints": "Proposed diagnostic adapter rejects fractional/out-of-range pitches; accepts integer MIDI 16..119, integer velocity 1..127, finite nonnegative start, finite positive duration and finite end. Entire batch validated before host allocation.",
+  "remaining": [
+    "Independent semantic approval of reset/natural-release and audible eight-voice stealing",
+    "Absolute tuning and musical assessment across the declared input domain",
+    "Upstream host integration of proposed input preflight",
+    "Canonical source/prompt/context rights and admission",
+    "Independent evaluation families",
+    "Authenticated signed readiness artifacts"
+  ],
+  "admission": "NOT_GRANTED",
+  "host_archive_sha256": "fce319780b443c5b8fcb37e4679368f79e6eea74de14c2ed47da944eec378afd",
+  "reset_archive_sha256": "bc43bc3df0af60d8fd72e69ff49835537796fea4e0a927c94168a53629bf50e4",
+  "input_preflight": {
+    "adapter": "scripts/diagnostics/bounded_pluck_host_contract.py",
+    "sha256": "7a6c57ab54ae8c8aab6dbd2ab96def2b7486d672a322173d6f03bf00bda4ec6f",
+    "tests": 40,
+    "scope": "Diagnostic adapter only; upstream Shipwright and canonical admission unchanged.",
+    "sample_offsets": "DawDreamer double arithmetic: on=start*rate; off=on+duration*rate. Require off < 2**31 and int(off)>int(on).",
+    "audio_regression": "916 fresh candidate host captures byte-identical to previous source",
+    "archive_sha256": "fce319780b443c5b8fcb37e4679368f79e6eea74de14c2ed47da944eec378afd"
+  },
+  "voice_exhaustion": {
+    "captures": 60,
+    "rates": [
+      44100,
+      48000,
+      96000,
+      192000
+    ],
+    "schedule": "12 distinct notes, 60 ms spacing, 40 ms duration, 1.5 second render",
+    "eight_voice_repeat": "byte-identical",
+    "sixteen_voice_solo_sum_max_error": 0.0,
+    "eight_vs_sixteen_max_abs_difference": 0.786296546459198,
+    "acceptance": "PENDING_SEMANTIC_REVIEW",
+    "archive_sha256": "fce319780b443c5b8fcb37e4679368f79e6eea74de14c2ed47da944eec378afd"
+  },
+  "bounded_histories": {
+    "captures": 20,
+    "duration_seconds": 12,
+    "rapid_note_count": 256,
+    "rates": [
+      44100,
+      48000,
+      96000,
+      192000
+    ],
+    "source_sha256": "74f7aef25b5c12a0e077bb407ddf491ea920fa015e3a20eef2884aacdf2a56fe",
+    "adapter_sha256": "7a6c57ab54ae8c8aab6dbd2ab96def2b7486d672a322173d6f03bf00bda4ec6f",
+    "archive_sha256": "fce319780b443c5b8fcb37e4679368f79e6eea74de14c2ed47da944eec378afd",
+    "scope": "Finite stereo output, exact silent controls and byte-identical rapid repeats. Low/high tails measured, not perceptually approved."
+  },
+  "source_path": "scripts/diagnostics/pluck-bounded-epoch.dsp",
+  "epoch_bound": {
+    "modulus": 65536,
+    "max_delay_samples": 9597,
+    "max_rising_gates_in_delay": 4799,
+    "conditions": "Finite20..8000Hz, sr<=192000Hz, binary gate; modulo tag equality cannot collide within retained delay history",
+    "receipt": "pluck-bounded-epoch-verification-2026-10-24.json"
+  },
+  "candidate_notice": "Separate candidate contract; does not replace current review packet or grant admission."
+}
