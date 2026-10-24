@@ -256,8 +256,14 @@ class SignalProfile:
     require_reference: bool = True
     press_buttons_first_block: bool = True
     suite: str | None = None
+    diagnostic_case: Any = None
 
     def __post_init__(self) -> None:
+        if self.diagnostic_case is not None:
+            from faustcoder.diagnostic_cases import DiagnosticCase
+            if not isinstance(self.diagnostic_case, DiagnosticCase):
+                raise ValueError("diagnostic_case must be a DiagnosticCase")
+            self.diagnostic_case.validate_profile(self)
         if self.sample_rate not in SAMPLE_RATES:
             raise ValueError("sample_rate must be 44100 or 48000")
         if self.block_size < 1 or self.block_size > 4096:
@@ -548,7 +554,7 @@ def profile_payload(profile: SignalProfile) -> dict[str, Any]:
     Version 2 is the allowlist shape. Stimulus bytes and compile flags
     are recorded on the receipt metrics. They are not fields here.
     """
-    return {
+    payload = {
         "absolute_tolerance_nano": to_nano(profile.absolute_tolerance),
         "block_size": profile.block_size,
         "clip_peak_nano": to_nano(profile.clip_peak),
@@ -576,6 +582,10 @@ def profile_payload(profile: SignalProfile) -> dict[str, Any]:
         "stimuli": list(profile.stimuli),
         "version": 2,
     }
+
+    if profile.diagnostic_case is not None:
+        payload["diagnostic_case"] = profile.diagnostic_case.payload()
+    return payload
 
 
 def reference_payload(reference: SignalReference) -> dict[str, Any]:
@@ -851,6 +861,11 @@ def run_signal(
     """
     if not isinstance(source, str):
         raise TypeError("source must be a string")
+    if profile.diagnostic_case is not None:
+        if reward_graded or promotion_candidate:
+            raise ValueError("diagnostic cases are not admitted for reward or promotion")
+        if reference is None or reference.frames != profile.frames:
+            raise ValueError("diagnostic cases require an explicit full-length reference")
     profile, reference = _prepare_render(
         profile, reference, reward_graded=reward_graded
     )
@@ -1296,6 +1311,8 @@ def _judge(
         failures.extend(stimulus_failures)
         if peak_error is not None and math.isfinite(peak_error):
             summary["max_abs_error_nano"] = to_nano(peak_error)
+    if profile.diagnostic_case is not None and profile.diagnostic_case.zero_companion is not None:
+        failures.append("diagnostic:companion_pending")
     failures = sorted(set(failures))
     if reward_graded:
         comparison = "reward-graded-signed-full"
@@ -1332,12 +1349,20 @@ def _judge(
         metrics["toolchain"] = toolchain
     if profile.suite is not None:
         metrics["suite"] = profile.suite
+    if profile.diagnostic_case is not None:
+        metrics["diagnostic_case"] = rendered["diagnostic_case"]
+        metrics["comparison"] = "diagnostic-signed-full"
+        metrics["diagnostic_case"]["compiler_digest"] = compiled.reproducible_digest
     metrics["compile_flags"] = list(compile_flags)
     if _suite_profile(profile):
         from faustcoder.signal_suite import stimulus_record
 
         metrics.update(stimulus_record(profile))
     harness = _harness_preimage()
+    if profile.diagnostic_case is not None:
+        harness["diagnostic_signal_sha256"] = _file_sha256(Path(__file__))
+        harness["diagnostic_python_sha256"] = _file_sha256(Path(__file__).with_name("diagnostic_cases.py"))
+        harness["diagnostic_worker_sha256"] = _file_sha256(worker_directory() / "diagnostic-cases.mjs")
     metrics["unshare_path"] = harness["unshare_path"]
     metrics["unshare_sha256"] = harness["unshare_sha256"]
     thresholds: dict[str, Any] = {
@@ -1364,7 +1389,7 @@ def _judge(
     if profile.require_reference:
         thresholds["require_reference"] = True
     thresholds["reward_graded"] = bool(reward_graded)
-    if profile.suite is not None:
+    if profile.suite is not None or profile.diagnostic_case is not None:
         thresholds["reward_allowlisted"] = False
     receipt: dict[str, Any] = {
         "source_sha256": hashlib.sha256(source.encode("utf-8")).hexdigest(),
@@ -1501,7 +1526,7 @@ def _measure_stimulus(
     # Reward grading signs the whole render, past head_frames included
     # (spec §23 A4). A suite profile signs every rendered frame. Other
     # runs keep the exact check on the head.
-    compared = profile.frames if reward_graded or _suite_profile(profile) else head
+    compared = profile.frames if reward_graded or _suite_profile(profile) or profile.diagnostic_case is not None else head
     summary["compared_frames"] = compared
     peak_error, token = compare_channels(
         [channel[:compared] for channel in quantized_candidate],
@@ -1773,7 +1798,8 @@ def _prepare_render(
             )
     if reward_graded:
         profile = replace(profile, reject_nonfinite=True, require_reference=True)
-    profile = _default_impulse_frames(profile)
+    if profile.diagnostic_case is None:
+        profile = _default_impulse_frames(profile)
     if reference is None:
         if _suite_profile(profile):
             profile = replace(profile, head_frames=profile.frames)
@@ -1972,19 +1998,20 @@ def _render(
         raise SandboxError(f"render worker is missing: {script}")
     libraries = share_directory()
     mono = stimuli_for(profile)
-    request = json.dumps(
-        {
-            "source": source,
-            "options": list(options),
-            "sample_rate": profile.sample_rate,
-            "block_size": profile.block_size,
-            "frames": profile.frames,
-            "stimuli": list(profile.stimuli),
-            "press_buttons_first_block": profile.press_buttons_first_block,
-        },
-        ensure_ascii=False,
-        separators=(",", ":"),
-    ).encode("utf-8")
+    request_body = {
+        "source": source, "options": list(options),
+        "sample_rate": profile.sample_rate, "block_size": profile.block_size,
+        "frames": profile.frames, "stimuli": list(profile.stimuli),
+        "press_buttons_first_block": profile.press_buttons_first_block,
+    }
+    diagnostic = None
+    if profile.diagnostic_case is not None:
+        from faustcoder.diagnostic_cases import input_buffers
+        diagnostic = profile.diagnostic_case
+        request_body["diagnostic_case"] = diagnostic.worker_payload()
+        for index, samples in enumerate(input_buffers(profile)):
+            mono[f"channel-{index}"] = samples
+    request = json.dumps(request_body, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
     with tempfile.TemporaryDirectory(prefix="faustcoder-signal-") as temporary:
         workdir = Path(temporary)
         _stage_runtime(workdir)
@@ -2031,6 +2058,9 @@ def _render(
             )
         samples = _read_outputs(workdir, body, profile)
         body["samples"] = samples
+        if diagnostic is not None:
+            from faustcoder.diagnostic_cases import validate_worker_result
+            body["diagnostic_case"] = validate_worker_result(profile, body, mono)
         return body
 
 

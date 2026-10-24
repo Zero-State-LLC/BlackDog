@@ -136,3 +136,21 @@ CI reuses `.github/workflows/spec-check.yml` and the hygiene workflows.
 ## Complexity tracking
 
 None.
+
+### Issue #108: diagnostic case extension (spec §27)
+
+Owner approved the bounded amendment and implementation on 2026-10-22 PT.
+Implement immutable `DiagnosticCase` / `ControlEvent` records and opt-in
+`SignalProfile.diagnostic_case`, with no fields added to legacy payloads.
+The worker validates against compiled descriptors, applies events before each
+block, and routes per-input buffers. `run_diagnostic_cases` executes and validates
+companions itself, retaining the silence failure until that validation succeeds.
+Bind case, input bytes, descriptors, code and companion receipts. Keep extension
+profiles outside reward allowlists and retain the existing sandbox/resource path.
+
+Validation covers invalid schedules, button conflicts, exact boundaries and
+persistent values, independent input routing, zero-input generators, invalid
+companions, an always-zero compiler mutant, full-frame reference comparison,
+receipt mutations and frozen legacy digests. Run sandboxed integration on Linux
+CI; do not weaken canaries for other platforms. See ADR-0008. No admission,
+FLOOR change, T07 freeze, detector default change or merge is authorized here.

@@ -3,7 +3,7 @@
 Formerly FaustCoder; renamed 2026-10-17 PT.
 
 - Status: DRAFT / refinement-ready
-- Version: 0.3.11 (D3-H2 human triage credential, Danny 2026-10-18 5:45 PM PT, a software key is fine for his triage key; see §26). 0.3.10 (D3-H2 human triage credential, Danny 2026-10-18 5:11 PM PT, "approved the BlackDog §26 option C spec amendment with ADVERSARY's defaults"; see §26). 0.3.9 (D3-H2 sampled rerun audit, Danny 2026-10-18 8:10 AM PT, "Approve the §26 0.3.9 amendment as recommended"; see §26). 0.3.8 (FLOOR lower-floor detections, Danny 2026-10-18 2:27 AM PT, "continue as recommended"; see §25). 0.3.7 (D3 option H, Danny 2026-10-18; see §26). 0.3.6 (FLOOR bounds ratified, Danny 2026-10-18 12:34 AM PT; see §25). 0.3.5 (Jev Q1–Q4, 2026-10-17 7:40 PM PT; Danny "use jev to make decisions" 7:37 PM PT; see §24). 0.3.4 (ADR-0006 reward ladder, Danny 2026-10-17 4:11 PM PT, A2 extended 4:28 PM PT; see §23). 0.3.3: D-013 rights defaults, Danny yes 2026-10-17 1:04 PM PT; see §22. 0.3.2: CompilerReceipt diagnostic classes, ADR-0005, Danny yes 2026-10-17 1:13 PM PT; see §21. 0.3.1: R-001 v0.2 evidence, Danny yes 2026-10-17 12:54 PM PT; see §20. 0.3.0: Faust-tooling assimilation and target lanes, ADR-0004; see §19. 0.2.0 training path: ADR-0002, §17
+- Version: 0.3.12 (bounded diagnostic harness cases, owner approval 2026-10-22 PT; §27, ADR-0008). 0.3.11 (D3-H2 human triage credential, Danny 2026-10-18 5:45 PM PT, a software key is fine for his triage key; see §26). 0.3.10 (D3-H2 human triage credential, Danny 2026-10-18 5:11 PM PT, "approved the BlackDog §26 option C spec amendment with ADVERSARY's defaults"; see §26). 0.3.9 (D3-H2 sampled rerun audit, Danny 2026-10-18 8:10 AM PT, "Approve the §26 0.3.9 amendment as recommended"; see §26). 0.3.8 (FLOOR lower-floor detections, Danny 2026-10-18 2:27 AM PT, "continue as recommended"; see §25). 0.3.7 (D3 option H, Danny 2026-10-18; see §26). 0.3.6 (FLOOR bounds ratified, Danny 2026-10-18 12:34 AM PT; see §25). 0.3.5 (Jev Q1–Q4, 2026-10-17 7:40 PM PT; Danny "use jev to make decisions" 7:37 PM PT; see §24). 0.3.4 (ADR-0006 reward ladder, Danny 2026-10-17 4:11 PM PT, A2 extended 4:28 PM PT; see §23). 0.3.3: D-013 rights defaults, Danny yes 2026-10-17 1:04 PM PT; see §22. 0.3.2: CompilerReceipt diagnostic classes, ADR-0005, Danny yes 2026-10-17 1:13 PM PT; see §21. 0.3.1: R-001 v0.2 evidence, Danny yes 2026-10-17 12:54 PM PT; see §20. 0.3.0: Faust-tooling assimilation and target lanes, ADR-0004; see §19. 0.2.0 training path: ADR-0002, §17
 - Target: NVIDIA DGX Spark (128 GB unified memory)
 
 ## 1. Constitution
@@ -779,3 +779,46 @@ Approval: Danny, 2026-10-18 5:11 PM PT, "approved the BlackDog §26 option C spe
 The halt report line records `persisted_at` (RFC 3339) inside the MAC'd body. That field is the persist time in rule 4. The grader writes it, so it can only move the lower bound later, which fails closed. The triage line records `appended_at` the same way. The human does not supply it.
 
 Not covered by this subsection: compromise of a human key; root on the host or anyone who can write the allowed-signers file; restoring both the report log and the consumed log to an older snapshot, and deleting the halt marker, the anchor and the report together (the existing D3-H2 limits); social engineering of a triager. Deleting the allowed-signers file fails closed and keeps every halt. A grader that forges the run-key MAC can set `appended_at` inside a former validity window of a reviewer key that is later revoked. The drop file's ctime does not close that: a drop written while the key was valid has a ctime inside that window, and the same grader writes both the MAC and `appended_at`. A later read uses the recorded `appended_at`. That limit is not covered.
+
+## 27. Bounded diagnostic signal cases (0.3.12)
+
+Approved by the owner in this chat: "Approve the bounded amendment and implementation",
+in response to the issue #108 proposal requesting canonical spec, plan, ADR, tests
+and a separate review PR. This amendment grants no merge or admission.
+
+1. An optional immutable diagnostic case names a unique case ID, sorted per-block
+   control events, optional ordered per-input stimuli and an optional distinct
+   expected-zero companion. Omitted extensions preserve version-2 canonical
+   profile bytes and both frozen reward-profile digests. Enabled cases carry
+   extension version 1 and are refused for reward grading or promotion.
+2. Before rendering, validate control events against compiled writable UI
+   descriptors: integer block inside the render, exact address, finite value,
+   range and step grid, no repeated block/address. Apply events before compute;
+   values persist. Explicit button events require automatic button pressing off.
+   Read-only meters are never writable controls.
+3. Explicit input routing supplies exactly one deterministic buffer per compiled
+   input, in order; zero-input DSPs require an empty list. Unknown stimuli,
+   incorrect lengths and nonfinite samples fail closed. In addition to existing
+   impulse/sine/noise definitions, multitone uses zero-phase 431 and 997 Hz sines,
+   each amplitude 0.125; alternating uses +0.25 then -0.25. Samples are float32;
+   receipts bind their bytes, seed, sample rate and generator definition.
+4. Every diagnostic case requires a reference and compares every rendered sample
+   with atol=2e-6 and rtol=1e-5. An expected-zero case requires an explicit all-zero
+   reference and a distinct nonzero companion executed by the same batch runner.
+   The companion must pass reference comparison, be finite and non-silent, and
+   have the same source/dependency/compiler and harness binding and render setup.
+   Missing, cyclic, expected-zero or failing companions leave the zero case failed.
+   A caller-supplied pass claim is insufficient. Only the silence failure can be
+   waived; other channel, nonfinite, clipping, resource and reference checks remain.
+5. Diagnostic receipts bind the complete case, actual applied controls, descriptor
+   digest, stimulus hashes, implementation hashes and companion receipt digest.
+   A direct single-case expected-zero run remains pending/failed until batch
+   validation. Existing sandbox isolation, compile flags, resource bounds and
+   receipt schema remain in force. Optional fields live in profile and metrics;
+   no extension fields are added to legacy requests or profiles.
+6. This diagnostic API does not admit hosts, training examples or production use.
+   TOKEN_FLOOR=40 remains provisional, T07 remains unfrozen, and both detector
+   experiments remain default-off. Future reward adoption requires a separate
+   profile/version and allowlist decision.
+
+Implementation rationale and validation: [ADR-0008](../../docs/adr/0008-diagnostic-control-cases.md).
