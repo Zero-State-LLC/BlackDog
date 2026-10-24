@@ -1,0 +1,40 @@
+{
+  "repository": "Orisu179/AmatiPP",
+  "commit": "4d54e25053c0f73e31b48630bb7b4a77fdfeb2be",
+  "inspected_files": [
+    {
+      "path": "source/Faust/FaustProgram.cpp",
+      "sha256": "1625f6cf1c130dd36749e100fcd3f88c2d9129d919b5d8591377aecd2570e453",
+      "blob_sha": "d0f797e359721db978af58618a74ec32a4a1d1c7"
+    },
+    {
+      "path": "source/PluginProcessor.cpp",
+      "sha256": "474296d84cf2363e8907b5dc9260ddd4afcf45e911d4d0151ea415119f02f5a5",
+      "blob_sha": "3714afc49cec93bc186a8020c10894ac9b9ddc5b"
+    },
+    {
+      "path": "source/PluginProcessor.h",
+      "sha256": "185e8222dc9210ffb87d65b7bfbbeccf1b4480d61b564dea11334a65f7e545ac",
+      "blob_sha": "63adc54cfcc5bf6c0fddfe3978393a518c5f0640"
+    },
+    {
+      "path": "source/Components/EditorComponent.cpp",
+      "sha256": "042376da86fd82405df82a122eee8717aad90c866164bbf668e13777f6b0eba9",
+      "blob_sha": "1ad22204e14b40a5c4eabe7abe8747d4ad165dd7"
+    },
+    {
+      "path": ".gitmodules",
+      "sha256": "4a662651195392ed930d3f4346ba30c5a56d34ee0877702eb3f2219df25c7e05",
+      "blob_sha": "d1e4fa3ab71963c47c43bc36cd69db27bfe9b315"
+    }
+  ],
+  "findings": [
+    "PluginProcessor sourceCode initializes empty; editor accepts source supplied by caller",
+    "FaustProgram compiles caller-supplied source; only inspected added DSP literal is effect = _;",
+    "FaustProgram.cpp explicitly declares GPL-3.0-or-later and Amati provenance; do not apply root MIT blanket clearance",
+    "Submodule URLs point to JUCE, melatonin_inspector, clap-juce-extensions and cmake-includes"
+  ],
+  "admission": "NOT_GRANTED",
+  "independent_evaluation_candidate_identified": false,
+  "scope": "Targeted source-path inspection, not exhaustive submodule or string-literal audit"
+}

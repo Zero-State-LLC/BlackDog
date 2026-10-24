@@ -1,0 +1,48 @@
+{
+  "status": "PREQUALIFICATION_NO_ADMISSION",
+  "leads": [
+    {
+      "repository": "renebohne/ttgo-audio-synth",
+      "commit": "2486b6463787caab3442709af24cb4200573d8a1",
+      "file": "untitled.cpp",
+      "metadata": {
+        "sha256": "6a0e71c8b228e394d78fb542c08d28dbd6c759a775bfb71cdf3de6850a3e31d5",
+        "blob_sha": "b10a961271dda5f0af7315c0d39bf2d356ada681"
+      },
+      "findings": [
+        "Header identifies generated Faust 2.23.10 C++",
+        "Architecture section declares GPL with exception; file warns of separate architecture/user licensing",
+        "Pinned tree lacks original .dsp/.lib files; no independent Faust target established"
+      ]
+    },
+    {
+      "repository": "materializepath/designing-sound-experiments",
+      "commit": "dacffbddca08a3b16e247fc1453657939be7049e",
+      "readme_blob": "3c3a12695e59c2b37f30800855bdf041cee8f7fb",
+      "files": {
+        "dsp/bitcrush.dsp": {
+          "sha256": "9ec284360def92c062a2ce466dc11b9bdc14723fe546ec72148cb6fc04050ae4",
+          "blob_sha": "4d3cf45ab3da845db172224af4ad5b2ff90237f3"
+        },
+        "dsp/bouncing-ball.dsp": {
+          "sha256": "210c6e2e8c5b75bd339444a777e96a1ed76bf77fd598ce33ad59a1220504683b",
+          "blob_sha": "c72d745cd6a64b6c1048ec1f74a82a61af356dcf"
+        },
+        "LICENSE": {
+          "sha256": "90008e3bab825dc3509f9c4fc23cbffb397b352d6d43509f59088e76ecfb9765",
+          "blob_sha": "b831f658be9e2dc2cf3f47952a49d3a8579b276d"
+        }
+      },
+      "findings": [
+        "Root MIT notice; README describes techniques based on Designing Sound, not by itself evidence of copied code",
+        "Both inspected DSP files declare author Agent Cooper + Robert; human/teacher provenance and any model restrictions remain unverified",
+        "Bitcrush uses os.osc and int conversion; exact quantization semantics need review",
+        "Bouncing ball uses ba.pulsen and fi.resonbp and hardcodes 48000 in samples-per-bounce; rate semantics require a restricted sample-rate contract or repair",
+        "Neither full transitive closure nor project/family independence has been qualified"
+      ]
+    }
+  ],
+  "admission": "NOT_GRANTED",
+  "new_independent_evaluation_candidates_admitted": 0,
+  "family_graph_changed": false
+}
