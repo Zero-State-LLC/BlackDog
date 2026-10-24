@@ -1,0 +1,67 @@
+diff --git a/shipwright/engine.py b/shipwright/engine.py
+index 526864e..ee814de 100644
+--- a/shipwright/engine.py
++++ b/shipwright/engine.py
+@@ -273,6 +273,8 @@ def _make_source(engine, name, track, notes, dur):
+         proc = engine.make_faust_processor(name)
+         proc.set_dsp_string(inst.dsp)
+         proc.num_voices = inst.num_voices
++        if inst.dynamic_voices is not None:
++            proc.dynamic_voices = inst.dynamic_voices
+     elif inst.kind == "plugin":
+         proc = engine.make_plugin_processor(name, _resolve_path(inst.path))
+     elif inst.kind == "soundfont":
+@@ -499,7 +501,21 @@ def _rendered_stems(spec, dur):
+     return stems
+ 
+ 
++def _preflight_instruments(spec):
++    """Validate every opted-in track before either render path allocates hosts."""
++    for track in spec.tracks:
++        if isinstance(track, AudioTrack):
++            continue
++        inst = track.instrument
++        if inst.dynamic_voices is not None:
++            if inst.kind != "faust" or type(inst.dynamic_voices) is not bool:
++                raise ValueError("dynamic_voices requires a Faust instrument and a bool")
++        if inst.preflight is not None:
++            inst.preflight(spec, track, config.SR)
++
++
+ def render_stems(spec: RenderSpec, apply_sidechain=True):
++    _preflight_instruments(spec)
+     _check_supported_fx(spec)
+     dur = _duration(spec)
+     stems = _rendered_stems(spec, dur)
+@@ -512,6 +528,7 @@ def render_stems(spec: RenderSpec, apply_sidechain=True):
+ 
+ 
+ def render_spec(spec: RenderSpec):
++    _preflight_instruments(spec)
+     _check_supported_fx(spec)
+     if _needs_offline(spec):
+         dur = _duration(spec)
+diff --git a/shipwright/registry.py b/shipwright/registry.py
+index 21c0956..2b63c2d 100644
+--- a/shipwright/registry.py
++++ b/shipwright/registry.py
+@@ -66,9 +66,17 @@ class Instrument:
+     preset: int = 0
+     render: Optional[Callable] = None   # per-note synth for kind="python"
+ 
++    # None preserves the DawDreamer default. False retains release tails.
++    dynamic_voices: Optional[bool] = None
++    # Optional pure validation callback: (RenderSpec, Track, sample_rate).
++    # Raise ValueError on invalid input; called before any host allocation.
++    preflight: Optional[Callable] = None
++
+     @classmethod
+-    def faust(cls, name: str, dsp: str, num_voices: int = 8):
+-        return cls(name=name, dsp=dsp, num_voices=num_voices, kind="faust")
++    def faust(cls, name: str, dsp: str, num_voices: int = 8, *,
++              dynamic_voices: Optional[bool] = None, preflight: Optional[Callable] = None):
++        return cls(name=name, dsp=dsp, num_voices=num_voices, kind="faust",
++                   dynamic_voices=dynamic_voices, preflight=preflight)
+ 
+     @classmethod
+     def plugin(cls, name: str, path: Path | str, num_voices: int = 8):
