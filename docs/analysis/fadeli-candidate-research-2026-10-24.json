@@ -1,0 +1,34 @@
+{
+  "repository": "DISTRHO/Fadeli",
+  "commit": "300e35009a7c49d33870fae871e32fb3e4b194e5",
+  "root_license": "ISC text",
+  "root_license_blob": "f6e40285991e744b83aa2cc8894e86ed8e57b346",
+  "readme_blob": "4317623bc527c99431cb66f1bb212aee1e3d92e9",
+  "readme_provenance": "Explicitly identifies bundled Faust DSP files as demos/examples and links Faust examples",
+  "inspected_files": [
+    {
+      "path": "dsp/dynamic-volume.dsp",
+      "blob": "37ed2a726b77c8fea730eef0ed0d9057d5ae618b",
+      "declared_author": "Grame",
+      "declared_license": "BSD",
+      "library_references": [
+        "ba.db2linear",
+        "si.smoo"
+      ]
+    },
+    {
+      "path": "dsp/analysis-dbmeter.dsp",
+      "blob": "a06651a27f64a56ba2e4077451a44bfa684830b4",
+      "declared_author": "Grame",
+      "declared_license": "BSD",
+      "library_references": [
+        "ba.db2linear",
+        "ba.linear2db",
+        "ma.SR"
+      ]
+    }
+  ],
+  "disposition": "Not demonstrated independent; upstream example provenance and full closure rights required. Root license not transferred to DSP examples.",
+  "admission": "NOT_GRANTED",
+  "family_replay_performed": false
+}

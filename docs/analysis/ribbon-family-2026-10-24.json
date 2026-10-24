@@ -1,0 +1,106 @@
+{
+  "graph": {
+    "identities": 1536,
+    "components": 12,
+    "joining_operations": 28702
+  },
+  "rows": [
+    {
+      "unit_id": "new:ribbon:carrierGroup",
+      "symbol": "carrierGroup",
+      "span": [
+        2755,
+        2794
+      ],
+      "closure_sha256": "79e889353a63904d24b207f32933a62e26389ac4c035b7376ad2e167fcd3c1b9",
+      "external_dependencies": [],
+      "primitive_dependencies": [
+        "vgroup"
+      ],
+      "project": "simplicit-mc/ribbon-synth",
+      "family": "sha256:b7163433a8fecf21a762daf9d7886efad71a127203b79805c47924e34a0756e1",
+      "comparison_connected": true,
+      "joining_evidence_count": 21,
+      "joining_evidence": [
+        {
+          "left": "new:ribbon:carrierGroup",
+          "right": "new:ribbon:modulatorGroup",
+          "reason": "exact",
+          "stream": "canonical",
+          "floor": 40
+        },
+        {
+          "reason": "collective_support",
+          "group_id": "sha256:1a583ac53d85096e4f56f4ccedcd6dd1f8c2c6f9da2c9c0d6bf72874bdd8257a",
+          "comparison": "comparison:0af91c8e5d9029bd24c099abd65928fa4d250beb",
+          "covered": 2085,
+          "denominator": 2660,
+          "stream": "canonical",
+          "floor": 40
+        }
+      ]
+    },
+    {
+      "unit_id": "new:ribbon:modulatorGroup",
+      "symbol": "modulatorGroup",
+      "span": [
+        3747,
+        3790
+      ],
+      "closure_sha256": "bb058a3989f2f9ebcfa681e7558675c89a0938f20c939a4a1f5ec8b4478b3621",
+      "external_dependencies": [],
+      "primitive_dependencies": [
+        "vgroup"
+      ],
+      "project": "simplicit-mc/ribbon-synth",
+      "family": "sha256:b7163433a8fecf21a762daf9d7886efad71a127203b79805c47924e34a0756e1",
+      "comparison_connected": true,
+      "joining_evidence_count": 20,
+      "joining_evidence": [
+        {
+          "left": "new:ribbon:carrierGroup",
+          "right": "new:ribbon:modulatorGroup",
+          "reason": "exact",
+          "stream": "canonical",
+          "floor": 40
+        },
+        {
+          "reason": "collective_support",
+          "group_id": "sha256:1a583ac53d85096e4f56f4ccedcd6dd1f8c2c6f9da2c9c0d6bf72874bdd8257a",
+          "comparison": "comparison:0af91c8e5d9029bd24c099abd65928fa4d250beb",
+          "covered": 2085,
+          "denominator": 2660,
+          "stream": "canonical",
+          "floor": 40
+        }
+      ]
+    }
+  ],
+  "source_commit": "a793afc33dc0b0854e5ca8a34c22e9d98a125b73",
+  "source_blob": "af146e17caaf28dccbe4ee04cc8d65ae5858576b",
+  "license_blob": "ffb96189b85cd5129fa6f967f557f7544c35fb04",
+  "rights": "MIT root; canonical unit rights not admitted",
+  "full_source_direct_library_references": [
+    "ba.lin2LogGain",
+    "ef.cubicnl",
+    "ma.PI",
+    "ma.log2",
+    "no.noise",
+    "os.lf_triangle",
+    "os.sawtooth",
+    "os.triangle",
+    "si.smoo"
+  ],
+  "full_source_transitive_closure_complete": false,
+  "admission": "NOT_GRANTED",
+  "policy": "unchanged floor40 provisional H1 collective",
+  "limitations": [
+    "Both wrappers belong to one project",
+    "Complete wrapper closures only; full synthesizer transitive closure remains incomplete",
+    "Commented AM example excluded from active reference inventory",
+    "No semantic approval, evaluation admission or signed membership inferred"
+  ],
+  "full_source_imports": [
+    "stdfaust.lib"
+  ]
+}

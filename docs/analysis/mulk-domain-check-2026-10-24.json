@@ -1,0 +1,20 @@
+{
+  "status": "BOUNDED_PROBE_DOMAIN_CHECK_PASS",
+  "products": 41328,
+  "observed_clamp_calls": 826560,
+  "clamp_activations": 0,
+  "instrumentation_overrange_control_detected": true,
+  "max_preclamp_magnitude": 8055029760.0,
+  "omitted_low_low_max_tolerance_ratio": 0.003280828814957256,
+  "source_sha256": "d4fdfcc5b44cb5d9d4a5ecf98fdec76c88376410dcc574811b2b4e45f10e075e",
+  "prompt_model_sha256": "eef2f8a3d8098f2de79eafb8abc4cf41668cd73313a6da7ac7ecc9af17f62341",
+  "input_sha256": "ad26c7e30def90e1d84128b075a0a6ee207ea5bf2b10b8c4c3d9f7e6f96730cb",
+  "coefficient_report_sha256": "e17a7184c61b989def002a0960680cd4bf4b16842e5f5f9c8b78d24511daa7df",
+  "limits": [
+    "Instrumented independent Python float32 model; compiled captures were separately checked for exact component agreement",
+    "Only existing 42 coefficient tuples and 984 input pairs",
+    "Omitted low-low term bound does not bound every other rounding error",
+    "No arbitrary input, coefficient or live-history guarantee; no independent semantic approval"
+  ],
+  "admission": "NOT_GRANTED"
+}
