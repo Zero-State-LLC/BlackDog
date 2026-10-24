@@ -1,0 +1,65 @@
+{
+  "status": "DIAGNOSTIC_NOT_ADMITTED",
+  "files": [
+    {
+      "path": "outputs/blackdog-spectral-pair32-model.json",
+      "sha256": "7402926ad36c107f8c48ed1a522f535c87c2b332eeabe53c28607802651c41f3"
+    },
+    {
+      "path": "outputs/blackdog-pair32-verification.json",
+      "sha256": "58fcd059211b5c7bb0ce70bb14c4c0855b56928a745b6ed8bc893eff26a58404"
+    },
+    {
+      "path": "outputs/blackdog-pair32-channel-analysis.json",
+      "sha256": "9da8fc930970d4438daffc7d129102fb8db0c736cffed289338aaffae77e0041"
+    },
+    {
+      "path": "outputs/blackdog-pair32-compiler-probe.json",
+      "sha256": "cee506d64835c45ed3eb014e5cf01b10802c3339295c9676a9174091000f6def"
+    },
+    {
+      "path": "outputs/blackdog-pair32-barrier-probe.json",
+      "sha256": "05faa84505a8d037683985c2623114be96c4df78d01c550e062223c6f10f840f"
+    },
+    {
+      "path": "outputs/blackdog-pair32-standard-timeout.json",
+      "sha256": "179b2a69f6b7d02692d908a994916d43c9d41a17b0dc86d33ca3e33ba1b3af1d"
+    },
+    {
+      "path": "outputs/blackdog-pair32-extended-timeout.json",
+      "sha256": "93ac272a03c9a9c89292c7354b7896310eed6dfdc5e745564abae5fc39331f3b"
+    },
+    {
+      "path": "outputs/blackdog-stateful-candidate-screen.json",
+      "sha256": "68fb1a77758b2a464792231a099e3c6c0c09316bed2d6b1efbb2160b46ccf034"
+    },
+    {
+      "path": "outputs/blackdog-helper-license-request.json",
+      "sha256": "17e0c79fd134e610c25e1f5bda8ddfd7a889c5b7dfa031c5dac4dfee680e6925"
+    },
+    {
+      "path": "outputs/blackdog-pair32-readiness-status.json",
+      "sha256": "ba8295dea1237abf2f60ff05498da26fd04b1a4e4869e0850e56394d30644896"
+    },
+    {
+      "path": "work/evaluation-search/stateful-families.json",
+      "sha256": "c490fc0fc8de145239ce500bc0dc3e394a78b39799489098732b93caa5464e5d"
+    },
+    {
+      "path": "work/evaluation-search/stateful-edges.json",
+      "sha256": "b048ad01a8cc2dbc88aa5023b8208149ff977d189e7acde20a9839420bd2d7c0"
+    },
+    {
+      "path": "work/spectral_pair32_model.py",
+      "sha256": "303b39dbf76fa8892936687da5ae5c7e897ad92f3c35a9f65f6ecfa2d6220e95"
+    },
+    {
+      "path": "work/stage_pair32.py",
+      "sha256": "fd0b4b109b91f9525b8e442817d023353f01d3a32935c519ee85486eb84419b7"
+    },
+    {
+      "path": "work/stage_pair32_barrier.py",
+      "sha256": "16a0b216e4cfc2b525e13d2e6f5d2342188295fa7d94d91d8dd79a17efcd5263"
+    }
+  ]
+}
