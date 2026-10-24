@@ -1,5 +1,5 @@
 {
-  "status": "BOUNDED_NATIVE_AND_WASM_PASS_SEMANTIC_REVIEW_PENDING",
+  "status": "BOUNDED_NATIVE_WASM_PASS_HOST_RETRIGGER_REJECTED",
   "source_sha256": "ddb0f318fd77ce19c025ee0525bf41f6086f017ad670405898ea5a6b92e8767b",
   "range_hz": [
     20,
@@ -31,5 +31,6 @@
     "pluck-live-verification-2026-10-24.json",
     "pluck-audio-model-comparison-2026-10-24.json",
     "pluck-wasm-verification-2026-10-24.json"
-  ]
+  ],
+  "host_followup": "Repeated-pitch host render differs from fresh-note superposition by up to0.0534413; see reset host review."
 }

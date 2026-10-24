@@ -1,0 +1,66 @@
+{
+  "status": "BOUNDED_HOST_NATIVE_WASM_PASS_SEMANTIC_REVIEW_PENDING",
+  "source_sha256": "83cd856eaf46228903180244b2e5002e139f87decb39d2235a6df980d0b85ab8",
+  "host_policy": {
+    "num_voices": 8,
+    "dynamic_voices": false,
+    "note_off": "Proposed natural decay after note-off; user requested recommendation, independent semantic decision pending",
+    "note_on": "Invalidate delay/filter state on rising gate with integer epoch tags"
+  },
+  "host_pin": {
+    "dawdreamer": "0.9.0",
+    "python": "3.12",
+    "platform": "macOS arm64",
+    "packages": [
+      {
+        "name": "dawdreamer",
+        "version": "0.9.0",
+        "url": "https://files.pythonhosted.org/packages/7e/95/93114482c9dbcab39d6e5b844bd6a96a919d5864e913c966abba0d67f0d5/dawdreamer-0.9.0-cp312-cp312-macosx_11_0_arm64.whl",
+        "archive_info": {
+          "hash": "sha256=cd53384a505918f11182c81113bb782e4a34baa4d5f53c089fa3919fb1deb991",
+          "hashes": {
+            "sha256": "cd53384a505918f11182c81113bb782e4a34baa4d5f53c089fa3919fb1deb991"
+          }
+        }
+      },
+      {
+        "name": "numpy",
+        "version": "2.3.5",
+        "url": "https://files.pythonhosted.org/packages/5b/e1/1ee06e70eb2136797abe847d386e7c0e830b67ad1d43f364dd04fa50d338/numpy-2.3.5-cp312-cp312-macosx_14_0_arm64.whl",
+        "archive_info": {
+          "hash": "sha256=612a95a17655e213502f60cfb9bf9408efdc9eb1d5f50535cc6eb365d11b42b5",
+          "hashes": {
+            "sha256": "612a95a17655e213502f60cfb9bf9408efdc9eb1d5f50535cc6eb365d11b42b5"
+          }
+        }
+      }
+    ]
+  },
+  "source_controls": {
+    "frequency_hz": [
+      20,
+      8000
+    ],
+    "gain": [
+      0,
+      1
+    ],
+    "gate": [
+      0,
+      1
+    ]
+  },
+  "host_note_constraints": "Shipwright casts pitches to integers. Integer MIDI16..119 falls inside20..8000Hz; fractional and out-of-range handling remains a separate contract issue.",
+  "remaining": [
+    "Independent semantic approval of reset/natural-release choice",
+    "Voice exhaustion and stealing",
+    "Longer natural tails and rapid retrigger histories",
+    "Dense range and epoch-counter lifetime",
+    "Host input preflight for fractional/out-of-range notes",
+    "Canonical admission and evaluation independence",
+    "Signed readiness artifacts"
+  ],
+  "admission": "NOT_GRANTED",
+  "host_archive_sha256": "d13deec8c45907509802647f4d12f248833f1d702f567ffdbf3d6bfc2a8c088a",
+  "reset_archive_sha256": "b7943a98a5517f523f6b5afc5e17ff475d14156ca58fb42d42522d21df274751"
+}
