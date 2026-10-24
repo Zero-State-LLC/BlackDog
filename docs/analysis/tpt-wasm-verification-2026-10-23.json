@@ -1,0 +1,16 @@
+{
+  "source_sha256": "bb4f4ba8a120d643666374037cc84dd21157372aed22fc108d5f5f6489dfa957",
+  "source_bytes": 7592,
+  "positive_captures": 12,
+  "frozen_reference_rejections": 12,
+  "compile_ms_range": [
+    1121,
+    1177
+  ],
+  "render_ms_range": [
+    17,
+    28
+  ],
+  "evidence_archive_sha256": "70b4e1498f4658675f1ab6bc13220b6d5e03ae0bd200b27f2a374d5b1c4425e7",
+  "admission": "NOT_GRANTED"
+}

@@ -1,0 +1,17 @@
+{
+  "graph": {
+    "identities": 1508,
+    "components": 12,
+    "joining_operations": 28134
+  },
+  "rows": [
+    {
+      "unit_id": "repair:paired-tpt-live",
+      "source_sha256": "bb4f4ba8a120d643666374037cc84dd21157372aed22fc108d5f5f6489dfa957",
+      "family": "sha256:be7174e2d6db4ee3fbf2ba2b94800f4a0e69ae8b6664e769aee537a6c7917342",
+      "comparison_connected": true
+    }
+  ],
+  "admission": "NOT_GRANTED",
+  "policy": "unchanged floor40 provisional H1 collective"
+}

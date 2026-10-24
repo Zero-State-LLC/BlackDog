@@ -1,0 +1,62 @@
+[
+  {
+    "rate": 44100,
+    "stimulus": "noise",
+    "max_abs_error": 1.2696062146044795e-08
+  },
+  {
+    "rate": 44100,
+    "stimulus": "impulse",
+    "max_abs_error": 2.965397527532332e-08
+  },
+  {
+    "rate": 44100,
+    "stimulus": "sine",
+    "max_abs_error": 2.9132133816389683e-08
+  },
+  {
+    "rate": 48000,
+    "stimulus": "noise",
+    "max_abs_error": 1.2407698701810688e-08
+  },
+  {
+    "rate": 48000,
+    "stimulus": "impulse",
+    "max_abs_error": 2.9641274323921607e-08
+  },
+  {
+    "rate": 48000,
+    "stimulus": "sine",
+    "max_abs_error": 2.8262833740022586e-08
+  },
+  {
+    "rate": 96000,
+    "stimulus": "noise",
+    "max_abs_error": 1.4494251354690846e-08
+  },
+  {
+    "rate": 96000,
+    "stimulus": "impulse",
+    "max_abs_error": 1.4859859676086273e-08
+  },
+  {
+    "rate": 96000,
+    "stimulus": "sine",
+    "max_abs_error": 1.4899209421770365e-08
+  },
+  {
+    "rate": 192000,
+    "stimulus": "noise",
+    "max_abs_error": 2.241513685774521e-08
+  },
+  {
+    "rate": 192000,
+    "stimulus": "impulse",
+    "max_abs_error": 1.4886352650567147e-08
+  },
+  {
+    "rate": 192000,
+    "stimulus": "sine",
+    "max_abs_error": 1.478549827016451e-08
+  }
+]
