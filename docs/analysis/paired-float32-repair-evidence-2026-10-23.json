@@ -1,0 +1,72 @@
+{
+  "status": "FIXED_FIXTURE_REPAIR_VALIDATED_NOT_ADMITTED",
+  "repair": "Return high/low pairs together and compose arithmetic stages sequentially, retaining rounding barriers.",
+  "tests": [
+    {
+      "name": "pair32-shared",
+      "frames": 4096,
+      "block_size": 64,
+      "verified_receipts": 13,
+      "verified_captures": 6,
+      "native_duration_ms": 404,
+      "source_sha256": "1f7a4734d3119a73f08c8d49dce65f1b144ce3a77c654fc387b347916e4d1fb0",
+      "archive_sha256": "3fd9adf4733b0be74002cfb66de487e1a70de7267a4cae333d614d172057c1ad",
+      "max_meter_error_db": 0.0009059906005859375,
+      "audio_passthrough_exact": true,
+      "verification_sha256": "fe6708b7c9f8f030fe00602bb6fb0321c78549f8e5bb2fa6b32960823d2e0b36",
+      "capture_verification_sha256": "6a91d8dda8606fa5e2fa477c5f96b6672b46256cb247b2e6f6410f95b3c89ed6"
+    },
+    {
+      "name": "pair32-long",
+      "frames": 16384,
+      "block_size": 128,
+      "verified_receipts": 13,
+      "verified_captures": 6,
+      "native_duration_ms": 405,
+      "source_sha256": "1f7a4734d3119a73f08c8d49dce65f1b144ce3a77c654fc387b347916e4d1fb0",
+      "archive_sha256": "a00db9ee6d490e9e6b4689f53c8e10aaeb0de388f20614de7e11cc3571047d78",
+      "max_meter_error_db": 0.0010728836059570312,
+      "audio_passthrough_exact": true,
+      "verification_sha256": "a3e0a70f365359e3814cc7c7c47c23c338a2a2b5740ad9862c4e935031ca91a4",
+      "capture_verification_sha256": "279f32926622ee90797770e0320a3ddd89f3b4df5b807786cffe90bae6f43915"
+    }
+  ],
+  "profiling": [
+    {
+      "file": "fixed-48000.stderr",
+      "sha256": "39f57e5811f5328427ae57b539f24757f2d175c5f919b158a8d6ce3705715283",
+      "log": "\nstart parser\n\nend parser (duration : 0.00113702)\n\nstart evaluation\n"
+    },
+    {
+      "file": "one-section.stderr",
+      "sha256": "8742deb95f215e2990755c782f2fa623e6364248608b444d1d14cfac046ae5da",
+      "log": "\nstart parser\n\nend parser (duration : 0.00117898)\n\nstart evaluation\n\nend evaluation (duration : 6.16217)\n\nstart propagation\n\nend propagation (duration : 0.00061512)\n\nstart generateCode\n\n\tstart compileMultiSignal\n\n\t\tstart prepare\n\n\t\t\tstart simplifyToNormalForm\n\n\t\t\t\tstart deBruijn2Sym\n\n\t\t\t\tend deBruijn2Sym (duration : 0.000148058)\n\n\t\t\t\tstart dissolveDelayedAliases\n\n\t\t\t\tend dissolveDelayedAliases (duration : 5.79357e-05)\n\n\t\t\t\tstart normalizeRecGroups\n\n\t\t\t\tend normalizeRecGroups (duration : 0.000598907)\n\n\t\t\t\tstart L1 typeAnnotation\n\n\t\t\t\tend L1 typeAnnotation (duration : 0.000879049)\n\n\t\t\t\tstart Cast and Promotion\n\n\t\t\t\tend Cast and Promotion (duration : 0.000154018)\n\n\t\t\t\tstart L2 simplification\n\n\t\t\t\tend L2 simplification (duration : 0.000322104)\n\n\t\t\t\tstart L3 typeAnnotation\n\n\t\t\t\tend L3 typeAnnotation (duration : 0.000895977)\n\n\t\t\t\tstart Cast and Promotion\n\n\t\t\t\tend Cast and Promotion (duration : 0.000133991)\n\n\t\t\t\tstart L4 typeAnnotation\n\n\t\t\t\tend L4 typeAnnotation (duration : 0.000916004)\n\n\t\t\t\tstart Safe access to rdtable/rwtable\n\n\t\t\t\tend Safe access to rdtable/rwtable (duration : 0.000105858)\n\n\t\t\t\tstart L4 typeAnnotation\n\n\t\t\t\tend L4 typeAnnotation (duration : 0.000859976)\n\n\t\t\t\tstart L4 signalChecker\n\n\t\t\t\tend L4 signalChecker (duration : 7.39098e-05)\n\n\t\t\tend simplifyToNormalForm (duration : 0.00520802)\n\n\t\t\tstart conditionAnnotation\n\n\t\t\tend conditionAnnotation (duration : 6.41346e-05)\n\n\t\t\tstart recursivnessAnnotation\n\n\t\t\tend recursivnessAnnotation (duration : 4.19617e-05)\n\n\t\t\tstart L2 typeAnnotation\n\n\t\t\tend L2 typeAnnotation (duration : 0.000822067)\n\n\t\t\tstart sharingAnalysis\n\n\t\t\tend sharingAnalysis (duration : 6.29425e-05)\n\n\t\t\tstart occurrences analysis\n\n\t\t\tend occurrences analysis (duration : 0.0001719)\n\n\t\tend prepare (duration : 0.00639701)\n\n\tend compileMultiSignal (duration : 0.0068531)\n\nend generateCode (duration : 0.0073061)\n"
+    }
+  ],
+  "profiling_note": "Diagnostic-only wrapper appends -time to the sandbox command; this flag is not represented in the compile_native receipt options. Timing logs are phase evidence, not admission receipts.",
+  "references": [
+    "https://faustdoc.grame.fr/manual/errors/",
+    "https://faustdoc.grame.fr/manual/options/"
+  ],
+  "source_sha256": "1f7a4734d3119a73f08c8d49dce65f1b144ce3a77c654fc387b347916e4d1fb0",
+  "arithmetic_module_sha256": "3fc5882c009e2374d82b93e96369a45b80f1084982161fe68f84f93a4b4930a9",
+  "scope": [
+    "Fixed 3-band spectral fixture at 44100 and 48000 Hz only",
+    "Native 2.88.0 compilation and WASM 2.90.0 signal execution",
+    "12 positive runs and 12 deliberately wrong-reference negative controls",
+    "Float32 profile, -ftz 0, original tolerances and meter floor",
+    "No arbitrary-rate, dynamic-parameter, full-input-domain or native-runtime qualification"
+  ],
+  "readiness": {
+    "scope_digest": "08fb16b587cd5b23f7a5be12b234dc89ae24e18ef943b3449e61ed39f4c19516",
+    "verified_gates": [],
+    "pilot_ready": false,
+    "training_authorized": false
+  },
+  "remaining": [
+    "fi._tanhalf and fi._tpt_df license clarification: issue 321 remains open with no comments",
+    "Family independence: latest replay remains 1477 identities, 12 components; no new candidate admitted",
+    "Trusted custodian public key and signed T07 snapshot bundle absent from available evidence",
+    "Other admission gates remain unchanged"
+  ]
+}
