@@ -1,0 +1,52 @@
+{
+  "status": "STRUCTURALLY_VERIFIED_NOT_QUALIFIED",
+  "unit_id": "repair-module:ds.mulk",
+  "target_sha256": "e53eb44125c66681b6d413aa7578d83cd4d3c15e81eef1ca68d8a7a5632e11da",
+  "prompt_sha256": "cd5fdfd76bddb0c8ea91616833191c26e8db4c9c144ffec0a283ff7bc3e01e1e",
+  "dependency_context_sha256": "43fab3a0e66bb720813467a32320798c86dce63d00c6e67223429359d26f0db3",
+  "assembled_sha256": "d4fdfcc5b44cb5d9d4a5ecf98fdec76c88376410dcc574811b2b4e45f10e075e",
+  "target_insertion_byte": 3131,
+  "dependency_interfaces": [
+    "r(x)",
+    "renorm(high,low)"
+  ],
+  "qualified": false,
+  "admission": "NOT_GRANTED",
+  "training_authorized": false,
+  "remaining": [
+    "modular_contract_review",
+    "independent_prompt_semantics",
+    "canonical_source_rights",
+    "full_closure_family_review",
+    "signed_partition_membership",
+    "tokenizer_sequence_bound"
+  ],
+  "tokenizer": {
+    "status": "TOKENIZER_VERIFIED_NOT_QUALIFIED",
+    "accepted_encodings": 1,
+    "rejected_encodings": 0,
+    "max_sequence_length": 512,
+    "encoding": "completion-only.v1",
+    "runtime_version": "0.23.3",
+    "eos_token_id": 151643,
+    "pad_token_id": 151643,
+    "vocabulary_size": 151665,
+    "rows": [
+      {
+        "unit_id": "repair-module:ds.mulk",
+        "pair_digest": "sha256:5604a3dd5bb97a94728437cc8667e03dd46bc62dcf0137105c788d16ee7a08b6",
+        "prompt_digest": "sha256:cd5fdfd76bddb0c8ea91616833191c26e8db4c9c144ffec0a283ff7bc3e01e1e",
+        "target_digest": "sha256:e53eb44125c66681b6d413aa7578d83cd4d3c15e81eef1ca68d8a7a5632e11da",
+        "prompt_tokens": 255,
+        "target_tokens": 107,
+        "total_tokens_with_eos": 363,
+        "status": "TOKENIZER_VERIFIED_NOT_QUALIFIED",
+        "encoding_digest": "sha256:83f7a413c9698daa3ae9f3d69c4e127853db2f046da6e2f2c412060afef59a18"
+      }
+    ]
+  },
+  "contract_sha256": "a21d4866f9444d77f9fd1a599f25b31b0fdf29cd02db04e254855194f3b42511",
+  "previous_prompt_sha256": "sha256:36436fadc5180f4af8741ce7c90d37c6914d40de1c97c43d85bf4264eeed2821",
+  "semantic_review": "Agent-reviewed exact operation-order clarification; not independent human approval",
+  "target_unchanged": true
+}
