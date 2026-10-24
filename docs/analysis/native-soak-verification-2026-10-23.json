@@ -1,0 +1,253 @@
+{
+  "rows": [
+    {
+      "schedule": "alternating",
+      "rate": 44100,
+      "stimulus": "noise",
+      "passed": true,
+      "prefix_wasm_passed": true,
+      "reset_rejected": true,
+      "max_tolerance_ratio": 0.11985353113998853,
+      "max_meter_error_db": 0.00010728836059570312
+    },
+    {
+      "schedule": "alternating",
+      "rate": 44100,
+      "stimulus": "impulse",
+      "passed": true,
+      "prefix_wasm_passed": true,
+      "reset_rejected": true,
+      "max_tolerance_ratio": 0.6115218566782004,
+      "max_meter_error_db": 0.0010848045349121094
+    },
+    {
+      "schedule": "alternating",
+      "rate": 44100,
+      "stimulus": "sine",
+      "passed": true,
+      "prefix_wasm_passed": true,
+      "reset_rejected": true,
+      "max_tolerance_ratio": 0.1506476734222827,
+      "max_meter_error_db": 0.0001043081283569336
+    },
+    {
+      "schedule": "alternating",
+      "rate": 48000,
+      "stimulus": "noise",
+      "passed": true,
+      "prefix_wasm_passed": true,
+      "reset_rejected": true,
+      "max_tolerance_ratio": 0.04781913693009063,
+      "max_meter_error_db": 3.5762786865234375e-05
+    },
+    {
+      "schedule": "alternating",
+      "rate": 48000,
+      "stimulus": "impulse",
+      "passed": true,
+      "prefix_wasm_passed": true,
+      "reset_rejected": true,
+      "max_tolerance_ratio": 0.20858111873115504,
+      "max_meter_error_db": 0.0003695487976074219
+    },
+    {
+      "schedule": "alternating",
+      "rate": 48000,
+      "stimulus": "sine",
+      "passed": true,
+      "prefix_wasm_passed": true,
+      "reset_rejected": true,
+      "max_tolerance_ratio": 0.05378080244880691,
+      "max_meter_error_db": 3.5762786865234375e-05
+    },
+    {
+      "schedule": "alternating",
+      "rate": 96000,
+      "stimulus": "noise",
+      "passed": true,
+      "prefix_wasm_passed": true,
+      "reset_rejected": true,
+      "max_tolerance_ratio": 0.092476280835792,
+      "max_meter_error_db": 8.344650268554688e-05
+    },
+    {
+      "schedule": "alternating",
+      "rate": 96000,
+      "stimulus": "impulse",
+      "passed": true,
+      "prefix_wasm_passed": true,
+      "reset_rejected": true,
+      "max_tolerance_ratio": 0.4419661542051251,
+      "max_meter_error_db": 0.0007867813110351562
+    },
+    {
+      "schedule": "alternating",
+      "rate": 96000,
+      "stimulus": "sine",
+      "passed": true,
+      "prefix_wasm_passed": true,
+      "reset_rejected": true,
+      "max_tolerance_ratio": 0.12491351330083568,
+      "max_meter_error_db": 8.344650268554688e-05
+    },
+    {
+      "schedule": "alternating",
+      "rate": 192000,
+      "stimulus": "noise",
+      "passed": true,
+      "prefix_wasm_passed": true,
+      "reset_rejected": true,
+      "max_tolerance_ratio": 0.16281481029246164,
+      "max_meter_error_db": 0.00014901161193847656
+    },
+    {
+      "schedule": "alternating",
+      "rate": 192000,
+      "stimulus": "impulse",
+      "passed": true,
+      "prefix_wasm_passed": true,
+      "reset_rejected": true,
+      "max_tolerance_ratio": 0.7099563107621298,
+      "max_meter_error_db": 0.0012636184692382812
+    },
+    {
+      "schedule": "alternating",
+      "rate": 192000,
+      "stimulus": "sine",
+      "passed": true,
+      "prefix_wasm_passed": true,
+      "reset_rejected": true,
+      "max_tolerance_ratio": 0.1996097230694546,
+      "max_meter_error_db": 0.00014901161193847656
+    },
+    {
+      "schedule": "threshold-walk",
+      "rate": 44100,
+      "stimulus": "noise",
+      "passed": true,
+      "prefix_wasm_passed": true,
+      "reset_rejected": true,
+      "max_tolerance_ratio": 0.12386175498451053,
+      "max_meter_error_db": 0.00010728836059570312
+    },
+    {
+      "schedule": "threshold-walk",
+      "rate": 44100,
+      "stimulus": "impulse",
+      "passed": true,
+      "prefix_wasm_passed": true,
+      "reset_rejected": true,
+      "max_tolerance_ratio": 0.5972407130109265,
+      "max_meter_error_db": 0.0010609626770019531
+    },
+    {
+      "schedule": "threshold-walk",
+      "rate": 44100,
+      "stimulus": "sine",
+      "passed": true,
+      "prefix_wasm_passed": true,
+      "reset_rejected": true,
+      "max_tolerance_ratio": 0.2285060700012107,
+      "max_meter_error_db": 0.00028014183044433594
+    },
+    {
+      "schedule": "threshold-walk",
+      "rate": 48000,
+      "stimulus": "noise",
+      "passed": true,
+      "prefix_wasm_passed": true,
+      "reset_rejected": true,
+      "max_tolerance_ratio": 0.04506180427185741,
+      "max_meter_error_db": 3.5762786865234375e-05
+    },
+    {
+      "schedule": "threshold-walk",
+      "rate": 48000,
+      "stimulus": "impulse",
+      "passed": true,
+      "prefix_wasm_passed": true,
+      "reset_rejected": true,
+      "max_tolerance_ratio": 0.2148032866406479,
+      "max_meter_error_db": 0.0003814697265625
+    },
+    {
+      "schedule": "threshold-walk",
+      "rate": 48000,
+      "stimulus": "sine",
+      "passed": true,
+      "prefix_wasm_passed": true,
+      "reset_rejected": true,
+      "max_tolerance_ratio": 0.23388039704509142,
+      "max_meter_error_db": 0.0002980232238769531
+    },
+    {
+      "schedule": "threshold-walk",
+      "rate": 96000,
+      "stimulus": "noise",
+      "passed": true,
+      "prefix_wasm_passed": true,
+      "reset_rejected": true,
+      "max_tolerance_ratio": 0.10384243628693476,
+      "max_meter_error_db": 8.344650268554688e-05
+    },
+    {
+      "schedule": "threshold-walk",
+      "rate": 96000,
+      "stimulus": "impulse",
+      "passed": true,
+      "prefix_wasm_passed": true,
+      "reset_rejected": true,
+      "max_tolerance_ratio": 0.4153625121210485,
+      "max_meter_error_db": 0.0007390975952148438
+    },
+    {
+      "schedule": "threshold-walk",
+      "rate": 96000,
+      "stimulus": "sine",
+      "passed": true,
+      "prefix_wasm_passed": true,
+      "reset_rejected": true,
+      "max_tolerance_ratio": 0.13703086600229114,
+      "max_meter_error_db": 0.00015497207641601562
+    },
+    {
+      "schedule": "threshold-walk",
+      "rate": 192000,
+      "stimulus": "noise",
+      "passed": true,
+      "prefix_wasm_passed": true,
+      "reset_rejected": true,
+      "max_tolerance_ratio": 0.15894852498908044,
+      "max_meter_error_db": 0.0001430511474609375
+    },
+    {
+      "schedule": "threshold-walk",
+      "rate": 192000,
+      "stimulus": "impulse",
+      "passed": true,
+      "prefix_wasm_passed": true,
+      "reset_rejected": true,
+      "max_tolerance_ratio": 0.7091431742808595,
+      "max_meter_error_db": 0.0012636184692382812
+    },
+    {
+      "schedule": "threshold-walk",
+      "rate": 192000,
+      "stimulus": "sine",
+      "passed": true,
+      "prefix_wasm_passed": true,
+      "reset_rejected": true,
+      "max_tolerance_ratio": 0.21108971698893703,
+      "max_meter_error_db": 0.00019669532775878906
+    }
+  ],
+  "passed": 24,
+  "prefix_wasm_passed": 24,
+  "reset_rejected": 24,
+  "max_tolerance_ratio": 0.7099563107621298,
+  "max_meter_error_db": 0.0012636184692382812,
+  "archive_sha256": "4ffbc1e257cf9fce1e2c70a835a3b7b3e42bd2dd6732b13e262831bca60c33ca",
+  "wasm_basis_archive_sha256": "80032ee9224709224b3520e7379ee2c2f80bd694cbdfbd356ffb4a837852a31b",
+  "backend": "native float32 only; long-history WASM not established",
+  "admission": "NOT_GRANTED"
+}

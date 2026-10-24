@@ -1,0 +1,27 @@
+{
+  "stage": "g++ -O2 paired source compilation",
+  "result": "cc1plus killed",
+  "limits": {
+    "cpu_seconds": 20,
+    "address_space_bytes": 1073741824,
+    "file_bytes": 16777216,
+    "wall_seconds": 30
+  },
+  "interpretation": "Resource-bound compilation failure; no signal result produced. Retrying -O1 with unchanged bounds.",
+  "admission": "NOT_GRANTED",
+  "retry": {
+    "optimization": "-O1",
+    "compile": "passed",
+    "tenfold_runtime": "killed with return code -9 under existing bounds",
+    "partial_paired_capture_bytes": 229488,
+    "required_bytes": 270000,
+    "admission": "NOT_GRANTED",
+    "next": "fivefold native history with unchanged limits"
+  },
+  "failure_configurations": [
+    "native_history_soak_o2_failed.py",
+    "native_history_soak_tenfold_failed.py"
+  ],
+  "production_frame_cap_unchanged": 144000,
+  "native_limits_unchanged": true
+}

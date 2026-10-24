@@ -1,0 +1,106 @@
+{
+  "graph": {
+    "identities": 1520,
+    "components": 12,
+    "joining_operations": 28378
+  },
+  "rows": [
+    {
+      "unit_id": "new:autobreath:easeLinear",
+      "source_url": "https://zenn.dev/mogesystem/articles/1af36a38da3bc3",
+      "html_sha256": "f766a04f518e756b2e91d06b3a6a549b4bc9c41df3d10b4d1e2a513b20d6ab70",
+      "source_sha256": "d73c163baf699d4d4d5f8194864e686701ebd156b907c5dfbcbd384cf37878ec",
+      "closure_sha256": "2a5eee13d9bc89c645af9c26a3c59061a34e5368ebe42ad8521ab16b4405d665",
+      "external_dependencies": [],
+      "license_evidence": "Author marks the code Unlicense; review and admission pending",
+      "family": "sha256:c9058da04438292d419a42b9261cde9184882e311ce2f4ba3ea08b9a795eb29a",
+      "comparison_connected": true,
+      "joining_evidence_count": 19,
+      "joining_evidence": [
+        {
+          "reason": "collective_support",
+          "group_id": "sha256:74d8f0fef0813dd9ce3794606a1e3c4ec200da0cbe088dd524936e44d71939e0",
+          "comparison": "comparison:0af91c8e5d9029bd24c099abd65928fa4d250beb",
+          "covered": 2085,
+          "denominator": 2660,
+          "stream": "canonical",
+          "floor": 40
+        },
+        {
+          "left": "new:autobreath:easeLinear",
+          "right": "comparison:0af91c8e5d9029bd24c099abd65928fa4d250beb",
+          "reason": "collective_union",
+          "stream": "canonical",
+          "floor": 40,
+          "group_id": "sha256:74d8f0fef0813dd9ce3794606a1e3c4ec200da0cbe088dd524936e44d71939e0"
+        }
+      ]
+    },
+    {
+      "unit_id": "new:autobreath:easeInQuad",
+      "source_url": "https://zenn.dev/mogesystem/articles/1af36a38da3bc3",
+      "html_sha256": "f766a04f518e756b2e91d06b3a6a549b4bc9c41df3d10b4d1e2a513b20d6ab70",
+      "source_sha256": "d73c163baf699d4d4d5f8194864e686701ebd156b907c5dfbcbd384cf37878ec",
+      "closure_sha256": "ecc59ea3147863bfaa95e65b6a2e54f1ce6d4cb239a01880c73468e2ab4f6540",
+      "external_dependencies": [],
+      "license_evidence": "Author marks the code Unlicense; review and admission pending",
+      "family": "sha256:c9058da04438292d419a42b9261cde9184882e311ce2f4ba3ea08b9a795eb29a",
+      "comparison_connected": true,
+      "joining_evidence_count": 21,
+      "joining_evidence": [
+        {
+          "left": "new:autobreath:easeInQuad",
+          "right": "comparison:3448b86afe14d461a26a3aca73f19be9ffbbb134",
+          "reason": "forward_containment",
+          "stream": "canonical",
+          "floor": 40,
+          "intersection": 18,
+          "denominator": 34
+        },
+        {
+          "left": "new:autobreath:easeInQuad",
+          "right": "comparison:9e3281d736b3838f022062034e79a35e3ee81a46",
+          "reason": "forward_containment",
+          "stream": "canonical",
+          "floor": 40,
+          "intersection": 17,
+          "denominator": 34
+        }
+      ]
+    },
+    {
+      "unit_id": "new:autobreath:easeOutQuad",
+      "source_url": "https://zenn.dev/mogesystem/articles/1af36a38da3bc3",
+      "html_sha256": "f766a04f518e756b2e91d06b3a6a549b4bc9c41df3d10b4d1e2a513b20d6ab70",
+      "source_sha256": "d73c163baf699d4d4d5f8194864e686701ebd156b907c5dfbcbd384cf37878ec",
+      "closure_sha256": "3d5751b4d710641b1e864fb9e956c4e44682d2d4a123bd1491b117eb3b3e2174",
+      "external_dependencies": [],
+      "license_evidence": "Author marks the code Unlicense; review and admission pending",
+      "family": "sha256:c9058da04438292d419a42b9261cde9184882e311ce2f4ba3ea08b9a795eb29a",
+      "comparison_connected": true,
+      "joining_evidence_count": 20,
+      "joining_evidence": [
+        {
+          "reason": "collective_support",
+          "group_id": "sha256:74d8f0fef0813dd9ce3794606a1e3c4ec200da0cbe088dd524936e44d71939e0",
+          "comparison": "comparison:0af91c8e5d9029bd24c099abd65928fa4d250beb",
+          "covered": 2085,
+          "denominator": 2660,
+          "stream": "canonical",
+          "floor": 40
+        },
+        {
+          "left": "new:autobreath:easeOutQuad",
+          "right": "comparison:0af91c8e5d9029bd24c099abd65928fa4d250beb",
+          "reason": "collective_union",
+          "stream": "canonical",
+          "floor": 40,
+          "group_id": "sha256:74d8f0fef0813dd9ce3794606a1e3c4ec200da0cbe088dd524936e44d71939e0"
+        }
+      ]
+    }
+  ],
+  "admission": "NOT_GRANTED",
+  "policy": "unchanged floor40 provisional H1 collective",
+  "scope": "Complete previous 1517 identities plus three complete dependency-free easing closures. Full instrument not admitted."
+}
