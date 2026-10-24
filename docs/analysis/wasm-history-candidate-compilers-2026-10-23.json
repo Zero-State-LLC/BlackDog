@@ -1,0 +1,62 @@
+{
+  "admission": "NOT_GRANTED",
+  "scope": "compiler closure check only; family independence fails",
+  "rows": [
+    {
+      "name": "lfoTriangle",
+      "receipt": {
+        "source_sha256": "836642dee892ca02fd4464368df7deda6fd5616a69fc635fdf754614d0cc6181",
+        "faust_version": "2.88.0",
+        "command": [
+          "faust",
+          "--faust=2.88.0",
+          "--faustlibraries=2edec0537f53",
+          "-lang",
+          "cpp",
+          "-ftz",
+          "0"
+        ],
+        "exit_code": 0,
+        "stdout_digest": "sha256:461673b837cf9326c91d2fdcd89bae86e8e370ff63f46ed4794042aa2bcc63e5",
+        "stderr_digest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "duration_ms": 77,
+        "environment_digest": "sha256:bf3f38d23eda24276c18f3f0e6cd60d7b86d1d12a6be8396b4bafb285e228df6",
+        "compiler": "faust-cli",
+        "lang": "cpp",
+        "options": [
+          "-ftz",
+          "0"
+        ],
+        "diagnostic_class": "ok"
+      }
+    },
+    {
+      "name": "sineTriWaveform",
+      "receipt": {
+        "source_sha256": "e9442c7d51a9dd10cbdb482cc67c2c68f71227d8b44f8178c1360465f0a4f064",
+        "faust_version": "2.88.0",
+        "command": [
+          "faust",
+          "--faust=2.88.0",
+          "--faustlibraries=2edec0537f53",
+          "-lang",
+          "cpp",
+          "-ftz",
+          "0"
+        ],
+        "exit_code": 0,
+        "stdout_digest": "sha256:44c6d432766cc53bbcbfcf3aa04918133966596d49eb1fa51520d5040b493687",
+        "stderr_digest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "duration_ms": 72,
+        "environment_digest": "sha256:bf3f38d23eda24276c18f3f0e6cd60d7b86d1d12a6be8396b4bafb285e228df6",
+        "compiler": "faust-cli",
+        "lang": "cpp",
+        "options": [
+          "-ftz",
+          "0"
+        ],
+        "diagnostic_class": "ok"
+      }
+    }
+  ]
+}

@@ -1,0 +1,105 @@
+{
+  "graph": {
+    "identities": 1522,
+    "components": 12,
+    "joining_operations": 28418
+  },
+  "rows": [
+    {
+      "unit_id": "new:smallstone:lfoTriangle",
+      "source_url": "https://gist.github.com/jpcima/5f38a16ca61d3996bc488e330966e216/d137594f936bd1b8ffcd3b144ab0d02a6c5eaed6",
+      "source_sha256": "554181540e40c21bf67e78bdd300066e5170f854020a6f09cd506c0aa6a16aa8",
+      "span": [
+        1268,
+        1346
+      ],
+      "closure_sha256": "06acf1148ae29180516f95c405dfed556c8516f81404493e40f1616c41f6669d",
+      "included_dependencies": [],
+      "external_dependencies": [],
+      "dependency_blob": null,
+      "dependency_spans": [],
+      "rights": "Root declares CC0-1.0; dependency and per-unit rights review remains separate; no admission",
+      "family": "sha256:8688927edcda9cb1632e5775162008e43f84282e1d470a518e545a208944a395",
+      "comparison_connected": true,
+      "joining_evidence_count": 20,
+      "joining_evidence": [
+        {
+          "reason": "collective_support",
+          "group_id": "sha256:91879f0935968be0acb7f5e4bd30f13aa842e74df45fac0edf92254c258c739a",
+          "comparison": "comparison:0af91c8e5d9029bd24c099abd65928fa4d250beb",
+          "covered": 2085,
+          "denominator": 2660,
+          "stream": "canonical",
+          "floor": 40
+        },
+        {
+          "left": "new:smallstone:lfoTriangle",
+          "right": "comparison:0af91c8e5d9029bd24c099abd65928fa4d250beb",
+          "reason": "collective_union",
+          "stream": "canonical",
+          "floor": 40,
+          "group_id": "sha256:91879f0935968be0acb7f5e4bd30f13aa842e74df45fac0edf92254c258c739a"
+        }
+      ]
+    },
+    {
+      "unit_id": "new:smallstone:sineTriWaveform",
+      "source_url": "https://gist.github.com/jpcima/5f38a16ca61d3996bc488e330966e216/d137594f936bd1b8ffcd3b144ab0d02a6c5eaed6",
+      "source_sha256": "554181540e40c21bf67e78bdd300066e5170f854020a6f09cd506c0aa6a16aa8",
+      "span": [
+        2598,
+        2811
+      ],
+      "closure_sha256": "972b8ac1f6c59404a7af82d63a9025df67144287ef22b5f421ba79b3ce8fcf66",
+      "included_dependencies": [
+        "ba.if",
+        "ba.time"
+      ],
+      "external_dependencies": [],
+      "dependency_blob": "c092fd6fdb9c4bd2371fd7fc610b8f7f13308da8",
+      "dependency_spans": [
+        {
+          "span": [
+            15733,
+            15753
+          ],
+          "source": "time = +(1)~_ : mem;"
+        },
+        {
+          "span": [
+            70875,
+            70920
+          ],
+          "source": "if(cond,then,else) = select2(cond,else,then);"
+        }
+      ],
+      "rights": "Root declares CC0-1.0; dependency and per-unit rights review remains separate; no admission",
+      "family": "sha256:8688927edcda9cb1632e5775162008e43f84282e1d470a518e545a208944a395",
+      "comparison_connected": true,
+      "joining_evidence_count": 20,
+      "joining_evidence": [
+        {
+          "left": "new:smallstone:sineTriWaveform",
+          "right": "comparison:0af91c8e5d9029bd24c099abd65928fa4d250beb",
+          "reason": "forward_containment",
+          "stream": "canonical",
+          "floor": 40,
+          "intersection": 69,
+          "denominator": 105
+        },
+        {
+          "reason": "collective_support",
+          "group_id": "sha256:91879f0935968be0acb7f5e4bd30f13aa842e74df45fac0edf92254c258c739a",
+          "comparison": "comparison:0af91c8e5d9029bd24c099abd65928fa4d250beb",
+          "covered": 2085,
+          "denominator": 2660,
+          "stream": "canonical",
+          "floor": 40
+        }
+      ]
+    }
+  ],
+  "admission": "NOT_GRANTED",
+  "policy": "unchanged floor40 provisional H1 collective",
+  "scope": "Previous 1520 identities plus two complete closures; no unresolved external dependencies"
+}
