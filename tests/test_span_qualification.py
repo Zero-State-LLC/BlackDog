@@ -153,3 +153,13 @@ def test_overload_order_is_part_of_batch_closure():
            for i,ids in enumerate([['u1','u2'],['u2','u1']])]
     batches,_=q.batch_contracts(cases,[dict(case=str(i),target='u1') for i in range(2)])
     assert [b['unit_ids'] for b in batches]==[['u1','u2'],['u2','u1']]
+
+
+def test_helper_license_confirmation_does_not_clear_mixed_blob(corpus_base):
+    """Exact MIT notices do not admit the surrounding mixed-rights filters blob."""
+    helpers = {'_tanhalf', '_tpt_df'}
+    row = 'faustlibraries-author-confirmed-helpers-mit'
+    assert not [u for u in corpus_base.units if u.entry_id == row]
+    excluded = [u for u in corpus_base.excluded if u.entry_id == row]
+    assert {u.function for u in excluded} == helpers
+    assert {u.reason for u in excluded} == {'needs-human'}

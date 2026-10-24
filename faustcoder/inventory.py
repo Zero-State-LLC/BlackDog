@@ -35,11 +35,14 @@ INVENTORY_VERSION = "rights-inventory.v1"
 NOTICE_VERSION = "notice-manifest.v1"
 # Content digests of the T05 corpus files. ``generated_at`` is omitted
 # and entries are sorted, so a re-sign does not move the pin.
+# 2026-10-24: exact helper MIT author confirmation; see
+# docs/analysis/helper-author-confirmation-2026-10-24.json.
+# Historical receipts retain their earlier pins and require a new replay.
 PINNED_INVENTORY_DIGEST = (
-    "sha256:24456833b059f2b6b54923206a74652b49ca7e5c251668d60f02294765d7e8a1"
+    "sha256:358ff7b792ff4f3e32b1619ff81030fdc61b8b575e29778a7b625a83665d1065"
 )
 PINNED_NOTICE_DIGEST = (
-    "sha256:79f90f61b496afd13c04f0522fd1fd35f57c7a728d966cdf057419ce5080b4f8"
+    "sha256:11b087017e3750f28689bc34fd3dc33c436717a11ba93ac0947b259d385ca27f"
 )
 FFUNCTION_REASON = "ffunction"
 NEEDS_HUMAN_REASON = "needs-human"

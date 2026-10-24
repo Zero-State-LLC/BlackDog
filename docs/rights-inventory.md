@@ -8,7 +8,7 @@ Cleared files and functions also have a row in
 (path, blob id, copyright, license). The rights transitions are
 [dataset-lifecycle.md](dataset-lifecycle.md).
 
-Counts at this pin: **30 cleared**, **14 rejected**, **2 need a human**.
+Counts at this pin: **31 cleared**, **14 rejected**, **2 need a human**.
 A cleared copyleft row is training-only. It is not permission to commit
 the files or to ship model output that copies them. Bare BSD is cleared
 for training and eval and is not redistributed.
@@ -73,7 +73,8 @@ boilerplate does not by itself take a file out of the header-less set.
 | faustlibraries-unlicense | rights_cleared | Unlicense, quantizers.lib | 16 |
 | faustlibraries-attribution-gap | needs_human | license text, no copyright string | 38 |
 | faustlibraries-agpl-functions | rights_rejected | AGPL-3.0-only | 2 |
-| faustlibraries-undeclared | rights_rejected | no declare and no header | 137 |
+| faustlibraries-undeclared | rights_rejected | no declare and no header | 135 |
+| faustlibraries-author-confirmed-helpers-mit | rights_cleared | MIT, redistribute | 2 |
 | faustlibraries-tubes | rights_rejected | unlicensed | 1 |
 | faustlibraries-mi | rights_rejected | unlicensed | 1 |
 | faust-impulse-effect-mit | rights_cleared | MIT, train only | 1 |
@@ -228,3 +229,7 @@ and the split. This inventory does not freeze a snapshot. D-013 adds a
 proposed gate for those tasks: an n-gram or AST near-duplicate filter
 on generated `.dsp` against the training-only set. The threshold is
 not set. Playground's zero exact matches do not retire that gate.
+
+## Helper clarification, 2026-10-24
+
+The author confirmed MIT licensing for `_tanhalf` and `_tpt_df`, explicitly covering the pinned definitions. Both definitions are byte-identical to those with declarations at upstream PR #322 head. The two functions moved from the undeclared row to a separate reviewed MIT row; notices retain Julius O. Smith III attribution. The upstream PR was still open at review. This changes only those helper rights, not closure eligibility, family membership, signed splits, or training admission. See [the pinned review](analysis/helper-author-confirmation-2026-10-24.json) and [the author confirmation](https://github.com/grame-cncm/faustlibraries/issues/321#issuecomment-6381252161).

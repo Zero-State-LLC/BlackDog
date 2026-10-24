@@ -10408,7 +10408,7 @@
         "commit": "2edec0537f536eaa130d42c354884d7db971663c",
         "ref": "master"
       },
-      "file_count": 137,
+      "file_count": 135,
       "license": "unlicensed",
       "evidence_label": "OBSERVED",
       "evidence_uri": "https://github.com/grame-cncm/faustlibraries/blob/2edec0537f536eaa130d42c354884d7db971663c/motion.lib",
@@ -10516,16 +10516,6 @@
           "path": "filters.lib",
           "blob_sha": "0af91c8e5d9029bd24c099abd65928fa4d250beb",
           "function": "_allpassnnltc@2661"
-        },
-        {
-          "path": "filters.lib",
-          "blob_sha": "0af91c8e5d9029bd24c099abd65928fa4d250beb",
-          "function": "_tanhalf"
-        },
-        {
-          "path": "filters.lib",
-          "blob_sha": "0af91c8e5d9029bd24c099abd65928fa4d250beb",
-          "function": "_tpt_df"
         },
         {
           "path": "filters.lib",
@@ -12569,6 +12559,61 @@
           "statement": "architecture/ is mostly C++ and was rejected for the DSP corpus. Two .dsp files do not make it a training source.",
           "label": "OBSERVED",
           "source": "https://github.com/grame-cncm/faust/tree/8c00913e44d42f9d25aa3f1a0d500bde5662d7bc/architecture"
+        }
+      ]
+    },
+    {
+      "id": "faustlibraries-author-confirmed-helpers-mit",
+      "name": "Exact pinned helpers with author-confirmed MIT licensing",
+      "url": "https://github.com/grame-cncm/faustlibraries/issues/321#issuecomment-6381252161",
+      "path": "filters.lib",
+      "pin": {
+        "repo": "grame-cncm/faustlibraries",
+        "commit": "2edec0537f536eaa130d42c354884d7db971663c",
+        "ref": "master"
+      },
+      "file_count": 2,
+      "license": "MIT",
+      "evidence_label": "OBSERVED",
+      "evidence_uri": "https://github.com/grame-cncm/faustlibraries/issues/321#issuecomment-6381252161",
+      "attribution": "Julius O. Smith III; ownership and MIT license confirmed for the pinned definitions.",
+      "attribution_complete": true,
+      "eligible_for": [
+        "train",
+        "eval",
+        "redistribute"
+      ],
+      "redistribute": true,
+      "redistribution": "Include MIT permission notice and author attribution; this row covers only the two exact helper definitions.",
+      "training": "Per-function MIT grant confirmed by the author; other closure members retain their own restrictions.",
+      "emitting_code": "Model output is not a license to redistribute library source.",
+      "decision": "rights_cleared",
+      "reason": "Author confirmation explicitly covers the original pin; definitions are byte-identical to the per-helper declarations at PR 322 head.",
+      "copyleft": false,
+      "reviewer": "Codex under delegated ADR-0003 D-013",
+      "danny_flags": [],
+      "claims": [
+        {
+          "statement": "The author confirms both helpers are his new MIT-licensed code and that the clarification covers the pinned definitions.",
+          "label": "OBSERVED",
+          "source": "https://github.com/grame-cncm/faustlibraries/issues/321#issuecomment-6381252161"
+        },
+        {
+          "statement": "Pinned helper definitions are byte-identical to the explicitly declared definitions at PR 322 head.",
+          "label": "OBSERVED",
+          "source": "https://github.com/grame-cncm/faustlibraries/blob/c7eddcdc3a762222f76c56c52ccb61a722cb6d47/filters.lib"
+        }
+      ],
+      "functions": [
+        {
+          "path": "filters.lib",
+          "blob_sha": "0af91c8e5d9029bd24c099abd65928fa4d250beb",
+          "function": "_tanhalf"
+        },
+        {
+          "path": "filters.lib",
+          "blob_sha": "0af91c8e5d9029bd24c099abd65928fa4d250beb",
+          "function": "_tpt_df"
         }
       ]
     }

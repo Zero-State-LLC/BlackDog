@@ -21352,6 +21352,28 @@
       "license": "STK-4.3",
       "evidence_label": "INFERRED",
       "license_notice": "Redistribution bundles the STK-4.3 permission notice recorded in license_texts."
+    },
+    {
+      "repo": "grame-cncm/faustlibraries",
+      "commit": "2edec0537f536eaa130d42c354884d7db971663c",
+      "path": "filters.lib",
+      "blob_sha": "0af91c8e5d9029bd24c099abd65928fa4d250beb",
+      "function": "_tanhalf",
+      "copyright": "Julius O. Smith III",
+      "license": "MIT",
+      "evidence_label": "INFERRED",
+      "license_notice": "Preserve the MIT permission notice and Julius O. Smith III attribution. Ownership is confirmed in issue 321 comment 6381252161; the author-name copyright attribution is inferred from that statement."
+    },
+    {
+      "repo": "grame-cncm/faustlibraries",
+      "commit": "2edec0537f536eaa130d42c354884d7db971663c",
+      "path": "filters.lib",
+      "blob_sha": "0af91c8e5d9029bd24c099abd65928fa4d250beb",
+      "function": "_tpt_df",
+      "copyright": "Julius O. Smith III",
+      "license": "MIT",
+      "evidence_label": "INFERRED",
+      "license_notice": "Preserve the MIT permission notice and Julius O. Smith III attribution. Ownership is confirmed in issue 321 comment 6381252161; the author-name copyright attribution is inferred from that statement."
     }
   ]
 }

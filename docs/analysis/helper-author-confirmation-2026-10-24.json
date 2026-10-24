@@ -1,0 +1,71 @@
+{
+  "status": "TWO_HELPER_LICENSE_BLOCKERS_RESOLVED",
+  "scope": "Only the exact two pinned helper definitions; no full-closure or dataset admission",
+  "comment_url": "https://github.com/grame-cncm/faustlibraries/issues/321#issuecomment-6381252161",
+  "comment_sha256": "962c37f27fb7796073651ea95ab0219b5c554fd10f3cb0dbfeb8f5aa9f7e096f",
+  "comment_author": "josmithiii",
+  "comment_created_at": "2026-10-24T07:06:18Z",
+  "pull_request": "https://github.com/grame-cncm/faustlibraries/pull/322",
+  "upstream_pr_merged": false,
+  "declaration_head": "c7eddcdc3a762222f76c56c52ccb61a722cb6d47",
+  "source_pin": "2edec0537f536eaa130d42c354884d7db971663c",
+  "pinned_blob_sha": "0af91c8e5d9029bd24c099abd65928fa4d250beb",
+  "declaration_blob_sha": "b1fd5790a28dcabc27abb135046812392387ebb3",
+  "rows": [
+    {
+      "function": "_tanhalf",
+      "pin_span": [
+        118028,
+        118085
+      ],
+      "declaration_head_span": [
+        118461,
+        118518
+      ],
+      "definition_sha256": "0c89477593eced7da48c6773299000b714b02b3e082c7001342adee4614c83bf",
+      "definitions_byte_identical": true,
+      "license": "MIT",
+      "author": "Julius O. Smith III",
+      "evidence_label": "OBSERVED",
+      "reviewer": "Codex under delegated ADR-0003 D-013",
+      "eligible_for": [
+        "train",
+        "eval",
+        "redistribute"
+      ]
+    },
+    {
+      "function": "_tpt_df",
+      "pin_span": [
+        126781,
+        126960
+      ],
+      "declaration_head_span": [
+        127291,
+        127470
+      ],
+      "definition_sha256": "f852afa526ee4f90eff343cc44db814fa83041d6bca12b29533e547b837e5694",
+      "definitions_byte_identical": true,
+      "license": "MIT",
+      "author": "Julius O. Smith III",
+      "evidence_label": "OBSERVED",
+      "reviewer": "Codex under delegated ADR-0003 D-013",
+      "eligible_for": [
+        "train",
+        "eval",
+        "redistribute"
+      ]
+    }
+  ],
+  "before": {
+    "inventory_sha256": "c8d46aeeada244255793ded7207ee4ffc2c7c2857c2cc3dbde31bba169c2a357",
+    "notice_sha256": "abbf8565869283db0957b88c3fdae41a82f0a96e2cd561fdc9fc83f2618008ba"
+  },
+  "inventory_sha256": "74747180898da4c602c13fedbac2fb8286268c080b0c0a13aba11a3d81713249",
+  "notice_manifest_sha256": "0c99a3f250538fa6f5c171ee9fe7f65d6e4a93dfcb95014533c479a3902a9490",
+  "closure_evaluation_cleared": false,
+  "admission": "NOT_GRANTED",
+  "inventory_content_digest": "sha256:358ff7b792ff4f3e32b1619ff81030fdc61b8b575e29778a7b625a83665d1065",
+  "notice_content_digest": "sha256:11b087017e3750f28689bc34fd3dc33c436717a11ba93ac0947b259d385ca27f",
+  "historical_receipts": "Earlier inventory and notice pins remain historical; new qualification receipts require new bindings."
+}
