@@ -1,0 +1,322 @@
+{
+  "status": "SEVEN_SPECIALIZED_CONFIGURATIONS_VALIDATED_NOT_ADMITTED",
+  "rows": [
+    {
+      "unit_id": "paired-general-44100-3-1500",
+      "parameters": {
+        "sample_rate": 44100,
+        "top_hz": 1500,
+        "bands": 3,
+        "bands_per_octave": 1,
+        "tau": 0.01,
+        "offset_db": 0
+      },
+      "source_sha256": "cf5d90b04fe58f7a77ee6ebb3056034a39d51d0ccf28e64da9f3322d05e35aa7",
+      "closure_sha256": "5c553b1c0c8683952f68d943769bba06bd68f90b801c6c475c9cbc1a04e9d31e",
+      "frames": 4096,
+      "block_size": 64,
+      "native_ms": 352,
+      "positive_passes": 3,
+      "wrong_reference_rejections": 3,
+      "max_meter_error_db": 0.0008463859558105469,
+      "passthrough_exact": true,
+      "archive_sha256": "80d742c2a43a928be80997186180e6ac9cdd535eb507ced65b1a13547194e85f"
+    },
+    {
+      "unit_id": "paired-general-48000-2-3000",
+      "parameters": {
+        "sample_rate": 48000,
+        "top_hz": 3000,
+        "bands": 2,
+        "bands_per_octave": 1,
+        "tau": 0.02,
+        "offset_db": -3
+      },
+      "source_sha256": "50b2bbc2626631dc03e8b56394d3dceab0708574003d5d6e3d2d1aa1b57ac04d",
+      "closure_sha256": "2a3dfa4dc5ef5dc38c95384498bf0f9135fd374ffd8dc616eb81cd734a8a1c52",
+      "frames": 4096,
+      "block_size": 64,
+      "native_ms": 201,
+      "positive_passes": 3,
+      "wrong_reference_rejections": 3,
+      "max_meter_error_db": 0.00026226043701171875,
+      "passthrough_exact": true,
+      "archive_sha256": "80d742c2a43a928be80997186180e6ac9cdd535eb507ced65b1a13547194e85f"
+    },
+    {
+      "unit_id": "paired-general-44100-3-4000",
+      "parameters": {
+        "sample_rate": 44100,
+        "top_hz": 4000,
+        "bands": 3,
+        "bands_per_octave": 3,
+        "tau": 0.01,
+        "offset_db": 0
+      },
+      "source_sha256": "3483d5d71c75a4bc96a86ca7d6991474c5e4e4987dd46359a3e91031282d087a",
+      "closure_sha256": "7603e7118cc1192a245907d4dbec700ce8cc4ac5be68d1b726ca9a832d6f7e13",
+      "frames": 4096,
+      "block_size": 64,
+      "native_ms": 406,
+      "positive_passes": 3,
+      "wrong_reference_rejections": 3,
+      "max_meter_error_db": 0.0009059906005859375,
+      "passthrough_exact": true,
+      "archive_sha256": "80d742c2a43a928be80997186180e6ac9cdd535eb507ced65b1a13547194e85f"
+    },
+    {
+      "unit_id": "paired-general-44100-4-6000",
+      "parameters": {
+        "sample_rate": 44100,
+        "top_hz": 6000,
+        "bands": 4,
+        "bands_per_octave": 2,
+        "tau": 0.005,
+        "offset_db": 3
+      },
+      "source_sha256": "172dd9795ef3c0630c7a43ba7cfdaaf4e7c47bd4f15e5d1874fe69d2250cee9a",
+      "closure_sha256": "226133e6e9c2bbd2da9caa004c2ca5c414950dc5733b16b4d6ff03690a026f86",
+      "frames": 4096,
+      "block_size": 64,
+      "native_ms": 652,
+      "positive_passes": 3,
+      "wrong_reference_rejections": 3,
+      "max_meter_error_db": 0.00015497207641601562,
+      "passthrough_exact": true,
+      "archive_sha256": "80d742c2a43a928be80997186180e6ac9cdd535eb507ced65b1a13547194e85f"
+    },
+    {
+      "unit_id": "paired-general-48000-5-12000",
+      "parameters": {
+        "sample_rate": 48000,
+        "top_hz": 12000,
+        "bands": 5,
+        "bands_per_octave": 3,
+        "tau": 0.05,
+        "offset_db": 0
+      },
+      "source_sha256": "1c5ccfa55407654d81992d00e22cb6045de7fb2afe006d3a616d59ba38fb973f",
+      "closure_sha256": "76689232556b32a419f13e67bd855045bf975812b124b7c0a3322a68c83bcf2d",
+      "frames": 4096,
+      "block_size": 64,
+      "native_ms": 906,
+      "positive_passes": 3,
+      "wrong_reference_rejections": 3,
+      "max_meter_error_db": 8.344650268554688e-05,
+      "passthrough_exact": true,
+      "archive_sha256": "80d742c2a43a928be80997186180e6ac9cdd535eb507ced65b1a13547194e85f"
+    },
+    {
+      "unit_id": "paired-general-48000-8-16000",
+      "parameters": {
+        "sample_rate": 48000,
+        "top_hz": 16000,
+        "bands": 8,
+        "bands_per_octave": 1,
+        "tau": 0.001,
+        "offset_db": -6
+      },
+      "source_sha256": "e4ec8bab4b7da44ace301963d102c22fc355f17a5f0844d74d5a1b2fb25596ca",
+      "closure_sha256": "06a949cf0fe3178ed7793b74d1b0a4c1e9020fbd314d2d0c5b73ec6438ecdd18",
+      "frames": 16384,
+      "block_size": 128,
+      "native_ms": 2417,
+      "positive_passes": 3,
+      "wrong_reference_rejections": 3,
+      "max_meter_error_db": 0.00010728836059570312,
+      "passthrough_exact": true,
+      "archive_sha256": "68c0605862f8abc295174eb6af3fa8e433e908c576fb6fe44a3e855db811a6b1"
+    },
+    {
+      "unit_id": "paired-general-44100-3-22000",
+      "parameters": {
+        "sample_rate": 44100,
+        "top_hz": 22000,
+        "bands": 3,
+        "bands_per_octave": 3,
+        "tau": 0.2,
+        "offset_db": 0
+      },
+      "source_sha256": "a63b2b7241520bc12d1066d4dd4b56c23c4e2e1ab3d6ddf4b18191fb2b5ed3d6",
+      "closure_sha256": "c38909ac12bd669d8b5d2441eecf8c0739521537fbf0d523a1a64ab83a5edee3",
+      "frames": 16384,
+      "block_size": 128,
+      "native_ms": 348,
+      "positive_passes": 3,
+      "wrong_reference_rejections": 3,
+      "max_meter_error_db": 0.0004947185516357422,
+      "passthrough_exact": true,
+      "archive_sha256": "68c0605862f8abc295174eb6af3fa8e433e908c576fb6fe44a3e855db811a6b1"
+    }
+  ],
+  "verified_receipts": 49,
+  "verified_captures": 21,
+  "generator_sha256": "b9f959862189329a686a87281c05814d7e25ed68b5ef86764259a1f98034694b",
+  "arithmetic_sha256": "3fc5882c009e2374d82b93e96369a45b80f1084982161fe68f84f93a4b4930a9",
+  "diagnostic_worker_sha256": "2b14aa98a4bb63d74646800b46ad56bef6eb7c8c1386f61a0103a202259d3e53",
+  "family": {
+    "graph": {
+      "identities": 1487,
+      "components": 12,
+      "joining_operations": 27697
+    },
+    "rows": [
+      {
+        "unit_id": "repair:paired-general-44100-3-1500",
+        "source_sha256": "cf5d90b04fe58f7a77ee6ebb3056034a39d51d0ccf28e64da9f3322d05e35aa7",
+        "closure_sha256": "5c553b1c0c8683952f68d943769bba06bd68f90b801c6c475c9cbc1a04e9d31e",
+        "family": "sha256:f74ffeca876438c2d0af04396ec82f94786cd6adc361fbf326abe83ff30298b1",
+        "comparison_connected": true
+      },
+      {
+        "unit_id": "repair:paired-general-48000-2-3000",
+        "source_sha256": "50b2bbc2626631dc03e8b56394d3dceab0708574003d5d6e3d2d1aa1b57ac04d",
+        "closure_sha256": "2a3dfa4dc5ef5dc38c95384498bf0f9135fd374ffd8dc616eb81cd734a8a1c52",
+        "family": "sha256:f74ffeca876438c2d0af04396ec82f94786cd6adc361fbf326abe83ff30298b1",
+        "comparison_connected": true
+      },
+      {
+        "unit_id": "repair:paired-general-44100-3-4000",
+        "source_sha256": "3483d5d71c75a4bc96a86ca7d6991474c5e4e4987dd46359a3e91031282d087a",
+        "closure_sha256": "7603e7118cc1192a245907d4dbec700ce8cc4ac5be68d1b726ca9a832d6f7e13",
+        "family": "sha256:f74ffeca876438c2d0af04396ec82f94786cd6adc361fbf326abe83ff30298b1",
+        "comparison_connected": true
+      },
+      {
+        "unit_id": "repair:paired-general-44100-4-6000",
+        "source_sha256": "172dd9795ef3c0630c7a43ba7cfdaaf4e7c47bd4f15e5d1874fe69d2250cee9a",
+        "closure_sha256": "226133e6e9c2bbd2da9caa004c2ca5c414950dc5733b16b4d6ff03690a026f86",
+        "family": "sha256:f74ffeca876438c2d0af04396ec82f94786cd6adc361fbf326abe83ff30298b1",
+        "comparison_connected": true
+      },
+      {
+        "unit_id": "repair:paired-general-48000-5-12000",
+        "source_sha256": "1c5ccfa55407654d81992d00e22cb6045de7fb2afe006d3a616d59ba38fb973f",
+        "closure_sha256": "76689232556b32a419f13e67bd855045bf975812b124b7c0a3322a68c83bcf2d",
+        "family": "sha256:f74ffeca876438c2d0af04396ec82f94786cd6adc361fbf326abe83ff30298b1",
+        "comparison_connected": true
+      },
+      {
+        "unit_id": "repair:paired-general-48000-8-16000",
+        "source_sha256": "e4ec8bab4b7da44ace301963d102c22fc355f17a5f0844d74d5a1b2fb25596ca",
+        "closure_sha256": "06a949cf0fe3178ed7793b74d1b0a4c1e9020fbd314d2d0c5b73ec6438ecdd18",
+        "family": "sha256:f74ffeca876438c2d0af04396ec82f94786cd6adc361fbf326abe83ff30298b1",
+        "comparison_connected": true
+      },
+      {
+        "unit_id": "repair:paired-general-44100-3-22000",
+        "source_sha256": "a63b2b7241520bc12d1066d4dd4b56c23c4e2e1ab3d6ddf4b18191fb2b5ed3d6",
+        "closure_sha256": "c38909ac12bd669d8b5d2441eecf8c0739521537fbf0d523a1a64ab83a5edee3",
+        "family": "sha256:f74ffeca876438c2d0af04396ec82f94786cd6adc361fbf326abe83ff30298b1",
+        "comparison_connected": true
+      }
+    ],
+    "policy": "unchanged floor40 provisional H1 collective",
+    "admission": "NOT_GRANTED"
+  },
+  "candidates": {
+    "graph": {
+      "identities": 1480,
+      "components": 12,
+      "joining_operations": 27550
+    },
+    "rows": [
+      {
+        "unit_id": "new:pd-faustgen:tests/passive.dsp",
+        "source_blob": "9424b5b067b8e06fd6b1739dae7086c6e78caab0",
+        "url": "https://github.com/CICM/pd-faustgen/blob/9e2aaeabe94a7fab6928711050535ac12a1a591a/tests/passive.dsp",
+        "closure_sha256": "d6e37085d4c3fdd33469c075d568f86bfdca5068ebed9e42f46ac47098d35ef5",
+        "external_dependencies": [],
+        "rights": "Pinned repository MIT notice; per-unit admission review pending",
+        "family": "sha256:73c5ae3b78dd01fb71d7458a533007e2e0e54b862ffc2c0f39f4afe189563824",
+        "comparison_connected": true
+      },
+      {
+        "unit_id": "new:pd-faustgen:tests/recompile.dsp",
+        "source_blob": "07aeb93286b13c9597ea868e61f07daed23e296f",
+        "url": "https://github.com/CICM/pd-faustgen/blob/9e2aaeabe94a7fab6928711050535ac12a1a591a/tests/recompile.dsp",
+        "closure_sha256": "2a863a7f6a48a8ba2d8965886478df34fa63e18f9f867bc4eaa608dabb8d670c",
+        "external_dependencies": [],
+        "rights": "Pinned repository MIT notice; per-unit admission review pending",
+        "family": "sha256:73c5ae3b78dd01fb71d7458a533007e2e0e54b862ffc2c0f39f4afe189563824",
+        "comparison_connected": true
+      },
+      {
+        "unit_id": "new:pd-faustgen:tests/double.dsp",
+        "source_blob": "7616f1a1d9cfdecbe5cf3d9f1ae593c76433f6a5",
+        "url": "https://github.com/CICM/pd-faustgen/blob/9e2aaeabe94a7fab6928711050535ac12a1a591a/tests/double.dsp",
+        "closure_sha256": "e5d5706b9d2999212415e236fc5e2a6a2df140ea20b9134c00d0d1ca42630a77",
+        "external_dependencies": [],
+        "rights": "Pinned repository MIT notice; per-unit admission review pending",
+        "family": "sha256:73c5ae3b78dd01fb71d7458a533007e2e0e54b862ffc2c0f39f4afe189563824",
+        "comparison_connected": true
+      }
+    ],
+    "policy": "unchanged floor40 provisional H1 collective",
+    "admission": "NOT_GRANTED"
+  },
+  "licenses": {
+    "url": "https://github.com/grame-cncm/faustlibraries/issues/321",
+    "state": "open",
+    "comments": 0,
+    "updated_at": "2026-10-24T00:23:48Z",
+    "license_grant_received": false
+  },
+  "readiness": {
+    "scope_digest": "08fb16b587cd5b23f7a5be12b234dc89ae24e18ef943b3449e61ed39f4c19516",
+    "verified_gates": [],
+    "pilot_ready": false,
+    "training_authorized": false
+  },
+  "signed_research_sha256": "82999d627f9d25d9ba0f48f12038acba8cd7943ecf031ddcc3814b2d8670855c",
+  "limits": [
+    "Offline specialized coefficients; runtime rate must match metadata",
+    "Only seven listed configurations are signal validated",
+    "8000/32000/88200/96000 Hz compiled but production signal profile rejects those rates; not signal qualified",
+    "No runtime parameter changes or native signal execution qualified",
+    "All full dependency closures retained; unresolved rights remain",
+    "Family floor40 and H1 collective rules unchanged; no independent evaluation candidate admitted"
+  ],
+  "initial_failures": {
+    "rows": [
+      {
+        "unit_id": "paired-general-8000-3",
+        "native_ms": 353,
+        "source_sha256": "6688bed153922cf6d01c455155b8dca38de09cb00f827e267cf1e51336ccf286",
+        "status": "BLOCKED",
+        "error": "sample_rate must be 44100 or 48000"
+      },
+      {
+        "unit_id": "paired-general-32000-2",
+        "native_ms": 206,
+        "source_sha256": "787d8309ba2daefe5d3bbdf10def866f6c61ad4d9e5b91fbc9077f2c0f785d2f",
+        "status": "BLOCKED",
+        "error": "sample_rate must be 44100 or 48000"
+      },
+      {
+        "unit_id": "paired-general-44100-3",
+        "native_ms": 356,
+        "source_sha256": "9bfa350549480502c88004421e11b187b390621a28097d7a9dd0c2f8d523dcce",
+        "status": "DIAGNOSTIC_FAIL",
+        "error": null
+      },
+      {
+        "unit_id": "paired-general-88200-4",
+        "native_ms": 603,
+        "source_sha256": "e3e6e42ccbc5950a01c090f351fa0524541ed64fab0a1f58b42cca7e5d2af620",
+        "status": "BLOCKED",
+        "error": "sample_rate must be 44100 or 48000"
+      },
+      {
+        "unit_id": "paired-general-96000-5",
+        "native_ms": 908,
+        "source_sha256": "f2045babb0c9f9e87d8f5bbfcec6f88fa95276deafe1f5d1468eca5087ee53ab",
+        "status": "BLOCKED",
+        "error": "sample_rate must be 44100 or 48000"
+      }
+    ],
+    "report_sha256": "f0e9cf07c4b41cfb6e9762fac2f95856e24456bbd57dfaff0edaaaef93a8abac",
+    "retained": true
+  },
+  "initial_failures_sha256": "4d698c85933c9862ef73cc20cda601a47c533166247924e4bcd697e73e4e8539"
+}
