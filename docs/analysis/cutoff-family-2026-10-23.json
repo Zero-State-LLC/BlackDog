@@ -1,0 +1,39 @@
+{
+  "graph": {
+    "identities": 1503,
+    "components": 12,
+    "joining_operations": 28031
+  },
+  "rows": [
+    {
+      "unit_id": "repair:cutoff-48000",
+      "source_sha256": "e8ce457ec6ac0f55e2426570aec2f1fc9bc91575bc2d1c4b2eef067e63738081",
+      "closure_sha256": "ee4b2e1651de68dfd86609af8b42c7744d06a80b1366992e45d67937d5037508",
+      "family": "sha256:f51929fd7daad6cd4a147bf583715c7ba67a7101b99b15d176044a6846f34532",
+      "comparison_connected": true
+    },
+    {
+      "unit_id": "repair:cutoff-192000",
+      "source_sha256": "a6e5034e007fd7c336e768765343cb03cfafb628f3a9307160073bd41dc09e8e",
+      "closure_sha256": "ea175f75b8e113ec28891cdac295af06aaaa7fb55d0c7c7221b223443d973e55",
+      "family": "sha256:f51929fd7daad6cd4a147bf583715c7ba67a7101b99b15d176044a6846f34532",
+      "comparison_connected": true
+    },
+    {
+      "unit_id": "repair:cutoff-deep-44100",
+      "source_sha256": "97fcb09358b6cadb790e25b7195cc09a740b76afe508f90efe2f21328c4cd9a5",
+      "closure_sha256": "0ff34e5cc7e3f42685f424e27d5258f231a9875015c19beaaf9b50780d4157b8",
+      "family": "sha256:f51929fd7daad6cd4a147bf583715c7ba67a7101b99b15d176044a6846f34532",
+      "comparison_connected": true
+    },
+    {
+      "unit_id": "repair:cutoff-deep-96000",
+      "source_sha256": "e18db5e16cfb818a7207faa6e1df3a203fa0bba486ade00fcd016d9afdb6f504",
+      "closure_sha256": "372e20042a4cd7174914f24ac3bcac0265143e2fe1304a3251961e872b28f8d7",
+      "family": "sha256:f51929fd7daad6cd4a147bf583715c7ba67a7101b99b15d176044a6846f34532",
+      "comparison_connected": true
+    }
+  ],
+  "admission": "NOT_GRANTED",
+  "policy": "unchanged floor40 provisional H1 collective"
+}

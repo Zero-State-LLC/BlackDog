@@ -23,7 +23,7 @@ def coefficients(rate, fc, high):
     return values
 
 
-def reference(samples, bank, events, block_size, *, reset_on_change=False):
+def reference(samples, bank, events, block_size, *, reset_on_change=False, sample_bank_indices=None):
     if type(block_size) is not int or block_size < 1 or not samples or len(samples) % block_size:
         raise ValueError('samples must contain whole positive blocks')
     if not bank or any(not math.isfinite(x) for x in samples):
@@ -37,6 +37,11 @@ def reference(samples, bank, events, block_size, *, reset_on_change=False):
         if type(index) is not int or not 0 <= index < len(bank):
             raise ValueError('bank index out of range')
         previous = block
+    if sample_bank_indices is not None:
+        if events or len(sample_bank_indices) != len(samples):
+            raise ValueError('per-sample trajectory must cover input and cannot mix with events')
+        if any(type(i) is not int or not 0 <= i < len(bank) for i in sample_bank_indices):
+            raise ValueError('per-sample bank index out of range')
     bands = bank[0]['bands']
     rate = bank[0]['sample_rate']
     tables = []
@@ -65,6 +70,8 @@ def reference(samples, bank, events, block_size, *, reset_on_change=False):
             if reset_on_change:
                 state.clear()
                 meter = [0.0]*bands
+        if sample_bank_indices is not None:
+            active = sample_bank_indices[n]
         config = bank[active]
         pole = math.exp(-1/(config['tau']*rate))
         values = []
