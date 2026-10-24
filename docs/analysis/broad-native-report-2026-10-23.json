@@ -1,0 +1,27 @@
+{
+  "events_sha256": "3733d9bf5a470ba1609970d19d0964abcce2645ea235f19a8e52b9218fde9db9",
+  "source_sha256": "e20aea8091786c0113ce6c9a102fae9a549f431ffd92780bbd8feb46e2f9220b",
+  "header_sha256": "04a74e2a83ae0e2ef0e6f9c1f9c961f610abb69b0c5bbb4e053a5ca12f8b2222",
+  "reference_sha256": "c3642f5dc3106899148e3970a6a06020e6d6642d27d7ce94247cc8d0dd17dae5",
+  "script_sha256": "0f11ee7c98efc4307121fbd70ac751f6a92c6b374f0874c01b088a87bd8ab615",
+  "rows": [
+    {
+      "schedule": "alternating",
+      "rate": 48000,
+      "stimulus": "sine",
+      "max_abs_error": 1.489285944566987e-08,
+      "capture_sha256": "2ebc56487d6af6fccede70c5a33b4876b6a6d6bac921fc4ecd1e94700c6dee60",
+      "input_sha256": "3c0da8ffb9d31adf465d512e458a21759e6cf7228565de1c6a4f1911a220a28c",
+      "driver_sha256": "321668714f190f68d5f2513b94cfc5d7c441fdbce384e31834e02815320e2ddc"
+    },
+    {
+      "schedule": "threshold-walk",
+      "rate": 48000,
+      "stimulus": "sine",
+      "max_abs_error": 2.8900155490951818e-08,
+      "capture_sha256": "517c113aaa8de9520cec217196358786227e02b9df965407597b77ec997b0dbd",
+      "input_sha256": "3c0da8ffb9d31adf465d512e458a21759e6cf7228565de1c6a4f1911a220a28c",
+      "driver_sha256": "16c8129c9bdd776e5a16c78fa4ce60bd3abc98b042b62766934ea686ac7c5c22"
+    }
+  ]
+}

@@ -1,0 +1,50 @@
+[
+  {
+    "schedule": "alternating",
+    "events": 2250,
+    "frames": 144000,
+    "cutoff_range": [
+      3051.19287109375,
+      4621.92529296875
+    ],
+    "selector_transitions_top_lower": [
+      0,
+      0
+    ],
+    "selector_occupancy_tpt_df": [
+      [
+        0,
+        144000
+      ],
+      [
+        0,
+        144000
+      ]
+    ],
+    "method": "Float32 production smoother and crossover replay; counts are control-model observations, not separately captured selector meters."
+  },
+  {
+    "schedule": "threshold-walk",
+    "events": 322,
+    "frames": 144000,
+    "cutoff_range": [
+      2000.004150390625,
+      5999.548828125
+    ],
+    "selector_transitions_top_lower": [
+      60,
+      96
+    ],
+    "selector_occupancy_tpt_df": [
+      [
+        17167,
+        126833
+      ],
+      [
+        97863,
+        46137
+      ]
+    ],
+    "method": "Float32 production smoother and crossover replay; counts are control-model observations, not separately captured selector meters."
+  }
+]

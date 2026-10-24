@@ -1,0 +1,115 @@
+{
+  "graph": {
+    "identities": 1517,
+    "components": 12,
+    "joining_operations": 28319
+  },
+  "rows": [
+    {
+      "unit_id": "new:spotlight:velocity_gain",
+      "source_sha256": "05a927162f442788538b6ff489840e85fd77d4bbd88a131f183ab6459dacb473",
+      "closure_sha256": "1517c3f587aeba7c0a650692491875d59cbae0bacbd184444eb1a9c7fb5c5db3",
+      "span": [
+        902,
+        969
+      ],
+      "external_dependencies": [],
+      "source_url": "https://gist.github.com/SpotlightKid/58a0ae69c94c2a2d54d363206ab82d07/3e8c61947e121f1b66f0a7c69ffced211a9f505f",
+      "license_evidence": "File-level MIT License declaration; per-unit rights review pending",
+      "family": "sha256:8aaa0fa2bb77b942d4594fb82c382009d2edd96287dc9e16aa014edb02c20a16",
+      "comparison_connected": true,
+      "joining_evidence": [
+        {
+          "comparison": "comparison:0af91c8e5d9029bd24c099abd65928fa4d250beb",
+          "covered": 2084,
+          "denominator": 2660,
+          "floor": 40,
+          "group_id": "sha256:30e72c6ef5d9cb9fc82aecf18eaeca08618a7ebe063acb73fbdf6494041c2718",
+          "reason": "collective_support",
+          "stream": "canonical"
+        },
+        {
+          "floor": 40,
+          "group_id": "sha256:30e72c6ef5d9cb9fc82aecf18eaeca08618a7ebe063acb73fbdf6494041c2718",
+          "left": "new:spotlight:velocity_gain",
+          "reason": "collective_union",
+          "right": "comparison:0af91c8e5d9029bd24c099abd65928fa4d250beb",
+          "stream": "canonical"
+        }
+      ],
+      "joining_evidence_count": 20
+    },
+    {
+      "unit_id": "new:spotlight:key2freq",
+      "source_sha256": "05a927162f442788538b6ff489840e85fd77d4bbd88a131f183ab6459dacb473",
+      "closure_sha256": "cefa29deed189486c1b4cb6101923133bafa07ab45b938c64636bb0c6fd349cb",
+      "span": [
+        509,
+        563
+      ],
+      "external_dependencies": [],
+      "source_url": "https://gist.github.com/SpotlightKid/58a0ae69c94c2a2d54d363206ab82d07/3e8c61947e121f1b66f0a7c69ffced211a9f505f",
+      "license_evidence": "File-level MIT License declaration; per-unit rights review pending",
+      "family": "sha256:8aaa0fa2bb77b942d4594fb82c382009d2edd96287dc9e16aa014edb02c20a16",
+      "comparison_connected": true,
+      "joining_evidence": [
+        {
+          "comparison": "comparison:0af91c8e5d9029bd24c099abd65928fa4d250beb",
+          "covered": 2084,
+          "denominator": 2660,
+          "floor": 40,
+          "group_id": "sha256:30e72c6ef5d9cb9fc82aecf18eaeca08618a7ebe063acb73fbdf6494041c2718",
+          "reason": "collective_support",
+          "stream": "canonical"
+        },
+        {
+          "floor": 40,
+          "group_id": "sha256:30e72c6ef5d9cb9fc82aecf18eaeca08618a7ebe063acb73fbdf6494041c2718",
+          "left": "new:spotlight:key2freq",
+          "reason": "collective_union",
+          "right": "comparison:0af91c8e5d9029bd24c099abd65928fa4d250beb",
+          "stream": "canonical"
+        }
+      ],
+      "joining_evidence_count": 19
+    },
+    {
+      "unit_id": "new:spotlight:bridgeFilter",
+      "source_sha256": "05a927162f442788538b6ff489840e85fd77d4bbd88a131f183ab6459dacb473",
+      "closure_sha256": "d398c066321af17b8d3a02b47fca82623fba97612058d3e955280b60e32bf181",
+      "span": [
+        1041,
+        1281
+      ],
+      "external_dependencies": [],
+      "source_url": "https://gist.github.com/SpotlightKid/58a0ae69c94c2a2d54d363206ab82d07/3e8c61947e121f1b66f0a7c69ffced211a9f505f",
+      "license_evidence": "File-level MIT License declaration; per-unit rights review pending",
+      "family": "sha256:8aaa0fa2bb77b942d4594fb82c382009d2edd96287dc9e16aa014edb02c20a16",
+      "comparison_connected": true,
+      "joining_evidence": [
+        {
+          "floor": 40,
+          "intersection": 76,
+          "left": "new:spotlight:bridgeFilter",
+          "reason": "token_jaccard",
+          "right": "u7e04dbd3567c7a3c895d",
+          "stream": "raw",
+          "union": 76
+        },
+        {
+          "floor": 40,
+          "left": "new:spotlight:bridgeFilter",
+          "reason": "exact",
+          "right": "u7e04dbd3567c7a3c895d",
+          "stream": "canonical"
+        }
+      ],
+      "joining_evidence_count": 23
+    }
+  ],
+  "admission": "NOT_GRANTED",
+  "policy": "unchanged floor40 provisional H1 collective",
+  "notes": [
+    "Three dependency-free definitions only; full instruments require additional library closures. No semantic or rights admission inferred."
+  ]
+}
