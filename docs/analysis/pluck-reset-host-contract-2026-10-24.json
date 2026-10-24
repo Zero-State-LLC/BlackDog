@@ -53,7 +53,7 @@
   "host_note_constraints": "Proposed diagnostic adapter rejects fractional/out-of-range pitches; accepts integer MIDI 16..119, integer velocity 1..127, finite nonnegative start, finite positive duration and finite end. Entire batch validated before host allocation.",
   "remaining": [
     "Independent semantic approval of reset/natural-release choice",
-    "Longer natural tails and rapid retrigger histories",
+    "Semantic assessment of measured 12-second natural tails and 256-note retrigger histories; lifetime beyond these bounds remains unqualified",
     "Dense range and epoch-counter lifetime",
     "Canonical admission and evaluation independence",
     "Signed readiness artifacts",
@@ -86,5 +86,20 @@
     "eight_vs_sixteen_max_abs_difference": 0.786296546459198,
     "acceptance": "PENDING_SEMANTIC_REVIEW",
     "archive_sha256": "161a5ffde739587fad220af927e099c4297c9135b019233225886625eb867f60"
+  },
+  "bounded_histories": {
+    "captures": 20,
+    "duration_seconds": 12,
+    "rapid_note_count": 256,
+    "rates": [
+      44100,
+      48000,
+      96000,
+      192000
+    ],
+    "source_sha256": "83cd856eaf46228903180244b2e5002e139f87decb39d2235a6df980d0b85ab8",
+    "adapter_sha256": "376c3770f357a4ecab784a671d1a8f521c6d625cbf24b5e08434b8bb6af09c51",
+    "archive_sha256": "35903213aa7e1c63a9dc86f0a3faee721530b1fb57c268709c9a6803c07c2bb5",
+    "scope": "Finite stereo output, exact silent controls and byte-identical rapid repeats. Low/high tails measured, not perceptually approved."
   }
 }
