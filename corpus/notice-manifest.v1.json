@@ -21374,6 +21374,60 @@
       "license": "MIT",
       "evidence_label": "INFERRED",
       "license_notice": "Preserve the MIT permission notice and Julius O. Smith III attribution. Ownership is confirmed in issue 321 comment 6381252161; the author-name copyright attribution is inferred from that statement."
+    },
+    {
+      "repo": "grame-cncm/faustlibraries",
+      "commit": "2edec0537f536eaa130d42c354884d7db971663c",
+      "path": "oscillators.lib",
+      "blob_sha": "64bb5871522c191cb97741271a41dbe4bc6b1c11",
+      "function": "_phasor_imp",
+      "copyright": "Except where noted otherwise, Copyright (C) 2003-2017 by GRAME,",
+      "license": "LGPL-2.1-or-later",
+      "evidence_label": "OBSERVED"
+    },
+    {
+      "repo": "grame-cncm/faustlibraries",
+      "commit": "2edec0537f536eaa130d42c354884d7db971663c",
+      "path": "oscillators.lib",
+      "blob_sha": "64bb5871522c191cb97741271a41dbe4bc6b1c11",
+      "function": "_sawN_fix",
+      "copyright": "section are Copyright (C) 2003-2022 by Julius O. Smith III <jos@ccrma.stanford.edu>",
+      "license": "STK-4.3",
+      "evidence_label": "OBSERVED",
+      "license_notice": "Redistribution bundles the STK-4.3 permission notice recorded in license_texts."
+    },
+    {
+      "repo": "grame-cncm/faustlibraries",
+      "commit": "2edec0537f536eaa130d42c354884d7db971663c",
+      "path": "oscillators.lib",
+      "blob_sha": "64bb5871522c191cb97741271a41dbe4bc6b1c11",
+      "function": "_sawN_imp",
+      "copyright": "section are Copyright (C) 2003-2022 by Julius O. Smith III <jos@ccrma.stanford.edu>",
+      "license": "STK-4.3",
+      "evidence_label": "OBSERVED",
+      "license_notice": "Redistribution bundles the STK-4.3 permission notice recorded in license_texts."
+    },
+    {
+      "repo": "grame-cncm/faustlibraries",
+      "commit": "2edec0537f536eaa130d42c354884d7db971663c",
+      "path": "oscillators.lib",
+      "blob_sha": "64bb5871522c191cb97741271a41dbe4bc6b1c11",
+      "function": "_sawN_poly",
+      "copyright": "section are Copyright (C) 2003-2022 by Julius O. Smith III <jos@ccrma.stanford.edu>",
+      "license": "STK-4.3",
+      "evidence_label": "OBSERVED",
+      "license_notice": "Redistribution bundles the STK-4.3 permission notice recorded in license_texts."
+    },
+    {
+      "repo": "grame-cncm/faustlibraries",
+      "commit": "2edec0537f536eaa130d42c354884d7db971663c",
+      "path": "oscillators.lib",
+      "blob_sha": "64bb5871522c191cb97741271a41dbe4bc6b1c11",
+      "function": "saw2ptr",
+      "copyright": "Julius O. Smith III",
+      "license": "STK-4.3",
+      "evidence_label": "OBSERVED",
+      "license_notice": "Redistribution bundles the STK-4.3 permission notice recorded in license_texts."
     }
   ]
 }

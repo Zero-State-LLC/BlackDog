@@ -1,0 +1,52 @@
+{
+  "graph": {
+    "identities": 1537,
+    "components": 12,
+    "joining_operations": 28725
+  },
+  "unit_id": "new:ribbon:full-pinned-closure",
+  "source_sha256": "9947ec7d9045f864bac9265d7e51bd61df59398190e7f83d3b7d037f81243e43",
+  "family": "sha256:cd1d79aa83c80e00e9702a614e8d69a79a767bd03e73a81337b5dbca5dff2326",
+  "comparison_connected": true,
+  "joining_evidence_count": 26,
+  "joining_evidence": [
+    {
+      "left": "new:ribbon:full-pinned-closure",
+      "right": "comparison:25679491349e746ee528d11a1cae23635a0524b3",
+      "reason": "verbatim_run",
+      "stream": "raw",
+      "floor": 40,
+      "intersection": 117,
+      "denominator": 2877
+    },
+    {
+      "left": "new:ribbon:full-pinned-closure",
+      "right": "comparison:3448b86afe14d461a26a3aca73f19be9ffbbb134",
+      "reason": "verbatim_run",
+      "stream": "raw",
+      "floor": 40,
+      "intersection": 167,
+      "denominator": 2877
+    },
+    {
+      "left": "new:ribbon:full-pinned-closure",
+      "right": "comparison:64bb5871522c191cb97741271a41dbe4bc6b1c11",
+      "reason": "verbatim_run",
+      "stream": "raw",
+      "floor": 40,
+      "intersection": 1613,
+      "denominator": 2877
+    },
+    {
+      "left": "new:ribbon:full-pinned-closure",
+      "right": "comparison:709081f9e244a961894c7f691e002729ef68a2ac",
+      "reason": "verbatim_run",
+      "stream": "raw",
+      "floor": 40,
+      "intersection": 217,
+      "denominator": 2877
+    }
+  ],
+  "policy": "unchanged floor40 provisional H1 collective",
+  "admission": "NOT_GRANTED"
+}

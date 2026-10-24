@@ -1,0 +1,35 @@
+{
+  "date": "2026-10-24",
+  "spark_scan_sha256": "abe6d64818e92045320a4220dc5276e56371bef6dd0cffa73930233f5349bd25",
+  "gmail_matches": 0,
+  "gmail_query": "(\"BlackDog\" OR \"FaustCoder\") (\"signed\" OR \"custodian\" OR \"public key\" OR \"T07\" OR \"semantic review\") after:2026/10/23 -from:notifications@github.com",
+  "pr115_reviews": 0,
+  "new_signed_artifacts_found": 0,
+  "new_independent_semantic_review_found": false,
+  "candidate_searches": [
+    {
+      "query": "faust physical modeling license:mit",
+      "results": 0
+    },
+    {
+      "query": "faust effects license:bsd-2-clause",
+      "results": 0
+    },
+    {
+      "query": "faust audio license:mit fork:false",
+      "results_returned": 15
+    }
+  ],
+  "inspected_lead": {
+    "repository": "Orisu179/AmatiPP",
+    "commit": "4d54e25053c0f73e31b48630bb7b4a77fdfeb2be",
+    "readme_blob": "506d6398746c3f7c0030158b527bed1a995b5015",
+    "license_blob": "1536cc6c169c5540829460cd3ddc47fd579ed795",
+    "standalone_faust_files_in_tree": 0,
+    "readme_provenance": "Based on glocq/Amati and pamplejuce",
+    "disposition": "No standalone .dsp/.lib candidate identified; embedded strings and submodules not qualified; no admission"
+  },
+  "limits": "Scoped public searches; no private holdout contents accessed",
+  "training_authorized": false,
+  "pilot_ready": false
+}

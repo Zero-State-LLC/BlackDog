@@ -1,8 +1,8 @@
 {
   "status": "EXACT_SPAN_POLICY_REVIEW_NOT_ADMISSION",
   "policy": "docs/adr/0003-licensing-and-data-rights.md#d-013",
-  "notice_manifest_sha256": "0c99a3f250538fa6f5c171ee9fe7f65d6e4a93dfcb95014533c479a3902a9490",
-  "prior_notice_manifest_sha256": "0c99a3f250538fa6f5c171ee9fe7f65d6e4a93dfcb95014533c479a3902a9490",
+  "notice_manifest_sha256": "82515361ffcde315604afad90ddde5b98edaebe1ee7f4e9ac0219874026b7733",
+  "prior_notice_manifest_sha256": "82515361ffcde315604afad90ddde5b98edaebe1ee7f4e9ac0219874026b7733",
   "added_notices": [],
   "member_records": [
     {

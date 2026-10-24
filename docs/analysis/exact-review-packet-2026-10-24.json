@@ -24,7 +24,7 @@
     "Does an authenticated signed partition bind this exact pair and context?"
   ],
   "input_sha256": {
-    "rights": "152022626d9df43c0f28d56485cc3d6313f48b3443e24c5db2187a18c1ef85aa",
+    "rights": "c9a02cc63184b4c50b4e84764274a77b1852651f311d2ad37938f36059e4b232",
     "family": "3d14dd54930fcfd4ce6d623e5a66407588bc6133bbf6e1c64af30bdcf3e69a0b",
     "wasm": "4a89a484433e559624ff1e8ad4482889787c834514adbaea699a4357e6e5d69f",
     "modular": "89733d0fb94b1ea816c618affb9f6351f820bfd3aaa0e867fb3db3f0e82a107b",
