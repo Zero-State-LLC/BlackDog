@@ -1,0 +1,42 @@
+{
+  "source_sha256": "83cd856eaf46228903180244b2e5002e139f87decb39d2235a6df980d0b85ab8",
+  "adapter_sha256": "376c3770f357a4ecab784a671d1a8f521c6d625cbf24b5e08434b8bb6af09c51",
+  "runner_sha256": "4a01e1c3a8cf1b48f301cfdd50ca1d60f4754c6d45c323056ab6e1de05c12e75",
+  "scope": "All104 integer MIDI pitches16..119 at velocities1/127; 0.5second renders, four rates, same host graph reused with clear_midi between renders; four start/end reset repeat controls; bounded finiteness/nonzero output and linear velocity scaling, not pitch accuracy or timbral acceptance",
+  "admission": "NOT_GRANTED",
+  "status": "BOUNDED_DENSE_HOST_PASS",
+  "capture_count": 836,
+  "report_sha256": "de3f01902efa0933b24cecd564ba53ae3b62ad4fb3a956f791c3d9a79886bd01",
+  "rates": [
+    {
+      "sample_rate": 44100,
+      "integer_pitches": 104,
+      "endpoint_captures": 208,
+      "max_velocity_scaling_error": 9.313225746154785e-10,
+      "reset_repeat_exact": true
+    },
+    {
+      "sample_rate": 48000,
+      "integer_pitches": 104,
+      "endpoint_captures": 208,
+      "max_velocity_scaling_error": 4.656612873077393e-10,
+      "reset_repeat_exact": true
+    },
+    {
+      "sample_rate": 96000,
+      "integer_pitches": 104,
+      "endpoint_captures": 208,
+      "max_velocity_scaling_error": 4.656612873077393e-10,
+      "reset_repeat_exact": true
+    },
+    {
+      "sample_rate": 192000,
+      "integer_pitches": 104,
+      "endpoint_captures": 208,
+      "max_velocity_scaling_error": 4.656612873077393e-10,
+      "reset_repeat_exact": true
+    }
+  ],
+  "verification_scope": "Same-workflow replay of hashes, finite stereo output, nonzero response, linear velocity scaling and reset repeat; not independent semantic review",
+  "archive_sha256": "57aeac54686e8a3976d4b89629f5ad4b03184f177b21ec449e4436f5bb34666c"
+}
