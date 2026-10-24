@@ -1,0 +1,31 @@
+{
+  "status": "BOUNDED_NATIVE_INTERFACE_PASS_PITCH_REVIEW_PENDING",
+  "source_sha256": "ddb0f318fd77ce19c025ee0525bf41f6086f017ad670405898ea5a6b92e8767b",
+  "range_hz": [
+    20,
+    8000
+  ],
+  "sample_rates": [
+    44100,
+    48000,
+    96000,
+    192000
+  ],
+  "inputs": 0,
+  "outputs": 2,
+  "loop": "integer delay plus first-order phase-matched allpass, averaging reflection filter and 0.998 feedback",
+  "integer_delay": "max(1,floor(sr/f-1.5)-1); guard inactive over supported domain",
+  "excitation": "positive gate differences",
+  "dependencies": "Faust primitives and sample-rate fconstant only",
+  "authorship": "Agent-authored derivative of Shipwright intent; not an independent evaluation candidate; exact model provenance/admission not established",
+  "admission": "NOT_GRANTED",
+  "coefficient_archive_sha256": "24a873bb1de6f817e72491b6f9d90f404ac42e65ebfde7b256480e8bbaa25700",
+  "remaining": [
+    "dense and live-control qualification",
+    "compiled audio pitch estimator validation",
+    "WASM",
+    "polyphonic host integration",
+    "independent semantic review",
+    "canonical rights and admission"
+  ]
+}

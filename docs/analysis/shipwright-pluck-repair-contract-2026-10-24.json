@@ -1,5 +1,5 @@
 {
-  "status": "PROPOSED_REPAIR_PENDING_QUALIFICATION",
+  "status": "BOUNDED_INTERFACE_PASS_PITCH_REJECTED",
   "original_sha256": "a15fef8086c17d4acf2136783ce9e5b61dbf1ff037e6265f8a938b05ec344125",
   "pre_override_closure_sha256": "790717942227d1ae3d0a1e496481e59ce50f49f90acfbade1296bf9fae35ed4c",
   "repaired_closure_sha256": "30518db5152c8fb7de4ab2aa874e918ea1189e5868ca01b4d2d0cbead9ee04f8",
@@ -28,5 +28,6 @@
     "New derivative source and dependency context",
     "No exact pitch accuracy claim; reflection filters and waveguide delays remain part of model",
     "Polyphonic host behavior unqualified"
-  ]
+  ],
+  "pitch_followup": "Retained captures show about 413.19 Hz for a 440 Hz request at 44100 Hz; see pluck-pitch-diagnostic-2026-10-24.json. Do not promote."
 }

@@ -1,0 +1,313 @@
+{
+  "scope": "Double-precision pole analysis using independently verified compiled float32 n/a captures; probe output can affect compiler optimization, so not a full audio pitch acceptance proof",
+  "rows": [
+    {
+      "sample_rate": 44100,
+      "frequency": 20,
+      "integer_delay": 2202,
+      "fractional_delay": 1.5,
+      "allpass_coefficient": -0.20000040531158447,
+      "pole_radius": 0.9999990916023891,
+      "pole_hz": 19.999999997959307,
+      "cents_error": -1.766457788865171e-07,
+      "residual": 1.0991258937685573e-13
+    },
+    {
+      "sample_rate": 44100,
+      "frequency": 50,
+      "integer_delay": 879,
+      "fractional_delay": 1.5,
+      "allpass_coefficient": -0.200002521276474,
+      "pole_radius": 0.999997722966002,
+      "pole_hz": 49.99999997059295,
+      "cents_error": -1.0182096911537678e-06,
+      "residual": 3.641652660238961e-14
+    },
+    {
+      "sample_rate": 44100,
+      "frequency": 110,
+      "integer_delay": 398,
+      "fractional_delay": 1.409090909090935,
+      "allpass_coefficient": -0.1698201596736908,
+      "pole_radius": 0.9999949297709276,
+      "pole_hz": 110.0000004140166,
+      "cents_error": 6.51599668350478e-06,
+      "residual": 2.046465379918328e-14
+    },
+    {
+      "sample_rate": 44100,
+      "frequency": 440,
+      "integer_delay": 97,
+      "fractional_delay": 1.7272727272727337,
+      "allpass_coefficient": -0.26696842908859253,
+      "pole_radius": 0.9999751230128827,
+      "pole_hz": 439.99997563329765,
+      "cents_error": -9.587378615381988e-05,
+      "residual": 5.34648588112766e-15
+    },
+    {
+      "sample_rate": 44100,
+      "frequency": 1000,
+      "integer_delay": 41,
+      "fractional_delay": 1.6000000000000014,
+      "allpass_coefficient": -0.23202286660671234,
+      "pole_radius": 0.9998970021612036,
+      "pole_hz": 999.9994497622558,
+      "cents_error": -0.0009525905798224814,
+      "residual": 1.378590511526152e-15
+    },
+    {
+      "sample_rate": 44100,
+      "frequency": 4000,
+      "integer_delay": 8,
+      "fractional_delay": 1.5250000000000004,
+      "allpass_coefficient": -0.22616037726402283,
+      "pole_radius": 0.9960545091184575,
+      "pole_hz": 3999.6252851748495,
+      "cents_error": -0.16218736286744048,
+      "residual": 5.576327965574438e-16
+    },
+    {
+      "sample_rate": 44100,
+      "frequency": 8000,
+      "integer_delay": 3,
+      "fractional_delay": 1.0125000000000002,
+      "allpass_coefficient": -0.007815226912498474,
+      "pole_radius": 0.9690227508338601,
+      "pole_hz": 7987.1669073051535,
+      "cents_error": -2.7793657161148935,
+      "residual": 7.46413616210103e-17
+    },
+    {
+      "sample_rate": 48000,
+      "frequency": 20,
+      "integer_delay": 2397,
+      "fractional_delay": 1.5,
+      "allpass_coefficient": -0.2000003308057785,
+      "pole_radius": 0.9999991654755944,
+      "pole_hz": 19.999999998571017,
+      "cents_error": -1.23695253035356e-07,
+      "residual": 3.3418015291466594e-14
+    },
+    {
+      "sample_rate": 48000,
+      "frequency": 50,
+      "integer_delay": 957,
+      "fractional_delay": 1.5,
+      "allpass_coefficient": -0.20000214874744415,
+      "pole_radius": 0.9999979090049875,
+      "pole_hz": 49.9999999716519,
+      "cents_error": -9.815437839181663e-07,
+      "residual": 4.574131858723251e-14
+    },
+    {
+      "sample_rate": 48000,
+      "frequency": 110,
+      "integer_delay": 433,
+      "fractional_delay": 1.863636363636374,
+      "allpass_coefficient": -0.30160942673683167,
+      "pole_radius": 0.9999953526944575,
+      "pole_hz": 109.99999691401102,
+      "cents_error": -4.8568811458882496e-05,
+      "residual": 9.117704632602102e-15
+    },
+    {
+      "sample_rate": 48000,
+      "frequency": 440,
+      "integer_delay": 106,
+      "fractional_delay": 1.5909090909090935,
+      "allpass_coefficient": -0.2282717227935791,
+      "pole_radius": 0.9999778467027334,
+      "pole_hz": 439.9999666584739,
+      "cents_error": -0.00013118633499115668,
+      "residual": 4.353814530493326e-15
+    },
+    {
+      "sample_rate": 48000,
+      "frequency": 1000,
+      "integer_delay": 45,
+      "fractional_delay": 1.5,
+      "allpass_coefficient": -0.20085938274860382,
+      "pole_radius": 0.9999136321787151,
+      "pole_hz": 999.9995488193132,
+      "cents_error": -0.0007810995434975224,
+      "residual": 1.800276872699916e-15
+    },
+    {
+      "sample_rate": 48000,
+      "frequency": 4000,
+      "integer_delay": 9,
+      "fractional_delay": 1.5,
+      "allpass_coefficient": -0.21441273391246796,
+      "pole_radius": 0.996927375967045,
+      "pole_hz": 3999.7342782789447,
+      "cents_error": -0.11501044290589468,
+      "residual": 9.784508518434236e-16
+    },
+    {
+      "sample_rate": 48000,
+      "frequency": 8000,
+      "integer_delay": 3,
+      "fractional_delay": 1.5,
+      "allpass_coefficient": -0.2679491937160492,
+      "pole_radius": 0.9746280900516557,
+      "pole_hz": 7989.6968239857315,
+      "cents_error": -2.231088155638807,
+      "residual": 4.617898160957078e-16
+    },
+    {
+      "sample_rate": 96000,
+      "frequency": 20,
+      "integer_delay": 4797,
+      "fractional_delay": 1.5,
+      "allpass_coefficient": -0.2000000774860382,
+      "pole_radius": 0.9999995828715755,
+      "pole_hz": 19.9999999996721,
+      "cents_error": -2.8383768331694525e-08,
+      "residual": 1.3329426825042494e-14
+    },
+    {
+      "sample_rate": 96000,
+      "frequency": 50,
+      "integer_delay": 1917,
+      "fractional_delay": 1.5,
+      "allpass_coefficient": -0.20000052452087402,
+      "pole_radius": 0.999998956593604,
+      "pole_hz": 49.9999999940973,
+      "cents_error": -2.0437912350369622e-07,
+      "residual": 5.695484696523595e-14
+    },
+    {
+      "sample_rate": 96000,
+      "frequency": 110,
+      "integer_delay": 870,
+      "fractional_delay": 1.227272727272748,
+      "allpass_coefficient": -0.10205084830522537,
+      "pole_radius": 0.9999976986173501,
+      "pole_hz": 109.99999712941135,
+      "cents_error": -4.51787351037738e-05,
+      "residual": 2.908893021556981e-14
+    },
+    {
+      "sample_rate": 96000,
+      "frequency": 440,
+      "integer_delay": 215,
+      "fractional_delay": 1.681818181818187,
+      "allpass_coefficient": -0.2542979419231415,
+      "pole_radius": 0.9999903490343294,
+      "pole_hz": 439.99998394422886,
+      "cents_error": -6.317340493662378e-05,
+      "residual": 1.3489328785955748e-15
+    },
+    {
+      "sample_rate": 96000,
+      "frequency": 1000,
+      "integer_delay": 93,
+      "fractional_delay": 1.5,
+      "allpass_coefficient": -0.20021435618400574,
+      "pole_radius": 0.9999735670805826,
+      "pole_hz": 999.9999308886768,
+      "cents_error": -0.00011964788006877456,
+      "residual": 4.233348116883594e-15
+    },
+    {
+      "sample_rate": 96000,
+      "frequency": 4000,
+      "integer_delay": 21,
+      "fractional_delay": 1.5,
+      "allpass_coefficient": -0.20346951484680176,
+      "pole_radius": 0.9995582931136525,
+      "pole_hz": 3999.9814497453144,
+      "cents_error": -0.008028726749552073,
+      "residual": 1.8284126781994644e-15
+    },
+    {
+      "sample_rate": 96000,
+      "frequency": 8000,
+      "integer_delay": 9,
+      "fractional_delay": 1.5,
+      "allpass_coefficient": -0.21441273391246796,
+      "pole_radius": 0.996927375967045,
+      "pole_hz": 7999.468556557889,
+      "cents_error": -0.11501044290589468,
+      "residual": 9.784508518434236e-16
+    },
+    {
+      "sample_rate": 192000,
+      "frequency": 20,
+      "integer_delay": 9597,
+      "fractional_delay": 1.5,
+      "allpass_coefficient": -0.20000001788139343,
+      "pole_radius": 0.9999997914524992,
+      "pole_hz": 19.999999999914408,
+      "cents_error": -7.4089488865690715e-09,
+      "residual": 5.773275218467643e-14
+    },
+    {
+      "sample_rate": 192000,
+      "frequency": 50,
+      "integer_delay": 3837,
+      "fractional_delay": 1.5,
+      "allpass_coefficient": -0.20000013709068298,
+      "pole_radius": 0.999999478558122,
+      "pole_hz": 49.99999999817135,
+      "cents_error": -6.331655773995068e-08,
+      "residual": 1.912914925636318e-13
+    },
+    {
+      "sample_rate": 192000,
+      "frequency": 110,
+      "integer_delay": 1742,
+      "fractional_delay": 1.9545454545454959,
+      "allpass_coefficient": -0.32308846712112427,
+      "pole_radius": 0.9999988520919914,
+      "pole_hz": 109.99999718165732,
+      "cents_error": -4.4356462461214086e-05,
+      "residual": 5.1514773850496645e-14
+    },
+    {
+      "sample_rate": 192000,
+      "frequency": 440,
+      "integer_delay": 433,
+      "fractional_delay": 1.863636363636374,
+      "allpass_coefficient": -0.30160942673683167,
+      "pole_radius": 0.9999953526944575,
+      "pole_hz": 439.9999876560441,
+      "cents_error": -4.8568811458882496e-05,
+      "residual": 9.117704632602102e-15
+    },
+    {
+      "sample_rate": 192000,
+      "frequency": 1000,
+      "integer_delay": 189,
+      "fractional_delay": 1.5,
+      "allpass_coefficient": -0.20005355775356293,
+      "pole_radius": 0.9999888757002872,
+      "pole_hz": 999.9999854899936,
+      "cents_error": -2.5120217346323797e-05,
+      "residual": 6.358457990800877e-16
+    },
+    {
+      "sample_rate": 192000,
+      "frequency": 4000,
+      "integer_delay": 45,
+      "fractional_delay": 1.5,
+      "allpass_coefficient": -0.20085938274860382,
+      "pole_radius": 0.9999136321787151,
+      "pole_hz": 3999.9981952772528,
+      "cents_error": -0.0007810995434975224,
+      "residual": 1.800276872699916e-15
+    },
+    {
+      "sample_rate": 192000,
+      "frequency": 8000,
+      "integer_delay": 21,
+      "fractional_delay": 1.5,
+      "allpass_coefficient": -0.20346951484680176,
+      "pole_radius": 0.9995582931136525,
+      "pole_hz": 7999.962899490629,
+      "cents_error": -0.008028726749552073,
+      "residual": 1.8284126781994644e-15
+    }
+  ]
+}

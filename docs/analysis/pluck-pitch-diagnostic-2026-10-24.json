@@ -1,0 +1,286 @@
+{
+  "status": "DIAGNOSTIC_NOT_ACCEPTANCE",
+  "method": "FFT autocorrelation, first 0.5 seconds, 0.6\u20131.5 nominal-period search and parabolic peak interpolation; not independent fundamental identification",
+  "rows": [
+    {
+      "sample_rate": 44100,
+      "requested_hz": 20,
+      "period_samples": 2211.5136130116575,
+      "estimated_hz": 19.941093620465782,
+      "cents_error": -5.10656041952238,
+      "normalized_correlation": 0.8722411361964514,
+      "boundary_peak": false,
+      "capture_sha256": "51a13a80498210e4d07e84549349b7bf4f71f0ec811abf79a5976235f7dcafdd"
+    },
+    {
+      "sample_rate": 44100,
+      "requested_hz": 50,
+      "period_samples": 888.5000000026524,
+      "estimated_hz": 49.634214968900785,
+      "cents_error": -12.71174457055735,
+      "normalized_correlation": 0.9265816384196562,
+      "boundary_peak": false,
+      "capture_sha256": "203a7cc31f68fc8ea041d2c19a9d335108646d836f622ae7a9780c430c296c13"
+    },
+    {
+      "sample_rate": 44100,
+      "requested_hz": 110,
+      "period_samples": 407.39703802364687,
+      "estimated_hz": 108.24820969228615,
+      "cents_error": -27.792431049928897,
+      "normalized_correlation": 0.9652702051768325,
+      "boundary_peak": false,
+      "capture_sha256": "3fa5fa38963542cc85cceb0c51837bf8f42b4620886dafa5dd5ed3fbee8d61f8"
+    },
+    {
+      "sample_rate": 44100,
+      "requested_hz": 440,
+      "period_samples": 106.73061619621977,
+      "estimated_hz": 413.1897816360771,
+      "cents_error": -108.8387371017874,
+      "normalized_correlation": 0.9828074202020248,
+      "boundary_peak": false,
+      "capture_sha256": "4da6ecc35009c31c10e5e72c18a8303b8462542a7a2310f7cf4b3db2156de76e"
+    },
+    {
+      "sample_rate": 44100,
+      "requested_hz": 1000,
+      "period_samples": 50.60337292516056,
+      "estimated_hz": 871.4834101122336,
+      "cents_error": -238.14587275606488,
+      "normalized_correlation": 0.9839506484634241,
+      "boundary_peak": false,
+      "capture_sha256": "1d8dd20c9e29fec5cb501c8aca3580f7a6ae996b4803014e0c35f28f9713e52a"
+    },
+    {
+      "sample_rate": 44100,
+      "requested_hz": 4000,
+      "period_samples": 17.981919963977536,
+      "estimated_hz": 2452.4633681132923,
+      "cents_error": -846.9220951221105,
+      "normalized_correlation": 0.9593571104273244,
+      "boundary_peak": true,
+      "capture_sha256": "0deb6b9921b39739207ccbafbe43688d667cb8d3b716443e29de3ff259973457"
+    },
+    {
+      "sample_rate": 44100,
+      "requested_hz": 8000,
+      "period_samples": 9.100569041592482,
+      "estimated_hz": 4845.850825201043,
+      "cents_error": -867.9000077869918,
+      "normalized_correlation": 0.9265085065395605,
+      "boundary_peak": true,
+      "capture_sha256": "37d8e8525cc9990754db23f403118bba381f79274a2e179d6c7480502d389bfa"
+    },
+    {
+      "sample_rate": 48000,
+      "requested_hz": 20,
+      "period_samples": 2406.5000000015852,
+      "estimated_hz": 19.945979638465978,
+      "cents_error": -4.682420963930303,
+      "normalized_correlation": 0.8539064376213507,
+      "boundary_peak": false,
+      "capture_sha256": "10207defa8aced3173e1be98fc4bfaac9d7889e26b18ffdea6586ba017df00d8"
+    },
+    {
+      "sample_rate": 48000,
+      "requested_hz": 50,
+      "period_samples": 966.5000000026524,
+      "estimated_hz": 49.663735126609694,
+      "cents_error": -11.682391928011882,
+      "normalized_correlation": 0.9265816384196562,
+      "boundary_peak": false,
+      "capture_sha256": "10ee9648d56414444d4236eaa8008ec83c67a0bae5b88eb0cc2a54fbe4333f21"
+    },
+    {
+      "sample_rate": 48000,
+      "requested_hz": 110,
+      "period_samples": 442.8635053492546,
+      "estimated_hz": 108.38553960806921,
+      "cents_error": -25.59747981287888,
+      "normalized_correlation": 0.9676649796806824,
+      "boundary_peak": false,
+      "capture_sha256": "875937bb5a45b6c1e11f21ded02871bd03ca602ace9335817cb59b3dbec4d201"
+    },
+    {
+      "sample_rate": 48000,
+      "requested_hz": 440,
+      "period_samples": 115.60112376639987,
+      "estimated_hz": 415.22087706513696,
+      "cents_error": -100.34944843161738,
+      "normalized_correlation": 0.9829925911525653,
+      "boundary_peak": false,
+      "capture_sha256": "79fc1921d3e5866e5a32c412ba4412d66cd621a2809c375a09bd51cba0843fd3"
+    },
+    {
+      "sample_rate": 48000,
+      "requested_hz": 1000,
+      "period_samples": 54.499882776576804,
+      "estimated_hz": 880.7358393187159,
+      "cents_error": -219.86246517151432,
+      "normalized_correlation": 0.9817486476940459,
+      "boundary_peak": false,
+      "capture_sha256": "cf08b8419baf6d70566602b554077ae44d5c8b686eb5829beefda59d9b839267"
+    },
+    {
+      "sample_rate": 48000,
+      "requested_hz": 4000,
+      "period_samples": 18.499984260794808,
+      "estimated_hz": 2594.596801994133,
+      "cents_error": -749.387565010459,
+      "normalized_correlation": 0.9870014159061324,
+      "boundary_peak": true,
+      "capture_sha256": "04a781d928e1752093b59016f86614a32aecf009abc24c313eb9f065868ea6a7"
+    },
+    {
+      "sample_rate": 48000,
+      "requested_hz": 8000,
+      "period_samples": 8.830533148667202,
+      "estimated_hz": 5435.685387494941,
+      "cents_error": -669.045652019322,
+      "normalized_correlation": 0.9208698988642317,
+      "boundary_peak": true,
+      "capture_sha256": "d0fb78e5ca68b8321062886c1b5ddfc7732ffdf9a726937494357ecd53145987"
+    },
+    {
+      "sample_rate": 96000,
+      "requested_hz": 20,
+      "period_samples": 4806.500000001585,
+      "estimated_hz": 19.972953292409933,
+      "cents_error": -2.3427935333302297,
+      "normalized_correlation": 0.8539064376213507,
+      "boundary_peak": false,
+      "capture_sha256": "22278069060738e8152022da74f03cde2f5fd3461b97ba3967e4dc92558a16be"
+    },
+    {
+      "sample_rate": 96000,
+      "requested_hz": 50,
+      "period_samples": 1926.5000000026525,
+      "estimated_hz": 49.83130028542321,
+      "cents_error": -5.851050063621448,
+      "normalized_correlation": 0.9265816384196565,
+      "boundary_peak": false,
+      "capture_sha256": "e78aecb14accdaa98c1400142c2b72757b4a798291af12288a81459e3139680b"
+    },
+    {
+      "sample_rate": 96000,
+      "requested_hz": 110,
+      "period_samples": 879.2139224494829,
+      "estimated_hz": 109.18844384600368,
+      "cents_error": -12.820019543206657,
+      "normalized_correlation": 0.9694295231027028,
+      "boundary_peak": false,
+      "capture_sha256": "844710bf3e6d413a89ffc503be8415f79651f7d9109cf0ad2fd9fa9569eaad7d"
+    },
+    {
+      "sample_rate": 96000,
+      "requested_hz": 440,
+      "period_samples": 224.68581195227824,
+      "estimated_hz": 427.2632934223268,
+      "cents_error": -50.85377357845843,
+      "normalized_correlation": 0.9821684463964498,
+      "boundary_peak": false,
+      "capture_sha256": "4ae65ff3e6e130d76ed126e4359f4aafa4bad6c69db99b34b441ac8cedb284f9"
+    },
+    {
+      "sample_rate": 96000,
+      "requested_hz": 1000,
+      "period_samples": 102.49999722241763,
+      "estimated_hz": 936.5853912335909,
+      "cents_error": -113.4210716275357,
+      "normalized_correlation": 0.9819381826258348,
+      "boundary_peak": false,
+      "capture_sha256": "e96e1b690ae03e6f34b43c7a79ef2429829204c712aed78dd26b7fa5e762674c"
+    },
+    {
+      "sample_rate": 96000,
+      "requested_hz": 4000,
+      "period_samples": 30.499998237931965,
+      "estimated_hz": 3147.5411654485797,
+      "cents_error": -414.92970419196894,
+      "normalized_correlation": 0.9841110098112262,
+      "boundary_peak": false,
+      "capture_sha256": "0b460ef11b1876cfe38f56915815a116375ebbad657675229b656c975d06f689"
+    },
+    {
+      "sample_rate": 96000,
+      "requested_hz": 8000,
+      "period_samples": 18.499999914975557,
+      "estimated_hz": 5189.189213038266,
+      "cents_error": -749.3890299327464,
+      "normalized_correlation": 0.9870679165992824,
+      "boundary_peak": true,
+      "capture_sha256": "bbb5456e41b1eb272b13bc08f1cde8a214c7ec497be29982d1e0d1f3ba61ea22"
+    },
+    {
+      "sample_rate": 192000,
+      "requested_hz": 20,
+      "period_samples": 9606.500000001586,
+      "estimated_hz": 19.986467495962973,
+      "cents_error": -1.1717930649823496,
+      "normalized_correlation": 0.8539064376213507,
+      "boundary_peak": false,
+      "capture_sha256": "d3a3b4a8466c4abf8a6f02a520ba617a375a9939a793aa317eca5f4b57d9ab6d"
+    },
+    {
+      "sample_rate": 192000,
+      "requested_hz": 50,
+      "period_samples": 3846.5000000026525,
+      "estimated_hz": 49.91550760428119,
+      "cents_error": -2.927996879173898,
+      "normalized_correlation": 0.9265816384196562,
+      "boundary_peak": false,
+      "capture_sha256": "1ffa82f332da2145f6dc5dff4e091a697918ba0ba8fc84daf963325eb0b68cd4"
+    },
+    {
+      "sample_rate": 192000,
+      "requested_hz": 110,
+      "period_samples": 1751.962520304264,
+      "estimated_hz": 109.59138553184077,
+      "cents_error": -6.442949435253901,
+      "normalized_correlation": 0.9701643197786962,
+      "boundary_peak": false,
+      "capture_sha256": "8dface5de090808a7690b542182ad357ff7817b2ae410a2114575b6c3264a124"
+    },
+    {
+      "sample_rate": 192000,
+      "requested_hz": 440,
+      "period_samples": 442.8636185201467,
+      "estimated_hz": 433.5420476434227,
+      "cents_error": -25.59792221843816,
+      "normalized_correlation": 0.9851181910076247,
+      "boundary_peak": false,
+      "capture_sha256": "018c9d08f39b70037bd51faa6f71106c56fd24e0db5f8c2d0dedaebdca507097"
+    },
+    {
+      "sample_rate": 192000,
+      "requested_hz": 1000,
+      "period_samples": 198.49999865596328,
+      "estimated_hz": 967.2544146097,
+      "cents_error": -57.63922398403534,
+      "normalized_correlation": 0.982036044841816,
+      "boundary_peak": false,
+      "capture_sha256": "42e9798ab5a7f536284c9c138408140900a16259cc8eccd0d0d7c350d34740b8"
+    },
+    {
+      "sample_rate": 192000,
+      "requested_hz": 4000,
+      "period_samples": 54.499999691674915,
+      "estimated_hz": 3522.935799746963,
+      "cents_error": -219.86617907274288,
+      "normalized_correlation": 0.9832334552636532,
+      "boundary_peak": false,
+      "capture_sha256": "03818d36a97a8b0b553f68c5070d038acd56ef42974f69e950354b3492535969"
+    },
+    {
+      "sample_rate": 192000,
+      "requested_hz": 8000,
+      "period_samples": 30.499999997850715,
+      "estimated_hz": 6295.081967656719,
+      "cents_error": -414.92980408807887,
+      "normalized_correlation": 0.9841301432467764,
+      "boundary_peak": false,
+      "capture_sha256": "1af0385dbc448c462e6b54127a40bc64e07998cf750a68c9bf996534668b7910"
+    }
+  ]
+}
