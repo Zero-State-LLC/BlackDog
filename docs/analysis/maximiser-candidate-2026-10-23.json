@@ -1,0 +1,25 @@
+{
+  "graph": {
+    "identities": 1504,
+    "components": 12,
+    "joining_operations": 28050
+  },
+  "rows": [
+    {
+      "unit_id": "new:maximiser:maxN",
+      "source_tree": "686e91735466490d5cf3cfab200929860bc8da3c",
+      "source_blob": "f3f8685d9fbec6b0c0938c434eeb8e7209543978",
+      "span": [
+        4647,
+        4697
+      ],
+      "closure_sha256": "d30e3c94587c01dc8624e089756d48a80a61811e0d36796395a7bce9271a035b",
+      "external_dependencies": [],
+      "family": "sha256:6ad40d72d10cfd9bc80bb5a22b737f4ccb23b0816324648b6399c708ba2d7b2b",
+      "comparison_connected": true,
+      "rights": "Per-unit review pending; extracted nested helper; do not inherit named maximiserMono declaration automatically"
+    }
+  ],
+  "admission": "NOT_GRANTED",
+  "policy": "unchanged floor40 provisional H1 collective"
+}

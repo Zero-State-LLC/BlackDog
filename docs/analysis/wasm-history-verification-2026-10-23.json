@@ -1,0 +1,283 @@
+{
+  "passed": 24,
+  "bounded_jobs": 120,
+  "wasm_reset_rejections": 24,
+  "split_probe": {
+    "comparison": "byte-equivalent float32 arrays to prior uninterrupted 144000-frame WASM capture",
+    "passed": true,
+    "sample_sha256": "sha256:5378c40641ffc8311d6047e04ba4fb6deb3219ac4ce01bb1a2990793444b37cb"
+  },
+  "state_bytes": 920,
+  "max_tolerance_ratio": 0.7099563107621298,
+  "max_meter_error_db": 0.0012636184692382812,
+  "rows": [
+    {
+      "schedule": "alternating",
+      "rate": 44100,
+      "stimulus": "noise",
+      "passed": true,
+      "native_reset_rejected": true,
+      "wasm_reset_rejected": true,
+      "wasm_reset_ratio": 25656.939187618158,
+      "max_tolerance_ratio": 0.11985353113998853,
+      "max_meter_error_db": 0.00010728836059570312
+    },
+    {
+      "schedule": "alternating",
+      "rate": 44100,
+      "stimulus": "impulse",
+      "passed": true,
+      "native_reset_rejected": true,
+      "wasm_reset_rejected": true,
+      "wasm_reset_ratio": 282.2415663281962,
+      "max_tolerance_ratio": 0.6115218566782004,
+      "max_meter_error_db": 0.0010848045349121094
+    },
+    {
+      "schedule": "alternating",
+      "rate": 44100,
+      "stimulus": "sine",
+      "passed": true,
+      "native_reset_rejected": true,
+      "wasm_reset_rejected": true,
+      "wasm_reset_ratio": 28870.265443522687,
+      "max_tolerance_ratio": 0.1506476734222827,
+      "max_meter_error_db": 0.0001043081283569336
+    },
+    {
+      "schedule": "alternating",
+      "rate": 48000,
+      "stimulus": "noise",
+      "passed": true,
+      "native_reset_rejected": true,
+      "wasm_reset_rejected": true,
+      "wasm_reset_ratio": 26140.957925756495,
+      "max_tolerance_ratio": 0.04781913693009063,
+      "max_meter_error_db": 3.5762786865234375e-05
+    },
+    {
+      "schedule": "alternating",
+      "rate": 48000,
+      "stimulus": "impulse",
+      "passed": true,
+      "native_reset_rejected": true,
+      "wasm_reset_rejected": true,
+      "wasm_reset_ratio": 369.51641551851696,
+      "max_tolerance_ratio": 0.20858111873115504,
+      "max_meter_error_db": 0.0003695487976074219
+    },
+    {
+      "schedule": "alternating",
+      "rate": 48000,
+      "stimulus": "sine",
+      "passed": true,
+      "native_reset_rejected": true,
+      "wasm_reset_rejected": true,
+      "wasm_reset_ratio": 29815.455475790382,
+      "max_tolerance_ratio": 0.05378080244880691,
+      "max_meter_error_db": 3.5762786865234375e-05
+    },
+    {
+      "schedule": "alternating",
+      "rate": 96000,
+      "stimulus": "noise",
+      "passed": true,
+      "native_reset_rejected": true,
+      "wasm_reset_rejected": true,
+      "wasm_reset_ratio": 37378.200848601315,
+      "max_tolerance_ratio": 0.092476280835792,
+      "max_meter_error_db": 8.344650268554688e-05
+    },
+    {
+      "schedule": "alternating",
+      "rate": 96000,
+      "stimulus": "impulse",
+      "passed": true,
+      "native_reset_rejected": true,
+      "wasm_reset_rejected": true,
+      "wasm_reset_ratio": 1458.3907058988161,
+      "max_tolerance_ratio": 0.4419661542051251,
+      "max_meter_error_db": 0.0007867813110351562
+    },
+    {
+      "schedule": "alternating",
+      "rate": 96000,
+      "stimulus": "sine",
+      "passed": true,
+      "native_reset_rejected": true,
+      "wasm_reset_rejected": true,
+      "wasm_reset_ratio": 45660.4316591271,
+      "max_tolerance_ratio": 0.12491351330083568,
+      "max_meter_error_db": 8.344650268554688e-05
+    },
+    {
+      "schedule": "alternating",
+      "rate": 192000,
+      "stimulus": "noise",
+      "passed": true,
+      "native_reset_rejected": true,
+      "wasm_reset_rejected": true,
+      "wasm_reset_ratio": 51391.94399039486,
+      "max_tolerance_ratio": 0.16281481029246164,
+      "max_meter_error_db": 0.00014901161193847656
+    },
+    {
+      "schedule": "alternating",
+      "rate": 192000,
+      "stimulus": "impulse",
+      "passed": true,
+      "native_reset_rejected": true,
+      "wasm_reset_rejected": true,
+      "wasm_reset_ratio": 4856.951652038434,
+      "max_tolerance_ratio": 0.7099563107621298,
+      "max_meter_error_db": 0.0012636184692382812
+    },
+    {
+      "schedule": "alternating",
+      "rate": 192000,
+      "stimulus": "sine",
+      "passed": true,
+      "native_reset_rejected": true,
+      "wasm_reset_rejected": true,
+      "wasm_reset_ratio": 63740.23838238816,
+      "max_tolerance_ratio": 0.1996097230694546,
+      "max_meter_error_db": 0.00014901161193847656
+    },
+    {
+      "schedule": "threshold-walk",
+      "rate": 44100,
+      "stimulus": "noise",
+      "passed": true,
+      "native_reset_rejected": true,
+      "wasm_reset_rejected": true,
+      "wasm_reset_ratio": 24800.110008989035,
+      "max_tolerance_ratio": 0.12386175498451053,
+      "max_meter_error_db": 0.00010728836059570312
+    },
+    {
+      "schedule": "threshold-walk",
+      "rate": 44100,
+      "stimulus": "impulse",
+      "passed": true,
+      "native_reset_rejected": true,
+      "wasm_reset_rejected": true,
+      "wasm_reset_ratio": 729.5974404236783,
+      "max_tolerance_ratio": 0.5972407130109265,
+      "max_meter_error_db": 0.0010609626770019531
+    },
+    {
+      "schedule": "threshold-walk",
+      "rate": 44100,
+      "stimulus": "sine",
+      "passed": true,
+      "native_reset_rejected": true,
+      "wasm_reset_rejected": true,
+      "wasm_reset_ratio": 29281.85292566176,
+      "max_tolerance_ratio": 0.2285060700012107,
+      "max_meter_error_db": 0.00028014183044433594
+    },
+    {
+      "schedule": "threshold-walk",
+      "rate": 48000,
+      "stimulus": "noise",
+      "passed": true,
+      "native_reset_rejected": true,
+      "wasm_reset_rejected": true,
+      "wasm_reset_ratio": 25214.857655524545,
+      "max_tolerance_ratio": 0.04506180427185741,
+      "max_meter_error_db": 3.5762786865234375e-05
+    },
+    {
+      "schedule": "threshold-walk",
+      "rate": 48000,
+      "stimulus": "impulse",
+      "passed": true,
+      "native_reset_rejected": true,
+      "wasm_reset_rejected": true,
+      "wasm_reset_ratio": 743.6945945992004,
+      "max_tolerance_ratio": 0.2148032866406479,
+      "max_meter_error_db": 0.0003814697265625
+    },
+    {
+      "schedule": "threshold-walk",
+      "rate": 48000,
+      "stimulus": "sine",
+      "passed": true,
+      "native_reset_rejected": true,
+      "wasm_reset_rejected": true,
+      "wasm_reset_ratio": 30278.814501248326,
+      "max_tolerance_ratio": 0.21984757322238593,
+      "max_meter_error_db": 0.00028014183044433594
+    },
+    {
+      "schedule": "threshold-walk",
+      "rate": 96000,
+      "stimulus": "noise",
+      "passed": true,
+      "native_reset_rejected": true,
+      "wasm_reset_rejected": true,
+      "wasm_reset_ratio": 36107.064039556106,
+      "max_tolerance_ratio": 0.10384243628693476,
+      "max_meter_error_db": 8.344650268554688e-05
+    },
+    {
+      "schedule": "threshold-walk",
+      "rate": 96000,
+      "stimulus": "impulse",
+      "passed": true,
+      "native_reset_rejected": true,
+      "wasm_reset_rejected": true,
+      "wasm_reset_ratio": 4269.36141096108,
+      "max_tolerance_ratio": 0.4153625121210485,
+      "max_meter_error_db": 0.0007390975952148438
+    },
+    {
+      "schedule": "threshold-walk",
+      "rate": 96000,
+      "stimulus": "sine",
+      "passed": true,
+      "native_reset_rejected": true,
+      "wasm_reset_rejected": true,
+      "wasm_reset_ratio": 46005.822293499135,
+      "max_tolerance_ratio": 0.13703086600229114,
+      "max_meter_error_db": 0.00015497207641601562
+    },
+    {
+      "schedule": "threshold-walk",
+      "rate": 192000,
+      "stimulus": "noise",
+      "passed": true,
+      "native_reset_rejected": true,
+      "wasm_reset_rejected": true,
+      "wasm_reset_ratio": 50499.31637972271,
+      "max_tolerance_ratio": 0.15894852498908044,
+      "max_meter_error_db": 0.0001430511474609375
+    },
+    {
+      "schedule": "threshold-walk",
+      "rate": 192000,
+      "stimulus": "impulse",
+      "passed": true,
+      "native_reset_rejected": true,
+      "wasm_reset_rejected": true,
+      "wasm_reset_ratio": 10090.581608559469,
+      "max_tolerance_ratio": 0.7091431742808595,
+      "max_meter_error_db": 0.0012636184692382812
+    },
+    {
+      "schedule": "threshold-walk",
+      "rate": 192000,
+      "stimulus": "sine",
+      "passed": true,
+      "native_reset_rejected": true,
+      "wasm_reset_rejected": true,
+      "wasm_reset_ratio": 63927.35261612826,
+      "max_tolerance_ratio": 0.21108971698893703,
+      "max_meter_error_db": 0.00019669532775878906
+    }
+  ],
+  "archive_sha256": "4e6d7b073f01bc2d14d3db0181ce4b1d34c7a63f55942eac87741280067f37fc",
+  "native_oracle_archive_sha256": "4ffbc1e257cf9fce1e2c70a835a3b7b3e42bd2dd6732b13e262831bca60c33ca",
+  "wasm_basis_archive_sha256": "80032ee9224709224b3520e7379ee2c2f80bd694cbdfbd356ffb4a837852a31b",
+  "admission": "NOT_GRANTED"
+}

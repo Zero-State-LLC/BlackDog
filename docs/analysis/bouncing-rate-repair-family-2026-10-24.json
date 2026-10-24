@@ -1,0 +1,13 @@
+{
+  "graph": {
+    "identities": 1540,
+    "components": 12,
+    "joining_operations": 28791
+  },
+  "unit_id": "new:designing:bouncing-ball-rate-repair",
+  "source_sha256": "2ed148fea9ca7caf634e6d3fbdfe5dfebd170e83f5e75b9a02ec1ad4a3e21bde",
+  "family": "sha256:514078c9d2e027dd6feb45878de5ac53c4cc12f48830f41cade3506e6317506a",
+  "comparison_connected": true,
+  "policy": "unchanged floor40 provisional H1 collective",
+  "admission": "NOT_GRANTED"
+}

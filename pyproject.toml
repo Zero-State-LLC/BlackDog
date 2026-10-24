@@ -13,7 +13,9 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+tokenizer = ["tokenizers==0.23.3"]
 test = [
+  "tokenizers==0.23.3",
   "pytest>=8.3",
   "rfc3339-validator>=0.1.4",
 ]

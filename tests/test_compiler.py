@@ -5,6 +5,7 @@ from __future__ import annotations
 import errno
 import fcntl
 import hashlib
+import json
 import os
 import selectors
 import shutil
@@ -460,7 +461,10 @@ def test_deep_recursion_is_internal(store, tmp_path: Path) -> None:
         assert compiled.diagnostics == "Maximum call stack size exceeded\n"
         assert compiled.receipt["runtime_stack_overflow"] is True
     ledger = RewardLedger(tmp_path / "recursion")
+    from faustcoder.reward.grader import task_digest_full
     run = SignalRun(
+        reward_task_digest=task_digest_full(json.loads(
+            (Path(__file__).parent / "fixtures/valid/task-spec.json").read_text(encoding="utf-8"))),
         compilation=compiled,
         receipt=None,
         reproducible_digest=compiled.reproducible_digest,
@@ -474,6 +478,9 @@ def test_deep_recursion_is_internal(store, tmp_path: Path) -> None:
         SignalSuite(runs=(run,), ledger=ledger),
         state=CandidateState.COMPILE_CHECKED,
         created_at="2026-10-18T00:00:00Z",
+        task=json.loads(
+            (Path(__file__).parent / "fixtures/valid/task-spec.json").read_text(encoding="utf-8")
+        ),
     )
     assert committed.state is CandidateState.COMPILE_CHECKED
     assert len(committed.outcomes) == 1

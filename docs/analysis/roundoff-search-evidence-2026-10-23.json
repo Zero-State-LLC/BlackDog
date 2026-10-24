@@ -1,0 +1,41 @@
+{
+  "status": "DIAGNOSTIC_NOT_ADMITTED",
+  "files": [
+    {
+      "path": "outputs/blackdog-faust-sc-family-screen.json",
+      "sha256": "9d4c9c6fcebcfe9cdca6ec419be4181dde5e430924238373c9513d20b2665b91"
+    },
+    {
+      "path": "outputs/blackdog-spectral-roundoff-model.json",
+      "sha256": "76655169ac6b7a7d7d8f039f290e297777a690863502824460e22e8479f7d368"
+    },
+    {
+      "path": "outputs/blackdog-helper-license-clarification-draft.md",
+      "sha256": "fb442c7dcd6a354783101b7892102c20e921d91ce81dcea8ff799ec23bb6f8de"
+    },
+    {
+      "path": "outputs/blackdog-signed-readiness-handoff.md",
+      "sha256": "63be424536492153ebc3c00b5cdceaa2bd8d9daa5aa7a59fe65880c507009a8a"
+    },
+    {
+      "path": "work/evaluation-search/faust-sc/manifest.json",
+      "sha256": "cb759009153d86c7163f65cb8be70f4c8db93e82863089d1e01fae12e2bc16d1"
+    },
+    {
+      "path": "work/evaluation-search/faust-sc/families.json",
+      "sha256": "b4069e8bb4f0fff5fa5666f118c5cd862c233eb0ccb46859525ecd83eb79daab"
+    },
+    {
+      "path": "work/evaluation-search/faust-sc/edges.json",
+      "sha256": "d543c91b6bd5969a8a02ac63866f4acf8a419840f3157267bf239dd743c8ff88"
+    },
+    {
+      "path": "work/spectral_roundoff_model.py",
+      "sha256": "f805e1866dbff30e0498da1de565de90b2274ff8a4af8d3868679eb6cdac1f4f"
+    },
+    {
+      "path": "work/screen_faust_sc.py",
+      "sha256": "51d1e68d6402e9348c432c078ad40f5c48a6f500c910d22bd22f3572180dbb0e"
+    }
+  ]
+}

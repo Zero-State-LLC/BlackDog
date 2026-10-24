@@ -1,0 +1,39 @@
+{
+  "graph": {
+    "identities": 1549,
+    "components": 12,
+    "joining_operations": 30137
+  },
+  "rows": [
+    {
+      "candidate": "pluck_single_loop",
+      "unit_id": "new:pluck_single_loop",
+      "source_sha256": "ddb0f318fd77ce19c025ee0525bf41f6086f017ad670405898ea5a6b92e8767b",
+      "family": "sha256:c241e5ecdcc0e3b8f2495719d043dd6c1642b6e2160b4d63541ba8885c425af5",
+      "comparison_connected": true
+    },
+    {
+      "candidate": "pluck_repair",
+      "unit_id": "new:pluck_repair",
+      "source_sha256": "30518db5152c8fb7de4ab2aa874e918ea1189e5868ca01b4d2d0cbead9ee04f8",
+      "family": "sha256:c241e5ecdcc0e3b8f2495719d043dd6c1642b6e2160b4d63541ba8885c425af5",
+      "comparison_connected": true
+    },
+    {
+      "candidate": "bitdsp_full_adder",
+      "unit_id": "new:bitdsp_full_adder",
+      "source_sha256": "8f73419b0ce88389b695b298904276f5bbd9534f9a3fe7ec8594ed306a6df75c",
+      "family": "sha256:c241e5ecdcc0e3b8f2495719d043dd6c1642b6e2160b4d63541ba8885c425af5",
+      "comparison_connected": true
+    },
+    {
+      "candidate": "bitdsp_bitstream_adder",
+      "unit_id": "new:bitdsp_bitstream_adder",
+      "source_sha256": "9893102cd4ac8d28172ba9172c91cd883b6d35d712cb39b2fa5c822998da5413",
+      "family": "sha256:c241e5ecdcc0e3b8f2495719d043dd6c1642b6e2160b4d63541ba8885c425af5",
+      "comparison_connected": true
+    }
+  ],
+  "admission": "NOT_GRANTED",
+  "policy": "unchanged floor40 provisional H1 collective"
+}

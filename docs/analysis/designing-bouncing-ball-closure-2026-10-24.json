@@ -1,0 +1,145 @@
+{
+  "library_pin": "2edec0537f536eaa130d42c354884d7db971663c",
+  "pin_selection": "Explicit diagnostic pin; upstream Designing Sound source did not declare this library revision",
+  "origin_commit": "dacffbddca08a3b16e247fc1453657939be7049e",
+  "origin_blob": "c72d745cd6a64b6c1048ec1f74a82a61af356dcf",
+  "origin_sha256": "210c6e2e8c5b75bd339444a777e96a1ed76bf77fd598ce33ad59a1220504683b",
+  "source_sha256": "93b1b97b5ea1890596199d02723a6c382495dc3b1941836dc1f651c18a7e0fc3",
+  "roots": [
+    "ba.pulsen",
+    "fi.resonbp"
+  ],
+  "missing": [],
+  "unverified_local_library_files": [],
+  "members": {
+    "ba.period": [
+      {
+        "file": "basics.lib",
+        "start_byte": 18185,
+        "end_byte": 18213,
+        "sha256": "71e8e085603dcddf84ee07f19f8d37c163b53dd6f8c9eb32274e40ce6f376218",
+        "blob_sha": "c092fd6fdb9c4bd2371fd7fc610b8f7f13308da8"
+      }
+    ],
+    "ba.pulsen": [
+      {
+        "file": "basics.lib",
+        "start_byte": 19817,
+        "end_byte": 19843,
+        "sha256": "15b62888169097e6d299ca8765958286ecaf15a33f4b63287b022a1e3928af19",
+        "blob_sha": "c092fd6fdb9c4bd2371fd7fc610b8f7f13308da8"
+      }
+    ],
+    "fi._tanhalf": [
+      {
+        "file": "filters.lib",
+        "start_byte": 118028,
+        "end_byte": 118085,
+        "sha256": "0c89477593eced7da48c6773299000b714b02b3e082c7001342adee4614c83bf",
+        "blob_sha": "0af91c8e5d9029bd24c099abd65928fa4d250beb"
+      }
+    ],
+    "fi.resonbp": [
+      {
+        "file": "filters.lib",
+        "start_byte": 145145,
+        "end_byte": 145291,
+        "sha256": "0c96f9bf1dc990057172df3375c12475d730fe564a8fe0b6e6c00d74b228b161",
+        "blob_sha": "0af91c8e5d9029bd24c099abd65928fa4d250beb"
+      }
+    ],
+    "fi.tf2s": [
+      {
+        "file": "filters.lib",
+        "start_byte": 104264,
+        "end_byte": 104845,
+        "sha256": "10887b0c3a0dcb9e44bce498cb06ac0a94996ff8daaf661c4bd2c583e9bfaa50",
+        "blob_sha": "0af91c8e5d9029bd24c099abd65928fa4d250beb"
+      }
+    ],
+    "ma.MAX": [
+      {
+        "file": "maths.lib",
+        "start_byte": 8740,
+        "end_byte": 8778,
+        "sha256": "ce6fbde56ba1b688d90b05c4bd448e0c52a50fcd9c6506b8e184114e37de2fc7",
+        "blob_sha": "bdaca8b89c2b1ce246916cfc466a744b3c8b7696"
+      },
+      {
+        "file": "maths.lib",
+        "start_byte": 8779,
+        "end_byte": 8825,
+        "sha256": "13204d4cc626fddf71e1704b9532a580b2bcc346b1b209858e95f3ac45c8255a",
+        "blob_sha": "bdaca8b89c2b1ce246916cfc466a744b3c8b7696"
+      },
+      {
+        "file": "maths.lib",
+        "start_byte": 8826,
+        "end_byte": 8870,
+        "sha256": "4e965e0640c10e0450dcacfde9ead960373dcaead5524c35a474b7996eb1745e",
+        "blob_sha": "bdaca8b89c2b1ce246916cfc466a744b3c8b7696"
+      },
+      {
+        "file": "maths.lib",
+        "start_byte": 8871,
+        "end_byte": 8921,
+        "sha256": "0cc638ac5e19358ef56c6e98878a7abb22708ad4f4607128b3cdd7508bf1b9ff",
+        "blob_sha": "bdaca8b89c2b1ce246916cfc466a744b3c8b7696"
+      }
+    ],
+    "ma.PI": [
+      {
+        "file": "maths.lib",
+        "start_byte": 5434,
+        "end_byte": 5462,
+        "sha256": "6bd98d96e6803b039673963c8b8194bb7027778c7fe3c6fb832acad6319292c3",
+        "blob_sha": "bdaca8b89c2b1ce246916cfc466a744b3c8b7696"
+      }
+    ],
+    "ma.SR": [
+      {
+        "file": "maths.lib",
+        "start_byte": 4128,
+        "end_byte": 4139,
+        "sha256": "5f93632249161d88f2b000bb4bcca10e6d5e49aeaf2375a8acdddc961ea746c2",
+        "blob_sha": "bdaca8b89c2b1ce246916cfc466a744b3c8b7696"
+      }
+    ],
+    "pl.SR": [
+      {
+        "file": "platform.lib",
+        "start_byte": 3071,
+        "end_byte": 3141,
+        "sha256": "a14037af7019e67bbfedeea8d145ef6f23a121c009d193ba252507c5dc4deb0e",
+        "blob_sha": "8d86e6940ac1e32edde54ec24b8475ed806dad41"
+      }
+    ]
+  },
+  "edges": {
+    "fi.resonbp": [
+      "fi.tf2s",
+      "ma.PI"
+    ],
+    "fi.tf2s": [
+      "fi._tanhalf",
+      "ma.MAX"
+    ],
+    "fi._tanhalf": [
+      "ma.PI",
+      "ma.SR"
+    ],
+    "ma.PI": [],
+    "ma.SR": [
+      "pl.SR"
+    ],
+    "pl.SR": [],
+    "ma.MAX": [],
+    "ba.pulsen": [
+      "ba.period"
+    ],
+    "ba.period": []
+  },
+  "admission": "NOT_GRANTED",
+  "status": "PINNED_CLOSURE_COMPILER_VERIFIED_DEFAULT_CONTROLS",
+  "minimality": "Conservative lexical closure; no minimality or arbitrary-control claim"
+}

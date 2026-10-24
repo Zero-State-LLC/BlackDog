@@ -1,0 +1,92 @@
+{
+  "graph": {
+    "identities": 1526,
+    "components": 12,
+    "joining_operations": 28498
+  },
+  "rows": [
+    {
+      "unit_id": "new:crossdelay:crossmix",
+      "source_url": "https://gist.github.com/SpotlightKid/7ec098b497818d40acdb7f45a9b85683/775a594ebafe7901737cf78847373548d880decb",
+      "source_sha256": "89e00254a5462285374cc80f85c4b3f7da1cc3f223f8a2713790959ae6ca96cf",
+      "spans": [
+        [
+          1360,
+          1444
+        ]
+      ],
+      "closure_sha256": "68de9f1beebb1cc592e17a0947bf99d69a15730b2b7dfee6ce755d2a71a0bd56",
+      "external_dependencies": [],
+      "rights": "Root declares MIT license; atandist cites a MusicDSP formula, requiring separate provenance review; no admission",
+      "family": "sha256:d2429ba4db3125242ca3f301fe10339359a1b8865718af0b461c56756f6e05bb",
+      "comparison_connected": true,
+      "joining_evidence_count": 20,
+      "joining_evidence": [
+        {
+          "reason": "collective_support",
+          "group_id": "sha256:8710a6757c4db07960efdd4a5917eb5047b9cf7a0e2fdcc60dada7141bc969e2",
+          "comparison": "comparison:0af91c8e5d9029bd24c099abd65928fa4d250beb",
+          "covered": 2085,
+          "denominator": 2660,
+          "stream": "canonical",
+          "floor": 40
+        },
+        {
+          "left": "new:crossdelay:crossmix",
+          "right": "comparison:0af91c8e5d9029bd24c099abd65928fa4d250beb",
+          "reason": "collective_union",
+          "stream": "canonical",
+          "floor": 40,
+          "group_id": "sha256:8710a6757c4db07960efdd4a5917eb5047b9cf7a0e2fdcc60dada7141bc969e2"
+        }
+      ]
+    },
+    {
+      "unit_id": "new:crossdelay:atandist",
+      "source_url": "https://gist.github.com/SpotlightKid/7ec098b497818d40acdb7f45a9b85683/775a594ebafe7901737cf78847373548d880decb",
+      "source_sha256": "89e00254a5462285374cc80f85c4b3f7da1cc3f223f8a2713790959ae6ca96cf",
+      "spans": [
+        [
+          779,
+          853
+        ],
+        [
+          1144,
+          1170
+        ],
+        [
+          1171,
+          1209
+        ]
+      ],
+      "closure_sha256": "1a84eb2f19fd6d39c36702bc282b3265bfddbf7b210cca8bc6f9a2746a7a68ef",
+      "external_dependencies": [],
+      "rights": "Root declares MIT license; atandist cites a MusicDSP formula, requiring separate provenance review; no admission",
+      "family": "sha256:d2429ba4db3125242ca3f301fe10339359a1b8865718af0b461c56756f6e05bb",
+      "comparison_connected": true,
+      "joining_evidence_count": 22,
+      "joining_evidence": [
+        {
+          "reason": "collective_support",
+          "group_id": "sha256:43d1698f3802c0fa9b98c255f2789f24f23c3c9419b611eadb78b5686421c54d",
+          "comparison": "comparison:6d0c5543b7ad20a2493914b2017933192cdb6337",
+          "covered": 538,
+          "denominator": 590,
+          "stream": "raw",
+          "floor": 40
+        },
+        {
+          "left": "new:crossdelay:atandist",
+          "right": "comparison:6d0c5543b7ad20a2493914b2017933192cdb6337",
+          "reason": "collective_union",
+          "stream": "raw",
+          "floor": 40,
+          "group_id": "sha256:43d1698f3802c0fa9b98c255f2789f24f23c3c9419b611eadb78b5686421c54d"
+        }
+      ]
+    }
+  ],
+  "admission": "NOT_GRANTED",
+  "policy": "unchanged floor40 provisional H1 collective",
+  "scope": "Previous 1524 identities plus two complete closures"
+}

@@ -1,0 +1,83 @@
+{
+  "graph": {
+    "identities": 1551,
+    "components": 12,
+    "joining_operations": 30183
+  },
+  "rows": [
+    {
+      "candidate": "pluck_reset",
+      "unit_id": "new:pluck_reset",
+      "source_sha256": "83cd856eaf46228903180244b2e5002e139f87decb39d2235a6df980d0b85ab8",
+      "family": "sha256:89969dcc51bfa6574e65272cbbdadff700819fb33ac94fc5fa9517f6c7094d0d",
+      "comparison_connected": true,
+      "joining_evidence_count": 23,
+      "joining_evidence": [
+        {
+          "reason": "collective_support",
+          "group_id": "sha256:a68c40ad406dce2b59c8f225794f6de20f179f6383791597675c4dcd2574477a",
+          "comparison": "comparison:64bb5871522c191cb97741271a41dbe4bc6b1c11",
+          "covered": 2343,
+          "denominator": 4672,
+          "stream": "raw",
+          "floor": 40
+        },
+        {
+          "left": "new:pluck_reset",
+          "right": "comparison:64bb5871522c191cb97741271a41dbe4bc6b1c11",
+          "reason": "collective_union",
+          "stream": "raw",
+          "floor": 40,
+          "group_id": "sha256:a68c40ad406dce2b59c8f225794f6de20f179f6383791597675c4dcd2574477a"
+        },
+        {
+          "reason": "collective_support",
+          "group_id": "sha256:a52565a942f2668d0e5bda31d1072e943029b7604b9646fbd1125d1702e8aec9",
+          "comparison": "comparison:6d0c5543b7ad20a2493914b2017933192cdb6337",
+          "covered": 538,
+          "denominator": 590,
+          "stream": "raw",
+          "floor": 40
+        }
+      ]
+    },
+    {
+      "candidate": "stratus_tester",
+      "unit_id": "new:stratus_tester",
+      "source_sha256": "78cc385bd0ce74032e31e68e467375e453d658b828340d003b1c8097af1f712b",
+      "family": "sha256:89969dcc51bfa6574e65272cbbdadff700819fb33ac94fc5fa9517f6c7094d0d",
+      "comparison_connected": true,
+      "joining_evidence_count": 24,
+      "joining_evidence": [
+        {
+          "reason": "collective_support",
+          "group_id": "sha256:a68c40ad406dce2b59c8f225794f6de20f179f6383791597675c4dcd2574477a",
+          "comparison": "comparison:64bb5871522c191cb97741271a41dbe4bc6b1c11",
+          "covered": 2343,
+          "denominator": 4672,
+          "stream": "raw",
+          "floor": 40
+        },
+        {
+          "left": "new:stratus_tester",
+          "right": "comparison:64bb5871522c191cb97741271a41dbe4bc6b1c11",
+          "reason": "collective_union",
+          "stream": "raw",
+          "floor": 40,
+          "group_id": "sha256:a68c40ad406dce2b59c8f225794f6de20f179f6383791597675c4dcd2574477a"
+        },
+        {
+          "reason": "collective_support",
+          "group_id": "sha256:a52565a942f2668d0e5bda31d1072e943029b7604b9646fbd1125d1702e8aec9",
+          "comparison": "comparison:6d0c5543b7ad20a2493914b2017933192cdb6337",
+          "covered": 538,
+          "denominator": 590,
+          "stream": "raw",
+          "floor": 40
+        }
+      ]
+    }
+  ],
+  "admission": "NOT_GRANTED",
+  "policy": "unchanged floor40 provisional H1 collective"
+}

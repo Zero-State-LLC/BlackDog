@@ -1,0 +1,93 @@
+{
+  "graph": {
+    "identities": 1524,
+    "components": 12,
+    "joining_operations": 28456
+  },
+  "rows": [
+    {
+      "unit_id": "new:reversedelay:phasor_phase",
+      "source_url": "https://gist.github.com/tomoyanonymous/d527fca58e929de6a021565505589406/bb635c138ecc738273745ba13a0ee9f8872c606f",
+      "source_sha256": "bcdc51e065c45531c8a5eacbbae8a7a617db2bb1f4732cc1fbab06b65cc9a1b7",
+      "span": [
+        198,
+        267
+      ],
+      "closure_sha256": "2d9443bb58ab25340b8fdd5f94cbbdb1cbf4653703056f107e909d5ecae13614",
+      "included_dependencies": [
+        "os.lf_rawsaw"
+      ],
+      "external_dependencies": [],
+      "dependency_pin": "2edec0537f536eaa130d42c354884d7db971663c",
+      "dependency_source_sha256": "3f59d0f39c9391f8d1bd9ad7d04b2f131a4abb46db6bf5c5542a456f5b2277bb",
+      "rights": "Root declares MIT; helper-specific rights review and semantic qualification remain separate; no admission",
+      "family": "sha256:93ecb79d267696b7ecdfa5621203c03f06fab3b203055485fd6848af662802f6",
+      "comparison_connected": true,
+      "joining_evidence_count": 19,
+      "joining_evidence": [
+        {
+          "left": "new:reversedelay:phasor_phase",
+          "right": "comparison:0af91c8e5d9029bd24c099abd65928fa4d250beb",
+          "reason": "forward_containment",
+          "stream": "canonical",
+          "floor": 40,
+          "intersection": 24,
+          "denominator": 42
+        },
+        {
+          "reason": "collective_support",
+          "group_id": "sha256:baf01428e8f88361ddc84c59fad23e2496cc9fb1ae2369b8e1cee47d674157bb",
+          "comparison": "comparison:0af91c8e5d9029bd24c099abd65928fa4d250beb",
+          "covered": 2085,
+          "denominator": 2660,
+          "stream": "canonical",
+          "floor": 40
+        }
+      ]
+    },
+    {
+      "unit_id": "new:reversedelay:indexphasor",
+      "source_url": "https://gist.github.com/tomoyanonymous/d527fca58e929de6a021565505589406/bb635c138ecc738273745ba13a0ee9f8872c606f",
+      "source_sha256": "bcdc51e065c45531c8a5eacbbae8a7a617db2bb1f4732cc1fbab06b65cc9a1b7",
+      "span": [
+        292,
+        387
+      ],
+      "closure_sha256": "23d6091a9d451f53d42952cbeccc6d33cba9c4ed56e6bf36779f0e2a22423dcd",
+      "included_dependencies": [
+        "os.lf_rawsaw",
+        "phasor_phase"
+      ],
+      "external_dependencies": [],
+      "dependency_pin": "2edec0537f536eaa130d42c354884d7db971663c",
+      "dependency_source_sha256": "3f59d0f39c9391f8d1bd9ad7d04b2f131a4abb46db6bf5c5542a456f5b2277bb",
+      "rights": "Root declares MIT; helper-specific rights review and semantic qualification remain separate; no admission",
+      "family": "sha256:93ecb79d267696b7ecdfa5621203c03f06fab3b203055485fd6848af662802f6",
+      "comparison_connected": true,
+      "joining_evidence_count": 19,
+      "joining_evidence": [
+        {
+          "left": "new:reversedelay:indexphasor",
+          "right": "comparison:0af91c8e5d9029bd24c099abd65928fa4d250beb",
+          "reason": "forward_containment",
+          "stream": "canonical",
+          "floor": 40,
+          "intersection": 38,
+          "denominator": 76
+        },
+        {
+          "reason": "collective_support",
+          "group_id": "sha256:baf01428e8f88361ddc84c59fad23e2496cc9fb1ae2369b8e1cee47d674157bb",
+          "comparison": "comparison:0af91c8e5d9029bd24c099abd65928fa4d250beb",
+          "covered": 2085,
+          "denominator": 2660,
+          "stream": "canonical",
+          "floor": 40
+        }
+      ]
+    }
+  ],
+  "admission": "NOT_GRANTED",
+  "policy": "unchanged floor40 provisional H1 collective",
+  "scope": "Previous 1522 identities plus two complete closures"
+}

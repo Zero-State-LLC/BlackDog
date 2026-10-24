@@ -1,0 +1,412 @@
+{
+  "status": "DISCRETE_DYNAMIC_AND_EXPERIMENTAL_RATES_VALIDATED_NOT_ADMITTED",
+  "verification": {
+    "pair32-dynamic": {
+      "status": "VERIFIED_DIAGNOSTIC_NOT_ADMITTED",
+      "counts": {
+        "native": 7,
+        "production_signal": 0,
+        "experimental_rate": 15,
+        "captures": 15
+      },
+      "rows": [
+        {
+          "unit_id": "dynamic-44100",
+          "status": "BLOCKED",
+          "error": "'descriptors'"
+        },
+        {
+          "unit_id": "dynamic-48000",
+          "status": "BLOCKED",
+          "error": "'descriptors'"
+        },
+        {
+          "unit_id": "extra-rate-8000",
+          "status": "DIAGNOSTIC_PASS",
+          "native_ms": 415,
+          "max_meter_error_db": 4.76837158203125e-05,
+          "required_sample_rate": 8000,
+          "events": [],
+          "source_sha256": "17f0b168c52e675626ed05f2061a0bfeb10b436382ce5987c21a6d6ef0099b78"
+        },
+        {
+          "unit_id": "extra-rate-32000",
+          "status": "DIAGNOSTIC_PASS",
+          "native_ms": 402,
+          "max_meter_error_db": 7.152557373046875e-05,
+          "required_sample_rate": 32000,
+          "events": [],
+          "source_sha256": "3f69ab7ddd1000409062355932e5a3acc68fc365a42dca62f165e17acd5ce7c5"
+        },
+        {
+          "unit_id": "extra-rate-88200",
+          "status": "DIAGNOSTIC_PASS",
+          "native_ms": 407,
+          "max_meter_error_db": 3.5762786865234375e-05,
+          "required_sample_rate": 88200,
+          "events": [],
+          "source_sha256": "8ea7d562aac76890b0a0e9b63aa23f8b163901941cf02f537f70fcf82a09a4ef"
+        },
+        {
+          "unit_id": "extra-rate-96000",
+          "status": "DIAGNOSTIC_PASS",
+          "native_ms": 407,
+          "max_meter_error_db": 0.0002741813659667969,
+          "required_sample_rate": 96000,
+          "events": [],
+          "source_sha256": "c1918243b2b18448b5b77f83cd29256edc35234bb5ca8c6ffe93cb624c2fde01"
+        },
+        {
+          "unit_id": "extra-rate-192000",
+          "status": "DIAGNOSTIC_PASS",
+          "native_ms": 353,
+          "max_meter_error_db": 0.0001728534698486328,
+          "required_sample_rate": 192000,
+          "events": [],
+          "source_sha256": "38aef3ff04915d95f7e302fc22ce1b14413c9116f682c023c42912ca3d8ad3db"
+        }
+      ],
+      "archive_sha256": "1a7652446cc17559a9af96fffec3b9590230ba054025c85127b071d3dd44e7b3",
+      "runner_sha256": "bc269fe2c6a02f3776ba61432a6fb6e7b4d84edde69fadc194e333e94c0912b9",
+      "reference_sha256": "7abb9d0a48daf207e577a04a7239466e196e6f3cde5c2fc7fe77957f00d14722",
+      "worker_sha256": "731cda0337b85c3f552606db7a8562e2a37ece894d1948e3e3d1eb789801bf85",
+      "production_signal_unchanged": true,
+      "admission": "NOT_GRANTED"
+    },
+    "pair32-switch": {
+      "status": "VERIFIED_DIAGNOSTIC_NOT_ADMITTED",
+      "counts": {
+        "native": 2,
+        "production_signal": 12,
+        "experimental_rate": 0,
+        "captures": 6
+      },
+      "rows": [
+        {
+          "unit_id": "dynamic-44100",
+          "status": "DIAGNOSTIC_PASS",
+          "native_ms": 405,
+          "max_meter_error_db": 0.0003218650817871094,
+          "required_sample_rate": 44100,
+          "events": [
+            [
+              8,
+              1
+            ],
+            [
+              24,
+              2
+            ],
+            [
+              40,
+              0
+            ]
+          ],
+          "source_sha256": "a09973801a6d09198493117dfbc85f31997c23a00f7656fc57e1e4c1d7263d4b"
+        },
+        {
+          "unit_id": "dynamic-48000",
+          "status": "DIAGNOSTIC_PASS",
+          "native_ms": 403,
+          "max_meter_error_db": 0.00011920928955078125,
+          "required_sample_rate": 48000,
+          "events": [
+            [
+              8,
+              1
+            ],
+            [
+              24,
+              2
+            ],
+            [
+              40,
+              0
+            ]
+          ],
+          "source_sha256": "7cf79536775fed221567f1658f69b0b93e97005f9d2fb6825a150014e3e3f988"
+        }
+      ],
+      "archive_sha256": "6aa43fcae5f534d3c4228f3e2e7f247089ce1e38bdf1d5f8833201552cc27634",
+      "runner_sha256": "f3f83330f1266943870561f11248e1a221218e664d681daaba981ff8037b62df",
+      "reference_sha256": "7abb9d0a48daf207e577a04a7239466e196e6f3cde5c2fc7fe77957f00d14722",
+      "worker_sha256": "731cda0337b85c3f552606db7a8562e2a37ece894d1948e3e3d1eb789801bf85",
+      "production_signal_unchanged": true,
+      "admission": "NOT_GRANTED"
+    },
+    "pair32-rapid": {
+      "status": "VERIFIED_DIAGNOSTIC_NOT_ADMITTED",
+      "counts": {
+        "native": 2,
+        "production_signal": 12,
+        "experimental_rate": 0,
+        "captures": 6
+      },
+      "rows": [
+        {
+          "unit_id": "dynamic-44100",
+          "status": "DIAGNOSTIC_PASS",
+          "native_ms": 350,
+          "max_meter_error_db": 0.000762939453125,
+          "required_sample_rate": 44100,
+          "events": [
+            [
+              1,
+              1
+            ],
+            [
+              2,
+              2
+            ],
+            [
+              3,
+              0
+            ],
+            [
+              4,
+              2
+            ],
+            [
+              5,
+              1
+            ],
+            [
+              6,
+              0
+            ],
+            [
+              32,
+              2
+            ],
+            [
+              64,
+              1
+            ],
+            [
+              96,
+              0
+            ]
+          ],
+          "source_sha256": "a09973801a6d09198493117dfbc85f31997c23a00f7656fc57e1e4c1d7263d4b"
+        },
+        {
+          "unit_id": "dynamic-48000",
+          "status": "DIAGNOSTIC_PASS",
+          "native_ms": 353,
+          "max_meter_error_db": 0.0002503395080566406,
+          "required_sample_rate": 48000,
+          "events": [
+            [
+              1,
+              1
+            ],
+            [
+              2,
+              2
+            ],
+            [
+              3,
+              0
+            ],
+            [
+              4,
+              2
+            ],
+            [
+              5,
+              1
+            ],
+            [
+              6,
+              0
+            ],
+            [
+              32,
+              2
+            ],
+            [
+              64,
+              1
+            ],
+            [
+              96,
+              0
+            ]
+          ],
+          "source_sha256": "7cf79536775fed221567f1658f69b0b93e97005f9d2fb6825a150014e3e3f988"
+        }
+      ],
+      "archive_sha256": "a4588aafcfe81a1e73a4a35914344ed388c7459c8ce5c67e06b8d5619fd16b5d",
+      "runner_sha256": "0a76fc4ce072fb4c6742f70c7f900a70ec12491faf00e49123d30af2def8169c",
+      "reference_sha256": "7abb9d0a48daf207e577a04a7239466e196e6f3cde5c2fc7fe77957f00d14722",
+      "worker_sha256": "731cda0337b85c3f552606db7a8562e2a37ece894d1948e3e3d1eb789801bf85",
+      "production_signal_unchanged": true,
+      "admission": "NOT_GRANTED"
+    },
+    "pair32-rate-long": {
+      "status": "VERIFIED_DIAGNOSTIC_NOT_ADMITTED",
+      "counts": {
+        "native": 3,
+        "production_signal": 0,
+        "experimental_rate": 9,
+        "captures": 9
+      },
+      "rows": [
+        {
+          "unit_id": "extra-rate-88200",
+          "status": "DIAGNOSTIC_PASS",
+          "native_ms": 354,
+          "max_meter_error_db": 3.5762786865234375e-05,
+          "required_sample_rate": 88200,
+          "events": [],
+          "source_sha256": "8ea7d562aac76890b0a0e9b63aa23f8b163901941cf02f537f70fcf82a09a4ef"
+        },
+        {
+          "unit_id": "extra-rate-96000",
+          "status": "DIAGNOSTIC_PASS",
+          "native_ms": 404,
+          "max_meter_error_db": 0.000762939453125,
+          "required_sample_rate": 96000,
+          "events": [],
+          "source_sha256": "c1918243b2b18448b5b77f83cd29256edc35234bb5ca8c6ffe93cb624c2fde01"
+        },
+        {
+          "unit_id": "extra-rate-192000",
+          "status": "DIAGNOSTIC_PASS",
+          "native_ms": 402,
+          "max_meter_error_db": 0.0010848045349121094,
+          "required_sample_rate": 192000,
+          "events": [],
+          "source_sha256": "38aef3ff04915d95f7e302fc22ce1b14413c9116f682c023c42912ca3d8ad3db"
+        }
+      ],
+      "archive_sha256": "75fb6fa26e0b377515600cacfb27fd0de93aeedfff1b28c9386e3979d35d87a6",
+      "runner_sha256": "0a76fc4ce072fb4c6742f70c7f900a70ec12491faf00e49123d30af2def8169c",
+      "reference_sha256": "ed9b225440b10f5b36d8681f6d659d7c615f20b32776a8dcd41ce5ac2a9b0ef1",
+      "worker_sha256": "731cda0337b85c3f552606db7a8562e2a37ece894d1948e3e3d1eb789801bf85",
+      "production_signal_unchanged": true,
+      "admission": "NOT_GRANTED"
+    }
+  },
+  "tests_passed": 25,
+  "code_hashes": {
+    "paired_dynamic_fixture.py": "14f2b772215995245da197cd680cd78d3d223ad0308334512f9d4957eb1effba",
+    "dynamic_spectral_reference.py": "ed9b225440b10f5b36d8681f6d659d7c615f20b32776a8dcd41ce5ac2a9b0ef1",
+    "experimental_rate_worker.py": "2cfc68fe7030de5cef2567aa103b55ae0b687469608c72a73c222199bb18c1ff"
+  },
+  "family": {
+    "graph": {
+      "identities": 1495,
+      "components": 12,
+      "joining_operations": 27863
+    },
+    "rows": [
+      {
+        "unit_id": "repair:dynamic-44100",
+        "source_sha256": "a09973801a6d09198493117dfbc85f31997c23a00f7656fc57e1e4c1d7263d4b",
+        "closure_sha256": "1107b5a8b771153d3a099ee6f2bbab15faf6cd2c4174edd93955cb05f813b4b2",
+        "family": "sha256:bc8f18b9f9bde5eed7d7a6b792aaed97850a9794ffc8e058d5b3d5a313a06d18",
+        "comparison_connected": true
+      },
+      {
+        "unit_id": "repair:dynamic-48000",
+        "source_sha256": "7cf79536775fed221567f1658f69b0b93e97005f9d2fb6825a150014e3e3f988",
+        "closure_sha256": "66a5eb5fe6b352cb959864214adaca094a48792177b41b5759310c5a6c6f6239",
+        "family": "sha256:bc8f18b9f9bde5eed7d7a6b792aaed97850a9794ffc8e058d5b3d5a313a06d18",
+        "comparison_connected": true
+      },
+      {
+        "unit_id": "repair:extra-rate-8000",
+        "source_sha256": "17f0b168c52e675626ed05f2061a0bfeb10b436382ce5987c21a6d6ef0099b78",
+        "closure_sha256": "5b4beae45ca0eea2184fa04410c9a88f436dd85021dc60106784d47573b75771",
+        "family": "sha256:bc8f18b9f9bde5eed7d7a6b792aaed97850a9794ffc8e058d5b3d5a313a06d18",
+        "comparison_connected": true
+      },
+      {
+        "unit_id": "repair:extra-rate-32000",
+        "source_sha256": "3f69ab7ddd1000409062355932e5a3acc68fc365a42dca62f165e17acd5ce7c5",
+        "closure_sha256": "1f0ee8b93249f619d95fb17a3373824a0a58122f1ff4ac65ac7a5ffb618aa6b4",
+        "family": "sha256:bc8f18b9f9bde5eed7d7a6b792aaed97850a9794ffc8e058d5b3d5a313a06d18",
+        "comparison_connected": true
+      },
+      {
+        "unit_id": "repair:extra-rate-88200",
+        "source_sha256": "8ea7d562aac76890b0a0e9b63aa23f8b163901941cf02f537f70fcf82a09a4ef",
+        "closure_sha256": "f23d5586cbc9847cd28bd1f2aeb85386daa2e01173e9265c5838cb4d36995a64",
+        "family": "sha256:bc8f18b9f9bde5eed7d7a6b792aaed97850a9794ffc8e058d5b3d5a313a06d18",
+        "comparison_connected": true
+      },
+      {
+        "unit_id": "repair:extra-rate-96000",
+        "source_sha256": "c1918243b2b18448b5b77f83cd29256edc35234bb5ca8c6ffe93cb624c2fde01",
+        "closure_sha256": "1f0ee8b93249f619d95fb17a3373824a0a58122f1ff4ac65ac7a5ffb618aa6b4",
+        "family": "sha256:bc8f18b9f9bde5eed7d7a6b792aaed97850a9794ffc8e058d5b3d5a313a06d18",
+        "comparison_connected": true
+      },
+      {
+        "unit_id": "repair:extra-rate-192000",
+        "source_sha256": "38aef3ff04915d95f7e302fc22ce1b14413c9116f682c023c42912ca3d8ad3db",
+        "closure_sha256": "fc39f5e684c3a9de40f65839923f6ef8b8e8e2cadb93b836a94d8be679ae5f43",
+        "family": "sha256:bc8f18b9f9bde5eed7d7a6b792aaed97850a9794ffc8e058d5b3d5a313a06d18",
+        "comparison_connected": true
+      }
+    ],
+    "admission": "NOT_GRANTED",
+    "policy": "unchanged floor40 provisional H1 collective"
+  },
+  "candidate": {
+    "graph": {
+      "identities": 1488,
+      "components": 12,
+      "joining_operations": 27714
+    },
+    "rows": [
+      {
+        "unit_id": "new:wdf:test_rec",
+        "source_commit": "40b1691689fb733a726458d7d9217ea9d982a3a3",
+        "source_blob": "2e689a484a3bdd3e14b2ccab9ff7b46c028f92ff",
+        "span": [
+          3913,
+          4021
+        ],
+        "closure_sha256": "1e8535659925b0766f1c037a8371514ba2c16e56a3ff622d4314934bc24d0ee8",
+        "external_dependencies": [],
+        "family": "sha256:c95e05a43fccc7417ab35793dd2417c9995f1ceed2a464a747a23c9019141e1e",
+        "comparison_connected": true,
+        "rights": "Repository MIT preserved; per-unit admission review pending"
+      }
+    ],
+    "admission": "NOT_GRANTED",
+    "policy": "unchanged floor40 provisional H1 collective"
+  },
+  "licenses": {
+    "issue": "https://github.com/grame-cncm/faustlibraries/issues/321",
+    "comments": 0,
+    "filters": {
+      "sha": "28cf26f1c45c5397b4433959b74e25d320e8234d",
+      "url": "https://github.com/grame-cncm/faustlibraries/blob/master/filters.lib",
+      "declarations": [],
+      "helpers_present": [
+        true,
+        true
+      ]
+    },
+    "rights_cleared": false
+  },
+  "signed_readiness": {
+    "bounded_public_records_unchanged": true,
+    "public_records": 14,
+    "scope_digest": "08fb16b587cd5b23f7a5be12b234dc89ae24e18ef943b3449e61ed39f4c19516",
+    "verified_gates": [],
+    "pilot_ready": false,
+    "training_authorized": false
+  },
+  "limitations": [
+    "Only discrete bank changes at block boundaries; no arbitrary continuous modulation",
+    "Bank preserves sample rate and band count; topology changes rejected",
+    "Additional rates use an isolated experimental renderer and sample comparisons, not production DSP-test receipts",
+    "Existing production profiles, admission schemas, resource limits and tolerances unchanged",
+    "No native signal execution qualification",
+    "No independent evaluation candidate admitted; helper rights and signed artifacts remain unresolved"
+  ]
+}

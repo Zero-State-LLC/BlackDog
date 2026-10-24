@@ -1,0 +1,19 @@
+{
+  "date": "2026-10-24",
+  "spark_public_scan_sha256": "abe6d64818e92045320a4220dc5276e56371bef6dd0cffa73930233f5349bd25",
+  "spark_changed": false,
+  "gmail_matches": 0,
+  "gmail_query": "(\"BlackDog\" OR \"FaustCoder\") (\"signed\" OR \"custodian\" OR \"public key\" OR \"T07\" OR \"semantic review\") after:2026/10/23 -from:notifications@github.com",
+  "notion_page": "4013e8ba-2f5c-8181-a601-f96a9cf82860",
+  "notion_page_last_edited_at": "2026-10-22T22:51:37.629Z",
+  "notion_verification_state": "unverified",
+  "notion_result": "Custody arrangement note only; blank body, no signed artifact or exact pair decision",
+  "pr115_comments": 0,
+  "pr115_reviews": 0,
+  "authenticated_signed_artifacts_found": 0,
+  "independent_semantic_approval_found": false,
+  "limitations": "Scoped public artifact searches; no private holdout access and no signatures created",
+  "readiness_replay_sha256": "3ca0db7ab619ffbd14172275bd1a0a1dd140cba50829118a1d189d5b34e6c0e9",
+  "pilot_ready": false,
+  "training_authorized": false
+}

@@ -1,0 +1,18 @@
+// Experimental paired-float32 arithmetic; not an admitted training target.
+// Finite-domain barrier: valid only when intermediates remain within +/-1e30.
+// Validated integration: fixed spectral fixture at 44100 and 48000 Hz.
+// Keep paired outputs together through sequential block composition.
+
+r(x)=max(-1e30,min(1e30,x));
+ae(a,b,c,d)=r(r(r(a-r(s-v))+r(c-v))+r(b+d)) with {s=r(a+c);v=r(s-a);};
+me(a,b,c,d)=r(r(r(r(r(r(ah*ch)-p)+r(ah*cl))+r(al*ch))+r(al*cl))+r(r(a*d)+r(b*c))) with {p=r(a*c);ca=r(4097*a);ah=r(ca-r(ca-a));al=r(a-ah);cc=r(4097*c);ch=r(cc-r(cc-c));cl=r(c-ch);};
+add(a,b,c,d)= (r(a+c),ae(a,b,c,d)) : renorm;
+mul(a,b,c,d)= (r(a*c),me(a,b,c,d)) : renorm;
+renorm(s,e)=r(s+e),r(e-r(r(s+e)-s));
+biquad(b0h,b0l,b1h,b1l,b2h,b2l,a1h,a1l,a2h,a2l,xh,xl) = loop ~ (_,_,_,_) : !,!,!,!,_,_ with {
+ loop(y1h,y1l,y2h,y2l) = (
+ mul(b0h,b0l,xh,xl),mul(b1h,b1l,xh',xl'),mul(b2h,b2l,xh'',xl''),
+ mul(a1h,a1l,y1h,y1l),mul(a2h,a2l,y2h,y2l))
+ : (add,_,_,_,_,_,_) : (add,_,_,_,_) : (add,_,_) : add : finish
+ with { finish(oh,ol)=oh,ol,y1h,y1l,oh,ol; };
+};

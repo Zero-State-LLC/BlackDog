@@ -1,0 +1,29 @@
+{
+  "graph": {
+    "identities": 1514,
+    "components": 12,
+    "joining_operations": 28259
+  },
+  "rows": [
+    {
+      "unit_id": "repair:switch-exact",
+      "source_sha256": "743c59f3e81e112f5add01cd2ff98836119bc2e28704d8c6fea727e5c2894ccb",
+      "family": "sha256:652fe29ce0b57897cb78e7ffb21c6b63588f8168aef244d7268f5d169490c0f0",
+      "comparison_connected": true
+    },
+    {
+      "unit_id": "repair:switch-precise-live",
+      "source_sha256": "40a1342836429fb8969b6737abf226a2b5ccfe19556d1882c4ced37421c1c515",
+      "family": "sha256:652fe29ce0b57897cb78e7ffb21c6b63588f8168aef244d7268f5d169490c0f0",
+      "comparison_connected": true
+    },
+    {
+      "unit_id": "repair:switch-precise-exact",
+      "source_sha256": "0a3d45f31bd662fabbb8ad86dc6f720867f6298ee90a60e33efa620be339648e",
+      "family": "sha256:652fe29ce0b57897cb78e7ffb21c6b63588f8168aef244d7268f5d169490c0f0",
+      "comparison_connected": true
+    }
+  ],
+  "admission": "NOT_GRANTED",
+  "policy": "unchanged floor40 provisional H1 collective"
+}

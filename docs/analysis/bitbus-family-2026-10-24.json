@@ -1,0 +1,141 @@
+{
+  "graph": {
+    "identities": 1531,
+    "components": 12,
+    "joining_operations": 28602
+  },
+  "rows": [
+    {
+      "unit_id": "new:bitbus:bitBus_to_int",
+      "source_commit": "d70843492b65bb2cb9cf97c2240905fefacc7383",
+      "source_blob": "f6e11f6bdad22fee13ca3528ae2ce52cfce9d9c5",
+      "source_url": "https://github.com/rottingsounds/bitDSP-faust/blob/d70843492b65bb2cb9cf97c2240905fefacc7383/lib/bitDSP_conversion.lib",
+      "target_span": [
+        2839,
+        2888
+      ],
+      "target_sha256": "6da785f4df5352ad620a34682cfc95bd66c8d068a69c49f7c1d5f904c2289881",
+      "closure_sha256": "fc8f5040d558b2961ae79682a50c68167af714912878aaa3779e67e6a4f61fbc",
+      "dependencies": [
+        {
+          "name": "si.bus",
+          "blob": "25679491349e746ee528d11a1cae23635a0524b3",
+          "spans": [
+            [
+              3558,
+              3571
+            ],
+            [
+              3572,
+              3583
+            ],
+            [
+              3640,
+              3653
+            ],
+            [
+              3708,
+              3730
+            ]
+          ]
+        }
+      ],
+      "external_unresolved": [],
+      "rights": "Root MIT; pinned si.bus is LGPL-2.1-or-later with Faust compiled-code exception; closure remains training-only under D-013, no admission",
+      "family": "sha256:c9d551598a6936da60cb5ae19ea1b851b1310340349a54cd1f1cbabd8839321d",
+      "comparison_connected": true,
+      "joining_evidence_count": 21,
+      "joining_evidence": [
+        {
+          "left": "new:bitbus:bitBus_to_int",
+          "right": "comparison:25679491349e746ee528d11a1cae23635a0524b3",
+          "reason": "forward_containment",
+          "stream": "raw",
+          "floor": 40,
+          "intersection": 38,
+          "denominator": 63
+        },
+        {
+          "left": "new:bitbus:bitBus_to_int",
+          "right": "comparison:0af91c8e5d9029bd24c099abd65928fa4d250beb",
+          "reason": "forward_containment",
+          "stream": "canonical",
+          "floor": 40,
+          "intersection": 42,
+          "denominator": 54
+        }
+      ],
+      "eligible_for": [
+        "train"
+      ],
+      "evaluation_eligible": false
+    },
+    {
+      "unit_id": "new:bitbus:int32_to_bitBus",
+      "source_commit": "d70843492b65bb2cb9cf97c2240905fefacc7383",
+      "source_blob": "f6e11f6bdad22fee13ca3528ae2ce52cfce9d9c5",
+      "source_url": "https://github.com/rottingsounds/bitDSP-faust/blob/d70843492b65bb2cb9cf97c2240905fefacc7383/lib/bitDSP_conversion.lib",
+      "target_span": [
+        4583,
+        4652
+      ],
+      "target_sha256": "f6a86af4593594d0c77d6303666c99d87ab64a7b79c9dc48fb70e1a73ffaf553",
+      "closure_sha256": "1b49d7b514d8a4a01dc67abe40dc2eeaca833db7274e6e0ee434b8cbb8380808",
+      "dependencies": [
+        {
+          "name": "si.bus",
+          "blob": "25679491349e746ee528d11a1cae23635a0524b3",
+          "spans": [
+            [
+              3558,
+              3571
+            ],
+            [
+              3572,
+              3583
+            ],
+            [
+              3640,
+              3653
+            ],
+            [
+              3708,
+              3730
+            ]
+          ]
+        }
+      ],
+      "external_unresolved": [],
+      "rights": "Root MIT; pinned si.bus is LGPL-2.1-or-later with Faust compiled-code exception; closure remains training-only under D-013, no admission",
+      "family": "sha256:c9d551598a6936da60cb5ae19ea1b851b1310340349a54cd1f1cbabd8839321d",
+      "comparison_connected": true,
+      "joining_evidence_count": 21,
+      "joining_evidence": [
+        {
+          "left": "new:bitbus:int32_to_bitBus",
+          "right": "comparison:25679491349e746ee528d11a1cae23635a0524b3",
+          "reason": "forward_containment",
+          "stream": "raw",
+          "floor": 40,
+          "intersection": 43,
+          "denominator": 74
+        },
+        {
+          "left": "new:bitbus:int32_to_bitBus",
+          "right": "comparison:0af91c8e5d9029bd24c099abd65928fa4d250beb",
+          "reason": "forward_containment",
+          "stream": "canonical",
+          "floor": 40,
+          "intersection": 44,
+          "denominator": 65
+        }
+      ],
+      "eligible_for": [
+        "train"
+      ],
+      "evaluation_eligible": false
+    }
+  ],
+  "admission": "NOT_GRANTED",
+  "policy": "unchanged floor40 provisional H1 collective"
+}

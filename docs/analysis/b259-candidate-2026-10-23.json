@@ -1,0 +1,25 @@
+{
+  "graph": {
+    "identities": 1509,
+    "components": 12,
+    "joining_operations": 28154
+  },
+  "rows": [
+    {
+      "unit_id": "new:b259wf:scale",
+      "source_tree": "7a5f94688f5f6fff3b3e51761ce8ad93627ee92b",
+      "source_blob": "7337c7a43361753f830b9501c606682358e5983d",
+      "span": [
+        263,
+        307
+      ],
+      "closure_sha256": "fe8e8e9861a982d4e77471737196b10a4bfa80ef4ef5bf7917aab28bd7f6781c",
+      "external_dependencies": [],
+      "family": "sha256:12945c7161f62421a3c90a47f70913b4f7dcd3af2efc4e5b47d4aa922fd87cef",
+      "comparison_connected": true,
+      "rights": "Quarantined: repository GPL-3.0 text; no named per-unit license declaration; not admitted"
+    }
+  ],
+  "admission": "NOT_GRANTED",
+  "policy": "unchanged floor40 provisional H1 collective"
+}

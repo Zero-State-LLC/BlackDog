@@ -1,0 +1,69 @@
+{
+  "rows": [
+    {
+      "realization": "tpt",
+      "stimulus": "noise",
+      "max_error_db": 3.625954565489309e-05,
+      "tolerance_ratio": 0.04149361092688107,
+      "passed": true
+    },
+    {
+      "realization": "tpt",
+      "stimulus": "impulse",
+      "max_error_db": 0.00029806778403251855,
+      "tolerance_ratio": 0.18817749344979479,
+      "passed": true
+    },
+    {
+      "realization": "tpt",
+      "stimulus": "sine",
+      "max_error_db": 0.0028035208898047337,
+      "tolerance_ratio": 2.059742298880307,
+      "passed": false
+    },
+    {
+      "realization": "default",
+      "stimulus": "noise",
+      "max_error_db": 4.601591049313569e-05,
+      "tolerance_ratio": 0.04818334345016987,
+      "passed": true
+    },
+    {
+      "realization": "default",
+      "stimulus": "impulse",
+      "max_error_db": 0.00029769905427468046,
+      "tolerance_ratio": 0.18900737106302623,
+      "passed": true
+    },
+    {
+      "realization": "default",
+      "stimulus": "sine",
+      "max_error_db": 0.004296055908359353,
+      "tolerance_ratio": 3.3001215039821683,
+      "passed": false
+    },
+    {
+      "realization": "df",
+      "stimulus": "noise",
+      "max_error_db": 7.938642177518496e-05,
+      "tolerance_ratio": 0.09139369365642554,
+      "passed": true
+    },
+    {
+      "realization": "df",
+      "stimulus": "impulse",
+      "max_error_db": 0.00027953062700092346,
+      "tolerance_ratio": 0.17535379577419366,
+      "passed": true
+    },
+    {
+      "realization": "df",
+      "stimulus": "sine",
+      "max_error_db": 0.004962920188189557,
+      "tolerance_ratio": 3.7382898617131772,
+      "passed": false
+    }
+  ],
+  "admission": "NOT_GRANTED",
+  "scope": "Native single versus double with identical externally computed float32 cutoff trajectory; compute(1), block-end meter capture."
+}

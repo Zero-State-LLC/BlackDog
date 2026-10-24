@@ -136,3 +136,65 @@ CI reuses `.github/workflows/spec-check.yml` and the hygiene workflows.
 ## Complexity tracking
 
 None.
+
+### Issue #108: diagnostic case extension (spec §27)
+
+Owner approved the bounded amendment and implementation on 2026-10-22 PT.
+Implement immutable `DiagnosticCase` / `ControlEvent` records and opt-in
+`SignalProfile.diagnostic_case`, with no fields added to legacy payloads.
+The worker validates against compiled descriptors, applies events before each
+block, and routes per-input buffers. `run_diagnostic_cases` executes and validates
+companions itself, retaining the silence failure until that validation succeeds.
+Bind case, input bytes, descriptors, code and companion receipts. Keep extension
+profiles outside reward allowlists and retain the existing sandbox/resource path.
+
+Validation covers invalid schedules, button conflicts, exact boundaries and
+persistent values, independent input routing, zero-input generators, invalid
+companions, an always-zero compiler mutant, full-frame reference comparison,
+receipt mutations and frozen legacy digests. Run sandboxed integration on Linux
+CI; do not weaken canaries for other platforms. See ADR-0008. No admission,
+FLOOR change, T07 freeze, detector default change or merge is authorized here.
+
+## Qualification recovery public pair bindings
+
+QR-03/QR-10 follows the recovery specification's public receipt and pair binding
+plan. Add the strict public-pair descriptor and ADR-0009, replay immutable R3b
+receipt joins, derive candidate prompts with separately recorded corrections, and
+integrate advisory results into readiness. No readiness gate is cleared and no
+training transition is added. Contract/negative/mutation tests precede real public
+receipt replay; actual data and approval payloads remain outside Git.
+
+## Candidate tokenizer verification
+
+Implement ADR-0010 using the strict public-pair-tokenizer descriptor and optional
+CPU tokenizer dependency. Reuse the canonical completion-only encoder and pin
+existing approved Qwen assets. Re-execute from readiness, keep raw text out of
+reports, and remove only the tokenizer subcheck after exact binding verification.
+
+### Saved public signal evidence
+
+QR-03: add a bounded affine sample replayer with an explicit strict descriptor,
+paired to the original public-pair bundle and executed closure-contract hashes.
+Use no-follow reads and no archived execution. Feed advisory results into
+readiness without clearing compiler qualification or admission requirements.
+
+### Recorded-family feasibility
+
+Replay the complete supplied joining forest and collective hyperedges, bind its
+identities to the recorded source hashes and selected public pairs, then surface
+single-family infeasibility inside readiness. Never edit detector defaults or
+interpret source NOT_COPY decisions as permission to remove lineage joins.
+
+QR-10 follow-through: add optional bound inventory/source triage to family replay,
+retain complete population checks and report eligibility/closure obstacles without
+changing family assignments. Validate 117 preserved source definitions outside Git.
+
+QR-10: expose recorded dependency eligibility intersections and unresolved
+external-member counts in advisory inventory replay; unknown metadata stays
+unknown. Keep canonical admission, complete closure and independent review separate.
+
+Record stream-component wrapper joins in graph evidence and replay full active/counterfactual populations. Test the Goertzel DC repair separately from original-source qualification.
+
+Explore a separately reviewed dependency-supplied instruction contract for oversized closures. Keep original full-closure rejection and canonical qualification gates unchanged. Isolate actual meter capture from filter numerical accuracy and keep instrumented diagnostics outside production readiness authority.
+
+Implement modular structural replay separately from readiness authority. Test hostile context/target mutations, then bind the four real candidates to their verified full harnesses and original families. Diagnose precision in an isolated harness; preserve the production float32 guard.

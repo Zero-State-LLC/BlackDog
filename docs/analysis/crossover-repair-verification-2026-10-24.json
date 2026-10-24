@@ -1,0 +1,150 @@
+{
+  "native_histories_verified": 13,
+  "production_float32_repair_qualified": false,
+  "wasm_repair_qualified": false,
+  "compile_successes": 5,
+  "bounded_allocation_failures": 6,
+  "rows": [
+    {
+      "variant": "crossover-repair-native",
+      "rate": 44100,
+      "frames": 720000,
+      "ratio": 1.694746709693649,
+      "passed": false,
+      "capture_sha256": "295340d6abd787f72ac212489b8699c5dac3455be401d663cc439b638859987e"
+    },
+    {
+      "variant": "crossover-repair-native",
+      "rate": 48000,
+      "frames": 720000,
+      "ratio": 1.862357590841859,
+      "passed": false,
+      "capture_sha256": "2ed5bb8edd1f1efde796aa3f93e9397661ed0de66ec9efa2a3915a783f0157ec"
+    },
+    {
+      "variant": "crossover-hybrid-native",
+      "rate": 44100,
+      "frames": 720000,
+      "ratio": 1.694746709693649,
+      "passed": false,
+      "capture_sha256": "ff01a003811b9ee159029b39958f6f06a6c90ea8902b4d68a8a6e06761438aaa"
+    },
+    {
+      "variant": "crossover-hybrid-native",
+      "rate": 48000,
+      "frames": 720000,
+      "ratio": 1.862357590841859,
+      "passed": false,
+      "capture_sha256": "1145cf3a455ede3cd72b1a5734fccde8cdc7e1806e8e47b30bd9a6ae70de7251"
+    },
+    {
+      "variant": "crossover-meter-native",
+      "rate": 44100,
+      "frames": 720000,
+      "ratio": 1.694746709693649,
+      "passed": false,
+      "capture_sha256": "fa30e38ef1681094803353a18d6de931b230c4338b563a56b0088471da6a65a1"
+    },
+    {
+      "variant": "crossover-meter-native",
+      "rate": 48000,
+      "frames": 720000,
+      "ratio": 1.862357590841859,
+      "passed": false,
+      "capture_sha256": "c5128998bd995ff47fe07f51a3280da0abd8d939c6866d594287d7a7552c4c98"
+    },
+    {
+      "variant": "crossover-product-native",
+      "rate": 44100,
+      "frames": 720000,
+      "ratio": 1.694746709693649,
+      "passed": false,
+      "capture_sha256": "bd01f59f3d283cde256ef0d92ebac87c4873cfcfa9d7e04e243993daabcad4be"
+    },
+    {
+      "variant": "crossover-product-native",
+      "rate": 48000,
+      "frames": 720000,
+      "ratio": 1.862357590841859,
+      "passed": false,
+      "capture_sha256": "2e25f31617c83370f10ac4038c443f4a06b6e09c965514aff835b30ad43b99e5"
+    },
+    {
+      "variant": "crossover-modular-native",
+      "rate": 44100,
+      "frames": 720000,
+      "ratio": 1.4607102593073833,
+      "passed": false,
+      "capture_sha256": "97db4cfcd62cee5a76684fb532a36fb2f397a77a2441c7e4bc697adbb881d071"
+    },
+    {
+      "variant": "crossover-modular-native",
+      "rate": 48000,
+      "frames": 720000,
+      "ratio": 1.8714237194429255,
+      "passed": false,
+      "capture_sha256": "a701315d1ba018e0234a0e8d388193d9926f2302a6c2ad34a364de795f1d62c8"
+    },
+    {
+      "variant": "crossover-modular-native-double-meter",
+      "rate": 44100,
+      "frames": 720000,
+      "ratio": 1.4526400368802708,
+      "passed": false,
+      "capture_sha256": "92893b3fb3b9a7b1c2c8b9b6dfec5ea27c481376efd48d60cef740c43e8a1d4f"
+    },
+    {
+      "variant": "crossover-modular-native-double-meter",
+      "rate": 48000,
+      "frames": 720000,
+      "ratio": 1.8551504697086394,
+      "passed": false,
+      "capture_sha256": "8239518eb6f8686aaec5da79d26c4dca152445f1266334f47798fca7073839ff"
+    },
+    {
+      "variant": "diagnostic-modular-double",
+      "rate": 44100,
+      "frames": 720000,
+      "ratio": 0.0,
+      "passed": true,
+      "capture_sha256": "9cb15a7e213b321f48d151c94d10b48301b1d8e66749b2e0df170daab319fb00"
+    }
+  ],
+  "coefficient_probes": [
+    {
+      "rate": 44100,
+      "max_relative_error": 2.344407149867843e-14,
+      "cutoff_high": 4047.23779296875,
+      "cutoff_low": -7.087062840582803e-05,
+      "actual": 3.371764130550673,
+      "reference": 3.371764130550752
+    },
+    {
+      "rate": 48000,
+      "max_relative_error": 2.4963948662709407e-14,
+      "cutoff_high": 2071.875732421875,
+      "cutoff_low": 0.00012060701556038111,
+      "actual": 7.329159217969789,
+      "reference": 7.329159217969972
+    },
+    {
+      "rate": 96000,
+      "max_relative_error": 2.4963948662709407e-14,
+      "cutoff_high": 4143.75146484375,
+      "cutoff_low": 0.00024121403112076223,
+      "actual": 7.329159217969789,
+      "reference": 7.329159217969972
+    },
+    {
+      "rate": 192000,
+      "max_relative_error": 2.1169965137559428e-14,
+      "cutoff_high": 4689.81787109375,
+      "cutoff_low": -0.00020315889560151845,
+      "actual": 13.005940648364003,
+      "reference": 13.005940648364279
+    }
+  ],
+  "archive_sha256": "a1add507dd2afe62ea9c3830cdf9a4f741a21f293e80be900745066e612fcf5d",
+  "reference_archive_sha256": "f1ee6a5ba5ae752eaff377d7ccee769e2b14ceee15e1e3d55eeb00d043ca06b2",
+  "admission": "NOT_GRANTED"
+}

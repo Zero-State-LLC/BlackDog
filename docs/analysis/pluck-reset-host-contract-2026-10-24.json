@@ -1,0 +1,105 @@
+{
+  "status": "BOUNDED_HOST_NATIVE_WASM_PASS_SEMANTIC_REVIEW_PENDING",
+  "source_sha256": "83cd856eaf46228903180244b2e5002e139f87decb39d2235a6df980d0b85ab8",
+  "host_policy": {
+    "num_voices": 8,
+    "dynamic_voices": false,
+    "note_off": "Proposed natural decay after note-off; user requested recommendation, independent semantic decision pending",
+    "note_on": "Invalidate delay/filter state on rising gate with integer epoch tags"
+  },
+  "host_pin": {
+    "dawdreamer": "0.9.0",
+    "python": "3.12",
+    "platform": "macOS arm64",
+    "packages": [
+      {
+        "name": "dawdreamer",
+        "version": "0.9.0",
+        "url": "https://files.pythonhosted.org/packages/7e/95/93114482c9dbcab39d6e5b844bd6a96a919d5864e913c966abba0d67f0d5/dawdreamer-0.9.0-cp312-cp312-macosx_11_0_arm64.whl",
+        "archive_info": {
+          "hash": "sha256=cd53384a505918f11182c81113bb782e4a34baa4d5f53c089fa3919fb1deb991",
+          "hashes": {
+            "sha256": "cd53384a505918f11182c81113bb782e4a34baa4d5f53c089fa3919fb1deb991"
+          }
+        }
+      },
+      {
+        "name": "numpy",
+        "version": "2.3.5",
+        "url": "https://files.pythonhosted.org/packages/5b/e1/1ee06e70eb2136797abe847d386e7c0e830b67ad1d43f364dd04fa50d338/numpy-2.3.5-cp312-cp312-macosx_14_0_arm64.whl",
+        "archive_info": {
+          "hash": "sha256=612a95a17655e213502f60cfb9bf9408efdc9eb1d5f50535cc6eb365d11b42b5",
+          "hashes": {
+            "sha256": "612a95a17655e213502f60cfb9bf9408efdc9eb1d5f50535cc6eb365d11b42b5"
+          }
+        }
+      }
+    ]
+  },
+  "source_controls": {
+    "frequency_hz": [
+      20,
+      8000
+    ],
+    "gain": [
+      0,
+      1
+    ],
+    "gate": [
+      0,
+      1
+    ]
+  },
+  "host_note_constraints": "Proposed diagnostic adapter rejects fractional/out-of-range pitches; accepts integer MIDI 16..119, integer velocity 1..127, finite nonnegative start, finite positive duration and finite end. Entire batch validated before host allocation.",
+  "remaining": [
+    "Independent semantic approval of reset/natural-release choice",
+    "Semantic assessment of measured 12-second natural tails and 256-note retrigger histories; lifetime beyond these bounds remains unqualified",
+    "Dense range and epoch-counter lifetime",
+    "Canonical admission and evaluation independence",
+    "Signed readiness artifacts",
+    "Semantic acceptance of audible tail stealing at eight-voice capacity",
+    "Upstream host integration of proposed input preflight"
+  ],
+  "admission": "NOT_GRANTED",
+  "host_archive_sha256": "d13deec8c45907509802647f4d12f248833f1d702f567ffdbf3d6bfc2a8c088a",
+  "reset_archive_sha256": "b7943a98a5517f523f6b5afc5e17ff475d14156ca58fb42d42522d21df274751",
+  "input_preflight": {
+    "adapter": "diagnostics/pluck_host_contract.py",
+    "sha256": "376c3770f357a4ecab784a671d1a8f521c6d625cbf24b5e08434b8bb6af09c51",
+    "tests": 40,
+    "scope": "Diagnostic adapter only; upstream Shipwright and canonical admission unchanged.",
+    "sample_offsets": "DawDreamer double arithmetic: on=start*rate; off=on+duration*rate. Require off < 2**31 and int(off)>int(on).",
+    "audio_regression": "60 captures byte-identical to prior adapter",
+    "archive_sha256": "ff6561ea29a1cc577cc209ef89a043f3d0a8bfd3694e4d4edb5ddd58fd0de9d3"
+  },
+  "voice_exhaustion": {
+    "captures": 60,
+    "rates": [
+      44100,
+      48000,
+      96000,
+      192000
+    ],
+    "schedule": "12 distinct notes, 60 ms spacing, 40 ms duration, 1.5 second render",
+    "eight_voice_repeat": "byte-identical",
+    "sixteen_voice_solo_sum_max_error": 0.0,
+    "eight_vs_sixteen_max_abs_difference": 0.786296546459198,
+    "acceptance": "PENDING_SEMANTIC_REVIEW",
+    "archive_sha256": "161a5ffde739587fad220af927e099c4297c9135b019233225886625eb867f60"
+  },
+  "bounded_histories": {
+    "captures": 20,
+    "duration_seconds": 12,
+    "rapid_note_count": 256,
+    "rates": [
+      44100,
+      48000,
+      96000,
+      192000
+    ],
+    "source_sha256": "83cd856eaf46228903180244b2e5002e139f87decb39d2235a6df980d0b85ab8",
+    "adapter_sha256": "376c3770f357a4ecab784a671d1a8f521c6d625cbf24b5e08434b8bb6af09c51",
+    "archive_sha256": "35903213aa7e1c63a9dc86f0a3faee721530b1fb57c268709c9a6803c07c2bb5",
+    "scope": "Finite stereo output, exact silent controls and byte-identical rapid repeats. Low/high tails measured, not perceptually approved."
+  }
+}

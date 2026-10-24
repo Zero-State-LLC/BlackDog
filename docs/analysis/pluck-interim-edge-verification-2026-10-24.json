@@ -1,0 +1,427 @@
+{
+  "source_sha256": "74f7aef25b5c12a0e077bb407ddf491ea920fa015e3a20eef2884aacdf2a56fe",
+  "adapter_sha256": "7a6c57ab54ae8c8aab6dbd2ab96def2b7486d672a322173d6f03bf00bda4ec6f",
+  "runner_sha256": "879613f646e1755ecbc6031e3810b26faeb0d73b9c3eb2d5d505e0b80da7b1bf",
+  "review_type": "INTERIM_SAME_AGENT_TECHNICAL_REVIEW",
+  "rows": [
+    {
+      "sample_rate": 48000,
+      "schedule": "overlap_same_pitch",
+      "notes": [
+        [
+          0.01,
+          0.2,
+          69,
+          100
+        ],
+        [
+          0.1,
+          0.2,
+          69,
+          80
+        ]
+      ],
+      "peak": 0.7463716268539429,
+      "solo_sum_difference": 0.0,
+      "captures": [
+        {
+          "file": "48000-overlap_same_pitch-0.bin",
+          "sha256": "ad1d0ce6f1bf0090f4032e2ff526599fe0618195c442087e9c7193354677533d"
+        },
+        {
+          "file": "48000-overlap_same_pitch-1.bin",
+          "sha256": "ffd5d73ba17c40694252e9fddbd90624b0e3f48eeb3911fef5c39e278c8501a0"
+        },
+        {
+          "file": "48000-overlap_same_pitch-2.bin",
+          "sha256": "1d127bca99ed87fba530402350d8694a5d305f808b94b7539cffe373ee7a49c7"
+        }
+      ],
+      "existing_export_peak": 0.7463716268539429,
+      "existing_export_scale": 1.0
+    },
+    {
+      "sample_rate": 48000,
+      "schedule": "touching_same_pitch",
+      "notes": [
+        [
+          0.01,
+          0.2,
+          69,
+          100
+        ],
+        [
+          0.21,
+          0.2,
+          69,
+          80
+        ]
+      ],
+      "peak": 0.7463716268539429,
+      "solo_sum_difference": 0.0,
+      "captures": [
+        {
+          "file": "48000-touching_same_pitch-0.bin",
+          "sha256": "3008cda7b5da93ad7f2159fc8c7489c839fbfe5d7be6dca082ebc4a289bf7500"
+        },
+        {
+          "file": "48000-touching_same_pitch-1.bin",
+          "sha256": "ffd5d73ba17c40694252e9fddbd90624b0e3f48eeb3911fef5c39e278c8501a0"
+        },
+        {
+          "file": "48000-touching_same_pitch-2.bin",
+          "sha256": "288b252b1236aa93426ea252dd19c7ad702b3d6d43940a9b9dfd549efefb97cd"
+        }
+      ],
+      "existing_export_peak": 0.7463716268539429,
+      "existing_export_scale": 1.0
+    },
+    {
+      "sample_rate": 48000,
+      "schedule": "same_sample_retrigger",
+      "notes": [
+        [
+          0.01,
+          2.0833333333333333e-05,
+          69,
+          100
+        ],
+        [
+          0.010020833333333333,
+          0.2,
+          69,
+          80
+        ]
+      ],
+      "peak": 0.7674728631973267,
+      "solo_sum_difference": 0.0,
+      "captures": [
+        {
+          "file": "48000-same_sample_retrigger-0.bin",
+          "sha256": "e9ef6a2de1c2d05486ca39475e445754f29b11aef5c5e99a24aa2da25ec00f2c"
+        },
+        {
+          "file": "48000-same_sample_retrigger-1.bin",
+          "sha256": "ffd5d73ba17c40694252e9fddbd90624b0e3f48eeb3911fef5c39e278c8501a0"
+        },
+        {
+          "file": "48000-same_sample_retrigger-2.bin",
+          "sha256": "0eeece85ec79df8dfc3690bdd6945674277c893707e8a15a76ffad0614778c9e"
+        }
+      ],
+      "existing_export_peak": 0.7674728631973267,
+      "existing_export_scale": 1.0
+    },
+    {
+      "sample_rate": 48000,
+      "schedule": "eight_unison",
+      "notes": [
+        [
+          0.01,
+          0.2,
+          69,
+          127
+        ],
+        [
+          0.01,
+          0.2,
+          69,
+          127
+        ],
+        [
+          0.01,
+          0.2,
+          69,
+          127
+        ],
+        [
+          0.01,
+          0.2,
+          69,
+          127
+        ],
+        [
+          0.01,
+          0.2,
+          69,
+          127
+        ],
+        [
+          0.01,
+          0.2,
+          69,
+          127
+        ],
+        [
+          0.01,
+          0.2,
+          69,
+          127
+        ],
+        [
+          0.01,
+          0.2,
+          69,
+          127
+        ]
+      ],
+      "peak": 7.583136558532715,
+      "solo_sum_difference": 0.0,
+      "captures": [
+        {
+          "file": "48000-eight_unison-0.bin",
+          "sha256": "6c4542b0a2a52cefcd159605edeee8e5fce39d330472f0ce747eac43071a8013"
+        },
+        {
+          "file": "48000-eight_unison-1.bin",
+          "sha256": "f25072ba9a93b3f535cb7d9c774a8d01c7a6a20327a994475609d6937fe821d7"
+        },
+        {
+          "file": "48000-eight_unison-2.bin",
+          "sha256": "f25072ba9a93b3f535cb7d9c774a8d01c7a6a20327a994475609d6937fe821d7"
+        },
+        {
+          "file": "48000-eight_unison-3.bin",
+          "sha256": "f25072ba9a93b3f535cb7d9c774a8d01c7a6a20327a994475609d6937fe821d7"
+        },
+        {
+          "file": "48000-eight_unison-4.bin",
+          "sha256": "f25072ba9a93b3f535cb7d9c774a8d01c7a6a20327a994475609d6937fe821d7"
+        },
+        {
+          "file": "48000-eight_unison-5.bin",
+          "sha256": "f25072ba9a93b3f535cb7d9c774a8d01c7a6a20327a994475609d6937fe821d7"
+        },
+        {
+          "file": "48000-eight_unison-6.bin",
+          "sha256": "f25072ba9a93b3f535cb7d9c774a8d01c7a6a20327a994475609d6937fe821d7"
+        },
+        {
+          "file": "48000-eight_unison-7.bin",
+          "sha256": "f25072ba9a93b3f535cb7d9c774a8d01c7a6a20327a994475609d6937fe821d7"
+        },
+        {
+          "file": "48000-eight_unison-8.bin",
+          "sha256": "f25072ba9a93b3f535cb7d9c774a8d01c7a6a20327a994475609d6937fe821d7"
+        }
+      ],
+      "existing_export_peak": 0.9700000286102295,
+      "existing_export_scale": 0.1279154071026895
+    },
+    {
+      "sample_rate": 192000,
+      "schedule": "overlap_same_pitch",
+      "notes": [
+        [
+          0.01,
+          0.2,
+          69,
+          100
+        ],
+        [
+          0.1,
+          0.2,
+          69,
+          80
+        ]
+      ],
+      "peak": 0.7157729864120483,
+      "solo_sum_difference": 0.0,
+      "captures": [
+        {
+          "file": "192000-overlap_same_pitch-0.bin",
+          "sha256": "4c690f8d0c27dddb6033c21781d1d3e43316f1a5c493e19ccaa0cb83dc87fabc"
+        },
+        {
+          "file": "192000-overlap_same_pitch-1.bin",
+          "sha256": "32b7e47b2e0c8fe53def6fa126a34f4f573d9a698920c4a8fe3eef252eda8f5b"
+        },
+        {
+          "file": "192000-overlap_same_pitch-2.bin",
+          "sha256": "a7f706d16023f96f64659a09e5ac094c5e5e25b02d2e5401572847d51b10769a"
+        }
+      ],
+      "existing_export_peak": 0.7157729864120483,
+      "existing_export_scale": 1.0
+    },
+    {
+      "sample_rate": 192000,
+      "schedule": "touching_same_pitch",
+      "notes": [
+        [
+          0.01,
+          0.2,
+          69,
+          100
+        ],
+        [
+          0.21,
+          0.2,
+          69,
+          80
+        ]
+      ],
+      "peak": 0.7157729864120483,
+      "solo_sum_difference": 0.0,
+      "captures": [
+        {
+          "file": "192000-touching_same_pitch-0.bin",
+          "sha256": "33a616537ebf82f692950ee76fcf89f941673b0bdf21e85d3e0af9d2f67842f7"
+        },
+        {
+          "file": "192000-touching_same_pitch-1.bin",
+          "sha256": "32b7e47b2e0c8fe53def6fa126a34f4f573d9a698920c4a8fe3eef252eda8f5b"
+        },
+        {
+          "file": "192000-touching_same_pitch-2.bin",
+          "sha256": "a1bc2645408bce7a367c5f94f8c8c48d60093213ff603b16b060dd35d9eab3df"
+        }
+      ],
+      "existing_export_peak": 0.7157729864120483,
+      "existing_export_scale": 1.0
+    },
+    {
+      "sample_rate": 192000,
+      "schedule": "same_sample_retrigger",
+      "notes": [
+        [
+          0.01,
+          5.208333333333333e-06,
+          69,
+          100
+        ],
+        [
+          0.010005208333333333,
+          0.2,
+          69,
+          80
+        ]
+      ],
+      "peak": 0.7885023355484009,
+      "solo_sum_difference": 0.0,
+      "captures": [
+        {
+          "file": "192000-same_sample_retrigger-0.bin",
+          "sha256": "37b59cb238bf8479160fe877ccdc040920e2d6422602cf5c325d97b29ea1cbb0"
+        },
+        {
+          "file": "192000-same_sample_retrigger-1.bin",
+          "sha256": "32b7e47b2e0c8fe53def6fa126a34f4f573d9a698920c4a8fe3eef252eda8f5b"
+        },
+        {
+          "file": "192000-same_sample_retrigger-2.bin",
+          "sha256": "88d2133b83ca5ae4a16449a368631f6f2ee17522d361abaa0d43b533f13a0c10"
+        }
+      ],
+      "existing_export_peak": 0.7885023355484009,
+      "existing_export_scale": 1.0
+    },
+    {
+      "sample_rate": 192000,
+      "schedule": "eight_unison",
+      "notes": [
+        [
+          0.01,
+          0.2,
+          69,
+          127
+        ],
+        [
+          0.01,
+          0.2,
+          69,
+          127
+        ],
+        [
+          0.01,
+          0.2,
+          69,
+          127
+        ],
+        [
+          0.01,
+          0.2,
+          69,
+          127
+        ],
+        [
+          0.01,
+          0.2,
+          69,
+          127
+        ],
+        [
+          0.01,
+          0.2,
+          69,
+          127
+        ],
+        [
+          0.01,
+          0.2,
+          69,
+          127
+        ],
+        [
+          0.01,
+          0.2,
+          69,
+          127
+        ]
+      ],
+      "peak": 7.272254467010498,
+      "solo_sum_difference": 0.0,
+      "captures": [
+        {
+          "file": "192000-eight_unison-0.bin",
+          "sha256": "2cda66cbc74576b3d17ddc265bc4c06b5392d9db88d61d7f059eea4ace36daa1"
+        },
+        {
+          "file": "192000-eight_unison-1.bin",
+          "sha256": "b0ad4b31f53a2f1437a87b9a5d1d8b5d06bfcb494e3eb7ab356f45e2e94b2904"
+        },
+        {
+          "file": "192000-eight_unison-2.bin",
+          "sha256": "b0ad4b31f53a2f1437a87b9a5d1d8b5d06bfcb494e3eb7ab356f45e2e94b2904"
+        },
+        {
+          "file": "192000-eight_unison-3.bin",
+          "sha256": "b0ad4b31f53a2f1437a87b9a5d1d8b5d06bfcb494e3eb7ab356f45e2e94b2904"
+        },
+        {
+          "file": "192000-eight_unison-4.bin",
+          "sha256": "b0ad4b31f53a2f1437a87b9a5d1d8b5d06bfcb494e3eb7ab356f45e2e94b2904"
+        },
+        {
+          "file": "192000-eight_unison-5.bin",
+          "sha256": "b0ad4b31f53a2f1437a87b9a5d1d8b5d06bfcb494e3eb7ab356f45e2e94b2904"
+        },
+        {
+          "file": "192000-eight_unison-6.bin",
+          "sha256": "b0ad4b31f53a2f1437a87b9a5d1d8b5d06bfcb494e3eb7ab356f45e2e94b2904"
+        },
+        {
+          "file": "192000-eight_unison-7.bin",
+          "sha256": "b0ad4b31f53a2f1437a87b9a5d1d8b5d06bfcb494e3eb7ab356f45e2e94b2904"
+        },
+        {
+          "file": "192000-eight_unison-8.bin",
+          "sha256": "b0ad4b31f53a2f1437a87b9a5d1d8b5d06bfcb494e3eb7ab356f45e2e94b2904"
+        }
+      ],
+      "existing_export_peak": 0.9700000286102295,
+      "existing_export_scale": 0.13338367137732335
+    }
+  ],
+  "admission": "NOT_GRANTED",
+  "verification": {
+    "capture_count": 36,
+    "status": "PASS",
+    "same_pitch_superposition": "exact in all six timing cases",
+    "unison_superposition": "exact in both eight-voice cases",
+    "engine_blob": "526864e97e865f509453340fd071aaa9bcad79e7",
+    "config_blob": "38e1fa3f3fd7a3d0355428356cde7f4b472e6c3b",
+    "export_scope": "Executed pinned _limit AST in isolation at documented default ceiling0.97; not full engine/export integration"
+  },
+  "archive_sha256": "ffbdca918c13ab4f6bed5e3607ab189e362d96089f5368e4ee63b04ff0ccdc10"
+}

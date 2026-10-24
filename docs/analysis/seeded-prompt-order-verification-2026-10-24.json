@@ -1,0 +1,6 @@
+{
+  "status": "PASS",
+  "compared_pairs": 87528,
+  "comparison": "Exact numerical equality of both float32 components against independently transcribed prompt q0..q3 and supplied renorm",
+  "independent_human_semantic_approval": false
+}

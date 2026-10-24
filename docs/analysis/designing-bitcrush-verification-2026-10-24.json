@@ -1,0 +1,140 @@
+{
+  "status": "COMPILE_AND_DEFAULT_AUDIO_EQUIVALENCE_PASS",
+  "rows": [
+    {
+      "variant": "original",
+      "source_sha256": "9ec284360def92c062a2ce466dc11b9bdc14723fe546ec72148cb6fc04050ae4",
+      "compile": {
+        "returncode": 0,
+        "stderr": "",
+        "elapsed_ms": 20
+      },
+      "gcc": {
+        "returncode": 0,
+        "stderr": "",
+        "elapsed_ms": 210
+      },
+      "header_sha256": "e730964dcfd70bf8a5b0cdc45fffe41cef55c219a21a3c693c13a2a4072b8008",
+      "captures": [
+        {
+          "rate": 44100,
+          "frames": 24000,
+          "sha256": "a3e21813183f58e131d308d8d1c5513a6cc5293c1b7e4064ca0dee1061e31d9f",
+          "run": {
+            "returncode": 0,
+            "stderr": "",
+            "elapsed_ms": 2
+          }
+        },
+        {
+          "rate": 48000,
+          "frames": 24000,
+          "sha256": "14ddad5f020b42d896fc6b10d3e741d7c0c0f11b64568770d9140b6b48b38479",
+          "run": {
+            "returncode": 0,
+            "stderr": "",
+            "elapsed_ms": 2
+          }
+        },
+        {
+          "rate": 96000,
+          "frames": 24000,
+          "sha256": "4842ee8d77fb7c700b4279766c1028da5678da64fe2a39d9ee7b682ab51b0430",
+          "run": {
+            "returncode": 0,
+            "stderr": "",
+            "elapsed_ms": 2
+          }
+        },
+        {
+          "rate": 192000,
+          "frames": 24000,
+          "sha256": "1c91200387f48dbfc78988ef7ab8e6ddad16402663c8ed022bf92e4aea72e639",
+          "run": {
+            "returncode": 0,
+            "stderr": "",
+            "elapsed_ms": 2
+          }
+        }
+      ]
+    },
+    {
+      "variant": "closed",
+      "source_sha256": "742a4030bda4c00e38e031e10fbc5dd914db017f37419e9b096a73c27f07eb43",
+      "compile": {
+        "returncode": 0,
+        "stderr": "",
+        "elapsed_ms": 9
+      },
+      "gcc": {
+        "returncode": 0,
+        "stderr": "",
+        "elapsed_ms": 208
+      },
+      "header_sha256": "7ee25cb4c15b50adcb82af59dbbc21f4b64b579c57948a6ca4de2f0166e48089",
+      "captures": [
+        {
+          "rate": 44100,
+          "frames": 24000,
+          "sha256": "a3e21813183f58e131d308d8d1c5513a6cc5293c1b7e4064ca0dee1061e31d9f",
+          "run": {
+            "returncode": 0,
+            "stderr": "",
+            "elapsed_ms": 3
+          }
+        },
+        {
+          "rate": 48000,
+          "frames": 24000,
+          "sha256": "14ddad5f020b42d896fc6b10d3e741d7c0c0f11b64568770d9140b6b48b38479",
+          "run": {
+            "returncode": 0,
+            "stderr": "",
+            "elapsed_ms": 2
+          }
+        },
+        {
+          "rate": 96000,
+          "frames": 24000,
+          "sha256": "4842ee8d77fb7c700b4279766c1028da5678da64fe2a39d9ee7b682ab51b0430",
+          "run": {
+            "returncode": 0,
+            "stderr": "",
+            "elapsed_ms": 2
+          }
+        },
+        {
+          "rate": 192000,
+          "frames": 24000,
+          "sha256": "1c91200387f48dbfc78988ef7ab8e6ddad16402663c8ed022bf92e4aea72e639",
+          "run": {
+            "returncode": 0,
+            "stderr": "",
+            "elapsed_ms": 2
+          }
+        }
+      ]
+    }
+  ],
+  "negative_omit_pi": {
+    "returncode": 1,
+    "stderr": "/home/delphi/blackdog-pair-qualification-m8e1n43a/designing-bitcrush-check/omit-pi.dsp:73 : ERROR : undefined symbol : PI\n",
+    "elapsed_ms": 6
+  },
+  "sample_rates": [
+    44100,
+    48000,
+    96000,
+    192000
+  ],
+  "frames_per_rate": 24000,
+  "exact_audio_equal": true,
+  "runner_sha256": "79176809acecb08263743105b591e6023c910d13d97ad7bc832181608b859271",
+  "limits": "20 CPU seconds, 1 GiB AS, 16 MiB file, 30 seconds wall per child",
+  "admission": "NOT_GRANTED",
+  "scope": "Default controls only; not all live controls or arbitrary library versions",
+  "archive_sha256": "6c60bc0bd2925dba68fc483e3b105245d4f140ef8e5febbfcb5020d34c721ad1",
+  "local_verification": "All capture hashes, finite float32 outputs, exact two-channel bytes and full matrix independently replayed",
+  "member_count": 20,
+  "span_count": 26
+}

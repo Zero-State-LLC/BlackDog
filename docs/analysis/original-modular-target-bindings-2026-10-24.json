@@ -1,0 +1,20 @@
+{
+  "rows": [
+    {
+      "unit_id": "module:an.mth_octave_analyzer6e_tpt_df",
+      "target_sha256": "d3b2129d242a6901695f30433c69ffb051609e6be568cd9569d295ca5f6c18f2"
+    },
+    {
+      "unit_id": "module:an.mth_octave_spectral_level6e",
+      "target_sha256": "fcf03b29336a661cc6c0e7100871cb2f04069cb82b45b3350d15a6b85ffb248a"
+    },
+    {
+      "unit_id": "module:fi.lowpass6e_tpt_df",
+      "target_sha256": "258959a63ba098fcc394fb33df9f3125148190bb8c416d64e03a537cab4a4bd7"
+    },
+    {
+      "unit_id": "module:fi.highpass6e_tpt_df",
+      "target_sha256": "537f2f4309503bf762dc8697ca769950c8f5694e9b68e8040159f8d9b3b7d392"
+    }
+  ]
+}

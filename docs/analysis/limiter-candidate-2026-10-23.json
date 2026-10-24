@@ -1,0 +1,28 @@
+{
+  "repository": "dariosanfilippo/limiterStereo",
+  "tree": "da1c38cc393f08b5dd79e56ffd4e6256af07a708",
+  "files": [
+    {
+      "path": "limiterStereo.dsp",
+      "blob": "bb10370a74f046af199266647717cc7ba2b1ec67"
+    },
+    {
+      "path": "LICENSE",
+      "blob": "3825b964df4f8a235d8a893a81765fb0d8c33814"
+    }
+  ],
+  "status": "CLOSURE_AND_RIGHTS_REVIEW_REQUIRED",
+  "dependencies": [
+    "si.bus",
+    "ba.if",
+    "de.delay",
+    "ma.SR",
+    "ma.PI",
+    "ma.T",
+    "ba.linear2db",
+    "ba.db2linear",
+    "si.smoo"
+  ],
+  "independence": "NOT_QUALIFIED",
+  "note": "Full source imports stdfaust.lib; repo license does not establish rights to dependency closure."
+}

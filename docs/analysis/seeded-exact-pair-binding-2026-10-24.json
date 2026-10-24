@@ -1,0 +1,24 @@
+{
+  "status": "SUPPLEMENTAL_BOUNDED_EVIDENCE_NOT_ADMISSION",
+  "pair_digest": "sha256:5604a3dd5bb97a94728437cc8667e03dd46bc62dcf0137105c788d16ee7a08b6",
+  "source_sha256": "d4fdfcc5b44cb5d9d4a5ecf98fdec76c88376410dcc574811b2b4e45f10e075e",
+  "target_sha256": "e53eb44125c66681b6d413aa7578d83cd4d3c15e81eef1ca68d8a7a5632e11da",
+  "prompt_sha256": "cd5fdfd76bddb0c8ea91616833191c26e8db4c9c144ffec0a283ff7bc3e01e1e",
+  "dependency_context_sha256": "43fab3a0e66bb720813467a32320798c86dce63d00c6e67223429359d26f0db3",
+  "exact_packet_sha256": "8b1fea3f7afb1ddf85bf1fe03047594eaac3cb472774e6c0e9dd9c7c9d1e2467",
+  "seeded_verification_sha256": "26d00ba85edcf7cfed54cd10f1bab18b6ad4c8fec93762a496fe38df111bd3fd",
+  "seeded_prompt_model_verification_sha256": "7e9e67b1b2d699f7c731f61225014bf75df9a3d860021ca3a1b2fc8f483a61a5",
+  "products_per_variant": 87528,
+  "positive_batches": 6,
+  "negative_batches_rejected": 12,
+  "independent_semantic_approval": false,
+  "admission": "NOT_GRANTED",
+  "training_authorized": false,
+  "scope": "Seed 20261024; 2048 seeded normalized float32 pairs plus 36 boundary pairs; 42 signed pinned coefficients; exponents -20..20; original product tolerance unchanged",
+  "limitations": [
+    "Overlaps earlier grid; do not add counts as distinct input coverage",
+    "No new WASM history qualification",
+    "Only final generated C++ header/driver/binary retained, alongside every DSP variant and full capture",
+    "Cryptographic report hashes bind local evidence; they do not authenticate an independent reviewer"
+  ]
+}

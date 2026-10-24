@@ -1,0 +1,14 @@
+{
+  "provenance_issue": {
+    "url": "https://github.com/materializepath/designing-sound-experiments/issues/1",
+    "state": "open",
+    "comments": 0
+  },
+  "semantic_reviews": 0,
+  "scoped_mail_results": 0,
+  "spark_public_custody_sha256": "abe6d64818e92045320a4220dc5276e56371bef6dd0cffa73930233f5349bd25",
+  "spark_unchanged": true,
+  "signed_artifacts_verified": [],
+  "pilot_ready": false,
+  "training_authorized": false
+}

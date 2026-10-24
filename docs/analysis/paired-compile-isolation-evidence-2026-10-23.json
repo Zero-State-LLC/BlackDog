@@ -1,0 +1,49 @@
+{
+  "status": "DIAGNOSTIC_NOT_ADMITTED",
+  "files": [
+    {
+      "path": "outputs/blackdog-pair32-compile-probes.json",
+      "sha256": "0a22e7279afb20bcf45275a48825f7df1715d2080187b05ff3ed730ba599100d"
+    },
+    {
+      "path": "outputs/blackdog-pair32-reduced-timeout.json",
+      "sha256": "42ab05f0c825f91ee8a05c45766d3c139a6a4997cf34c4534c399281abf4b6cd"
+    },
+    {
+      "path": "outputs/blackdog-pair32-upper-timeout.json",
+      "sha256": "67c57fb4344b3cf844a6bf6d84d69105d81f7ce09ac5ea153d6895dc1338a2a9"
+    },
+    {
+      "path": "outputs/blackdog-conversion-candidate-screen.json",
+      "sha256": "4588ebb24ffe61c959c15543d7bed1701d1a918938436596bbc8ee10a787695b"
+    },
+    {
+      "path": "outputs/blackdog-helper-license-issue-current.json",
+      "sha256": "c118ceb34efcc50cdb90a2809c1db4da5142df9d0da2b689ce0393535afa43f5"
+    },
+    {
+      "path": "work/evaluation-search/conversion-families.json",
+      "sha256": "94d264432d720e3e4d303eddf49ca706dc74a0f48faafde4786fa3188deb21cc"
+    },
+    {
+      "path": "work/evaluation-search/conversion-edges.json",
+      "sha256": "b2c12bb9d17c60b4fa419a3f9f53b426354b9cf37b5107feb4871c50f78883e2"
+    },
+    {
+      "path": "work/stage_pair32_compile_probe.py",
+      "sha256": "dac0fbf581b53c01c2fb04d8cde8cfae7b97e8c204f04d1ff7d6ad163f91fd13"
+    },
+    {
+      "path": "work/stage_pair32_reduced.py",
+      "sha256": "95c1fda587f603f4be874015e01923de3c9bfb1095ef69cfc7a3fa5ea23ec663"
+    },
+    {
+      "path": "work/stage_pair32_upper.py",
+      "sha256": "8abb0ec6dbcd47235d56602cc7f4df40d4d6bf60e49a426f94c69bcae82834b7"
+    },
+    {
+      "path": "work/screen_conversion_candidates.py",
+      "sha256": "74ca972e40d7401ad29fa48707ee8a6020d48b52ba799a90b7ee4be0f2d7bcc9"
+    }
+  ]
+}

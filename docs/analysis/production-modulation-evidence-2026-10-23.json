@@ -1,0 +1,29 @@
+{
+  "production-rate": {
+    "captures": 15,
+    "worst_meter_error_db": 0.0010848045349121094,
+    "report_sha256": "cf819a3fe10744d4d798a58387b0b8c4a24f689b06e4cb9b84e5a1ba8b940cc4",
+    "worker_sha256": "bbe37e5a0367757868ba74250222a4875e0a7d4c637aa01e6cf238f6a826eeee",
+    "rates": [
+      8000,
+      32000,
+      88200,
+      96000,
+      192000
+    ]
+  },
+  "continuous": {
+    "captures": 12,
+    "worst_meter_error_db": 0.0011086463928222656,
+    "report_sha256": "5c51c01ea3d6c0f449fec0c3c87f5f4bd35b39069308dc1659d9c68cada662a4",
+    "worker_sha256": "bbe37e5a0367757868ba74250222a4875e0a7d4c637aa01e6cf238f6a826eeee",
+    "rates": [
+      44100,
+      48000,
+      96000,
+      192000
+    ]
+  },
+  "admission": "NOT_GRANTED",
+  "scope": "Production profile and receipt boundaries; diagnostic meter capture. Continuous offset only, fixed filter coefficients."
+}

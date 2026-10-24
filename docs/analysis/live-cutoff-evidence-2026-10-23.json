@@ -1,0 +1,93 @@
+{
+  "rows": [
+    {
+      "rate": 48000,
+      "captures": 3,
+      "negative_reference_rejections": 3,
+      "worst_meter_error_db": 0.0002741813659667969,
+      "source_sha256": "134c2e1761774b1a85f01ad2c498e8592553a2fdf886d197d2d89419ef24c79b",
+      "source_bytes": 208827,
+      "native_compile_ms": 1614,
+      "control_address": "/input/cutoff_hz",
+      "events": [
+        [
+          0,
+          2000
+        ],
+        [
+          8,
+          6000
+        ],
+        [
+          24,
+          2500
+        ],
+        [
+          40,
+          3333.33
+        ]
+      ],
+      "report_sha256": "335d14eec0ab7f254dce964b73adb985ad1a6c2d03f5870a8e84993ccc4ef350"
+    },
+    {
+      "rate": 44100,
+      "captures": 3,
+      "negative_reference_rejections": 3,
+      "worst_meter_error_db": 0.0008940696716308594,
+      "source_sha256": "fcff0f95b23597ca1393e72891bdce18bcc88e3e9a00f8c0edb898149884c86b",
+      "source_bytes": 208768,
+      "native_compile_ms": 1615,
+      "control_address": "/input/cutoff_hz",
+      "events": [
+        [
+          0,
+          2000
+        ],
+        [
+          8,
+          6000
+        ],
+        [
+          24,
+          2500
+        ],
+        [
+          40,
+          3333.33
+        ]
+      ],
+      "report_sha256": "6ff3b2f3f0d42cf3b984a8a4ee7ba6523faef5f1c3846948015f164710364a0f"
+    },
+    {
+      "rate": 192000,
+      "captures": 3,
+      "negative_reference_rejections": 3,
+      "worst_meter_error_db": 0.00019073486328125,
+      "source_sha256": "e4fca097271b1137cecf3230a92603ef9ce4e402319500e3436bd729e15f9ec2",
+      "source_bytes": 208927,
+      "native_compile_ms": 1559,
+      "control_address": "/input/cutoff_hz",
+      "events": [
+        [
+          0,
+          2000
+        ],
+        [
+          8,
+          6000
+        ],
+        [
+          24,
+          2500
+        ],
+        [
+          40,
+          3333.33
+        ]
+      ],
+      "report_sha256": "d3563bbf9105fa7ea96282437d8923dd7e5785ab5530afb30216cb91b64e8d5b"
+    }
+  ],
+  "admission": "NOT_GRANTED",
+  "contract": "2-6kHz smoothed top cutoff,65 coefficient knots,linear paired interpolation; fixed 3-band topology. Equivalence to TPT/default not established."
+}

@@ -1,0 +1,84 @@
+{
+  "graph": {
+    "identities": 1539,
+    "components": 12,
+    "joining_operations": 28769
+  },
+  "rows": [
+    {
+      "unit_id": "new:designing:bitcrush",
+      "candidate": "bitcrush",
+      "source_sha256": "742a4030bda4c00e38e031e10fbc5dd914db017f37419e9b096a73c27f07eb43",
+      "family": "sha256:44d228fe46ab1db0e500ae1486ba2e225d204a7979106ae3edd64ebad7084eb9",
+      "comparison_connected": true,
+      "joining_evidence_count": 24,
+      "joining_evidence": [
+        {
+          "left": "new:designing:bitcrush",
+          "right": "comparison:64bb5871522c191cb97741271a41dbe4bc6b1c11",
+          "reason": "verbatim_run",
+          "stream": "raw",
+          "floor": 40,
+          "intersection": 458,
+          "denominator": 747
+        },
+        {
+          "reason": "collective_support",
+          "group_id": "sha256:99764ce6c0dfe8eb7ae3edc8495534ab2e9b062870715b4367844a5e97e6933f",
+          "comparison": "comparison:6d0c5543b7ad20a2493914b2017933192cdb6337",
+          "covered": 538,
+          "denominator": 590,
+          "stream": "raw",
+          "floor": 40
+        },
+        {
+          "left": "new:designing:bitcrush",
+          "right": "comparison:6d0c5543b7ad20a2493914b2017933192cdb6337",
+          "reason": "collective_union",
+          "stream": "raw",
+          "floor": 40,
+          "group_id": "sha256:99764ce6c0dfe8eb7ae3edc8495534ab2e9b062870715b4367844a5e97e6933f"
+        }
+      ]
+    },
+    {
+      "unit_id": "new:designing:bouncing-ball",
+      "candidate": "bouncing-ball",
+      "source_sha256": "93b1b97b5ea1890596199d02723a6c382495dc3b1941836dc1f651c18a7e0fc3",
+      "family": "sha256:44d228fe46ab1db0e500ae1486ba2e225d204a7979106ae3edd64ebad7084eb9",
+      "comparison_connected": true,
+      "joining_evidence_count": 22,
+      "joining_evidence": [
+        {
+          "left": "new:designing:bouncing-ball",
+          "right": "comparison:0af91c8e5d9029bd24c099abd65928fa4d250beb",
+          "reason": "verbatim_run",
+          "stream": "raw",
+          "floor": 40,
+          "intersection": 256,
+          "denominator": 546
+        },
+        {
+          "reason": "collective_support",
+          "group_id": "sha256:99764ce6c0dfe8eb7ae3edc8495534ab2e9b062870715b4367844a5e97e6933f",
+          "comparison": "comparison:6d0c5543b7ad20a2493914b2017933192cdb6337",
+          "covered": 538,
+          "denominator": 590,
+          "stream": "raw",
+          "floor": 40
+        },
+        {
+          "left": "new:designing:bouncing-ball",
+          "right": "comparison:0af91c8e5d9029bd24c099abd65928fa4d250beb",
+          "reason": "verbatim_run",
+          "stream": "canonical",
+          "floor": 40,
+          "intersection": 245,
+          "denominator": 307
+        }
+      ]
+    }
+  ],
+  "policy": "unchanged floor40 provisional H1 collective",
+  "admission": "NOT_GRANTED"
+}

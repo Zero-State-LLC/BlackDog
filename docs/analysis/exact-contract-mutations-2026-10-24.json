@@ -1,0 +1,46 @@
+[
+  {
+    "case": "identity",
+    "result": "STRUCTURALLY_VERIFIED_NOT_QUALIFIED"
+  },
+  {
+    "case": "digest",
+    "result": "REJECTED",
+    "reason": "modular source digest mismatch"
+  },
+  {
+    "case": "rebind_context",
+    "result": "REJECTED",
+    "reason": "assembled harness differs from verified source"
+  },
+  {
+    "case": "target",
+    "result": "REJECTED",
+    "reason": "assembled harness differs from verified source"
+  },
+  {
+    "case": "interface",
+    "result": "REJECTED",
+    "reason": "prompt omits dependency interface"
+  },
+  {
+    "case": "symbol",
+    "result": "REJECTED",
+    "reason": "target definition does not match symbol"
+  },
+  {
+    "case": "leak",
+    "result": "REJECTED",
+    "reason": "target leaked into context or prompt"
+  },
+  {
+    "case": "path",
+    "result": "REJECTED",
+    "reason": "unsafe relative path"
+  },
+  {
+    "case": "admitted",
+    "result": "REJECTED",
+    "reason": "invalid modular contract fields"
+  }
+]

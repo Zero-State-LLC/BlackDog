@@ -1,0 +1,24 @@
+{
+  "repo": "rottingsounds/bitDSP-faust",
+  "commit": "d70843492b65bb2cb9cf97c2240905fefacc7383",
+  "file": "lib/bitDSP.lib",
+  "rows": [
+    {
+      "name": "full_adder",
+      "start_byte": 9335,
+      "end_byte": 9576,
+      "sha256": "b494521400f66e3381e734df414ac028050d48fcf889dc3acbdc2c67aebcef1e",
+      "source_blob": "070e285172c27aa355a00cccbf16b8819882c380"
+    },
+    {
+      "name": "bitstream_adder",
+      "start_byte": 9960,
+      "end_byte": 10136,
+      "sha256": "6773f7b61fc5d4c18a38c69c4ffd6fbcb717ae8e25ce0cf56bfd2afd06a63a74",
+      "source_blob": "070e285172c27aa355a00cccbf16b8819882c380"
+    }
+  ],
+  "dependencies": "full_adder: Faust builtins only; bitstream_adder: exact full_adder plus builtins",
+  "license": "MIT root with per-function Dario Sanfilippo author comments; canonical rights review pending",
+  "admission": "NOT_GRANTED"
+}

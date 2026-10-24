@@ -1,0 +1,50 @@
+{
+  "status": "PREQUALIFICATION_ONLY_NO_ADMISSION",
+  "checked_date": "2026-10-24",
+  "new_independent_evaluation_candidates_admitted": 0,
+  "candidate": {
+    "repository": "darkoverlordofdata/amp-sim-faust",
+    "commit": "df478c01ed3763795c11779faa47a4b9d0f6de37",
+    "source_blob": "146b3656400395a8075f08960261fe8f2be3bb65",
+    "root_license_blob": "a2d4ca6f5554163a8e5b171386230839b276eb74",
+    "root_license": "MIT",
+    "explicit_lineage": "src/amplifier.dsp credits creativeintent/temper/Dsp/temper.dsp",
+    "upstream_repository": "creativeintent/temper",
+    "upstream_commit": "3795450eef941a7cc6766c526c77a7b872fd2926",
+    "upstream_source_blob": "3419d9e1d2b3e09366853e087ca64b956bb47385",
+    "upstream_license_blob": "20d40b6bceca3a6c0237d7455ebf1820aeff3680",
+    "upstream_root_license": "GPL-3.0 text",
+    "exact_matching_spans": [
+      {
+        "symbol": "tanh",
+        "identical_bytes": 46,
+        "sha256": "917abc8953cfc9ab43df9b8c9fbdde029c4ac19097384f633463bea10ad225f5"
+      },
+      {
+        "symbol": "tf2s",
+        "identical_bytes": 336,
+        "sha256": "3ce59d901051aefc6e4d0f753e8849689cfb922955c1482f9af7252d801351ad"
+      },
+      {
+        "symbol": "resonlp",
+        "identical_bytes": 122,
+        "sha256": "bff6245428ed5461a4a8a4c7d6a5ecb905f4e82f65942029ebe5cdfa6b355f50"
+      }
+    ],
+    "disposition": "Upstream rights and full closure review required; root MIT label does not establish eligibility or independence"
+  },
+  "other_leads": [
+    {
+      "repository": "mryndzionek/fireplace_sim",
+      "commit": "de921efe52e97c6c869d54320c254a850d3609b5",
+      "disposition": "Tree contains generated C but no original .dsp/.lib; original source needed"
+    },
+    {
+      "repository": "tonal-glyph/faustus",
+      "commit": "cc887b115aceaee202edbdb37ee0e4087bfb5a33",
+      "disposition": "Faust compiler/architecture fork; not a demonstrated independent DSP family"
+    }
+  ],
+  "family_graph_changed": false,
+  "limitations": "Prequalification source-lineage review only, not a complete dependency closure or legal determination."
+}

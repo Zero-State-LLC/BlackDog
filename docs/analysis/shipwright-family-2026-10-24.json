@@ -1,0 +1,46 @@
+{
+  "graph": {
+    "identities": 1545,
+    "components": 12,
+    "joining_operations": 30047
+  },
+  "rows": [
+    {
+      "candidate": "saw_lead",
+      "unit_id": "new:shipwright:saw_lead",
+      "source_sha256": "860b8123f4c9e19d298ea580f38354bc2058c558c996802ae0226d94430c12b2",
+      "family": "sha256:7f66fb80efbd734f2f9220c94e936eced92efab157a7774184a5b9a67bf09b99",
+      "comparison_connected": true
+    },
+    {
+      "candidate": "soft_pad",
+      "unit_id": "new:shipwright:soft_pad",
+      "source_sha256": "310238c884fcc04459d60b07efb644cc10604456ef13261769ee1b4525e5f6ef",
+      "family": "sha256:7f66fb80efbd734f2f9220c94e936eced92efab157a7774184a5b9a67bf09b99",
+      "comparison_connected": true
+    },
+    {
+      "candidate": "sub_bass",
+      "unit_id": "new:shipwright:sub_bass",
+      "source_sha256": "f0a16bb970f4dddf925f9e52ec7da09e549e0521621dd3ed6441d32737bc4205",
+      "family": "sha256:7f66fb80efbd734f2f9220c94e936eced92efab157a7774184a5b9a67bf09b99",
+      "comparison_connected": true
+    },
+    {
+      "candidate": "pluck",
+      "unit_id": "new:shipwright:pluck",
+      "source_sha256": "09b3c95d9fad85e2fc43b39ed5010fad8a3b45a510e728dec54f469007913267",
+      "family": "sha256:7f66fb80efbd734f2f9220c94e936eced92efab157a7774184a5b9a67bf09b99",
+      "comparison_connected": true
+    },
+    {
+      "candidate": "reverb",
+      "unit_id": "new:shipwright:reverb",
+      "source_sha256": "6905a0af83345cd16d79d4396905d78769f7da1dc601a50b3053a30b749abb79",
+      "family": "sha256:7f66fb80efbd734f2f9220c94e936eced92efab157a7774184a5b9a67bf09b99",
+      "comparison_connected": true
+    }
+  ],
+  "admission": "NOT_GRANTED",
+  "policy": "unchanged floor40 provisional H1 collective"
+}

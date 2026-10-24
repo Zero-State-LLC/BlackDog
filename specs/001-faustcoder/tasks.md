@@ -313,3 +313,100 @@ graph LR
 ```
 
 Parallel starts after T01: T02, T05 and T09. Lanes T17 to T19, T21 and T22 run in parallel with T10. From 0.3.5: GD-1 precedes T10, and A7-S precedes A2-T. From 0.3.7: D3-H1 blocks T10. D3-H2 precedes P3 and does not block P1 or P2. From 0.3.10: D3-H2-C precedes P3 and does not block P1 or P2.
+
+## Recovery public pair preparation
+
+- [x] Define public-pair-review schema and ADR-0009; bind exact source, contract,
+  dossier, notice and bounded approval references.
+- [x] Add deterministic candidate-pair preparation and readiness advisory adapter.
+- [x] Add negative tests for changed identity/content, unsafe inputs and scope
+  escalation; preserve separate instruction-pair and training blockers.
+- [ ] Complete runtime/prompt qualification and canonical signed-partition admission
+  before consuming any candidate as a training example.
+
+## Recovery tokenizer preflight
+
+- [x] Define exact-tokenizer descriptor, local adapter and read-only CLI.
+- [x] Integrate readiness replay, negative tests and bounded sequence checks.
+- [x] Verify the seven candidates against the pinned tokenizer and compare IDs
+  with the existing offline Spark Transformers tokenizer.
+- [ ] Bind remaining runtime and prompt qualification to canonical admitted
+  Examples and signed disjoint partitions before training.
+
+### QR-03 saved-signal replay
+
+- [x] Add schema, synthetic valid/invalid fixtures and bounded affine replay.
+- [x] Connect replay to readiness while preserving qualification blockers.
+- [x] Test binding, coverage, numerical and formula failures; replay public evidence.
+
+### QR-03 family feasibility
+
+- [x] Add strict descriptor, component reconstruction and negative tests.
+- [x] Wire a specific partition blocker into readiness and replay public evidence.
+- [x] Record fresh isolated Spark diagnostics and the remaining admission inputs.
+
+### QR-10 outside-family review
+
+- [x] Bind complete inventory and outside-family source bytes to accounting.
+- [x] Test source/population tampering and preserve eligibility boundaries.
+- [x] Record bounded diagnostics and tokenizer checks for self-contained definitions.
+
+### QR-10 dependency and independent-source follow-through
+
+- [x] Resolve and test decimal/frac, including an omitted-helper negative control.
+- [x] Bind recorded local members for four evaluation aliases to original spans.
+- [x] Screen five pinned public candidates against the complete preserved graph.
+- [ ] Complete external member source/rights closure and independent semantics.
+- [ ] Establish independent evaluation candidates and signed membership; no
+  admission or detector exemptions inferred from this exploratory screen.
+
+### QR-10 external-member checks
+
+- [x] Test exact peak-envelope and Goertzel helper closures and omission controls.
+- [x] Expose conservative recorded member eligibility in readiness inventory.
+- [x] Preserve numerical boundary failures and unresolved elliptic-filter coverage.
+
+### QR-10 numerical and graph resolution
+
+- [x] Reproduce original Goertzel failure and validate separate stable-DC repair with fixed-tolerance negative controls.
+- [x] Emit missing wrapper join evidence, test rejection controls, and replay full active/counterfactual graphs.
+- [ ] Qualify repaired-source rights, instruction and family bindings; complete analyzer/elliptic minimal closures and numerical references.
+
+### QR-10 analyzer closure checkpoint
+
+- [x] Assemble exact-span standalone analyzer/elliptic closures and verify dual-backend compilation plus all-member omission controls.
+- [x] Screen full repaired/assembled closures and run pinned tokenizer checks without truncation.
+- [x] Execute independent fixed-tolerance signal references above/below/at the filter transition and preserve failures.
+- [ ] Resolve low-pass 2304-Hz boundary failure and verify spectral meter semantics.
+- [ ] Resolve sequence-length suitability, rights, independent family and signed qualification blockers.
+
+### QR-10 low-pass, meter and size follow-through
+
+- [x] Reproduce low-pass direct-form failure and test explicit TPT alternative across three cutoffs.
+- [x] Capture actual meters and verify controlled-band semantics with meter-only negative references.
+- [x] Bind proposed modular targets to full dependency harnesses and check pinned token counts.
+- [ ] Resolve original direct-form and end-to-end sine-meter discrepancies.
+- [ ] Review modular task contract, independent prompt semantics, rights and complete family bindings before qualification.
+
+### QR-10 precision and modular structural replay
+
+- [x] Compare original low-pass/spectral source at double precision without changing production guard or tolerance.
+- [x] Implement bounded modular structural reviewer and mutation tests.
+- [x] Replay four real compiled harnesses, full-closure lineage and explicit-interface tokenization.
+- [ ] Resolve production float32 qualification and independently review modular semantics, rights and split evidence.
+
+### QR-11 float32 ladder and modular semantics
+
+- [x] Verify a separate float32 low-pass ladder candidate across three cutoffs and both rates.
+- [x] Preserve unresolved spectral sine failures and all initial fixture clipping failures.
+- [x] Verify 15 bounded modular semantic configurations and re-tokenize clarified prompts.
+- [x] Reconcile 43 rights spans, add five notices, and screen full ladder families.
+- [ ] Resolve real spectral numerical behavior, remaining helper rights, independent families and exact-scope signed readiness evidence.
+
+### QR-12 spectral localization and helper lineage
+
+- [x] Bind per-channel capture bytes to verified receipts; localize spectral middle-band error.
+- [x] Reject six unsuccessful section-order candidates at unchanged tolerances.
+- [x] Verify exact STK source lineage and complete two inferred helper notices.
+- [x] Correct checkpoint Markdown lint error.
+- [ ] Resolve spectral float32 behavior, two remaining helper licenses, independent families and signed readiness.

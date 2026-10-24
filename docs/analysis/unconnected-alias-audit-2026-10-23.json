@@ -1,0 +1,4536 @@
+{
+  "raw_unconnected_units": 117,
+  "eval_rights_candidates": 4,
+  "rows": [
+    {
+      "unit_id": "ue843710d79ea95056122",
+      "function": "goertzel",
+      "path": "analyzers.lib",
+      "canonical_tokens": 4,
+      "eligible_for": [
+        "train",
+        "eval",
+        "redistribute"
+      ],
+      "license": "STK-4.3",
+      "dependency_closure_unit_ids": [
+        "u000745b06eb3e59088b6",
+        "u4de71a30af88ffa9223b",
+        "u578ad17129619dc958e5",
+        "u64af1c2f79f072a0596c"
+      ],
+      "dependency_not_in_ledger": [],
+      "blockers": [
+        "independent_source_closure_review",
+        "human_leakage_adjudication",
+        "executable_semantic_contract_required"
+      ],
+      "dependency_comparison_connected": [
+        "u000745b06eb3e59088b6",
+        "u64af1c2f79f072a0596c"
+      ],
+      "family": "sha256:dc251beb7a0458f1abef0a873d3743c9749cb4c5931f3e3435cf1680b0417b7e",
+      "source_sha256": "sha256:d9275c6077618b80dfd37dc0b67e354438bceb53f2ea125e8b38adcea495c430",
+      "span": {
+        "blob_sha": "ac7f0c9142ad3ac82e1b8fdf8feb1d281aac09c7",
+        "end_byte": 42965,
+        "function": "goertzel",
+        "manifest_digest": "sha256:fbfcc0bf8323b16b68da804858d378c4170408c0f05b303b5808d330f4cef3f9",
+        "path": "analyzers.lib",
+        "pin": "2edec0537f536eaa130d42c354884d7db971663c",
+        "repo": "grame-cncm/faustlibraries",
+        "sha256": "sha256:d9275c6077618b80dfd37dc0b67e354438bceb53f2ea125e8b38adcea495c430",
+        "start_byte": 42942,
+        "unit_id": "ue843710d79ea95056122"
+      }
+    },
+    {
+      "unit_id": "u75ccf3fc043bc4b0aa29",
+      "function": "mth_octave_analyzer_default",
+      "path": "analyzers.lib",
+      "canonical_tokens": 4,
+      "eligible_for": [
+        "train",
+        "eval",
+        "redistribute"
+      ],
+      "license": "STK-4.3",
+      "dependency_closure_unit_ids": [
+        "uc247ae38ce35a64af244",
+        "uda4227acc391ad988ec2"
+      ],
+      "dependency_not_in_ledger": [],
+      "blockers": [
+        "independent_source_closure_review",
+        "human_leakage_adjudication",
+        "executable_semantic_contract_required"
+      ],
+      "dependency_comparison_connected": [
+        "uc247ae38ce35a64af244",
+        "uda4227acc391ad988ec2"
+      ],
+      "family": "sha256:dc251beb7a0458f1abef0a873d3743c9749cb4c5931f3e3435cf1680b0417b7e",
+      "source_sha256": "sha256:62457c2f782d8a87c70470c8396aec7e32396ffdfe0ea3f66507c99f2f43d1c4",
+      "span": {
+        "blob_sha": "ac7f0c9142ad3ac82e1b8fdf8feb1d281aac09c7",
+        "end_byte": 29411,
+        "function": "mth_octave_analyzer_default",
+        "manifest_digest": "sha256:fbfcc0bf8323b16b68da804858d378c4170408c0f05b303b5808d330f4cef3f9",
+        "path": "analyzers.lib",
+        "pin": "2edec0537f536eaa130d42c354884d7db971663c",
+        "repo": "grame-cncm/faustlibraries",
+        "sha256": "sha256:62457c2f782d8a87c70470c8396aec7e32396ffdfe0ea3f66507c99f2f43d1c4",
+        "start_byte": 29359,
+        "unit_id": "u75ccf3fc043bc4b0aa29"
+      }
+    },
+    {
+      "unit_id": "ufb0c3c99bfb02096d558",
+      "function": "mth_octave_spectral_level_default",
+      "path": "analyzers.lib",
+      "canonical_tokens": 4,
+      "eligible_for": [
+        "train",
+        "eval",
+        "redistribute"
+      ],
+      "license": "STK-4.3",
+      "dependency_closure_unit_ids": [
+        "u07f0ba1644b8bd999960",
+        "uc247ae38ce35a64af244",
+        "uda4227acc391ad988ec2"
+      ],
+      "dependency_not_in_ledger": [],
+      "blockers": [
+        "independent_source_closure_review",
+        "human_leakage_adjudication",
+        "executable_semantic_contract_required"
+      ],
+      "dependency_comparison_connected": [
+        "u07f0ba1644b8bd999960",
+        "uc247ae38ce35a64af244",
+        "uda4227acc391ad988ec2"
+      ],
+      "family": "sha256:dc251beb7a0458f1abef0a873d3743c9749cb4c5931f3e3435cf1680b0417b7e",
+      "source_sha256": "sha256:c1af6676d46d5cd310f741be6260806a36b3571028775d59d508be12a7642f39",
+      "span": {
+        "blob_sha": "ac7f0c9142ad3ac82e1b8fdf8feb1d281aac09c7",
+        "end_byte": 34092,
+        "function": "mth_octave_spectral_level_default",
+        "manifest_digest": "sha256:fbfcc0bf8323b16b68da804858d378c4170408c0f05b303b5808d330f4cef3f9",
+        "path": "analyzers.lib",
+        "pin": "2edec0537f536eaa130d42c354884d7db971663c",
+        "repo": "grame-cncm/faustlibraries",
+        "sha256": "sha256:c1af6676d46d5cd310f741be6260806a36b3571028775d59d508be12a7642f39",
+        "start_byte": 34028,
+        "unit_id": "ufb0c3c99bfb02096d558"
+      }
+    },
+    {
+      "unit_id": "ud87f8b1aff79a835de39",
+      "function": "peak_envelope",
+      "path": "analyzers.lib",
+      "canonical_tokens": 4,
+      "eligible_for": [
+        "train",
+        "eval",
+        "redistribute"
+      ],
+      "license": "STK-4.3",
+      "dependency_closure_unit_ids": [
+        "u0031089577cf18d51c96"
+      ],
+      "dependency_not_in_ledger": [],
+      "blockers": [
+        "independent_source_closure_review",
+        "human_leakage_adjudication",
+        "executable_semantic_contract_required"
+      ],
+      "dependency_comparison_connected": [
+        "u0031089577cf18d51c96"
+      ],
+      "family": "sha256:dc251beb7a0458f1abef0a873d3743c9749cb4c5931f3e3435cf1680b0417b7e",
+      "source_sha256": "sha256:5acd9f25e6b94c7ae9fefd8932f029e0046471c6f7e6d6bb92d0bb20f205593b",
+      "span": {
+        "blob_sha": "ac7f0c9142ad3ac82e1b8fdf8feb1d281aac09c7",
+        "end_byte": 8394,
+        "function": "peak_envelope",
+        "manifest_digest": "sha256:fbfcc0bf8323b16b68da804858d378c4170408c0f05b303b5808d330f4cef3f9",
+        "path": "analyzers.lib",
+        "pin": "2edec0537f536eaa130d42c354884d7db971663c",
+        "repo": "grame-cncm/faustlibraries",
+        "sha256": "sha256:5acd9f25e6b94c7ae9fefd8932f029e0046471c6f7e6d6bb92d0bb20f205593b",
+        "start_byte": 8365,
+        "unit_id": "ud87f8b1aff79a835de39"
+      }
+    },
+    {
+      "unit_id": "u63a591a1ee15a19e997a",
+      "function": "DEBUG",
+      "path": "debug.lib",
+      "canonical_tokens": 4,
+      "eligible_for": [
+        "train"
+      ],
+      "license": "LGPL-2.1-or-later",
+      "dependency_closure_unit_ids": [],
+      "dependency_not_in_ledger": [],
+      "blockers": [
+        "independent_source_closure_review",
+        "human_leakage_adjudication",
+        "executable_semantic_contract_required"
+      ],
+      "dependency_comparison_connected": [],
+      "family": "sha256:dc4bf5f7e107984e49eb61233ae08c2571339d50a8d898effd96f3763d7da02d",
+      "source_sha256": "sha256:179af667bad4a52f32de29b7edec8c848552d3aceb04fba8ba93d40e9d037796",
+      "span": {
+        "blob_sha": "2e26f8ddf08676e075a749218d093c3fa1e3ac8e",
+        "end_byte": 5045,
+        "function": "DEBUG",
+        "manifest_digest": "sha256:fbfcc0bf8323b16b68da804858d378c4170408c0f05b303b5808d330f4cef3f9",
+        "path": "debug.lib",
+        "pin": "2edec0537f536eaa130d42c354884d7db971663c",
+        "repo": "grame-cncm/faustlibraries",
+        "sha256": "sha256:179af667bad4a52f32de29b7edec8c848552d3aceb04fba8ba93d40e9d037796",
+        "start_byte": 5035,
+        "unit_id": "u63a591a1ee15a19e997a"
+      }
+    },
+    {
+      "unit_id": "u9ba28dd4a0d002487e16",
+      "function": "probe_attack_state_impl",
+      "path": "debug.lib",
+      "canonical_tokens": 4,
+      "eligible_for": [
+        "train"
+      ],
+      "license": "LGPL-2.1-or-later",
+      "dependency_closure_unit_ids": [
+        "u8dfda5f6ba488e271976",
+        "ubfcb373227b2ae7c8897",
+        "ufc80a46d6b7469ca86c1"
+      ],
+      "dependency_not_in_ledger": [],
+      "blockers": [
+        "independent_source_closure_review",
+        "human_leakage_adjudication",
+        "executable_semantic_contract_required"
+      ],
+      "dependency_comparison_connected": [
+        "u8dfda5f6ba488e271976",
+        "ubfcb373227b2ae7c8897",
+        "ufc80a46d6b7469ca86c1"
+      ],
+      "family": "sha256:dc251beb7a0458f1abef0a873d3743c9749cb4c5931f3e3435cf1680b0417b7e",
+      "source_sha256": "sha256:c126f0dc2f040960f78f2e05a54450e201a6d627eacd12fada35edd307f5b90c",
+      "span": {
+        "blob_sha": "2e26f8ddf08676e075a749218d093c3fa1e3ac8e",
+        "end_byte": 46525,
+        "function": "probe_attack_state_impl",
+        "manifest_digest": "sha256:fbfcc0bf8323b16b68da804858d378c4170408c0f05b303b5808d330f4cef3f9",
+        "path": "debug.lib",
+        "pin": "2edec0537f536eaa130d42c354884d7db971663c",
+        "repo": "grame-cncm/faustlibraries",
+        "sha256": "sha256:c126f0dc2f040960f78f2e05a54450e201a6d627eacd12fada35edd307f5b90c",
+        "start_byte": 46474,
+        "unit_id": "u9ba28dd4a0d002487e16"
+      }
+    },
+    {
+      "unit_id": "ufbd1beaab5abb99af886",
+      "function": "probe_band_hi_impl",
+      "path": "debug.lib",
+      "canonical_tokens": 4,
+      "eligible_for": [
+        "train"
+      ],
+      "license": "LGPL-2.1-or-later",
+      "dependency_closure_unit_ids": [
+        "u37ad6f9bdf535892d3ad",
+        "uab30e253aa8655031ab5",
+        "ud630a67b785b38e50de4",
+        "ud63589711391a94416fb"
+      ],
+      "dependency_not_in_ledger": [],
+      "blockers": [
+        "independent_source_closure_review",
+        "human_leakage_adjudication",
+        "executable_semantic_contract_required"
+      ],
+      "dependency_comparison_connected": [
+        "u37ad6f9bdf535892d3ad",
+        "uab30e253aa8655031ab5",
+        "ud630a67b785b38e50de4",
+        "ud63589711391a94416fb"
+      ],
+      "family": "sha256:dc251beb7a0458f1abef0a873d3743c9749cb4c5931f3e3435cf1680b0417b7e",
+      "source_sha256": "sha256:257c8b81d44fdbfeb3ff9e5bf9fbb0ce4ec15984ef8686e77d910a96d2d01e9b",
+      "span": {
+        "blob_sha": "2e26f8ddf08676e075a749218d093c3fa1e3ac8e",
+        "end_byte": 46661,
+        "function": "probe_band_hi_impl",
+        "manifest_digest": "sha256:fbfcc0bf8323b16b68da804858d378c4170408c0f05b303b5808d330f4cef3f9",
+        "path": "debug.lib",
+        "pin": "2edec0537f536eaa130d42c354884d7db971663c",
+        "repo": "grame-cncm/faustlibraries",
+        "sha256": "sha256:257c8b81d44fdbfeb3ff9e5bf9fbb0ce4ec15984ef8686e77d910a96d2d01e9b",
+        "start_byte": 46620,
+        "unit_id": "ufbd1beaab5abb99af886"
+      }
+    },
+    {
+      "unit_id": "u02d420b0d10323c0360f",
+      "function": "probe_band_lo_impl",
+      "path": "debug.lib",
+      "canonical_tokens": 4,
+      "eligible_for": [
+        "train"
+      ],
+      "license": "LGPL-2.1-or-later",
+      "dependency_closure_unit_ids": [
+        "u784635cb643f4796d007",
+        "ud630a67b785b38e50de4",
+        "ud63589711391a94416fb",
+        "ude6039153de1931c8d00"
+      ],
+      "dependency_not_in_ledger": [],
+      "blockers": [
+        "independent_source_closure_review",
+        "human_leakage_adjudication",
+        "executable_semantic_contract_required"
+      ],
+      "dependency_comparison_connected": [
+        "u784635cb643f4796d007",
+        "ud630a67b785b38e50de4",
+        "ud63589711391a94416fb",
+        "ude6039153de1931c8d00"
+      ],
+      "family": "sha256:dc251beb7a0458f1abef0a873d3743c9749cb4c5931f3e3435cf1680b0417b7e",
+      "source_sha256": "sha256:af0a0d657c9ba7b62bd5b0e0a109d1e392164f81ab7a98406f292a5b4e2fc2a8",
+      "span": {
+        "blob_sha": "2e26f8ddf08676e075a749218d093c3fa1e3ac8e",
+        "end_byte": 46797,
+        "function": "probe_band_lo_impl",
+        "manifest_digest": "sha256:fbfcc0bf8323b16b68da804858d378c4170408c0f05b303b5808d330f4cef3f9",
+        "path": "debug.lib",
+        "pin": "2edec0537f536eaa130d42c354884d7db971663c",
+        "repo": "grame-cncm/faustlibraries",
+        "sha256": "sha256:af0a0d657c9ba7b62bd5b0e0a109d1e392164f81ab7a98406f292a5b4e2fc2a8",
+        "start_byte": 46756,
+        "unit_id": "u02d420b0d10323c0360f"
+      }
+    },
+    {
+      "unit_id": "u6820a2e33b1afca6f734",
+      "function": "probe_band_mid_impl",
+      "path": "debug.lib",
+      "canonical_tokens": 4,
+      "eligible_for": [
+        "train"
+      ],
+      "license": "LGPL-2.1-or-later",
+      "dependency_closure_unit_ids": [
+        "u304364c5ad3ac362b3df",
+        "ud630a67b785b38e50de4",
+        "ud63589711391a94416fb",
+        "ufe3294e8f1f0f79e4676"
+      ],
+      "dependency_not_in_ledger": [],
+      "blockers": [
+        "independent_source_closure_review",
+        "human_leakage_adjudication",
+        "executable_semantic_contract_required"
+      ],
+      "dependency_comparison_connected": [
+        "u304364c5ad3ac362b3df",
+        "ud630a67b785b38e50de4",
+        "ud63589711391a94416fb",
+        "ufe3294e8f1f0f79e4676"
+      ],
+      "family": "sha256:dc251beb7a0458f1abef0a873d3743c9749cb4c5931f3e3435cf1680b0417b7e",
+      "source_sha256": "sha256:266f025e48efc3372b873c6328c1cc43ba1953ab50513b31282c531458a1b798",
+      "span": {
+        "blob_sha": "2e26f8ddf08676e075a749218d093c3fa1e3ac8e",
+        "end_byte": 46937,
+        "function": "probe_band_mid_impl",
+        "manifest_digest": "sha256:fbfcc0bf8323b16b68da804858d378c4170408c0f05b303b5808d330f4cef3f9",
+        "path": "debug.lib",
+        "pin": "2edec0537f536eaa130d42c354884d7db971663c",
+        "repo": "grame-cncm/faustlibraries",
+        "sha256": "sha256:266f025e48efc3372b873c6328c1cc43ba1953ab50513b31282c531458a1b798",
+        "start_byte": 46894,
+        "unit_id": "u6820a2e33b1afca6f734"
+      }
+    },
+    {
+      "unit_id": "u982289d41cd864f5832e",
+      "function": "probe_below_threshold_impl",
+      "path": "debug.lib",
+      "canonical_tokens": 4,
+      "eligible_for": [
+        "train"
+      ],
+      "license": "LGPL-2.1-or-later",
+      "dependency_closure_unit_ids": [
+        "u1c254f52a07428e92f56",
+        "ufa558704d5f9e7307f75",
+        "ufc80a46d6b7469ca86c1"
+      ],
+      "dependency_not_in_ledger": [],
+      "blockers": [
+        "independent_source_closure_review",
+        "human_leakage_adjudication",
+        "executable_semantic_contract_required"
+      ],
+      "dependency_comparison_connected": [
+        "u1c254f52a07428e92f56",
+        "ufa558704d5f9e7307f75",
+        "ufc80a46d6b7469ca86c1"
+      ],
+      "family": "sha256:dc251beb7a0458f1abef0a873d3743c9749cb4c5931f3e3435cf1680b0417b7e",
+      "source_sha256": "sha256:274bb9c37b4c472041c34c4ab755401e1f08d195e8a5ab2d65e31ff20da10f9c",
+      "span": {
+        "blob_sha": "2e26f8ddf08676e075a749218d093c3fa1e3ac8e",
+        "end_byte": 47105,
+        "function": "probe_below_threshold_impl",
+        "manifest_digest": "sha256:fbfcc0bf8323b16b68da804858d378c4170408c0f05b303b5808d330f4cef3f9",
+        "path": "debug.lib",
+        "pin": "2edec0537f536eaa130d42c354884d7db971663c",
+        "repo": "grame-cncm/faustlibraries",
+        "sha256": "sha256:274bb9c37b4c472041c34c4ab755401e1f08d195e8a5ab2d65e31ff20da10f9c",
+        "start_byte": 47048,
+        "unit_id": "u982289d41cd864f5832e"
+      }
+    },
+    {
+      "unit_id": "uf0a8ef17f47cd2da2a2d",
+      "function": "probe_bool_impl",
+      "path": "debug.lib",
+      "canonical_tokens": 4,
+      "eligible_for": [
+        "train"
+      ],
+      "license": "LGPL-2.1-or-later",
+      "dependency_closure_unit_ids": [
+        "u4294432d49a3c79fb0d1",
+        "uc8d48d3528bafb4ae082"
+      ],
+      "dependency_not_in_ledger": [],
+      "blockers": [
+        "independent_source_closure_review",
+        "human_leakage_adjudication",
+        "executable_semantic_contract_required"
+      ],
+      "dependency_comparison_connected": [
+        "u4294432d49a3c79fb0d1",
+        "uc8d48d3528bafb4ae082"
+      ],
+      "family": "sha256:dc251beb7a0458f1abef0a873d3743c9749cb4c5931f3e3435cf1680b0417b7e",
+      "source_sha256": "sha256:92f53b1d1ac6a4df95e7079dd7922f5aad3c78d7f6a2e15940c0845d752bf51e",
+      "span": {
+        "blob_sha": "2e26f8ddf08676e075a749218d093c3fa1e3ac8e",
+        "end_byte": 47229,
+        "function": "probe_bool_impl",
+        "manifest_digest": "sha256:fbfcc0bf8323b16b68da804858d378c4170408c0f05b303b5808d330f4cef3f9",
+        "path": "debug.lib",
+        "pin": "2edec0537f536eaa130d42c354884d7db971663c",
+        "repo": "grame-cncm/faustlibraries",
+        "sha256": "sha256:92f53b1d1ac6a4df95e7079dd7922f5aad3c78d7f6a2e15940c0845d752bf51e",
+        "start_byte": 47194,
+        "unit_id": "uf0a8ef17f47cd2da2a2d"
+      }
+    },
+    {
+      "unit_id": "ubd97a93bd598c694f41c",
+      "function": "probe_crest_db_impl",
+      "path": "debug.lib",
+      "canonical_tokens": 4,
+      "eligible_for": [
+        "train"
+      ],
+      "license": "LGPL-2.1-or-later",
+      "dependency_closure_unit_ids": [
+        "u0031089577cf18d51c96",
+        "u14e999f84fcd5539ac03",
+        "u8c9703bf54852c2d74ab",
+        "ud630a67b785b38e50de4",
+        "ud63589711391a94416fb",
+        "ud87f8b1aff79a835de39"
+      ],
+      "dependency_not_in_ledger": [],
+      "blockers": [
+        "independent_source_closure_review",
+        "human_leakage_adjudication",
+        "executable_semantic_contract_required"
+      ],
+      "dependency_comparison_connected": [
+        "u0031089577cf18d51c96",
+        "u14e999f84fcd5539ac03",
+        "u8c9703bf54852c2d74ab",
+        "ud630a67b785b38e50de4",
+        "ud63589711391a94416fb"
+      ],
+      "family": "sha256:dc251beb7a0458f1abef0a873d3743c9749cb4c5931f3e3435cf1680b0417b7e",
+      "source_sha256": "sha256:43b276d137ebe81fc6edcf765a120879fa9a803d5e844b98a9cc13e235cef7cc",
+      "span": {
+        "blob_sha": "2e26f8ddf08676e075a749218d093c3fa1e3ac8e",
+        "end_byte": 47369,
+        "function": "probe_crest_db_impl",
+        "manifest_digest": "sha256:fbfcc0bf8323b16b68da804858d378c4170408c0f05b303b5808d330f4cef3f9",
+        "path": "debug.lib",
+        "pin": "2edec0537f536eaa130d42c354884d7db971663c",
+        "repo": "grame-cncm/faustlibraries",
+        "sha256": "sha256:43b276d137ebe81fc6edcf765a120879fa9a803d5e844b98a9cc13e235cef7cc",
+        "start_byte": 47326,
+        "unit_id": "ubd97a93bd598c694f41c"
+      }
+    },
+    {
+      "unit_id": "u5cceae293c03022836c8",
+      "function": "probe_dc_impl",
+      "path": "debug.lib",
+      "canonical_tokens": 4,
+      "eligible_for": [
+        "train"
+      ],
+      "license": "LGPL-2.1-or-later",
+      "dependency_closure_unit_ids": [
+        "u6c2d4acdd94b8670e0d2",
+        "uef9ecfa154c8ec143c82"
+      ],
+      "dependency_not_in_ledger": [],
+      "blockers": [
+        "independent_source_closure_review",
+        "human_leakage_adjudication",
+        "executable_semantic_contract_required"
+      ],
+      "dependency_comparison_connected": [
+        "u6c2d4acdd94b8670e0d2",
+        "uef9ecfa154c8ec143c82"
+      ],
+      "family": "sha256:dc251beb7a0458f1abef0a873d3743c9749cb4c5931f3e3435cf1680b0417b7e",
+      "source_sha256": "sha256:08073a33f5836c3a85cf333c3a7949a9d7e6264cff5b671b37410d5a7530271b",
+      "span": {
+        "blob_sha": "2e26f8ddf08676e075a749218d093c3fa1e3ac8e",
+        "end_byte": 47485,
+        "function": "probe_dc_impl",
+        "manifest_digest": "sha256:fbfcc0bf8323b16b68da804858d378c4170408c0f05b303b5808d330f4cef3f9",
+        "path": "debug.lib",
+        "pin": "2edec0537f536eaa130d42c354884d7db971663c",
+        "repo": "grame-cncm/faustlibraries",
+        "sha256": "sha256:08073a33f5836c3a85cf333c3a7949a9d7e6264cff5b671b37410d5a7530271b",
+        "start_byte": 47454,
+        "unit_id": "u5cceae293c03022836c8"
+      }
+    },
+    {
+      "unit_id": "u911cf33ce70024a14828",
+      "function": "probe_dc_precise_impl",
+      "path": "debug.lib",
+      "canonical_tokens": 4,
+      "eligible_for": [
+        "train"
+      ],
+      "license": "LGPL-2.1-or-later",
+      "dependency_closure_unit_ids": [
+        "u088afff1fb6a77a85783",
+        "ua831ff3cbd13b39a1f96"
+      ],
+      "dependency_not_in_ledger": [],
+      "blockers": [
+        "independent_source_closure_review",
+        "human_leakage_adjudication",
+        "executable_semantic_contract_required"
+      ],
+      "dependency_comparison_connected": [
+        "u088afff1fb6a77a85783",
+        "ua831ff3cbd13b39a1f96"
+      ],
+      "family": "sha256:dc251beb7a0458f1abef0a873d3743c9749cb4c5931f3e3435cf1680b0417b7e",
+      "source_sha256": "sha256:c3b4dc721dac2cc5837b0a84fdce88cd8bcf6ecc9e25ca4a6be200e615ba4f53",
+      "span": {
+        "blob_sha": "2e26f8ddf08676e075a749218d093c3fa1e3ac8e",
+        "end_byte": 47633,
+        "function": "probe_dc_precise_impl",
+        "manifest_digest": "sha256:fbfcc0bf8323b16b68da804858d378c4170408c0f05b303b5808d330f4cef3f9",
+        "path": "debug.lib",
+        "pin": "2edec0537f536eaa130d42c354884d7db971663c",
+        "repo": "grame-cncm/faustlibraries",
+        "sha256": "sha256:c3b4dc721dac2cc5837b0a84fdce88cd8bcf6ecc9e25ca4a6be200e615ba4f53",
+        "start_byte": 47586,
+        "unit_id": "u911cf33ce70024a14828"
+      }
+    },
+    {
+      "unit_id": "u80f4f21d87f3607afef3",
+      "function": "probe_env_db_impl",
+      "path": "debug.lib",
+      "canonical_tokens": 4,
+      "eligible_for": [
+        "train"
+      ],
+      "license": "LGPL-2.1-or-later",
+      "dependency_closure_unit_ids": [
+        "u329cf27db6f665367e09",
+        "uf2ba2923f630183e3a40",
+        "ufc80a46d6b7469ca86c1"
+      ],
+      "dependency_not_in_ledger": [],
+      "blockers": [
+        "independent_source_closure_review",
+        "human_leakage_adjudication",
+        "executable_semantic_contract_required"
+      ],
+      "dependency_comparison_connected": [
+        "u329cf27db6f665367e09",
+        "uf2ba2923f630183e3a40",
+        "ufc80a46d6b7469ca86c1"
+      ],
+      "family": "sha256:dc251beb7a0458f1abef0a873d3743c9749cb4c5931f3e3435cf1680b0417b7e",
+      "source_sha256": "sha256:ddcc3ccfd2748ed77436e19f37c8c6f669f725c6d70a8f0f7f9ca86fbabc01d5",
+      "span": {
+        "blob_sha": "2e26f8ddf08676e075a749218d093c3fa1e3ac8e",
+        "end_byte": 47765,
+        "function": "probe_env_db_impl",
+        "manifest_digest": "sha256:fbfcc0bf8323b16b68da804858d378c4170408c0f05b303b5808d330f4cef3f9",
+        "path": "debug.lib",
+        "pin": "2edec0537f536eaa130d42c354884d7db971663c",
+        "repo": "grame-cncm/faustlibraries",
+        "sha256": "sha256:ddcc3ccfd2748ed77436e19f37c8c6f669f725c6d70a8f0f7f9ca86fbabc01d5",
+        "start_byte": 47726,
+        "unit_id": "u80f4f21d87f3607afef3"
+      }
+    },
+    {
+      "unit_id": "u6303c10fb1b503bb274d",
+      "function": "probe_env_impl",
+      "path": "debug.lib",
+      "canonical_tokens": 4,
+      "eligible_for": [
+        "train"
+      ],
+      "license": "LGPL-2.1-or-later",
+      "dependency_closure_unit_ids": [
+        "u5c185733245a19e682ca",
+        "ue315a761d3718c82a48c",
+        "ufc80a46d6b7469ca86c1"
+      ],
+      "dependency_not_in_ledger": [],
+      "blockers": [
+        "independent_source_closure_review",
+        "human_leakage_adjudication",
+        "executable_semantic_contract_required"
+      ],
+      "dependency_comparison_connected": [
+        "u5c185733245a19e682ca",
+        "ue315a761d3718c82a48c",
+        "ufc80a46d6b7469ca86c1"
+      ],
+      "family": "sha256:dc251beb7a0458f1abef0a873d3743c9749cb4c5931f3e3435cf1680b0417b7e",
+      "source_sha256": "sha256:228c9c7141a343dda8f01872c86d99d8705f3cce1371679dce2860a14bd2cd5e",
+      "span": {
+        "blob_sha": "2e26f8ddf08676e075a749218d093c3fa1e3ac8e",
+        "end_byte": 47885,
+        "function": "probe_env_impl",
+        "manifest_digest": "sha256:fbfcc0bf8323b16b68da804858d378c4170408c0f05b303b5808d330f4cef3f9",
+        "path": "debug.lib",
+        "pin": "2edec0537f536eaa130d42c354884d7db971663c",
+        "repo": "grame-cncm/faustlibraries",
+        "sha256": "sha256:228c9c7141a343dda8f01872c86d99d8705f3cce1371679dce2860a14bd2cd5e",
+        "start_byte": 47852,
+        "unit_id": "u6303c10fb1b503bb274d"
+      }
+    },
+    {
+      "unit_id": "u00fda5ee036652f91ed0",
+      "function": "probe_env_lin_impl",
+      "path": "debug.lib",
+      "canonical_tokens": 4,
+      "eligible_for": [
+        "train"
+      ],
+      "license": "LGPL-2.1-or-later",
+      "dependency_closure_unit_ids": [
+        "u0bc026786fa6bfa5b3c9",
+        "ue494dd1b6201afaa6791",
+        "ufc80a46d6b7469ca86c1"
+      ],
+      "dependency_not_in_ledger": [],
+      "blockers": [
+        "independent_source_closure_review",
+        "human_leakage_adjudication",
+        "executable_semantic_contract_required"
+      ],
+      "dependency_comparison_connected": [
+        "u0bc026786fa6bfa5b3c9",
+        "ue494dd1b6201afaa6791",
+        "ufc80a46d6b7469ca86c1"
+      ],
+      "family": "sha256:dc251beb7a0458f1abef0a873d3743c9749cb4c5931f3e3435cf1680b0417b7e",
+      "source_sha256": "sha256:17a8bfc06648d777b7818ab7cd5cbcae44255e2d0fc17b77ba0ff767a1e35fd0",
+      "span": {
+        "blob_sha": "2e26f8ddf08676e075a749218d093c3fa1e3ac8e",
+        "end_byte": 48021,
+        "function": "probe_env_lin_impl",
+        "manifest_digest": "sha256:fbfcc0bf8323b16b68da804858d378c4170408c0f05b303b5808d330f4cef3f9",
+        "path": "debug.lib",
+        "pin": "2edec0537f536eaa130d42c354884d7db971663c",
+        "repo": "grame-cncm/faustlibraries",
+        "sha256": "sha256:17a8bfc06648d777b7818ab7cd5cbcae44255e2d0fc17b77ba0ff767a1e35fd0",
+        "start_byte": 47980,
+        "unit_id": "u00fda5ee036652f91ed0"
+      }
+    },
+    {
+      "unit_id": "u77ad469293b61a29c6f5",
+      "function": "probe_freq_db_impl",
+      "path": "debug.lib",
+      "canonical_tokens": 4,
+      "eligible_for": [
+        "train"
+      ],
+      "license": "LGPL-2.1-or-later",
+      "dependency_closure_unit_ids": [
+        "u1ff6259c0f0621ddba90",
+        "u2613ae95596afb7f578f",
+        "ud630a67b785b38e50de4",
+        "ud63589711391a94416fb"
+      ],
+      "dependency_not_in_ledger": [],
+      "blockers": [
+        "independent_source_closure_review",
+        "human_leakage_adjudication",
+        "executable_semantic_contract_required"
+      ],
+      "dependency_comparison_connected": [
+        "u1ff6259c0f0621ddba90",
+        "u2613ae95596afb7f578f",
+        "ud630a67b785b38e50de4",
+        "ud63589711391a94416fb"
+      ],
+      "family": "sha256:dc251beb7a0458f1abef0a873d3743c9749cb4c5931f3e3435cf1680b0417b7e",
+      "source_sha256": "sha256:c98b59142286889bce767e0998d6ae285dac1eb67fb1f8a8c6ea8b46c0c4a358",
+      "span": {
+        "blob_sha": "2e26f8ddf08676e075a749218d093c3fa1e3ac8e",
+        "end_byte": 48157,
+        "function": "probe_freq_db_impl",
+        "manifest_digest": "sha256:fbfcc0bf8323b16b68da804858d378c4170408c0f05b303b5808d330f4cef3f9",
+        "path": "debug.lib",
+        "pin": "2edec0537f536eaa130d42c354884d7db971663c",
+        "repo": "grame-cncm/faustlibraries",
+        "sha256": "sha256:c98b59142286889bce767e0998d6ae285dac1eb67fb1f8a8c6ea8b46c0c4a358",
+        "start_byte": 48116,
+        "unit_id": "u77ad469293b61a29c6f5"
+      }
+    },
+    {
+      "unit_id": "u58668af6a84f78de9328",
+      "function": "probe_freq_lin_impl",
+      "path": "debug.lib",
+      "canonical_tokens": 4,
+      "eligible_for": [
+        "train"
+      ],
+      "license": "LGPL-2.1-or-later",
+      "dependency_closure_unit_ids": [
+        "u3388ab84614ba7901a8c",
+        "ud630a67b785b38e50de4",
+        "ud63589711391a94416fb",
+        "uf5a7538eecbf21d1cb3c"
+      ],
+      "dependency_not_in_ledger": [],
+      "blockers": [
+        "independent_source_closure_review",
+        "human_leakage_adjudication",
+        "executable_semantic_contract_required"
+      ],
+      "dependency_comparison_connected": [
+        "u3388ab84614ba7901a8c",
+        "ud630a67b785b38e50de4",
+        "ud63589711391a94416fb",
+        "uf5a7538eecbf21d1cb3c"
+      ],
+      "family": "sha256:dc251beb7a0458f1abef0a873d3743c9749cb4c5931f3e3435cf1680b0417b7e",
+      "source_sha256": "sha256:d941a471e814964af3df59f6fd250c9b12ce926b9f8bfb4bee34646eecb81b98",
+      "span": {
+        "blob_sha": "2e26f8ddf08676e075a749218d093c3fa1e3ac8e",
+        "end_byte": 48297,
+        "function": "probe_freq_lin_impl",
+        "manifest_digest": "sha256:fbfcc0bf8323b16b68da804858d378c4170408c0f05b303b5808d330f4cef3f9",
+        "path": "debug.lib",
+        "pin": "2edec0537f536eaa130d42c354884d7db971663c",
+        "repo": "grame-cncm/faustlibraries",
+        "sha256": "sha256:d941a471e814964af3df59f6fd250c9b12ce926b9f8bfb4bee34646eecb81b98",
+        "start_byte": 48254,
+        "unit_id": "u58668af6a84f78de9328"
+      }
+    },
+    {
+      "unit_id": "u5c9bd5bbad5b6e7cc334",
+      "function": "probe_freq_ratio_impl",
+      "path": "debug.lib",
+      "canonical_tokens": 4,
+      "eligible_for": [
+        "train"
+      ],
+      "license": "LGPL-2.1-or-later",
+      "dependency_closure_unit_ids": [
+        "u6340612d552858c4b976",
+        "ubf54df296c0e9548c56f",
+        "ud630a67b785b38e50de4",
+        "ud63589711391a94416fb"
+      ],
+      "dependency_not_in_ledger": [],
+      "blockers": [
+        "independent_source_closure_review",
+        "human_leakage_adjudication",
+        "executable_semantic_contract_required"
+      ],
+      "dependency_comparison_connected": [
+        "u6340612d552858c4b976",
+        "ubf54df296c0e9548c56f",
+        "ud630a67b785b38e50de4",
+        "ud63589711391a94416fb"
+      ],
+      "family": "sha256:dc251beb7a0458f1abef0a873d3743c9749cb4c5931f3e3435cf1680b0417b7e",
+      "source_sha256": "sha256:203720e4e742ecf65b05a4041d9557f4d85fb4ba539bb26123bdd49c8bb91f74",
+      "span": {
+        "blob_sha": "2e26f8ddf08676e075a749218d093c3fa1e3ac8e",
+        "end_byte": 48445,
+        "function": "probe_freq_ratio_impl",
+        "manifest_digest": "sha256:fbfcc0bf8323b16b68da804858d378c4170408c0f05b303b5808d330f4cef3f9",
+        "path": "debug.lib",
+        "pin": "2edec0537f536eaa130d42c354884d7db971663c",
+        "repo": "grame-cncm/faustlibraries",
+        "sha256": "sha256:203720e4e742ecf65b05a4041d9557f4d85fb4ba539bb26123bdd49c8bb91f74",
+        "start_byte": 48398,
+        "unit_id": "u5c9bd5bbad5b6e7cc334"
+      }
+    },
+    {
+      "unit_id": "u094e7ca3996cb6f2066b",
+      "function": "probe_max_impl",
+      "path": "debug.lib",
+      "canonical_tokens": 4,
+      "eligible_for": [
+        "train"
+      ],
+      "license": "LGPL-2.1-or-later",
+      "dependency_closure_unit_ids": [
+        "u0031089577cf18d51c96",
+        "u8d0fd2524a4bceb00f70",
+        "ud87f8b1aff79a835de39",
+        "uff9c26e6808ea33d810f"
+      ],
+      "dependency_not_in_ledger": [],
+      "blockers": [
+        "independent_source_closure_review",
+        "human_leakage_adjudication",
+        "executable_semantic_contract_required"
+      ],
+      "dependency_comparison_connected": [
+        "u0031089577cf18d51c96",
+        "u8d0fd2524a4bceb00f70",
+        "uff9c26e6808ea33d810f"
+      ],
+      "family": "sha256:dc251beb7a0458f1abef0a873d3743c9749cb4c5931f3e3435cf1680b0417b7e",
+      "source_sha256": "sha256:f71f567ca47fde7fc5f2256d1493a9be317bb746dee277f2c908dd6a93dc66c6",
+      "span": {
+        "blob_sha": "2e26f8ddf08676e075a749218d093c3fa1e3ac8e",
+        "end_byte": 48565,
+        "function": "probe_max_impl",
+        "manifest_digest": "sha256:fbfcc0bf8323b16b68da804858d378c4170408c0f05b303b5808d330f4cef3f9",
+        "path": "debug.lib",
+        "pin": "2edec0537f536eaa130d42c354884d7db971663c",
+        "repo": "grame-cncm/faustlibraries",
+        "sha256": "sha256:f71f567ca47fde7fc5f2256d1493a9be317bb746dee277f2c908dd6a93dc66c6",
+        "start_byte": 48532,
+        "unit_id": "u094e7ca3996cb6f2066b"
+      }
+    },
+    {
+      "unit_id": "ud3ea6f1ad54edd58c01f",
+      "function": "probe_min_impl",
+      "path": "debug.lib",
+      "canonical_tokens": 4,
+      "eligible_for": [
+        "train"
+      ],
+      "license": "LGPL-2.1-or-later",
+      "dependency_closure_unit_ids": [
+        "u0031089577cf18d51c96",
+        "u8f80f38eb936b371ffb7",
+        "ud34969c7e80acdcddf46",
+        "ud87f8b1aff79a835de39"
+      ],
+      "dependency_not_in_ledger": [],
+      "blockers": [
+        "independent_source_closure_review",
+        "human_leakage_adjudication",
+        "executable_semantic_contract_required"
+      ],
+      "dependency_comparison_connected": [
+        "u0031089577cf18d51c96",
+        "u8f80f38eb936b371ffb7",
+        "ud34969c7e80acdcddf46"
+      ],
+      "family": "sha256:dc251beb7a0458f1abef0a873d3743c9749cb4c5931f3e3435cf1680b0417b7e",
+      "source_sha256": "sha256:05394a653a408017e21ff672c6896548a844047395c8150d151b54a1f3818e0d",
+      "span": {
+        "blob_sha": "2e26f8ddf08676e075a749218d093c3fa1e3ac8e",
+        "end_byte": 48685,
+        "function": "probe_min_impl",
+        "manifest_digest": "sha256:fbfcc0bf8323b16b68da804858d378c4170408c0f05b303b5808d330f4cef3f9",
+        "path": "debug.lib",
+        "pin": "2edec0537f536eaa130d42c354884d7db971663c",
+        "repo": "grame-cncm/faustlibraries",
+        "sha256": "sha256:05394a653a408017e21ff672c6896548a844047395c8150d151b54a1f3818e0d",
+        "start_byte": 48652,
+        "unit_id": "ud3ea6f1ad54edd58c01f"
+      }
+    },
+    {
+      "unit_id": "uafb6b953b582c5f94a8c",
+      "function": "probe_multiband_impl",
+      "path": "debug.lib",
+      "canonical_tokens": 4,
+      "eligible_for": [
+        "train"
+      ],
+      "license": "LGPL-2.1-or-later",
+      "dependency_closure_unit_ids": [
+        "u0ff42b49a3dfce325e2d",
+        "u7329edb876bcd09c4e04",
+        "ud630a67b785b38e50de4",
+        "ud63589711391a94416fb"
+      ],
+      "dependency_not_in_ledger": [],
+      "blockers": [
+        "independent_source_closure_review",
+        "human_leakage_adjudication",
+        "executable_semantic_contract_required"
+      ],
+      "dependency_comparison_connected": [
+        "u0ff42b49a3dfce325e2d",
+        "u7329edb876bcd09c4e04",
+        "ud630a67b785b38e50de4",
+        "ud63589711391a94416fb"
+      ],
+      "family": "sha256:dc251beb7a0458f1abef0a873d3743c9749cb4c5931f3e3435cf1680b0417b7e",
+      "source_sha256": "sha256:5ddb983c18d9adda475dfca2f174999c056cf243aef192770a402ab63a3213f3",
+      "span": {
+        "blob_sha": "2e26f8ddf08676e075a749218d093c3fa1e3ac8e",
+        "end_byte": 48829,
+        "function": "probe_multiband_impl",
+        "manifest_digest": "sha256:fbfcc0bf8323b16b68da804858d378c4170408c0f05b303b5808d330f4cef3f9",
+        "path": "debug.lib",
+        "pin": "2edec0537f536eaa130d42c354884d7db971663c",
+        "repo": "grame-cncm/faustlibraries",
+        "sha256": "sha256:5ddb983c18d9adda475dfca2f174999c056cf243aef192770a402ab63a3213f3",
+        "start_byte": 48784,
+        "unit_id": "uafb6b953b582c5f94a8c"
+      }
+    },
+    {
+      "unit_id": "u8348c7f594a01bd57d2f",
+      "function": "probe_onset_impl",
+      "path": "debug.lib",
+      "canonical_tokens": 4,
+      "eligible_for": [
+        "train"
+      ],
+      "license": "LGPL-2.1-or-later",
+      "dependency_closure_unit_ids": [
+        "u000745b06eb3e59088b6",
+        "u096ef87ac896a2e62498",
+        "u578ad17129619dc958e5",
+        "ue2c3275d50ae819921e8",
+        "ufc80a46d6b7469ca86c1"
+      ],
+      "dependency_not_in_ledger": [],
+      "blockers": [
+        "independent_source_closure_review",
+        "human_leakage_adjudication",
+        "executable_semantic_contract_required"
+      ],
+      "dependency_comparison_connected": [
+        "u000745b06eb3e59088b6",
+        "u096ef87ac896a2e62498",
+        "ue2c3275d50ae819921e8",
+        "ufc80a46d6b7469ca86c1"
+      ],
+      "family": "sha256:dc251beb7a0458f1abef0a873d3743c9749cb4c5931f3e3435cf1680b0417b7e",
+      "source_sha256": "sha256:4d5d6853212905706658c72deeed1c771cf87d312e04ccdac176473339db8e38",
+      "span": {
+        "blob_sha": "2e26f8ddf08676e075a749218d093c3fa1e3ac8e",
+        "end_byte": 48957,
+        "function": "probe_onset_impl",
+        "manifest_digest": "sha256:fbfcc0bf8323b16b68da804858d378c4170408c0f05b303b5808d330f4cef3f9",
+        "path": "debug.lib",
+        "pin": "2edec0537f536eaa130d42c354884d7db971663c",
+        "repo": "grame-cncm/faustlibraries",
+        "sha256": "sha256:4d5d6853212905706658c72deeed1c771cf87d312e04ccdac176473339db8e38",
+        "start_byte": 48920,
+        "unit_id": "u8348c7f594a01bd57d2f"
+      }
+    },
+    {
+      "unit_id": "uda946c0d775d4e63fb85",
+      "function": "probe_peak_db_impl",
+      "path": "debug.lib",
+      "canonical_tokens": 4,
+      "eligible_for": [
+        "train"
+      ],
+      "license": "LGPL-2.1-or-later",
+      "dependency_closure_unit_ids": [
+        "u0031089577cf18d51c96",
+        "u1867cd6de05f92ec059e",
+        "ube659fc0ff3b7fd1df6e",
+        "ud87f8b1aff79a835de39"
+      ],
+      "dependency_not_in_ledger": [],
+      "blockers": [
+        "independent_source_closure_review",
+        "human_leakage_adjudication",
+        "executable_semantic_contract_required"
+      ],
+      "dependency_comparison_connected": [
+        "u0031089577cf18d51c96",
+        "u1867cd6de05f92ec059e",
+        "ube659fc0ff3b7fd1df6e"
+      ],
+      "family": "sha256:dc251beb7a0458f1abef0a873d3743c9749cb4c5931f3e3435cf1680b0417b7e",
+      "source_sha256": "sha256:c5ed33bbe31b056e071b9ac80e463cb40ea6037e7be1bb194fae6f7efa28eb48",
+      "span": {
+        "blob_sha": "2e26f8ddf08676e075a749218d093c3fa1e3ac8e",
+        "end_byte": 49093,
+        "function": "probe_peak_db_impl",
+        "manifest_digest": "sha256:fbfcc0bf8323b16b68da804858d378c4170408c0f05b303b5808d330f4cef3f9",
+        "path": "debug.lib",
+        "pin": "2edec0537f536eaa130d42c354884d7db971663c",
+        "repo": "grame-cncm/faustlibraries",
+        "sha256": "sha256:c5ed33bbe31b056e071b9ac80e463cb40ea6037e7be1bb194fae6f7efa28eb48",
+        "start_byte": 49052,
+        "unit_id": "uda946c0d775d4e63fb85"
+      }
+    },
+    {
+      "unit_id": "u34e785131517a01d069f",
+      "function": "probe_peak_hold_impl",
+      "path": "debug.lib",
+      "canonical_tokens": 4,
+      "eligible_for": [
+        "train"
+      ],
+      "license": "LGPL-2.1-or-later",
+      "dependency_closure_unit_ids": [
+        "u7653e89e70669f07e8df",
+        "ufb0570a63833335bcb15"
+      ],
+      "dependency_not_in_ledger": [],
+      "blockers": [
+        "independent_source_closure_review",
+        "human_leakage_adjudication",
+        "executable_semantic_contract_required"
+      ],
+      "dependency_comparison_connected": [
+        "u7653e89e70669f07e8df",
+        "ufb0570a63833335bcb15"
+      ],
+      "family": "sha256:dc251beb7a0458f1abef0a873d3743c9749cb4c5931f3e3435cf1680b0417b7e",
+      "source_sha256": "sha256:bffa4325076f4e9e17eb8c026fa1459271a0948c106aa64f15bac285c47465dd",
+      "span": {
+        "blob_sha": "2e26f8ddf08676e075a749218d093c3fa1e3ac8e",
+        "end_byte": 49237,
+        "function": "probe_peak_hold_impl",
+        "manifest_digest": "sha256:fbfcc0bf8323b16b68da804858d378c4170408c0f05b303b5808d330f4cef3f9",
+        "path": "debug.lib",
+        "pin": "2edec0537f536eaa130d42c354884d7db971663c",
+        "repo": "grame-cncm/faustlibraries",
+        "sha256": "sha256:bffa4325076f4e9e17eb8c026fa1459271a0948c106aa64f15bac285c47465dd",
+        "start_byte": 49192,
+        "unit_id": "u34e785131517a01d069f"
+      }
+    },
+    {
+      "unit_id": "ue005a4bb0791b4fc0fce",
+      "function": "probe_peak_lin_impl",
+      "path": "debug.lib",
+      "canonical_tokens": 4,
+      "eligible_for": [
+        "train"
+      ],
+      "license": "LGPL-2.1-or-later",
+      "dependency_closure_unit_ids": [
+        "u0031089577cf18d51c96",
+        "ub3aa421abe99af2007df",
+        "ucda2607b2e771759ddc5",
+        "ud87f8b1aff79a835de39"
+      ],
+      "dependency_not_in_ledger": [],
+      "blockers": [
+        "independent_source_closure_review",
+        "human_leakage_adjudication",
+        "executable_semantic_contract_required"
+      ],
+      "dependency_comparison_connected": [
+        "u0031089577cf18d51c96",
+        "ub3aa421abe99af2007df",
+        "ucda2607b2e771759ddc5"
+      ],
+      "family": "sha256:dc251beb7a0458f1abef0a873d3743c9749cb4c5931f3e3435cf1680b0417b7e",
+      "source_sha256": "sha256:1681cf9a5faa99509a630651ad9cdcc47c06cbfab5eba3727af0b0e210a2157d",
+      "span": {
+        "blob_sha": "2e26f8ddf08676e075a749218d093c3fa1e3ac8e",
+        "end_byte": 49377,
+        "function": "probe_peak_lin_impl",
+        "manifest_digest": "sha256:fbfcc0bf8323b16b68da804858d378c4170408c0f05b303b5808d330f4cef3f9",
+        "path": "debug.lib",
+        "pin": "2edec0537f536eaa130d42c354884d7db971663c",
+        "repo": "grame-cncm/faustlibraries",
+        "sha256": "sha256:1681cf9a5faa99509a630651ad9cdcc47c06cbfab5eba3727af0b0e210a2157d",
+        "start_byte": 49334,
+        "unit_id": "ue005a4bb0791b4fc0fce"
+      }
+    },
+    {
+      "unit_id": "ue8f12861159a75b940e5",
+      "function": "probe_rms_db_impl",
+      "path": "debug.lib",
+      "canonical_tokens": 4,
+      "eligible_for": [
+        "train"
+      ],
+      "license": "LGPL-2.1-or-later",
+      "dependency_closure_unit_ids": [
+        "u40dc043d6859466e3580",
+        "ud630a67b785b38e50de4",
+        "ud63589711391a94416fb",
+        "udfcd9849dbefe8245d94"
+      ],
+      "dependency_not_in_ledger": [],
+      "blockers": [
+        "independent_source_closure_review",
+        "human_leakage_adjudication",
+        "executable_semantic_contract_required"
+      ],
+      "dependency_comparison_connected": [
+        "u40dc043d6859466e3580",
+        "ud630a67b785b38e50de4",
+        "ud63589711391a94416fb",
+        "udfcd9849dbefe8245d94"
+      ],
+      "family": "sha256:dc251beb7a0458f1abef0a873d3743c9749cb4c5931f3e3435cf1680b0417b7e",
+      "source_sha256": "sha256:7f948868142b97f31cd0bfc9316c6f454fe7ace9b9ea5e35765e91d5b4ca9fcd",
+      "span": {
+        "blob_sha": "2e26f8ddf08676e075a749218d093c3fa1e3ac8e",
+        "end_byte": 49509,
+        "function": "probe_rms_db_impl",
+        "manifest_digest": "sha256:fbfcc0bf8323b16b68da804858d378c4170408c0f05b303b5808d330f4cef3f9",
+        "path": "debug.lib",
+        "pin": "2edec0537f536eaa130d42c354884d7db971663c",
+        "repo": "grame-cncm/faustlibraries",
+        "sha256": "sha256:7f948868142b97f31cd0bfc9316c6f454fe7ace9b9ea5e35765e91d5b4ca9fcd",
+        "start_byte": 49470,
+        "unit_id": "ue8f12861159a75b940e5"
+      }
+    },
+    {
+      "unit_id": "u1451fe3c1b09d907452f",
+      "function": "probe_rms_lin_impl",
+      "path": "debug.lib",
+      "canonical_tokens": 4,
+      "eligible_for": [
+        "train"
+      ],
+      "license": "LGPL-2.1-or-later",
+      "dependency_closure_unit_ids": [
+        "u32aaf6db5babf01a0098",
+        "u5610c709feca121b9e7e",
+        "ud630a67b785b38e50de4",
+        "ud63589711391a94416fb"
+      ],
+      "dependency_not_in_ledger": [],
+      "blockers": [
+        "independent_source_closure_review",
+        "human_leakage_adjudication",
+        "executable_semantic_contract_required"
+      ],
+      "dependency_comparison_connected": [
+        "u32aaf6db5babf01a0098",
+        "u5610c709feca121b9e7e",
+        "ud630a67b785b38e50de4",
+        "ud63589711391a94416fb"
+      ],
+      "family": "sha256:dc251beb7a0458f1abef0a873d3743c9749cb4c5931f3e3435cf1680b0417b7e",
+      "source_sha256": "sha256:d7c2714b03db74cefe2053430532ebda5f3160c8e0fe4a6d5804910c9970e41f",
+      "span": {
+        "blob_sha": "2e26f8ddf08676e075a749218d093c3fa1e3ac8e",
+        "end_byte": 49645,
+        "function": "probe_rms_lin_impl",
+        "manifest_digest": "sha256:fbfcc0bf8323b16b68da804858d378c4170408c0f05b303b5808d330f4cef3f9",
+        "path": "debug.lib",
+        "pin": "2edec0537f536eaa130d42c354884d7db971663c",
+        "repo": "grame-cncm/faustlibraries",
+        "sha256": "sha256:d7c2714b03db74cefe2053430532ebda5f3160c8e0fe4a6d5804910c9970e41f",
+        "start_byte": 49604,
+        "unit_id": "u1451fe3c1b09d907452f"
+      }
+    },
+    {
+      "unit_id": "u5c8f526bc5cf69e3dae3",
+      "function": "probe_sample_count_impl",
+      "path": "debug.lib",
+      "canonical_tokens": 4,
+      "eligible_for": [
+        "train"
+      ],
+      "license": "LGPL-2.1-or-later",
+      "dependency_closure_unit_ids": [
+        "u4e78276c9f879486e677",
+        "u8b34fbac2c3b079b5bf9"
+      ],
+      "dependency_not_in_ledger": [],
+      "blockers": [
+        "independent_source_closure_review",
+        "human_leakage_adjudication",
+        "executable_semantic_contract_required"
+      ],
+      "dependency_comparison_connected": [
+        "u4e78276c9f879486e677",
+        "u8b34fbac2c3b079b5bf9"
+      ],
+      "family": "sha256:dc251beb7a0458f1abef0a873d3743c9749cb4c5931f3e3435cf1680b0417b7e",
+      "source_sha256": "sha256:83b1bd0738a52d5d09067112d48b091e93e38a2d7fbbe733547120eb246e05d7",
+      "span": {
+        "blob_sha": "2e26f8ddf08676e075a749218d093c3fa1e3ac8e",
+        "end_byte": 49801,
+        "function": "probe_sample_count_impl",
+        "manifest_digest": "sha256:fbfcc0bf8323b16b68da804858d378c4170408c0f05b303b5808d330f4cef3f9",
+        "path": "debug.lib",
+        "pin": "2edec0537f536eaa130d42c354884d7db971663c",
+        "repo": "grame-cncm/faustlibraries",
+        "sha256": "sha256:83b1bd0738a52d5d09067112d48b091e93e38a2d7fbbe733547120eb246e05d7",
+        "start_byte": 49750,
+        "unit_id": "u5c8f526bc5cf69e3dae3"
+      }
+    },
+    {
+      "unit_id": "u15b29f76566f7f183f00",
+      "function": "probe_silence_impl",
+      "path": "debug.lib",
+      "canonical_tokens": 4,
+      "eligible_for": [
+        "train"
+      ],
+      "license": "LGPL-2.1-or-later",
+      "dependency_closure_unit_ids": [
+        "u1ebb58d0e27173bb1917",
+        "ub19eb66ca310693cfce0",
+        "ud630a67b785b38e50de4",
+        "ud63589711391a94416fb"
+      ],
+      "dependency_not_in_ledger": [],
+      "blockers": [
+        "independent_source_closure_review",
+        "human_leakage_adjudication",
+        "executable_semantic_contract_required"
+      ],
+      "dependency_comparison_connected": [
+        "u1ebb58d0e27173bb1917",
+        "ub19eb66ca310693cfce0",
+        "ud630a67b785b38e50de4",
+        "ud63589711391a94416fb"
+      ],
+      "family": "sha256:dc251beb7a0458f1abef0a873d3743c9749cb4c5931f3e3435cf1680b0417b7e",
+      "source_sha256": "sha256:8a34cf0086b3cf35bfc304464e4392edbc264d8fc137320dab209f1d8abdb304",
+      "span": {
+        "blob_sha": "2e26f8ddf08676e075a749218d093c3fa1e3ac8e",
+        "end_byte": 49937,
+        "function": "probe_silence_impl",
+        "manifest_digest": "sha256:fbfcc0bf8323b16b68da804858d378c4170408c0f05b303b5808d330f4cef3f9",
+        "path": "debug.lib",
+        "pin": "2edec0537f536eaa130d42c354884d7db971663c",
+        "repo": "grame-cncm/faustlibraries",
+        "sha256": "sha256:8a34cf0086b3cf35bfc304464e4392edbc264d8fc137320dab209f1d8abdb304",
+        "start_byte": 49896,
+        "unit_id": "u15b29f76566f7f183f00"
+      }
+    },
+    {
+      "unit_id": "u738b027ca4d0799db8ee",
+      "function": "probe_slew_impl",
+      "path": "debug.lib",
+      "canonical_tokens": 4,
+      "eligible_for": [
+        "train"
+      ],
+      "license": "LGPL-2.1-or-later",
+      "dependency_closure_unit_ids": [
+        "u059c630733c2bd6f171d",
+        "uc3f232fee90bb2087934",
+        "ud630a67b785b38e50de4",
+        "ud63589711391a94416fb"
+      ],
+      "dependency_not_in_ledger": [],
+      "blockers": [
+        "independent_source_closure_review",
+        "human_leakage_adjudication",
+        "executable_semantic_contract_required"
+      ],
+      "dependency_comparison_connected": [
+        "u059c630733c2bd6f171d",
+        "uc3f232fee90bb2087934",
+        "ud630a67b785b38e50de4",
+        "ud63589711391a94416fb"
+      ],
+      "family": "sha256:dc251beb7a0458f1abef0a873d3743c9749cb4c5931f3e3435cf1680b0417b7e",
+      "source_sha256": "sha256:012c36c0f552c2954b851e4c2800fd442b794425250582563dc1a3789cb08391",
+      "span": {
+        "blob_sha": "2e26f8ddf08676e075a749218d093c3fa1e3ac8e",
+        "end_byte": 50061,
+        "function": "probe_slew_impl",
+        "manifest_digest": "sha256:fbfcc0bf8323b16b68da804858d378c4170408c0f05b303b5808d330f4cef3f9",
+        "path": "debug.lib",
+        "pin": "2edec0537f536eaa130d42c354884d7db971663c",
+        "repo": "grame-cncm/faustlibraries",
+        "sha256": "sha256:012c36c0f552c2954b851e4c2800fd442b794425250582563dc1a3789cb08391",
+        "start_byte": 50026,
+        "unit_id": "u738b027ca4d0799db8ee"
+      }
+    },
+    {
+      "unit_id": "ufcf832d05c77a4c61f6e",
+      "function": "probe_spectral_centroid_impl",
+      "path": "debug.lib",
+      "canonical_tokens": 4,
+      "eligible_for": [
+        "train"
+      ],
+      "license": "LGPL-2.1-or-later",
+      "dependency_closure_unit_ids": [
+        "u80527f8472f26ab17e73",
+        "uc0ebf5f12553d33fddf4",
+        "ud630a67b785b38e50de4",
+        "ud63589711391a94416fb"
+      ],
+      "dependency_not_in_ledger": [],
+      "blockers": [
+        "independent_source_closure_review",
+        "human_leakage_adjudication",
+        "executable_semantic_contract_required"
+      ],
+      "dependency_comparison_connected": [
+        "u80527f8472f26ab17e73",
+        "uc0ebf5f12553d33fddf4",
+        "ud630a67b785b38e50de4",
+        "ud63589711391a94416fb"
+      ],
+      "family": "sha256:dc251beb7a0458f1abef0a873d3743c9749cb4c5931f3e3435cf1680b0417b7e",
+      "source_sha256": "sha256:45ad77c2ad3ce0dde66b33fdb4139e0f6b5e5a91678baf0d6ebdf2b57ce24790",
+      "span": {
+        "blob_sha": "2e26f8ddf08676e075a749218d093c3fa1e3ac8e",
+        "end_byte": 50237,
+        "function": "probe_spectral_centroid_impl",
+        "manifest_digest": "sha256:fbfcc0bf8323b16b68da804858d378c4170408c0f05b303b5808d330f4cef3f9",
+        "path": "debug.lib",
+        "pin": "2edec0537f536eaa130d42c354884d7db971663c",
+        "repo": "grame-cncm/faustlibraries",
+        "sha256": "sha256:45ad77c2ad3ce0dde66b33fdb4139e0f6b5e5a91678baf0d6ebdf2b57ce24790",
+        "start_byte": 50176,
+        "unit_id": "ufcf832d05c77a4c61f6e"
+      }
+    },
+    {
+      "unit_id": "u8fb3388f024eb78e2f03",
+      "function": "probe_tap_impl",
+      "path": "debug.lib",
+      "canonical_tokens": 4,
+      "eligible_for": [
+        "train"
+      ],
+      "license": "LGPL-2.1-or-later",
+      "dependency_closure_unit_ids": [
+        "u19a133952d3f9d6f3f45",
+        "ud549d12c6fca8d21a74d"
+      ],
+      "dependency_not_in_ledger": [],
+      "blockers": [
+        "independent_source_closure_review",
+        "human_leakage_adjudication",
+        "executable_semantic_contract_required"
+      ],
+      "dependency_comparison_connected": [
+        "u19a133952d3f9d6f3f45",
+        "ud549d12c6fca8d21a74d"
+      ],
+      "family": "sha256:dc251beb7a0458f1abef0a873d3743c9749cb4c5931f3e3435cf1680b0417b7e",
+      "source_sha256": "sha256:274d88e441cfb2e14ebc538613f3958908e5b8616ba02664e0f91b19bb2c37f7",
+      "span": {
+        "blob_sha": "2e26f8ddf08676e075a749218d093c3fa1e3ac8e",
+        "end_byte": 50357,
+        "function": "probe_tap_impl",
+        "manifest_digest": "sha256:fbfcc0bf8323b16b68da804858d378c4170408c0f05b303b5808d330f4cef3f9",
+        "path": "debug.lib",
+        "pin": "2edec0537f536eaa130d42c354884d7db971663c",
+        "repo": "grame-cncm/faustlibraries",
+        "sha256": "sha256:274d88e441cfb2e14ebc538613f3958908e5b8616ba02664e0f91b19bb2c37f7",
+        "start_byte": 50324,
+        "unit_id": "u8fb3388f024eb78e2f03"
+      }
+    },
+    {
+      "unit_id": "u8725c36fca3fe19711c4",
+      "function": "probe_tap_n_impl",
+      "path": "debug.lib",
+      "canonical_tokens": 4,
+      "eligible_for": [
+        "train"
+      ],
+      "license": "LGPL-2.1-or-later",
+      "dependency_closure_unit_ids": [
+        "u19a133952d3f9d6f3f45",
+        "u33dd3ce6d0d1bf0bcd8e",
+        "u36f6ea2a1de9cf2062d6",
+        "u4cfe7e9ae2c6c827039c",
+        "u63a591a1ee15a19e997a",
+        "ub486ecee0840689ed9d4",
+        "ubc3991646252e5065745",
+        "ud549d12c6fca8d21a74d"
+      ],
+      "dependency_not_in_ledger": [],
+      "blockers": [
+        "independent_source_closure_review",
+        "human_leakage_adjudication",
+        "executable_semantic_contract_required"
+      ],
+      "dependency_comparison_connected": [
+        "u19a133952d3f9d6f3f45",
+        "u33dd3ce6d0d1bf0bcd8e",
+        "u36f6ea2a1de9cf2062d6",
+        "u4cfe7e9ae2c6c827039c",
+        "ub486ecee0840689ed9d4",
+        "ubc3991646252e5065745",
+        "ud549d12c6fca8d21a74d"
+      ],
+      "family": "sha256:dc251beb7a0458f1abef0a873d3743c9749cb4c5931f3e3435cf1680b0417b7e",
+      "source_sha256": "sha256:5fd326183594436ac166c8b92c851cdd460a4ac85aa630b6ead2f03bd045c8ad",
+      "span": {
+        "blob_sha": "2e26f8ddf08676e075a749218d093c3fa1e3ac8e",
+        "end_byte": 50485,
+        "function": "probe_tap_n_impl",
+        "manifest_digest": "sha256:fbfcc0bf8323b16b68da804858d378c4170408c0f05b303b5808d330f4cef3f9",
+        "path": "debug.lib",
+        "pin": "2edec0537f536eaa130d42c354884d7db971663c",
+        "repo": "grame-cncm/faustlibraries",
+        "sha256": "sha256:5fd326183594436ac166c8b92c851cdd460a4ac85aa630b6ead2f03bd045c8ad",
+        "start_byte": 50448,
+        "unit_id": "u8725c36fca3fe19711c4"
+      }
+    },
+    {
+      "unit_id": "u88990032b6d03bd7fa2b",
+      "function": "probe_tap_n_reorder",
+      "path": "debug.lib",
+      "canonical_tokens": 4,
+      "eligible_for": [
+        "train"
+      ],
+      "license": "LGPL-2.1-or-later",
+      "dependency_closure_unit_ids": [
+        "u36f6ea2a1de9cf2062d6"
+      ],
+      "dependency_not_in_ledger": [],
+      "blockers": [
+        "independent_source_closure_review",
+        "human_leakage_adjudication",
+        "executable_semantic_contract_required"
+      ],
+      "dependency_comparison_connected": [
+        "u36f6ea2a1de9cf2062d6"
+      ],
+      "family": "sha256:dc251beb7a0458f1abef0a873d3743c9749cb4c5931f3e3435cf1680b0417b7e",
+      "source_sha256": "sha256:1e09ee4d728d45c94ec9aa6f3a21ba4cc0551173a738c9702e573d7914e202b9",
+      "span": {
+        "blob_sha": "2e26f8ddf08676e075a749218d093c3fa1e3ac8e",
+        "end_byte": 50625,
+        "function": "probe_tap_n_reorder",
+        "manifest_digest": "sha256:fbfcc0bf8323b16b68da804858d378c4170408c0f05b303b5808d330f4cef3f9",
+        "path": "debug.lib",
+        "pin": "2edec0537f536eaa130d42c354884d7db971663c",
+        "repo": "grame-cncm/faustlibraries",
+        "sha256": "sha256:1e09ee4d728d45c94ec9aa6f3a21ba4cc0551173a738c9702e573d7914e202b9",
+        "start_byte": 50582,
+        "unit_id": "u88990032b6d03bd7fa2b"
+      }
+    },
+    {
+      "unit_id": "u4e1ac9ab0a787ef5a89f",
+      "function": "probe_time_ms_impl",
+      "path": "debug.lib",
+      "canonical_tokens": 4,
+      "eligible_for": [
+        "train"
+      ],
+      "license": "LGPL-2.1-or-later",
+      "dependency_closure_unit_ids": [
+        "u000745b06eb3e59088b6",
+        "u578ad17129619dc958e5",
+        "u89e6978978495fa7ac8f",
+        "ua8966701f4e9663f8562"
+      ],
+      "dependency_not_in_ledger": [],
+      "blockers": [
+        "independent_source_closure_review",
+        "human_leakage_adjudication",
+        "executable_semantic_contract_required"
+      ],
+      "dependency_comparison_connected": [
+        "u000745b06eb3e59088b6",
+        "u89e6978978495fa7ac8f",
+        "ua8966701f4e9663f8562"
+      ],
+      "family": "sha256:dc251beb7a0458f1abef0a873d3743c9749cb4c5931f3e3435cf1680b0417b7e",
+      "source_sha256": "sha256:3930b4c8f46b9146c20f990ff4d81231a0bf9faec36ba4586ba57ad902f8a5d5",
+      "span": {
+        "blob_sha": "2e26f8ddf08676e075a749218d093c3fa1e3ac8e",
+        "end_byte": 50761,
+        "function": "probe_time_ms_impl",
+        "manifest_digest": "sha256:fbfcc0bf8323b16b68da804858d378c4170408c0f05b303b5808d330f4cef3f9",
+        "path": "debug.lib",
+        "pin": "2edec0537f536eaa130d42c354884d7db971663c",
+        "repo": "grame-cncm/faustlibraries",
+        "sha256": "sha256:3930b4c8f46b9146c20f990ff4d81231a0bf9faec36ba4586ba57ad902f8a5d5",
+        "start_byte": 50720,
+        "unit_id": "u4e1ac9ab0a787ef5a89f"
+      }
+    },
+    {
+      "unit_id": "ub8ff8ce30a70fb71e438",
+      "function": "probe_value_impl",
+      "path": "debug.lib",
+      "canonical_tokens": 4,
+      "eligible_for": [
+        "train"
+      ],
+      "license": "LGPL-2.1-or-later",
+      "dependency_closure_unit_ids": [
+        "u5788a6ac871905b77d17",
+        "u589f82adfc613c0f6c90"
+      ],
+      "dependency_not_in_ledger": [],
+      "blockers": [
+        "independent_source_closure_review",
+        "human_leakage_adjudication",
+        "executable_semantic_contract_required"
+      ],
+      "dependency_comparison_connected": [
+        "u5788a6ac871905b77d17",
+        "u589f82adfc613c0f6c90"
+      ],
+      "family": "sha256:dc251beb7a0458f1abef0a873d3743c9749cb4c5931f3e3435cf1680b0417b7e",
+      "source_sha256": "sha256:7abc3161de06ba365ce8e04cc7e43dff273d9245f79768b83fc7c6c9578f39ae",
+      "span": {
+        "blob_sha": "2e26f8ddf08676e075a749218d093c3fa1e3ac8e",
+        "end_byte": 50889,
+        "function": "probe_value_impl",
+        "manifest_digest": "sha256:fbfcc0bf8323b16b68da804858d378c4170408c0f05b303b5808d330f4cef3f9",
+        "path": "debug.lib",
+        "pin": "2edec0537f536eaa130d42c354884d7db971663c",
+        "repo": "grame-cncm/faustlibraries",
+        "sha256": "sha256:7abc3161de06ba365ce8e04cc7e43dff273d9245f79768b83fc7c6c9578f39ae",
+        "start_byte": 50852,
+        "unit_id": "ub8ff8ce30a70fb71e438"
+      }
+    },
+    {
+      "unit_id": "u1892977276d99bfc96cd",
+      "function": "probe_zcr_impl",
+      "path": "debug.lib",
+      "canonical_tokens": 4,
+      "eligible_for": [
+        "train"
+      ],
+      "license": "LGPL-2.1-or-later",
+      "dependency_closure_unit_ids": [
+        "u229a91c7d05ddd1d7bc9",
+        "u25ea26b96425617df798",
+        "u54aeab9776a7c06928f4",
+        "u66ef72f5248ac3963861"
+      ],
+      "dependency_not_in_ledger": [],
+      "blockers": [
+        "independent_source_closure_review",
+        "human_leakage_adjudication",
+        "executable_semantic_contract_required"
+      ],
+      "dependency_comparison_connected": [
+        "u229a91c7d05ddd1d7bc9",
+        "u25ea26b96425617df798",
+        "u54aeab9776a7c06928f4",
+        "u66ef72f5248ac3963861"
+      ],
+      "family": "sha256:dc251beb7a0458f1abef0a873d3743c9749cb4c5931f3e3435cf1680b0417b7e",
+      "source_sha256": "sha256:b6b1fb7b72ff199e512b766a0e85449195f51915a968f265798a1284eb5e1d75",
+      "span": {
+        "blob_sha": "2e26f8ddf08676e075a749218d093c3fa1e3ac8e",
+        "end_byte": 51009,
+        "function": "probe_zcr_impl",
+        "manifest_digest": "sha256:fbfcc0bf8323b16b68da804858d378c4170408c0f05b303b5808d330f4cef3f9",
+        "path": "debug.lib",
+        "pin": "2edec0537f536eaa130d42c354884d7db971663c",
+        "repo": "grame-cncm/faustlibraries",
+        "sha256": "sha256:b6b1fb7b72ff199e512b766a0e85449195f51915a968f265798a1284eb5e1d75",
+        "start_byte": 50976,
+        "unit_id": "u1892977276d99bfc96cd"
+      }
+    },
+    {
+      "unit_id": "u36f6cf8d0c689e6eeab0",
+      "function": "th",
+      "path": "hoa.lib",
+      "canonical_tokens": 4,
+      "eligible_for": [
+        "train"
+      ],
+      "license": "LGPL-2.1-or-later",
+      "dependency_closure_unit_ids": [
+        "u0493cdbfe5a66b926bea",
+        "u11ce556043e18e53372a",
+        "u2b33ac793c858258bbbc",
+        "u30e1d9ec246c4d1e2c2b",
+        "u33a1dc1934877b6f8d52",
+        "u34ecc3d79c9eb9278ea8",
+        "u3e8e203ca87f51a3a227",
+        "u4de71a30af88ffa9223b",
+        "u501b3d46e88cdec4771d",
+        "u565d8e6d06b38855b530",
+        "u6a52d982a503a626fe89",
+        "u87e6c79aab9642b3fd61",
+        "ua9876ed3ff03aa7d74f1",
+        "ub2e201e188c93f3ea9d2",
+        "ub484cb8377172009c24a",
+        "uc34bcd9c1d64725bbd5f",
+        "uc9f553ef98f20fd70178",
+        "udf422d0a75ed984e9a0f",
+        "ueced03580e8c7ea20ab8",
+        "uf6943da996d419562b19",
+        "ufc3aea37bd31f142630e",
+        "ufdc2008af66332a41183",
+        "ufeda3c60b3e914403bdb"
+      ],
+      "dependency_not_in_ledger": [],
+      "blockers": [
+        "independent_source_closure_review",
+        "human_leakage_adjudication",
+        "executable_semantic_contract_required"
+      ],
+      "dependency_comparison_connected": [
+        "u0493cdbfe5a66b926bea",
+        "u11ce556043e18e53372a",
+        "u2b33ac793c858258bbbc",
+        "u30e1d9ec246c4d1e2c2b",
+        "u33a1dc1934877b6f8d52",
+        "u34ecc3d79c9eb9278ea8",
+        "u3e8e203ca87f51a3a227",
+        "u501b3d46e88cdec4771d",
+        "u565d8e6d06b38855b530",
+        "u6a52d982a503a626fe89",
+        "u87e6c79aab9642b3fd61",
+        "ua9876ed3ff03aa7d74f1",
+        "ub2e201e188c93f3ea9d2",
+        "ub484cb8377172009c24a",
+        "uc34bcd9c1d64725bbd5f",
+        "uc9f553ef98f20fd70178",
+        "udf422d0a75ed984e9a0f",
+        "ueced03580e8c7ea20ab8",
+        "uf6943da996d419562b19",
+        "ufc3aea37bd31f142630e",
+        "ufdc2008af66332a41183",
+        "ufeda3c60b3e914403bdb"
+      ],
+      "family": "sha256:dc251beb7a0458f1abef0a873d3743c9749cb4c5931f3e3435cf1680b0417b7e",
+      "source_sha256": "sha256:43a9615c48c87fd67161785dd2016f411f0419ea058fbe0b11443f9089e13533",
+      "span": {
+        "blob_sha": "9d187f462471e0f8d7a01caebb72b802db6c67c5",
+        "end_byte": 51945,
+        "function": "th",
+        "manifest_digest": "sha256:fbfcc0bf8323b16b68da804858d378c4170408c0f05b303b5808d330f4cef3f9",
+        "path": "hoa.lib",
+        "pin": "2edec0537f536eaa130d42c354884d7db971663c",
+        "repo": "grame-cncm/faustlibraries",
+        "sha256": "sha256:43a9615c48c87fd67161785dd2016f411f0419ea058fbe0b11443f9089e13533",
+        "start_byte": 51936,
+        "unit_id": "u36f6cf8d0c689e6eeab0"
+      }
+    },
+    {
+      "unit_id": "u182096b97d2fbf8fb2da",
+      "function": "MAX_INTER",
+      "path": "interpolators.lib",
+      "canonical_tokens": 4,
+      "eligible_for": [
+        "train"
+      ],
+      "license": "LGPL-2.1-or-later",
+      "dependency_closure_unit_ids": [],
+      "dependency_not_in_ledger": [],
+      "blockers": [
+        "independent_source_closure_review",
+        "human_leakage_adjudication",
+        "executable_semantic_contract_required"
+      ],
+      "dependency_comparison_connected": [],
+      "family": "sha256:dc4bf5f7e107984e49eb61233ae08c2571339d50a8d898effd96f3763d7da02d",
+      "source_sha256": "sha256:973ba8ae916b644bb091b675d780ee2ee30a51c358ff5e238373adb24c274264",
+      "span": {
+        "blob_sha": "4b89fab99892bed405bca1684e6d525781b9df3f",
+        "end_byte": 33730,
+        "function": "MAX_INTER",
+        "manifest_digest": "sha256:fbfcc0bf8323b16b68da804858d378c4170408c0f05b303b5808d330f4cef3f9",
+        "path": "interpolators.lib",
+        "pin": "2edec0537f536eaa130d42c354884d7db971663c",
+        "repo": "grame-cncm/faustlibraries",
+        "sha256": "sha256:973ba8ae916b644bb091b675d780ee2ee30a51c358ff5e238373adb24c274264",
+        "start_byte": 33716,
+        "unit_id": "u182096b97d2fbf8fb2da"
+      }
+    },
+    {
+      "unit_id": "u3420340de9a18113be4c",
+      "function": "cosine",
+      "path": "interpolators.lib",
+      "canonical_tokens": 4,
+      "eligible_for": [
+        "train"
+      ],
+      "license": "LGPL-2.1-or-later",
+      "dependency_closure_unit_ids": [],
+      "dependency_not_in_ledger": [],
+      "blockers": [
+        "independent_source_closure_review",
+        "human_leakage_adjudication",
+        "executable_semantic_contract_required"
+      ],
+      "dependency_comparison_connected": [],
+      "family": "sha256:dc4bf5f7e107984e49eb61233ae08c2571339d50a8d898effd96f3763d7da02d",
+      "source_sha256": "sha256:1bd4f9c36f831aea4dec98216a1fd46ddce80491c0ac616e6b607f19d49da4f6",
+      "span": {
+        "blob_sha": "4b89fab99892bed405bca1684e6d525781b9df3f",
+        "end_byte": 33755,
+        "function": "cosine",
+        "manifest_digest": "sha256:fbfcc0bf8323b16b68da804858d378c4170408c0f05b303b5808d330f4cef3f9",
+        "path": "interpolators.lib",
+        "pin": "2edec0537f536eaa130d42c354884d7db971663c",
+        "repo": "grame-cncm/faustlibraries",
+        "sha256": "sha256:1bd4f9c36f831aea4dec98216a1fd46ddce80491c0ac616e6b607f19d49da4f6",
+        "start_byte": 33744,
+        "unit_id": "u3420340de9a18113be4c"
+      }
+    },
+    {
+      "unit_id": "uf3364525a7c1baa081cc",
+      "function": "cubic",
+      "path": "interpolators.lib",
+      "canonical_tokens": 4,
+      "eligible_for": [
+        "train"
+      ],
+      "license": "LGPL-2.1-or-later",
+      "dependency_closure_unit_ids": [],
+      "dependency_not_in_ledger": [],
+      "blockers": [
+        "independent_source_closure_review",
+        "human_leakage_adjudication",
+        "executable_semantic_contract_required"
+      ],
+      "dependency_comparison_connected": [],
+      "family": "sha256:dc4bf5f7e107984e49eb61233ae08c2571339d50a8d898effd96f3763d7da02d",
+      "source_sha256": "sha256:ae76733770f256331adbf436ee16769673aeff2d893c88867911e879c74cb541",
+      "span": {
+        "blob_sha": "4b89fab99892bed405bca1684e6d525781b9df3f",
+        "end_byte": 33767,
+        "function": "cubic",
+        "manifest_digest": "sha256:fbfcc0bf8323b16b68da804858d378c4170408c0f05b303b5808d330f4cef3f9",
+        "path": "interpolators.lib",
+        "pin": "2edec0537f536eaa130d42c354884d7db971663c",
+        "repo": "grame-cncm/faustlibraries",
+        "sha256": "sha256:ae76733770f256331adbf436ee16769673aeff2d893c88867911e879c74cb541",
+        "start_byte": 33756,
+        "unit_id": "uf3364525a7c1baa081cc"
+      }
+    },
+    {
+      "unit_id": "u6ff080635a7e51061215",
+      "function": "linear",
+      "path": "interpolators.lib",
+      "canonical_tokens": 4,
+      "eligible_for": [
+        "train"
+      ],
+      "license": "LGPL-2.1-or-later",
+      "dependency_closure_unit_ids": [],
+      "dependency_not_in_ledger": [],
+      "blockers": [
+        "independent_source_closure_review",
+        "human_leakage_adjudication",
+        "executable_semantic_contract_required"
+      ],
+      "dependency_comparison_connected": [],
+      "family": "sha256:dc4bf5f7e107984e49eb61233ae08c2571339d50a8d898effd96f3763d7da02d",
+      "source_sha256": "sha256:7c266b48abf05b3c660cfc1fbef2eb228099e967031e0e5c78e0ed4c91383cc7",
+      "span": {
+        "blob_sha": "4b89fab99892bed405bca1684e6d525781b9df3f",
+        "end_byte": 33743,
+        "function": "linear",
+        "manifest_digest": "sha256:fbfcc0bf8323b16b68da804858d378c4170408c0f05b303b5808d330f4cef3f9",
+        "path": "interpolators.lib",
+        "pin": "2edec0537f536eaa130d42c354884d7db971663c",
+        "repo": "grame-cncm/faustlibraries",
+        "sha256": "sha256:7c266b48abf05b3c660cfc1fbef2eb228099e967031e0e5c78e0ed4c91383cc7",
+        "start_byte": 33732,
+        "unit_id": "u6ff080635a7e51061215"
+      }
+    },
+    {
+      "unit_id": "u04bf04517fdd97acc976",
+      "function": "reset",
+      "path": "interpolators.lib",
+      "canonical_tokens": 4,
+      "eligible_for": [
+        "train"
+      ],
+      "license": "LGPL-2.1-or-later",
+      "dependency_closure_unit_ids": [
+        "udcad236660772c0368c6"
+      ],
+      "dependency_not_in_ledger": [],
+      "blockers": [
+        "independent_source_closure_review",
+        "human_leakage_adjudication",
+        "executable_semantic_contract_required"
+      ],
+      "dependency_comparison_connected": [
+        "udcad236660772c0368c6"
+      ],
+      "family": "sha256:dc251beb7a0458f1abef0a873d3743c9749cb4c5931f3e3435cf1680b0417b7e",
+      "source_sha256": "sha256:1b38442e70cdc0d889e2e9bbc627e98480d665fac81f366cbbbd4e8cda81dc14",
+      "span": {
+        "blob_sha": "4b89fab99892bed405bca1684e6d525781b9df3f",
+        "end_byte": 48198,
+        "function": "reset",
+        "manifest_digest": "sha256:fbfcc0bf8323b16b68da804858d378c4170408c0f05b303b5808d330f4cef3f9",
+        "path": "interpolators.lib",
+        "pin": "2edec0537f536eaa130d42c354884d7db971663c",
+        "repo": "grame-cncm/faustlibraries",
+        "sha256": "sha256:1b38442e70cdc0d889e2e9bbc627e98480d665fac81f366cbbbd4e8cda81dc14",
+        "start_byte": 48183,
+        "unit_id": "u04bf04517fdd97acc976"
+      }
+    },
+    {
+      "unit_id": "u8859a49e55c0d179753b",
+      "function": "BS",
+      "path": "maths.lib",
+      "canonical_tokens": 4,
+      "eligible_for": [
+        "train"
+      ],
+      "license": "LGPL-2.1-or-later",
+      "dependency_closure_unit_ids": [
+        "ua1da6e003a5c964f33c0"
+      ],
+      "dependency_not_in_ledger": [],
+      "blockers": [
+        "independent_source_closure_review",
+        "human_leakage_adjudication",
+        "external_dependency_review",
+        "executable_semantic_contract_required"
+      ],
+      "dependency_comparison_connected": [
+        "ua1da6e003a5c964f33c0"
+      ],
+      "family": "sha256:d6f116d92fa06d87f015f98f228213ee8dc5c35f28cf8bdad03a53a75fe728e5",
+      "source_sha256": "sha256:8224527fd7186b9348104b410aeee12173de5247b34557e4624688ad3b771c11",
+      "span": {
+        "blob_sha": "bdaca8b89c2b1ce246916cfc466a744b3c8b7696",
+        "end_byte": 5051,
+        "function": "BS",
+        "manifest_digest": "sha256:fbfcc0bf8323b16b68da804858d378c4170408c0f05b303b5808d330f4cef3f9",
+        "path": "maths.lib",
+        "pin": "2edec0537f536eaa130d42c354884d7db971663c",
+        "repo": "grame-cncm/faustlibraries",
+        "sha256": "sha256:8224527fd7186b9348104b410aeee12173de5247b34557e4624688ad3b771c11",
+        "start_byte": 5040,
+        "unit_id": "u8859a49e55c0d179753b"
+      }
+    },
+    {
+      "unit_id": "ud6342e19d7fb35175073",
+      "function": "E",
+      "path": "maths.lib",
+      "canonical_tokens": 4,
+      "eligible_for": [
+        "train"
+      ],
+      "license": "LGPL-2.1-or-later",
+      "dependency_closure_unit_ids": [],
+      "dependency_not_in_ledger": [],
+      "blockers": [
+        "independent_source_closure_review",
+        "human_leakage_adjudication",
+        "executable_semantic_contract_required"
+      ],
+      "dependency_comparison_connected": [],
+      "family": "sha256:dc4bf5f7e107984e49eb61233ae08c2571339d50a8d898effd96f3763d7da02d",
+      "source_sha256": "sha256:7942f6e002dbedf73b768db0ade95d001a1f7bb58445b8681c10c804f417ad25",
+      "span": {
+        "blob_sha": "bdaca8b89c2b1ce246916cfc466a744b3c8b7696",
+        "end_byte": 6729,
+        "function": "E",
+        "manifest_digest": "sha256:fbfcc0bf8323b16b68da804858d378c4170408c0f05b303b5808d330f4cef3f9",
+        "path": "maths.lib",
+        "pin": "2edec0537f536eaa130d42c354884d7db971663c",
+        "repo": "grame-cncm/faustlibraries",
+        "sha256": "sha256:7942f6e002dbedf73b768db0ade95d001a1f7bb58445b8681c10c804f417ad25",
+        "start_byte": 6702,
+        "unit_id": "ud6342e19d7fb35175073"
+      }
+    },
+    {
+      "unit_id": "u05acd86574c7e9af3023",
+      "function": "INFINITY",
+      "path": "maths.lib",
+      "canonical_tokens": 4,
+      "eligible_for": [
+        "train"
+      ],
+      "license": "LGPL-2.1-or-later",
+      "dependency_closure_unit_ids": [],
+      "dependency_not_in_ledger": [],
+      "blockers": [
+        "independent_source_closure_review",
+        "human_leakage_adjudication",
+        "executable_semantic_contract_required"
+      ],
+      "dependency_comparison_connected": [],
+      "family": "sha256:dc251beb7a0458f1abef0a873d3743c9749cb4c5931f3e3435cf1680b0417b7e",
+      "source_sha256": "sha256:ba7dd38fd651a1b0af89a63f5c30243be7c65780fdece429e66b25f570220260",
+      "span": {
+        "blob_sha": "bdaca8b89c2b1ce246916cfc466a744b3c8b7696",
+        "end_byte": 9471,
+        "function": "INFINITY",
+        "manifest_digest": "sha256:fbfcc0bf8323b16b68da804858d378c4170408c0f05b303b5808d330f4cef3f9",
+        "path": "maths.lib",
+        "pin": "2edec0537f536eaa130d42c354884d7db971663c",
+        "repo": "grame-cncm/faustlibraries",
+        "sha256": "sha256:ba7dd38fd651a1b0af89a63f5c30243be7c65780fdece429e66b25f570220260",
+        "start_byte": 9456,
+        "unit_id": "u05acd86574c7e9af3023"
+      }
+    },
+    {
+      "unit_id": "u4de71a30af88ffa9223b",
+      "function": "PI",
+      "path": "maths.lib",
+      "canonical_tokens": 4,
+      "eligible_for": [
+        "train"
+      ],
+      "license": "LGPL-2.1-or-later",
+      "dependency_closure_unit_ids": [],
+      "dependency_not_in_ledger": [],
+      "blockers": [
+        "independent_source_closure_review",
+        "human_leakage_adjudication",
+        "executable_semantic_contract_required"
+      ],
+      "dependency_comparison_connected": [],
+      "family": "sha256:dc4bf5f7e107984e49eb61233ae08c2571339d50a8d898effd96f3763d7da02d",
+      "source_sha256": "sha256:6bd98d96e6803b039673963c8b8194bb7027778c7fe3c6fb832acad6319292c3",
+      "span": {
+        "blob_sha": "bdaca8b89c2b1ce246916cfc466a744b3c8b7696",
+        "end_byte": 5462,
+        "function": "PI",
+        "manifest_digest": "sha256:fbfcc0bf8323b16b68da804858d378c4170408c0f05b303b5808d330f4cef3f9",
+        "path": "maths.lib",
+        "pin": "2edec0537f536eaa130d42c354884d7db971663c",
+        "repo": "grame-cncm/faustlibraries",
+        "sha256": "sha256:6bd98d96e6803b039673963c8b8194bb7027778c7fe3c6fb832acad6319292c3",
+        "start_byte": 5434,
+        "unit_id": "u4de71a30af88ffa9223b"
+      }
+    },
+    {
+      "unit_id": "u578ad17129619dc958e5",
+      "function": "SR",
+      "path": "maths.lib",
+      "canonical_tokens": 4,
+      "eligible_for": [
+        "train"
+      ],
+      "license": "LGPL-2.1-or-later",
+      "dependency_closure_unit_ids": [
+        "u000745b06eb3e59088b6"
+      ],
+      "dependency_not_in_ledger": [],
+      "blockers": [
+        "independent_source_closure_review",
+        "human_leakage_adjudication",
+        "external_dependency_review",
+        "executable_semantic_contract_required"
+      ],
+      "dependency_comparison_connected": [
+        "u000745b06eb3e59088b6"
+      ],
+      "family": "sha256:15d522958484d8be42b8eb49ff34e4d240810002eecd967910ede5fef107b7b8",
+      "source_sha256": "sha256:5f93632249161d88f2b000bb4bcca10e6d5e49aeaf2375a8acdddc961ea746c2",
+      "span": {
+        "blob_sha": "bdaca8b89c2b1ce246916cfc466a744b3c8b7696",
+        "end_byte": 4139,
+        "function": "SR",
+        "manifest_digest": "sha256:fbfcc0bf8323b16b68da804858d378c4170408c0f05b303b5808d330f4cef3f9",
+        "path": "maths.lib",
+        "pin": "2edec0537f536eaa130d42c354884d7db971663c",
+        "repo": "grame-cncm/faustlibraries",
+        "sha256": "sha256:5f93632249161d88f2b000bb4bcca10e6d5e49aeaf2375a8acdddc961ea746c2",
+        "start_byte": 4128,
+        "unit_id": "u578ad17129619dc958e5"
+      }
+    },
+    {
+      "unit_id": "ubf898881561c1ec01927",
+      "function": "decimal",
+      "path": "maths.lib",
+      "canonical_tokens": 4,
+      "eligible_for": [
+        "train"
+      ],
+      "license": "LGPL-2.1-or-later",
+      "dependency_closure_unit_ids": [
+        "u0f769f9c5df3cc654c72"
+      ],
+      "dependency_not_in_ledger": [],
+      "blockers": [
+        "independent_source_closure_review",
+        "human_leakage_adjudication",
+        "executable_semantic_contract_required"
+      ],
+      "dependency_comparison_connected": [
+        "u0f769f9c5df3cc654c72"
+      ],
+      "family": "sha256:dc251beb7a0458f1abef0a873d3743c9749cb4c5931f3e3435cf1680b0417b7e",
+      "source_sha256": "sha256:1482f4b52c6cc717acc2c4968b4c09957a17c36973bc5534360a82615d64f42b",
+      "span": {
+        "blob_sha": "bdaca8b89c2b1ce246916cfc466a744b3c8b7696",
+        "end_byte": 33197,
+        "function": "decimal",
+        "manifest_digest": "sha256:fbfcc0bf8323b16b68da804858d378c4170408c0f05b303b5808d330f4cef3f9",
+        "path": "maths.lib",
+        "pin": "2edec0537f536eaa130d42c354884d7db971663c",
+        "repo": "grame-cncm/faustlibraries",
+        "sha256": "sha256:1482f4b52c6cc717acc2c4968b4c09957a17c36973bc5534360a82615d64f42b",
+        "start_byte": 33182,
+        "unit_id": "ubf898881561c1ec01927"
+      }
+    },
+    {
+      "unit_id": "u309259721c4447d5f587",
+      "function": "fabs",
+      "path": "maths.lib",
+      "canonical_tokens": 4,
+      "eligible_for": [
+        "train"
+      ],
+      "license": "LGPL-2.1-or-later",
+      "dependency_closure_unit_ids": [],
+      "dependency_not_in_ledger": [],
+      "blockers": [
+        "independent_source_closure_review",
+        "human_leakage_adjudication",
+        "executable_semantic_contract_required"
+      ],
+      "dependency_comparison_connected": [],
+      "family": "sha256:dc251beb7a0458f1abef0a873d3743c9749cb4c5931f3e3435cf1680b0417b7e",
+      "source_sha256": "sha256:171c70b14a9b592738fe0a095dd37fef6da0ea5df399c86901891971238023d2",
+      "span": {
+        "blob_sha": "bdaca8b89c2b1ce246916cfc466a744b3c8b7696",
+        "end_byte": 31791,
+        "function": "fabs",
+        "manifest_digest": "sha256:fbfcc0bf8323b16b68da804858d378c4170408c0f05b303b5808d330f4cef3f9",
+        "path": "maths.lib",
+        "pin": "2edec0537f536eaa130d42c354884d7db971663c",
+        "repo": "grame-cncm/faustlibraries",
+        "sha256": "sha256:171c70b14a9b592738fe0a095dd37fef6da0ea5df399c86901891971238023d2",
+        "start_byte": 31780,
+        "unit_id": "u309259721c4447d5f587"
+      }
+    },
+    {
+      "unit_id": "u20f26374d2008a4c3cb3",
+      "function": "fmax",
+      "path": "maths.lib",
+      "canonical_tokens": 4,
+      "eligible_for": [
+        "train"
+      ],
+      "license": "LGPL-2.1-or-later",
+      "dependency_closure_unit_ids": [],
+      "dependency_not_in_ledger": [],
+      "blockers": [
+        "independent_source_closure_review",
+        "human_leakage_adjudication",
+        "executable_semantic_contract_required"
+      ],
+      "dependency_comparison_connected": [],
+      "family": "sha256:dc251beb7a0458f1abef0a873d3743c9749cb4c5931f3e3435cf1680b0417b7e",
+      "source_sha256": "sha256:97fa94c7b80abd785e0dd1c0b41e22c2450a9229b84002d6097928d7ac70e6ee",
+      "span": {
+        "blob_sha": "bdaca8b89c2b1ce246916cfc466a744b3c8b7696",
+        "end_byte": 31803,
+        "function": "fmax",
+        "manifest_digest": "sha256:fbfcc0bf8323b16b68da804858d378c4170408c0f05b303b5808d330f4cef3f9",
+        "path": "maths.lib",
+        "pin": "2edec0537f536eaa130d42c354884d7db971663c",
+        "repo": "grame-cncm/faustlibraries",
+        "sha256": "sha256:97fa94c7b80abd785e0dd1c0b41e22c2450a9229b84002d6097928d7ac70e6ee",
+        "start_byte": 31792,
+        "unit_id": "u20f26374d2008a4c3cb3"
+      }
+    },
+    {
+      "unit_id": "u0c76cefe3216ac6ad8ca",
+      "function": "fmin",
+      "path": "maths.lib",
+      "canonical_tokens": 4,
+      "eligible_for": [
+        "train"
+      ],
+      "license": "LGPL-2.1-or-later",
+      "dependency_closure_unit_ids": [],
+      "dependency_not_in_ledger": [],
+      "blockers": [
+        "independent_source_closure_review",
+        "human_leakage_adjudication",
+        "executable_semantic_contract_required"
+      ],
+      "dependency_comparison_connected": [],
+      "family": "sha256:dc251beb7a0458f1abef0a873d3743c9749cb4c5931f3e3435cf1680b0417b7e",
+      "source_sha256": "sha256:87532138a30e2c54483e93e18ea2576c6239db797eca1097f2adbfc26abe2d68",
+      "span": {
+        "blob_sha": "bdaca8b89c2b1ce246916cfc466a744b3c8b7696",
+        "end_byte": 31815,
+        "function": "fmin",
+        "manifest_digest": "sha256:fbfcc0bf8323b16b68da804858d378c4170408c0f05b303b5808d330f4cef3f9",
+        "path": "maths.lib",
+        "pin": "2edec0537f536eaa130d42c354884d7db971663c",
+        "repo": "grame-cncm/faustlibraries",
+        "sha256": "sha256:87532138a30e2c54483e93e18ea2576c6239db797eca1097f2adbfc26abe2d68",
+        "start_byte": 31804,
+        "unit_id": "u0c76cefe3216ac6ad8ca"
+      }
+    },
+    {
+      "unit_id": "u28172b7359cecc7d275a",
+      "function": "atodb",
+      "path": "maxmsp.lib",
+      "canonical_tokens": 4,
+      "eligible_for": [
+        "train"
+      ],
+      "license": "LGPL-2.1-or-later",
+      "dependency_closure_unit_ids": [],
+      "dependency_not_in_ledger": [],
+      "blockers": [
+        "independent_source_closure_review",
+        "human_leakage_adjudication",
+        "external_dependency_review",
+        "executable_semantic_contract_required"
+      ],
+      "dependency_comparison_connected": [],
+      "family": "sha256:7d2e5ace872864ba8b39438827c64f128a93d5cee9af1f91bfc9e9994c7ea00f",
+      "source_sha256": "sha256:c465ebb63f7cf98d80c3168b4927485b3611b7ed7e888c06449cd9f21c7af86c",
+      "span": {
+        "blob_sha": "2366cea4e391c9a456aa36e8987aa9cbb1df8b7a",
+        "end_byte": 2654,
+        "function": "atodb",
+        "manifest_digest": "sha256:fbfcc0bf8323b16b68da804858d378c4170408c0f05b303b5808d330f4cef3f9",
+        "path": "maxmsp.lib",
+        "pin": "2edec0537f536eaa130d42c354884d7db971663c",
+        "repo": "grame-cncm/faustlibraries",
+        "sha256": "sha256:c465ebb63f7cf98d80c3168b4927485b3611b7ed7e888c06449cd9f21c7af86c",
+        "start_byte": 2633,
+        "unit_id": "u28172b7359cecc7d275a"
+      }
+    },
+    {
+      "unit_id": "ufa1195be5165506369b8",
+      "function": "dwmEnv",
+      "path": "misceffects.lib",
+      "canonical_tokens": 4,
+      "eligible_for": [
+        "train"
+      ],
+      "license": "LGPL-2.1-or-later",
+      "dependency_closure_unit_ids": [
+        "u4de71a30af88ffa9223b",
+        "u8db8c3b2d52bc261af31",
+        "uc48f825e1c8022391bd5",
+        "uc7e156df324cd67a9999"
+      ],
+      "dependency_not_in_ledger": [],
+      "blockers": [
+        "independent_source_closure_review",
+        "human_leakage_adjudication",
+        "executable_semantic_contract_required"
+      ],
+      "dependency_comparison_connected": [
+        "u8db8c3b2d52bc261af31",
+        "uc48f825e1c8022391bd5",
+        "uc7e156df324cd67a9999"
+      ],
+      "family": "sha256:dc251beb7a0458f1abef0a873d3743c9749cb4c5931f3e3435cf1680b0417b7e",
+      "source_sha256": "sha256:2f94a2015e2094ee247fdeea291638e05c0eb597af1296d9f64767d3bbf0c25e",
+      "span": {
+        "blob_sha": "2daedd2e5db170e210b434d11c838ae6f2753135",
+        "end_byte": 66404,
+        "function": "dwmEnv",
+        "manifest_digest": "sha256:fbfcc0bf8323b16b68da804858d378c4170408c0f05b303b5808d330f4cef3f9",
+        "path": "misceffects.lib",
+        "pin": "2edec0537f536eaa130d42c354884d7db971663c",
+        "repo": "grame-cncm/faustlibraries",
+        "sha256": "sha256:2f94a2015e2094ee247fdeea291638e05c0eb597af1296d9f64767d3bbf0c25e",
+        "start_byte": 66387,
+        "unit_id": "ufa1195be5165506369b8"
+      }
+    },
+    {
+      "unit_id": "u514232b087e8889c1de3",
+      "function": "mixLinearClamp",
+      "path": "misceffects.lib",
+      "canonical_tokens": 4,
+      "eligible_for": [
+        "train"
+      ],
+      "license": "LGPL-2.1-or-later",
+      "dependency_closure_unit_ids": [],
+      "dependency_not_in_ledger": [],
+      "blockers": [
+        "independent_source_closure_review",
+        "human_leakage_adjudication",
+        "external_dependency_review",
+        "executable_semantic_contract_required"
+      ],
+      "dependency_comparison_connected": [],
+      "family": "sha256:411af5987775e60f5cdba36fcad28e012f622f8f22b97dc8d32ef4b2f8be707b",
+      "source_sha256": "sha256:223e01c382a1b8bc23c14370c3413bcdf996b7c2f6b83a3e656db819eb300035",
+      "span": {
+        "blob_sha": "2daedd2e5db170e210b434d11c838ae6f2753135",
+        "end_byte": 35933,
+        "function": "mixLinearClamp",
+        "manifest_digest": "sha256:fbfcc0bf8323b16b68da804858d378c4170408c0f05b303b5808d330f4cef3f9",
+        "path": "misceffects.lib",
+        "pin": "2edec0537f536eaa130d42c354884d7db971663c",
+        "repo": "grame-cncm/faustlibraries",
+        "sha256": "sha256:223e01c382a1b8bc23c14370c3413bcdf996b7c2f6b83a3e656db819eb300035",
+        "start_byte": 35891,
+        "unit_id": "u514232b087e8889c1de3"
+      }
+    },
+    {
+      "unit_id": "u14d8d67cafefb9b6960d",
+      "function": "mixLinearLoop",
+      "path": "misceffects.lib",
+      "canonical_tokens": 4,
+      "eligible_for": [
+        "train"
+      ],
+      "license": "LGPL-2.1-or-later",
+      "dependency_closure_unit_ids": [],
+      "dependency_not_in_ledger": [],
+      "blockers": [
+        "independent_source_closure_review",
+        "human_leakage_adjudication",
+        "external_dependency_review",
+        "executable_semantic_contract_required"
+      ],
+      "dependency_comparison_connected": [],
+      "family": "sha256:9a3021ef78ddc87f8b1c30f8cdb08d5f2353d7e3e604da9bba1fac9c32f23b44",
+      "source_sha256": "sha256:14370109c5857654c2a6cb74be18cc602144132e6b3586ea78b0373042829a02",
+      "span": {
+        "blob_sha": "2daedd2e5db170e210b434d11c838ae6f2753135",
+        "end_byte": 36847,
+        "function": "mixLinearLoop",
+        "manifest_digest": "sha256:fbfcc0bf8323b16b68da804858d378c4170408c0f05b303b5808d330f4cef3f9",
+        "path": "misceffects.lib",
+        "pin": "2edec0537f536eaa130d42c354884d7db971663c",
+        "repo": "grame-cncm/faustlibraries",
+        "sha256": "sha256:14370109c5857654c2a6cb74be18cc602144132e6b3586ea78b0373042829a02",
+        "start_byte": 36807,
+        "unit_id": "u14d8d67cafefb9b6960d"
+      }
+    },
+    {
+      "unit_id": "u1c9f7136f520e647446f",
+      "function": "mixPowerClamp",
+      "path": "misceffects.lib",
+      "canonical_tokens": 4,
+      "eligible_for": [
+        "train"
+      ],
+      "license": "LGPL-2.1-or-later",
+      "dependency_closure_unit_ids": [],
+      "dependency_not_in_ledger": [],
+      "blockers": [
+        "independent_source_closure_review",
+        "human_leakage_adjudication",
+        "external_dependency_review",
+        "executable_semantic_contract_required"
+      ],
+      "dependency_comparison_connected": [],
+      "family": "sha256:495fae89691e39005b0f609b3c46a4bb0a2869e32977b074cf069ee935e7824a",
+      "source_sha256": "sha256:5a4d4b1c551aafe233e1016c5884ca3800903cb40828e2bdc51337a807e2cb36",
+      "span": {
+        "blob_sha": "2daedd2e5db170e210b434d11c838ae6f2753135",
+        "end_byte": 37881,
+        "function": "mixPowerClamp",
+        "manifest_digest": "sha256:fbfcc0bf8323b16b68da804858d378c4170408c0f05b303b5808d330f4cef3f9",
+        "path": "misceffects.lib",
+        "pin": "2edec0537f536eaa130d42c354884d7db971663c",
+        "repo": "grame-cncm/faustlibraries",
+        "sha256": "sha256:5a4d4b1c551aafe233e1016c5884ca3800903cb40828e2bdc51337a807e2cb36",
+        "start_byte": 37841,
+        "unit_id": "u1c9f7136f520e647446f"
+      }
+    },
+    {
+      "unit_id": "u278d5740a87a1314f7f5",
+      "function": "mixPowerLoop",
+      "path": "misceffects.lib",
+      "canonical_tokens": 4,
+      "eligible_for": [
+        "train"
+      ],
+      "license": "LGPL-2.1-or-later",
+      "dependency_closure_unit_ids": [],
+      "dependency_not_in_ledger": [],
+      "blockers": [
+        "independent_source_closure_review",
+        "human_leakage_adjudication",
+        "external_dependency_review",
+        "executable_semantic_contract_required"
+      ],
+      "dependency_comparison_connected": [],
+      "family": "sha256:eefe8b34d24b5345ea91fa3c38fbfd36dc7a7e99ad44346d0716c83b18472a5e",
+      "source_sha256": "sha256:a06fc54c1ab26d8b2c567aaf98fbf6281a442f5ae73f327dc11c1e3390855847",
+      "span": {
+        "blob_sha": "2daedd2e5db170e210b434d11c838ae6f2753135",
+        "end_byte": 38796,
+        "function": "mixPowerLoop",
+        "manifest_digest": "sha256:fbfcc0bf8323b16b68da804858d378c4170408c0f05b303b5808d330f4cef3f9",
+        "path": "misceffects.lib",
+        "pin": "2edec0537f536eaa130d42c354884d7db971663c",
+        "repo": "grame-cncm/faustlibraries",
+        "sha256": "sha256:a06fc54c1ab26d8b2c567aaf98fbf6281a442f5ae73f327dc11c1e3390855847",
+        "start_byte": 38758,
+        "unit_id": "u278d5740a87a1314f7f5"
+      }
+    },
+    {
+      "unit_id": "u3ed8c146de1cd5418912",
+      "function": "wavefold",
+      "path": "misceffects.lib",
+      "canonical_tokens": 4,
+      "eligible_for": [
+        "train"
+      ],
+      "license": "LGPL-2.1-or-later",
+      "dependency_closure_unit_ids": [],
+      "dependency_not_in_ledger": [],
+      "blockers": [
+        "independent_source_closure_review",
+        "human_leakage_adjudication",
+        "external_dependency_review",
+        "executable_semantic_contract_required"
+      ],
+      "dependency_comparison_connected": [],
+      "family": "sha256:0d14fe1d548f02ee68b5aaae5e51acbe24745e4a3e2533040e8b10d7dc488786",
+      "source_sha256": "sha256:a84f0edf66818bae7f9ab40cb381c00ad38af02630544313f0e6603335e319cd",
+      "span": {
+        "blob_sha": "2daedd2e5db170e210b434d11c838ae6f2753135",
+        "end_byte": 63675,
+        "function": "wavefold",
+        "manifest_digest": "sha256:fbfcc0bf8323b16b68da804858d378c4170408c0f05b303b5808d330f4cef3f9",
+        "path": "misceffects.lib",
+        "pin": "2edec0537f536eaa130d42c354884d7db971663c",
+        "repo": "grame-cncm/faustlibraries",
+        "sha256": "sha256:a84f0edf66818bae7f9ab40cb381c00ad38af02630544313f0e6603335e319cd",
+        "start_byte": 63639,
+        "unit_id": "u3ed8c146de1cd5418912"
+      }
+    },
+    {
+      "unit_id": "ua7695eaa4cab1a383680",
+      "function": "maxLength",
+      "path": "physmodels.lib",
+      "canonical_tokens": 4,
+      "eligible_for": [
+        "train"
+      ],
+      "license": "LGPL-2.1-or-later",
+      "dependency_closure_unit_ids": [],
+      "dependency_not_in_ledger": [],
+      "blockers": [
+        "independent_source_closure_review",
+        "human_leakage_adjudication",
+        "executable_semantic_contract_required"
+      ],
+      "dependency_comparison_connected": [],
+      "family": "sha256:dc4bf5f7e107984e49eb61233ae08c2571339d50a8d898effd96f3763d7da02d",
+      "source_sha256": "sha256:a9bcfea58f57202d378462b6a4bb1a01761c8ff1d25dfb137253d6b74050b606",
+      "span": {
+        "blob_sha": "4404aa62f889f23b662ae728f7151c362b8c8b03",
+        "end_byte": 6213,
+        "function": "maxLength",
+        "manifest_digest": "sha256:fbfcc0bf8323b16b68da804858d378c4170408c0f05b303b5808d330f4cef3f9",
+        "path": "physmodels.lib",
+        "pin": "2edec0537f536eaa130d42c354884d7db971663c",
+        "repo": "grame-cncm/faustlibraries",
+        "sha256": "sha256:a9bcfea58f57202d378462b6a4bb1a01761c8ff1d25dfb137253d6b74050b606",
+        "start_byte": 6199,
+        "unit_id": "ua7695eaa4cab1a383680"
+      }
+    },
+    {
+      "unit_id": "u55a6b4771711903bc859",
+      "function": "openTube",
+      "path": "physmodels.lib",
+      "canonical_tokens": 4,
+      "eligible_for": [
+        "train"
+      ],
+      "license": "LGPL-2.1-or-later",
+      "dependency_closure_unit_ids": [
+        "u40c9b7d4593fa52aa3ae",
+        "u77e1cead7a10a5fef04f",
+        "u7a18828060d37753e7a8",
+        "u857d0e53e06f1a7b5120",
+        "ua7695eaa4cab1a383680",
+        "ud4b7809d248f704987c7"
+      ],
+      "dependency_not_in_ledger": [],
+      "blockers": [
+        "independent_source_closure_review",
+        "human_leakage_adjudication",
+        "executable_semantic_contract_required"
+      ],
+      "dependency_comparison_connected": [
+        "u77e1cead7a10a5fef04f",
+        "u7a18828060d37753e7a8",
+        "u857d0e53e06f1a7b5120",
+        "ud4b7809d248f704987c7"
+      ],
+      "family": "sha256:dc251beb7a0458f1abef0a873d3743c9749cb4c5931f3e3435cf1680b0417b7e",
+      "source_sha256": "sha256:aeab62a0dcb80f1cab26e70e087e8477d7da016ff66464caf9f7c4bdf1b6f82b",
+      "span": {
+        "blob_sha": "4404aa62f889f23b662ae728f7151c362b8c8b03",
+        "end_byte": 83509,
+        "function": "openTube",
+        "manifest_digest": "sha256:fbfcc0bf8323b16b68da804858d378c4170408c0f05b303b5808d330f4cef3f9",
+        "path": "physmodels.lib",
+        "pin": "2edec0537f536eaa130d42c354884d7db971663c",
+        "repo": "grame-cncm/faustlibraries",
+        "sha256": "sha256:aeab62a0dcb80f1cab26e70e087e8477d7da016ff66464caf9f7c4bdf1b6f82b",
+        "start_byte": 83484,
+        "unit_id": "u55a6b4771711903bc859"
+      }
+    },
+    {
+      "unit_id": "u40c9b7d4593fa52aa3ae",
+      "function": "speedOfSound",
+      "path": "physmodels.lib",
+      "canonical_tokens": 4,
+      "eligible_for": [
+        "train"
+      ],
+      "license": "LGPL-2.1-or-later",
+      "dependency_closure_unit_ids": [],
+      "dependency_not_in_ledger": [],
+      "blockers": [
+        "independent_source_closure_review",
+        "human_leakage_adjudication",
+        "executable_semantic_contract_required"
+      ],
+      "dependency_comparison_connected": [],
+      "family": "sha256:dc4bf5f7e107984e49eb61233ae08c2571339d50a8d898effd96f3763d7da02d",
+      "source_sha256": "sha256:5b4222c5d0cba556e3c11cc31b9c8fcdfccb217e2e6248d0662bcdc8a0e1eae7",
+      "span": {
+        "blob_sha": "4404aa62f889f23b662ae728f7151c362b8c8b03",
+        "end_byte": 5904,
+        "function": "speedOfSound",
+        "manifest_digest": "sha256:fbfcc0bf8323b16b68da804858d378c4170408c0f05b303b5808d330f4cef3f9",
+        "path": "physmodels.lib",
+        "pin": "2edec0537f536eaa130d42c354884d7db971663c",
+        "repo": "grame-cncm/faustlibraries",
+        "sha256": "sha256:5b4222c5d0cba556e3c11cc31b9c8fcdfccb217e2e6248d0662bcdc8a0e1eae7",
+        "start_byte": 5885,
+        "unit_id": "u40c9b7d4593fa52aa3ae"
+      }
+    },
+    {
+      "unit_id": "uad0bcd6aa355a07400a0",
+      "function": "bitonicBuilderLayer",
+      "path": "routes.lib",
+      "canonical_tokens": 4,
+      "eligible_for": [
+        "train"
+      ],
+      "license": "LGPL-2.1-or-later",
+      "dependency_closure_unit_ids": [
+        "u6c351c71447dcde642fe",
+        "u73658447117b0963eed0",
+        "u8072b4d78a69e0583402",
+        "u896985e5645e5f1920fb",
+        "u9a92732462d9fdc78df5",
+        "uc44a465a7e218acc4574",
+        "uc6ec42e6b1602b9e217c",
+        "ucc2017a1332ec6436113",
+        "ud51afe23122a870c8124",
+        "ud5b76c169f42a41f804f",
+        "udcc2063cb0579470c4d8",
+        "ue86fe9e7db89d7fb9ed2",
+        "ue8e14fb33149e931e829"
+      ],
+      "dependency_not_in_ledger": [],
+      "blockers": [
+        "independent_source_closure_review",
+        "human_leakage_adjudication",
+        "executable_semantic_contract_required"
+      ],
+      "dependency_comparison_connected": [
+        "u6c351c71447dcde642fe",
+        "u73658447117b0963eed0",
+        "u8072b4d78a69e0583402",
+        "u896985e5645e5f1920fb",
+        "u9a92732462d9fdc78df5",
+        "uc44a465a7e218acc4574",
+        "uc6ec42e6b1602b9e217c",
+        "ucc2017a1332ec6436113",
+        "ud51afe23122a870c8124",
+        "ud5b76c169f42a41f804f",
+        "udcc2063cb0579470c4d8",
+        "ue86fe9e7db89d7fb9ed2",
+        "ue8e14fb33149e931e829"
+      ],
+      "family": "sha256:dc251beb7a0458f1abef0a873d3743c9749cb4c5931f3e3435cf1680b0417b7e",
+      "source_sha256": "sha256:0bb12348162ccb9be58354af88b2d9e5328192afeb9bf190c257bea51ebb1f91",
+      "span": {
+        "blob_sha": "b5e22c181d2f18e1a4548c735df05cddcdf490c9",
+        "end_byte": 19263,
+        "function": "bitonicBuilderLayer",
+        "manifest_digest": "sha256:fbfcc0bf8323b16b68da804858d378c4170408c0f05b303b5808d330f4cef3f9",
+        "path": "routes.lib",
+        "pin": "2edec0537f536eaa130d42c354884d7db971663c",
+        "repo": "grame-cncm/faustlibraries",
+        "sha256": "sha256:0bb12348162ccb9be58354af88b2d9e5328192afeb9bf190c257bea51ebb1f91",
+        "start_byte": 19220,
+        "unit_id": "uad0bcd6aa355a07400a0"
+      }
+    },
+    {
+      "unit_id": "u0b38f8c55f7cf86bb05f",
+      "function": "bitonicBuilderLayerIdx",
+      "path": "routes.lib",
+      "canonical_tokens": 4,
+      "eligible_for": [
+        "train"
+      ],
+      "license": "LGPL-2.1-or-later",
+      "dependency_closure_unit_ids": [
+        "u023db3abc4691b8a1eeb",
+        "u0a6b8e62365714a3c9df",
+        "u1e8f01a7d1280dbaff25",
+        "u314965370eaa37bc4c4a",
+        "u4231c69c871db9f40d02",
+        "u49d278124afe8f1a3aaa",
+        "u59ced2536e9cb73ffeb8",
+        "ua73fb09512d22d77c20f",
+        "uc6ec42e6b1602b9e217c",
+        "udcc2063cb0579470c4d8",
+        "ue8e14fb33149e931e829",
+        "uedc51f22ca0ace950e1c",
+        "uf54946007946a7a4261f"
+      ],
+      "dependency_not_in_ledger": [],
+      "blockers": [
+        "independent_source_closure_review",
+        "human_leakage_adjudication",
+        "executable_semantic_contract_required"
+      ],
+      "dependency_comparison_connected": [
+        "u023db3abc4691b8a1eeb",
+        "u0a6b8e62365714a3c9df",
+        "u1e8f01a7d1280dbaff25",
+        "u314965370eaa37bc4c4a",
+        "u4231c69c871db9f40d02",
+        "u49d278124afe8f1a3aaa",
+        "u59ced2536e9cb73ffeb8",
+        "ua73fb09512d22d77c20f",
+        "uc6ec42e6b1602b9e217c",
+        "udcc2063cb0579470c4d8",
+        "ue8e14fb33149e931e829",
+        "uedc51f22ca0ace950e1c",
+        "uf54946007946a7a4261f"
+      ],
+      "family": "sha256:dc251beb7a0458f1abef0a873d3743c9749cb4c5931f3e3435cf1680b0417b7e",
+      "source_sha256": "sha256:be7eed4af7f866212af42058848b4bc17d707b9b1e11169d336b2f6f815b5f76",
+      "span": {
+        "blob_sha": "b5e22c181d2f18e1a4548c735df05cddcdf490c9",
+        "end_byte": 19410,
+        "function": "bitonicBuilderLayerIdx",
+        "manifest_digest": "sha256:fbfcc0bf8323b16b68da804858d378c4170408c0f05b303b5808d330f4cef3f9",
+        "path": "routes.lib",
+        "pin": "2edec0537f536eaa130d42c354884d7db971663c",
+        "repo": "grame-cncm/faustlibraries",
+        "sha256": "sha256:be7eed4af7f866212af42058848b4bc17d707b9b1e11169d336b2f6f815b5f76",
+        "start_byte": 19361,
+        "unit_id": "u0b38f8c55f7cf86bb05f"
+      }
+    },
+    {
+      "unit_id": "uc9692483cdb46c70060c",
+      "function": "bitonicBuilderNetwork",
+      "path": "routes.lib",
+      "canonical_tokens": 4,
+      "eligible_for": [
+        "train"
+      ],
+      "license": "LGPL-2.1-or-later",
+      "dependency_closure_unit_ids": [
+        "u6c351c71447dcde642fe",
+        "u73658447117b0963eed0",
+        "u8072b4d78a69e0583402",
+        "u87fceb481f21c6ba18bd",
+        "u896985e5645e5f1920fb",
+        "u9a92732462d9fdc78df5",
+        "uc44a465a7e218acc4574",
+        "uc6ec42e6b1602b9e217c",
+        "ucc2017a1332ec6436113",
+        "ud51afe23122a870c8124",
+        "ud5b76c169f42a41f804f",
+        "udcc2063cb0579470c4d8",
+        "ue86fe9e7db89d7fb9ed2",
+        "ue8e14fb33149e931e829"
+      ],
+      "dependency_not_in_ledger": [],
+      "blockers": [
+        "independent_source_closure_review",
+        "human_leakage_adjudication",
+        "executable_semantic_contract_required"
+      ],
+      "dependency_comparison_connected": [
+        "u6c351c71447dcde642fe",
+        "u73658447117b0963eed0",
+        "u8072b4d78a69e0583402",
+        "u87fceb481f21c6ba18bd",
+        "u896985e5645e5f1920fb",
+        "u9a92732462d9fdc78df5",
+        "uc44a465a7e218acc4574",
+        "uc6ec42e6b1602b9e217c",
+        "ucc2017a1332ec6436113",
+        "ud51afe23122a870c8124",
+        "ud5b76c169f42a41f804f",
+        "udcc2063cb0579470c4d8",
+        "ue86fe9e7db89d7fb9ed2",
+        "ue8e14fb33149e931e829"
+      ],
+      "family": "sha256:dc251beb7a0458f1abef0a873d3743c9749cb4c5931f3e3435cf1680b0417b7e",
+      "source_sha256": "sha256:ea944af033f2471a7439212e546844a1c3f3415d7cf34f4c14fc895c72c2da78",
+      "span": {
+        "blob_sha": "b5e22c181d2f18e1a4548c735df05cddcdf490c9",
+        "end_byte": 19553,
+        "function": "bitonicBuilderNetwork",
+        "manifest_digest": "sha256:fbfcc0bf8323b16b68da804858d378c4170408c0f05b303b5808d330f4cef3f9",
+        "path": "routes.lib",
+        "pin": "2edec0537f536eaa130d42c354884d7db971663c",
+        "repo": "grame-cncm/faustlibraries",
+        "sha256": "sha256:ea944af033f2471a7439212e546844a1c3f3415d7cf34f4c14fc895c72c2da78",
+        "start_byte": 19506,
+        "unit_id": "uc9692483cdb46c70060c"
+      }
+    },
+    {
+      "unit_id": "ub8d805b4eb367c5d3b6b",
+      "function": "bitonicBuilderNetworkIdx",
+      "path": "routes.lib",
+      "canonical_tokens": 4,
+      "eligible_for": [
+        "train"
+      ],
+      "license": "LGPL-2.1-or-later",
+      "dependency_closure_unit_ids": [
+        "u023db3abc4691b8a1eeb",
+        "u0a6b8e62365714a3c9df",
+        "u1e8f01a7d1280dbaff25",
+        "u314965370eaa37bc4c4a",
+        "u4231c69c871db9f40d02",
+        "u49d278124afe8f1a3aaa",
+        "u59ced2536e9cb73ffeb8",
+        "ua73fb09512d22d77c20f",
+        "uc6ec42e6b1602b9e217c",
+        "udcc2063cb0579470c4d8",
+        "ue1582d0a94b0a71bb2ce",
+        "ue8e14fb33149e931e829",
+        "uedc51f22ca0ace950e1c",
+        "uf54946007946a7a4261f"
+      ],
+      "dependency_not_in_ledger": [],
+      "blockers": [
+        "independent_source_closure_review",
+        "human_leakage_adjudication",
+        "executable_semantic_contract_required"
+      ],
+      "dependency_comparison_connected": [
+        "u023db3abc4691b8a1eeb",
+        "u0a6b8e62365714a3c9df",
+        "u1e8f01a7d1280dbaff25",
+        "u314965370eaa37bc4c4a",
+        "u4231c69c871db9f40d02",
+        "u49d278124afe8f1a3aaa",
+        "u59ced2536e9cb73ffeb8",
+        "ua73fb09512d22d77c20f",
+        "uc6ec42e6b1602b9e217c",
+        "udcc2063cb0579470c4d8",
+        "ue1582d0a94b0a71bb2ce",
+        "ue8e14fb33149e931e829",
+        "uedc51f22ca0ace950e1c",
+        "uf54946007946a7a4261f"
+      ],
+      "family": "sha256:dc251beb7a0458f1abef0a873d3743c9749cb4c5931f3e3435cf1680b0417b7e",
+      "source_sha256": "sha256:3a740d817aca95fa966ecdf43ebaf58d74895c480c2ef0fb8e7f327612f398a1",
+      "span": {
+        "blob_sha": "b5e22c181d2f18e1a4548c735df05cddcdf490c9",
+        "end_byte": 19708,
+        "function": "bitonicBuilderNetworkIdx",
+        "manifest_digest": "sha256:fbfcc0bf8323b16b68da804858d378c4170408c0f05b303b5808d330f4cef3f9",
+        "path": "routes.lib",
+        "pin": "2edec0537f536eaa130d42c354884d7db971663c",
+        "repo": "grame-cncm/faustlibraries",
+        "sha256": "sha256:3a740d817aca95fa966ecdf43ebaf58d74895c480c2ef0fb8e7f327612f398a1",
+        "start_byte": 19655,
+        "unit_id": "ub8d805b4eb367c5d3b6b"
+      }
+    },
+    {
+      "unit_id": "ub91f1229fb9e450cc79d",
+      "function": "bitonicRouteCompareInputList",
+      "path": "routes.lib",
+      "canonical_tokens": 4,
+      "eligible_for": [
+        "train"
+      ],
+      "license": "LGPL-2.1-or-later",
+      "dependency_closure_unit_ids": [
+        "uc6ec42e6b1602b9e217c",
+        "udcc2063cb0579470c4d8",
+        "ue86fe9e7db89d7fb9ed2"
+      ],
+      "dependency_not_in_ledger": [],
+      "blockers": [
+        "independent_source_closure_review",
+        "human_leakage_adjudication",
+        "executable_semantic_contract_required"
+      ],
+      "dependency_comparison_connected": [
+        "uc6ec42e6b1602b9e217c",
+        "udcc2063cb0579470c4d8",
+        "ue86fe9e7db89d7fb9ed2"
+      ],
+      "family": "sha256:dc251beb7a0458f1abef0a873d3743c9749cb4c5931f3e3435cf1680b0417b7e",
+      "source_sha256": "sha256:d164a32611d5b1c29e1a069e7e5c427f8a10fe76ec753b6dff50f264b6c9020c",
+      "span": {
+        "blob_sha": "b5e22c181d2f18e1a4548c735df05cddcdf490c9",
+        "end_byte": 19879,
+        "function": "bitonicRouteCompareInputList",
+        "manifest_digest": "sha256:fbfcc0bf8323b16b68da804858d378c4170408c0f05b303b5808d330f4cef3f9",
+        "path": "routes.lib",
+        "pin": "2edec0537f536eaa130d42c354884d7db971663c",
+        "repo": "grame-cncm/faustlibraries",
+        "sha256": "sha256:d164a32611d5b1c29e1a069e7e5c427f8a10fe76ec753b6dff50f264b6c9020c",
+        "start_byte": 19818,
+        "unit_id": "ub91f1229fb9e450cc79d"
+      }
+    },
+    {
+      "unit_id": "u7ef2226f3de2ef12ae99",
+      "function": "bitonicRouteCompareInputListIdx",
+      "path": "routes.lib",
+      "canonical_tokens": 4,
+      "eligible_for": [
+        "train"
+      ],
+      "license": "LGPL-2.1-or-later",
+      "dependency_closure_unit_ids": [
+        "u314965370eaa37bc4c4a",
+        "uc6ec42e6b1602b9e217c",
+        "udcc2063cb0579470c4d8"
+      ],
+      "dependency_not_in_ledger": [],
+      "blockers": [
+        "independent_source_closure_review",
+        "human_leakage_adjudication",
+        "executable_semantic_contract_required"
+      ],
+      "dependency_comparison_connected": [
+        "u314965370eaa37bc4c4a",
+        "uc6ec42e6b1602b9e217c",
+        "udcc2063cb0579470c4d8"
+      ],
+      "family": "sha256:dc251beb7a0458f1abef0a873d3743c9749cb4c5931f3e3435cf1680b0417b7e",
+      "source_sha256": "sha256:54d5f97fcebfcbe775d93023a16d54e5c09705838f036b18192e84ef011a29b8",
+      "span": {
+        "blob_sha": "b5e22c181d2f18e1a4548c735df05cddcdf490c9",
+        "end_byte": 20062,
+        "function": "bitonicRouteCompareInputListIdx",
+        "manifest_digest": "sha256:fbfcc0bf8323b16b68da804858d378c4170408c0f05b303b5808d330f4cef3f9",
+        "path": "routes.lib",
+        "pin": "2edec0537f536eaa130d42c354884d7db971663c",
+        "repo": "grame-cncm/faustlibraries",
+        "sha256": "sha256:54d5f97fcebfcbe775d93023a16d54e5c09705838f036b18192e84ef011a29b8",
+        "start_byte": 19995,
+        "unit_id": "u7ef2226f3de2ef12ae99"
+      }
+    },
+    {
+      "unit_id": "u03cd01198aec19226770",
+      "function": "bitonicRouteCompareOutputList",
+      "path": "routes.lib",
+      "canonical_tokens": 4,
+      "eligible_for": [
+        "train"
+      ],
+      "license": "LGPL-2.1-or-later",
+      "dependency_closure_unit_ids": [
+        "u8072b4d78a69e0583402",
+        "uc6ec42e6b1602b9e217c",
+        "udcc2063cb0579470c4d8"
+      ],
+      "dependency_not_in_ledger": [],
+      "blockers": [
+        "independent_source_closure_review",
+        "human_leakage_adjudication",
+        "executable_semantic_contract_required"
+      ],
+      "dependency_comparison_connected": [
+        "u8072b4d78a69e0583402",
+        "uc6ec42e6b1602b9e217c",
+        "udcc2063cb0579470c4d8"
+      ],
+      "family": "sha256:dc251beb7a0458f1abef0a873d3743c9749cb4c5931f3e3435cf1680b0417b7e",
+      "source_sha256": "sha256:59a987939b4f8aa2c844801960819ff65ecc7b98f7093f13a410925f8678ba36",
+      "span": {
+        "blob_sha": "b5e22c181d2f18e1a4548c735df05cddcdf490c9",
+        "end_byte": 20237,
+        "function": "bitonicRouteCompareOutputList",
+        "manifest_digest": "sha256:fbfcc0bf8323b16b68da804858d378c4170408c0f05b303b5808d330f4cef3f9",
+        "path": "routes.lib",
+        "pin": "2edec0537f536eaa130d42c354884d7db971663c",
+        "repo": "grame-cncm/faustlibraries",
+        "sha256": "sha256:59a987939b4f8aa2c844801960819ff65ecc7b98f7093f13a410925f8678ba36",
+        "start_byte": 20174,
+        "unit_id": "u03cd01198aec19226770"
+      }
+    },
+    {
+      "unit_id": "u340e9fc022e16ce9dc4b",
+      "function": "bitonicRouteCompareOutputListIdx",
+      "path": "routes.lib",
+      "canonical_tokens": 4,
+      "eligible_for": [
+        "train"
+      ],
+      "license": "LGPL-2.1-or-later",
+      "dependency_closure_unit_ids": [
+        "uc6ec42e6b1602b9e217c",
+        "udcc2063cb0579470c4d8",
+        "uf54946007946a7a4261f"
+      ],
+      "dependency_not_in_ledger": [],
+      "blockers": [
+        "independent_source_closure_review",
+        "human_leakage_adjudication",
+        "executable_semantic_contract_required"
+      ],
+      "dependency_comparison_connected": [
+        "uc6ec42e6b1602b9e217c",
+        "udcc2063cb0579470c4d8",
+        "uf54946007946a7a4261f"
+      ],
+      "family": "sha256:dc251beb7a0458f1abef0a873d3743c9749cb4c5931f3e3435cf1680b0417b7e",
+      "source_sha256": "sha256:b5eeb123f54a2eef162128e0caba211962ffd625e003ee0945ac2fedd95aaedd",
+      "span": {
+        "blob_sha": "b5e22c181d2f18e1a4548c735df05cddcdf490c9",
+        "end_byte": 20424,
+        "function": "bitonicRouteCompareOutputListIdx",
+        "manifest_digest": "sha256:fbfcc0bf8323b16b68da804858d378c4170408c0f05b303b5808d330f4cef3f9",
+        "path": "routes.lib",
+        "pin": "2edec0537f536eaa130d42c354884d7db971663c",
+        "repo": "grame-cncm/faustlibraries",
+        "sha256": "sha256:b5eeb123f54a2eef162128e0caba211962ffd625e003ee0945ac2fedd95aaedd",
+        "start_byte": 20355,
+        "unit_id": "u340e9fc022e16ce9dc4b"
+      }
+    },
+    {
+      "unit_id": "u8a85b66ea0cf54a5d3f0",
+      "function": "bitonicRouteInput",
+      "path": "routes.lib",
+      "canonical_tokens": 4,
+      "eligible_for": [
+        "train"
+      ],
+      "license": "LGPL-2.1-or-later",
+      "dependency_closure_unit_ids": [
+        "uc44a465a7e218acc4574",
+        "uc6ec42e6b1602b9e217c",
+        "udcc2063cb0579470c4d8",
+        "ue86fe9e7db89d7fb9ed2",
+        "ue8e14fb33149e931e829"
+      ],
+      "dependency_not_in_ledger": [],
+      "blockers": [
+        "independent_source_closure_review",
+        "human_leakage_adjudication",
+        "executable_semantic_contract_required"
+      ],
+      "dependency_comparison_connected": [
+        "uc44a465a7e218acc4574",
+        "uc6ec42e6b1602b9e217c",
+        "udcc2063cb0579470c4d8",
+        "ue86fe9e7db89d7fb9ed2",
+        "ue8e14fb33149e931e829"
+      ],
+      "family": "sha256:dc251beb7a0458f1abef0a873d3743c9749cb4c5931f3e3435cf1680b0417b7e",
+      "source_sha256": "sha256:4ef18f42e3122cd1f25537044d1bf485b3f6b038d2d501226d1beb37fd06155b",
+      "span": {
+        "blob_sha": "b5e22c181d2f18e1a4548c735df05cddcdf490c9",
+        "end_byte": 20551,
+        "function": "bitonicRouteInput",
+        "manifest_digest": "sha256:fbfcc0bf8323b16b68da804858d378c4170408c0f05b303b5808d330f4cef3f9",
+        "path": "routes.lib",
+        "pin": "2edec0537f536eaa130d42c354884d7db971663c",
+        "repo": "grame-cncm/faustlibraries",
+        "sha256": "sha256:4ef18f42e3122cd1f25537044d1bf485b3f6b038d2d501226d1beb37fd06155b",
+        "start_byte": 20512,
+        "unit_id": "u8a85b66ea0cf54a5d3f0"
+      }
+    },
+    {
+      "unit_id": "ub16a0e6142452d37a923",
+      "function": "bitonicRouteInputIdx",
+      "path": "routes.lib",
+      "canonical_tokens": 4,
+      "eligible_for": [
+        "train"
+      ],
+      "license": "LGPL-2.1-or-later",
+      "dependency_closure_unit_ids": [
+        "u314965370eaa37bc4c4a",
+        "ua73fb09512d22d77c20f",
+        "uc6ec42e6b1602b9e217c",
+        "udcc2063cb0579470c4d8",
+        "ue8e14fb33149e931e829"
+      ],
+      "dependency_not_in_ledger": [],
+      "blockers": [
+        "independent_source_closure_review",
+        "human_leakage_adjudication",
+        "executable_semantic_contract_required"
+      ],
+      "dependency_comparison_connected": [
+        "u314965370eaa37bc4c4a",
+        "ua73fb09512d22d77c20f",
+        "uc6ec42e6b1602b9e217c",
+        "udcc2063cb0579470c4d8",
+        "ue8e14fb33149e931e829"
+      ],
+      "family": "sha256:dc251beb7a0458f1abef0a873d3743c9749cb4c5931f3e3435cf1680b0417b7e",
+      "source_sha256": "sha256:5e2223371427c11cba1dc09422a2dcc672677bdd846fa52a25ec955e3619e3dc",
+      "span": {
+        "blob_sha": "b5e22c181d2f18e1a4548c735df05cddcdf490c9",
+        "end_byte": 20690,
+        "function": "bitonicRouteInputIdx",
+        "manifest_digest": "sha256:fbfcc0bf8323b16b68da804858d378c4170408c0f05b303b5808d330f4cef3f9",
+        "path": "routes.lib",
+        "pin": "2edec0537f536eaa130d42c354884d7db971663c",
+        "repo": "grame-cncm/faustlibraries",
+        "sha256": "sha256:5e2223371427c11cba1dc09422a2dcc672677bdd846fa52a25ec955e3619e3dc",
+        "start_byte": 20645,
+        "unit_id": "ub16a0e6142452d37a923"
+      }
+    },
+    {
+      "unit_id": "u6af496a2ec276621084d",
+      "function": "bitonicRouteOutput",
+      "path": "routes.lib",
+      "canonical_tokens": 4,
+      "eligible_for": [
+        "train"
+      ],
+      "license": "LGPL-2.1-or-later",
+      "dependency_closure_unit_ids": [
+        "u8072b4d78a69e0583402",
+        "u896985e5645e5f1920fb",
+        "uc6ec42e6b1602b9e217c",
+        "udcc2063cb0579470c4d8",
+        "ue8e14fb33149e931e829"
+      ],
+      "dependency_not_in_ledger": [],
+      "blockers": [
+        "independent_source_closure_review",
+        "human_leakage_adjudication",
+        "executable_semantic_contract_required"
+      ],
+      "dependency_comparison_connected": [
+        "u8072b4d78a69e0583402",
+        "u896985e5645e5f1920fb",
+        "uc6ec42e6b1602b9e217c",
+        "udcc2063cb0579470c4d8",
+        "ue8e14fb33149e931e829"
+      ],
+      "family": "sha256:dc251beb7a0458f1abef0a873d3743c9749cb4c5931f3e3435cf1680b0417b7e",
+      "source_sha256": "sha256:d800395e6d36988c2e3a8606fab14ba55485968ccf89a7eea2ce176765db77de",
+      "span": {
+        "blob_sha": "b5e22c181d2f18e1a4548c735df05cddcdf490c9",
+        "end_byte": 20821,
+        "function": "bitonicRouteOutput",
+        "manifest_digest": "sha256:fbfcc0bf8323b16b68da804858d378c4170408c0f05b303b5808d330f4cef3f9",
+        "path": "routes.lib",
+        "pin": "2edec0537f536eaa130d42c354884d7db971663c",
+        "repo": "grame-cncm/faustlibraries",
+        "sha256": "sha256:d800395e6d36988c2e3a8606fab14ba55485968ccf89a7eea2ce176765db77de",
+        "start_byte": 20780,
+        "unit_id": "u6af496a2ec276621084d"
+      }
+    },
+    {
+      "unit_id": "u9d6e154e8bf0afb722fc",
+      "function": "bitonicRouteOutputIdx",
+      "path": "routes.lib",
+      "canonical_tokens": 4,
+      "eligible_for": [
+        "train"
+      ],
+      "license": "LGPL-2.1-or-later",
+      "dependency_closure_unit_ids": [
+        "u023db3abc4691b8a1eeb",
+        "uc6ec42e6b1602b9e217c",
+        "udcc2063cb0579470c4d8",
+        "ue8e14fb33149e931e829",
+        "uf54946007946a7a4261f"
+      ],
+      "dependency_not_in_ledger": [],
+      "blockers": [
+        "independent_source_closure_review",
+        "human_leakage_adjudication",
+        "executable_semantic_contract_required"
+      ],
+      "dependency_comparison_connected": [
+        "u023db3abc4691b8a1eeb",
+        "uc6ec42e6b1602b9e217c",
+        "udcc2063cb0579470c4d8",
+        "ue8e14fb33149e931e829",
+        "uf54946007946a7a4261f"
+      ],
+      "family": "sha256:dc251beb7a0458f1abef0a873d3743c9749cb4c5931f3e3435cf1680b0417b7e",
+      "source_sha256": "sha256:0b16c44fd4f5413ba1292bb2e7db82e324d617f03c21879f915c688928491575",
+      "span": {
+        "blob_sha": "b5e22c181d2f18e1a4548c735df05cddcdf490c9",
+        "end_byte": 20964,
+        "function": "bitonicRouteOutputIdx",
+        "manifest_digest": "sha256:fbfcc0bf8323b16b68da804858d378c4170408c0f05b303b5808d330f4cef3f9",
+        "path": "routes.lib",
+        "pin": "2edec0537f536eaa130d42c354884d7db971663c",
+        "repo": "grame-cncm/faustlibraries",
+        "sha256": "sha256:0b16c44fd4f5413ba1292bb2e7db82e324d617f03c21879f915c688928491575",
+        "start_byte": 20917,
+        "unit_id": "u9d6e154e8bf0afb722fc"
+      }
+    },
+    {
+      "unit_id": "ucb2a2431a769b3fe2535",
+      "function": "bitonicSorterLayer",
+      "path": "routes.lib",
+      "canonical_tokens": 4,
+      "eligible_for": [
+        "train"
+      ],
+      "license": "LGPL-2.1-or-later",
+      "dependency_closure_unit_ids": [
+        "u73658447117b0963eed0",
+        "u8072b4d78a69e0583402",
+        "u896985e5645e5f1920fb",
+        "u9a92732462d9fdc78df5",
+        "u9d02e06b7d809e5f419e",
+        "uc44a465a7e218acc4574",
+        "uc6ec42e6b1602b9e217c",
+        "ucc2017a1332ec6436113",
+        "ud5b76c169f42a41f804f",
+        "udcc2063cb0579470c4d8",
+        "ue86fe9e7db89d7fb9ed2",
+        "ue8e14fb33149e931e829"
+      ],
+      "dependency_not_in_ledger": [],
+      "blockers": [
+        "independent_source_closure_review",
+        "human_leakage_adjudication",
+        "executable_semantic_contract_required"
+      ],
+      "dependency_comparison_connected": [
+        "u73658447117b0963eed0",
+        "u8072b4d78a69e0583402",
+        "u896985e5645e5f1920fb",
+        "u9a92732462d9fdc78df5",
+        "u9d02e06b7d809e5f419e",
+        "uc44a465a7e218acc4574",
+        "uc6ec42e6b1602b9e217c",
+        "ucc2017a1332ec6436113",
+        "ud5b76c169f42a41f804f",
+        "udcc2063cb0579470c4d8",
+        "ue86fe9e7db89d7fb9ed2",
+        "ue8e14fb33149e931e829"
+      ],
+      "family": "sha256:dc251beb7a0458f1abef0a873d3743c9749cb4c5931f3e3435cf1680b0417b7e",
+      "source_sha256": "sha256:1dae34d759c0e7b25a60347975dde90b38107754debd2f5f47d1d0435063cf27",
+      "span": {
+        "blob_sha": "b5e22c181d2f18e1a4548c735df05cddcdf490c9",
+        "end_byte": 21095,
+        "function": "bitonicSorterLayer",
+        "manifest_digest": "sha256:fbfcc0bf8323b16b68da804858d378c4170408c0f05b303b5808d330f4cef3f9",
+        "path": "routes.lib",
+        "pin": "2edec0537f536eaa130d42c354884d7db971663c",
+        "repo": "grame-cncm/faustlibraries",
+        "sha256": "sha256:1dae34d759c0e7b25a60347975dde90b38107754debd2f5f47d1d0435063cf27",
+        "start_byte": 21054,
+        "unit_id": "ucb2a2431a769b3fe2535"
+      }
+    },
+    {
+      "unit_id": "u43816515ea64cb37ff9b",
+      "function": "bitonicSorterLayerIdx",
+      "path": "routes.lib",
+      "canonical_tokens": 4,
+      "eligible_for": [
+        "train"
+      ],
+      "license": "LGPL-2.1-or-later",
+      "dependency_closure_unit_ids": [
+        "u023db3abc4691b8a1eeb",
+        "u1e8f01a7d1280dbaff25",
+        "u314965370eaa37bc4c4a",
+        "u4231c69c871db9f40d02",
+        "u49d278124afe8f1a3aaa",
+        "u5916062fe6e05769bc5e",
+        "u59ced2536e9cb73ffeb8",
+        "ua73fb09512d22d77c20f",
+        "uc6ec42e6b1602b9e217c",
+        "udcc2063cb0579470c4d8",
+        "ue8e14fb33149e931e829",
+        "uf54946007946a7a4261f"
+      ],
+      "dependency_not_in_ledger": [],
+      "blockers": [
+        "independent_source_closure_review",
+        "human_leakage_adjudication",
+        "executable_semantic_contract_required"
+      ],
+      "dependency_comparison_connected": [
+        "u023db3abc4691b8a1eeb",
+        "u1e8f01a7d1280dbaff25",
+        "u314965370eaa37bc4c4a",
+        "u4231c69c871db9f40d02",
+        "u49d278124afe8f1a3aaa",
+        "u5916062fe6e05769bc5e",
+        "u59ced2536e9cb73ffeb8",
+        "ua73fb09512d22d77c20f",
+        "uc6ec42e6b1602b9e217c",
+        "udcc2063cb0579470c4d8",
+        "ue8e14fb33149e931e829",
+        "uf54946007946a7a4261f"
+      ],
+      "family": "sha256:dc251beb7a0458f1abef0a873d3743c9749cb4c5931f3e3435cf1680b0417b7e",
+      "source_sha256": "sha256:f2e27b76a0a0ea8520ef29650f6df5e4ee030aa9174a48bce033432bbe2fef02",
+      "span": {
+        "blob_sha": "b5e22c181d2f18e1a4548c735df05cddcdf490c9",
+        "end_byte": 21238,
+        "function": "bitonicSorterLayerIdx",
+        "manifest_digest": "sha256:fbfcc0bf8323b16b68da804858d378c4170408c0f05b303b5808d330f4cef3f9",
+        "path": "routes.lib",
+        "pin": "2edec0537f536eaa130d42c354884d7db971663c",
+        "repo": "grame-cncm/faustlibraries",
+        "sha256": "sha256:f2e27b76a0a0ea8520ef29650f6df5e4ee030aa9174a48bce033432bbe2fef02",
+        "start_byte": 21191,
+        "unit_id": "u43816515ea64cb37ff9b"
+      }
+    },
+    {
+      "unit_id": "u77edc93a64a97076f9f1",
+      "function": "bitonicSorterNetwork",
+      "path": "routes.lib",
+      "canonical_tokens": 4,
+      "eligible_for": [
+        "train"
+      ],
+      "license": "LGPL-2.1-or-later",
+      "dependency_closure_unit_ids": [
+        "u73658447117b0963eed0",
+        "u8072b4d78a69e0583402",
+        "u896985e5645e5f1920fb",
+        "u9a92732462d9fdc78df5",
+        "u9d02e06b7d809e5f419e",
+        "uc0a3dfd11fbf4e27806a",
+        "uc44a465a7e218acc4574",
+        "uc6ec42e6b1602b9e217c",
+        "ucc2017a1332ec6436113",
+        "ud5b76c169f42a41f804f",
+        "udcc2063cb0579470c4d8",
+        "ue86fe9e7db89d7fb9ed2",
+        "ue8e14fb33149e931e829"
+      ],
+      "dependency_not_in_ledger": [],
+      "blockers": [
+        "independent_source_closure_review",
+        "human_leakage_adjudication",
+        "executable_semantic_contract_required"
+      ],
+      "dependency_comparison_connected": [
+        "u73658447117b0963eed0",
+        "u8072b4d78a69e0583402",
+        "u896985e5645e5f1920fb",
+        "u9a92732462d9fdc78df5",
+        "u9d02e06b7d809e5f419e",
+        "uc0a3dfd11fbf4e27806a",
+        "uc44a465a7e218acc4574",
+        "uc6ec42e6b1602b9e217c",
+        "ucc2017a1332ec6436113",
+        "ud5b76c169f42a41f804f",
+        "udcc2063cb0579470c4d8",
+        "ue86fe9e7db89d7fb9ed2",
+        "ue8e14fb33149e931e829"
+      ],
+      "family": "sha256:dc251beb7a0458f1abef0a873d3743c9749cb4c5931f3e3435cf1680b0417b7e",
+      "source_sha256": "sha256:d4d8967278d8c22297dbe0bef183ece61ee846bcf9f4b235e861c38833534615",
+      "span": {
+        "blob_sha": "b5e22c181d2f18e1a4548c735df05cddcdf490c9",
+        "end_byte": 21377,
+        "function": "bitonicSorterNetwork",
+        "manifest_digest": "sha256:fbfcc0bf8323b16b68da804858d378c4170408c0f05b303b5808d330f4cef3f9",
+        "path": "routes.lib",
+        "pin": "2edec0537f536eaa130d42c354884d7db971663c",
+        "repo": "grame-cncm/faustlibraries",
+        "sha256": "sha256:d4d8967278d8c22297dbe0bef183ece61ee846bcf9f4b235e861c38833534615",
+        "start_byte": 21332,
+        "unit_id": "u77edc93a64a97076f9f1"
+      }
+    },
+    {
+      "unit_id": "u47607080efb1b93b6056",
+      "function": "bitonicSorterNetworkIdx",
+      "path": "routes.lib",
+      "canonical_tokens": 4,
+      "eligible_for": [
+        "train"
+      ],
+      "license": "LGPL-2.1-or-later",
+      "dependency_closure_unit_ids": [
+        "u023db3abc4691b8a1eeb",
+        "u1e8f01a7d1280dbaff25",
+        "u314965370eaa37bc4c4a",
+        "u4231c69c871db9f40d02",
+        "u49d278124afe8f1a3aaa",
+        "u5916062fe6e05769bc5e",
+        "u59ced2536e9cb73ffeb8",
+        "ua73fb09512d22d77c20f",
+        "uc6ec42e6b1602b9e217c",
+        "udcc2063cb0579470c4d8",
+        "ue7267aeec2e6e8bfd17b",
+        "ue8e14fb33149e931e829",
+        "uf54946007946a7a4261f"
+      ],
+      "dependency_not_in_ledger": [],
+      "blockers": [
+        "independent_source_closure_review",
+        "human_leakage_adjudication",
+        "executable_semantic_contract_required"
+      ],
+      "dependency_comparison_connected": [
+        "u023db3abc4691b8a1eeb",
+        "u1e8f01a7d1280dbaff25",
+        "u314965370eaa37bc4c4a",
+        "u4231c69c871db9f40d02",
+        "u49d278124afe8f1a3aaa",
+        "u5916062fe6e05769bc5e",
+        "u59ced2536e9cb73ffeb8",
+        "ua73fb09512d22d77c20f",
+        "uc6ec42e6b1602b9e217c",
+        "udcc2063cb0579470c4d8",
+        "ue7267aeec2e6e8bfd17b",
+        "ue8e14fb33149e931e829",
+        "uf54946007946a7a4261f"
+      ],
+      "family": "sha256:dc251beb7a0458f1abef0a873d3743c9749cb4c5931f3e3435cf1680b0417b7e",
+      "source_sha256": "sha256:a53d24e6ea5a6f9a6d38847e238daabfddd056fe4c972a7d65242b9f70841f90",
+      "span": {
+        "blob_sha": "b5e22c181d2f18e1a4548c735df05cddcdf490c9",
+        "end_byte": 21528,
+        "function": "bitonicSorterNetworkIdx",
+        "manifest_digest": "sha256:fbfcc0bf8323b16b68da804858d378c4170408c0f05b303b5808d330f4cef3f9",
+        "path": "routes.lib",
+        "pin": "2edec0537f536eaa130d42c354884d7db971663c",
+        "repo": "grame-cncm/faustlibraries",
+        "sha256": "sha256:a53d24e6ea5a6f9a6d38847e238daabfddd056fe4c972a7d65242b9f70841f90",
+        "start_byte": 21477,
+        "unit_id": "u47607080efb1b93b6056"
+      }
+    },
+    {
+      "unit_id": "u0b9fde4403aaa89fb9fc",
+      "function": "comparator",
+      "path": "routes.lib",
+      "canonical_tokens": 4,
+      "eligible_for": [
+        "train"
+      ],
+      "license": "LGPL-2.1-or-later",
+      "dependency_closure_unit_ids": [
+        "u73658447117b0963eed0",
+        "u9a92732462d9fdc78df5",
+        "ucc2017a1332ec6436113",
+        "ud5b76c169f42a41f804f"
+      ],
+      "dependency_not_in_ledger": [],
+      "blockers": [
+        "independent_source_closure_review",
+        "human_leakage_adjudication",
+        "executable_semantic_contract_required"
+      ],
+      "dependency_comparison_connected": [
+        "u73658447117b0963eed0",
+        "u9a92732462d9fdc78df5",
+        "ucc2017a1332ec6436113",
+        "ud5b76c169f42a41f804f"
+      ],
+      "family": "sha256:dc251beb7a0458f1abef0a873d3743c9749cb4c5931f3e3435cf1680b0417b7e",
+      "source_sha256": "sha256:5ae0310b2c8f3a75928d212bad78bde721c39d4eed923d4ed45bbf7eeea95446",
+      "span": {
+        "blob_sha": "b5e22c181d2f18e1a4548c735df05cddcdf490c9",
+        "end_byte": 21627,
+        "function": "comparator",
+        "manifest_digest": "sha256:fbfcc0bf8323b16b68da804858d378c4170408c0f05b303b5808d330f4cef3f9",
+        "path": "routes.lib",
+        "pin": "2edec0537f536eaa130d42c354884d7db971663c",
+        "repo": "grame-cncm/faustlibraries",
+        "sha256": "sha256:5ae0310b2c8f3a75928d212bad78bde721c39d4eed923d4ed45bbf7eeea95446",
+        "start_byte": 21602,
+        "unit_id": "u0b9fde4403aaa89fb9fc"
+      }
+    },
+    {
+      "unit_id": "u076896a91f7701b693f8",
+      "function": "comparatorAsc",
+      "path": "routes.lib",
+      "canonical_tokens": 4,
+      "eligible_for": [
+        "train"
+      ],
+      "license": "LGPL-2.1-or-later",
+      "dependency_closure_unit_ids": [
+        "ucc2017a1332ec6436113"
+      ],
+      "dependency_not_in_ledger": [],
+      "blockers": [
+        "independent_source_closure_review",
+        "human_leakage_adjudication"
+      ],
+      "dependency_comparison_connected": [
+        "ucc2017a1332ec6436113"
+      ],
+      "family": "sha256:dc251beb7a0458f1abef0a873d3743c9749cb4c5931f3e3435cf1680b0417b7e",
+      "source_sha256": "sha256:ca838a8755d3ecfc502edfdb50e071d8bb755927602f6184f706be61ad694b1a",
+      "span": {
+        "blob_sha": "b5e22c181d2f18e1a4548c735df05cddcdf490c9",
+        "end_byte": 21738,
+        "function": "comparatorAsc",
+        "manifest_digest": "sha256:fbfcc0bf8323b16b68da804858d378c4170408c0f05b303b5808d330f4cef3f9",
+        "path": "routes.lib",
+        "pin": "2edec0537f536eaa130d42c354884d7db971663c",
+        "repo": "grame-cncm/faustlibraries",
+        "sha256": "sha256:ca838a8755d3ecfc502edfdb50e071d8bb755927602f6184f706be61ad694b1a",
+        "start_byte": 21707,
+        "unit_id": "u076896a91f7701b693f8"
+      }
+    },
+    {
+      "unit_id": "ufad1f9cf1cac1f27721a",
+      "function": "comparatorAscIdx",
+      "path": "routes.lib",
+      "canonical_tokens": 4,
+      "eligible_for": [
+        "train"
+      ],
+      "license": "LGPL-2.1-or-later",
+      "dependency_closure_unit_ids": [
+        "u59ced2536e9cb73ffeb8"
+      ],
+      "dependency_not_in_ledger": [],
+      "blockers": [
+        "independent_source_closure_review",
+        "human_leakage_adjudication",
+        "executable_semantic_contract_required"
+      ],
+      "dependency_comparison_connected": [
+        "u59ced2536e9cb73ffeb8"
+      ],
+      "family": "sha256:dc251beb7a0458f1abef0a873d3743c9749cb4c5931f3e3435cf1680b0417b7e",
+      "source_sha256": "sha256:5d8810af451f9b546a7e1a734e332e10146813bbab67cf5e412c4485670a37f0",
+      "span": {
+        "blob_sha": "b5e22c181d2f18e1a4548c735df05cddcdf490c9",
+        "end_byte": 21861,
+        "function": "comparatorAscIdx",
+        "manifest_digest": "sha256:fbfcc0bf8323b16b68da804858d378c4170408c0f05b303b5808d330f4cef3f9",
+        "path": "routes.lib",
+        "pin": "2edec0537f536eaa130d42c354884d7db971663c",
+        "repo": "grame-cncm/faustlibraries",
+        "sha256": "sha256:5d8810af451f9b546a7e1a734e332e10146813bbab67cf5e412c4485670a37f0",
+        "start_byte": 21824,
+        "unit_id": "ufad1f9cf1cac1f27721a"
+      }
+    },
+    {
+      "unit_id": "u9f0c7ae700a832f1fdaf",
+      "function": "comparatorDes",
+      "path": "routes.lib",
+      "canonical_tokens": 4,
+      "eligible_for": [
+        "train"
+      ],
+      "license": "LGPL-2.1-or-later",
+      "dependency_closure_unit_ids": [
+        "u9a92732462d9fdc78df5"
+      ],
+      "dependency_not_in_ledger": [],
+      "blockers": [
+        "independent_source_closure_review",
+        "human_leakage_adjudication"
+      ],
+      "dependency_comparison_connected": [
+        "u9a92732462d9fdc78df5"
+      ],
+      "family": "sha256:dc251beb7a0458f1abef0a873d3743c9749cb4c5931f3e3435cf1680b0417b7e",
+      "source_sha256": "sha256:d518d46d6dc5eb1a1e910161fe7d3cc93be5b5453b8ebf7f16bd807b166b006a",
+      "span": {
+        "blob_sha": "b5e22c181d2f18e1a4548c735df05cddcdf490c9",
+        "end_byte": 21972,
+        "function": "comparatorDes",
+        "manifest_digest": "sha256:fbfcc0bf8323b16b68da804858d378c4170408c0f05b303b5808d330f4cef3f9",
+        "path": "routes.lib",
+        "pin": "2edec0537f536eaa130d42c354884d7db971663c",
+        "repo": "grame-cncm/faustlibraries",
+        "sha256": "sha256:d518d46d6dc5eb1a1e910161fe7d3cc93be5b5453b8ebf7f16bd807b166b006a",
+        "start_byte": 21941,
+        "unit_id": "u9f0c7ae700a832f1fdaf"
+      }
+    },
+    {
+      "unit_id": "u63c4f6244fd42970c1d1",
+      "function": "comparatorDesIdx",
+      "path": "routes.lib",
+      "canonical_tokens": 4,
+      "eligible_for": [
+        "train"
+      ],
+      "license": "LGPL-2.1-or-later",
+      "dependency_closure_unit_ids": [
+        "u1e8f01a7d1280dbaff25"
+      ],
+      "dependency_not_in_ledger": [],
+      "blockers": [
+        "independent_source_closure_review",
+        "human_leakage_adjudication",
+        "executable_semantic_contract_required"
+      ],
+      "dependency_comparison_connected": [
+        "u1e8f01a7d1280dbaff25"
+      ],
+      "family": "sha256:dc251beb7a0458f1abef0a873d3743c9749cb4c5931f3e3435cf1680b0417b7e",
+      "source_sha256": "sha256:04b763c3a004f294db185b4b8951a07b835f544bd23582417e11b5cea760654d",
+      "span": {
+        "blob_sha": "b5e22c181d2f18e1a4548c735df05cddcdf490c9",
+        "end_byte": 22095,
+        "function": "comparatorDesIdx",
+        "manifest_digest": "sha256:fbfcc0bf8323b16b68da804858d378c4170408c0f05b303b5808d330f4cef3f9",
+        "path": "routes.lib",
+        "pin": "2edec0537f536eaa130d42c354884d7db971663c",
+        "repo": "grame-cncm/faustlibraries",
+        "sha256": "sha256:04b763c3a004f294db185b4b8951a07b835f544bd23582417e11b5cea760654d",
+        "start_byte": 22058,
+        "unit_id": "u63c4f6244fd42970c1d1"
+      }
+    },
+    {
+      "unit_id": "u3c460d52daadd5bcc9fe",
+      "function": "comparatorDirections",
+      "path": "routes.lib",
+      "canonical_tokens": 4,
+      "eligible_for": [
+        "train"
+      ],
+      "license": "LGPL-2.1-or-later",
+      "dependency_closure_unit_ids": [
+        "u6c351c71447dcde642fe"
+      ],
+      "dependency_not_in_ledger": [],
+      "blockers": [
+        "independent_source_closure_review",
+        "human_leakage_adjudication",
+        "executable_semantic_contract_required"
+      ],
+      "dependency_comparison_connected": [
+        "u6c351c71447dcde642fe"
+      ],
+      "family": "sha256:dc251beb7a0458f1abef0a873d3743c9749cb4c5931f3e3435cf1680b0417b7e",
+      "source_sha256": "sha256:157e684bd10ba20b62d91157910270f4b9db51263c2e4120c8604a1d15e6794b",
+      "span": {
+        "blob_sha": "b5e22c181d2f18e1a4548c735df05cddcdf490c9",
+        "end_byte": 22234,
+        "function": "comparatorDirections",
+        "manifest_digest": "sha256:fbfcc0bf8323b16b68da804858d378c4170408c0f05b303b5808d330f4cef3f9",
+        "path": "routes.lib",
+        "pin": "2edec0537f536eaa130d42c354884d7db971663c",
+        "repo": "grame-cncm/faustlibraries",
+        "sha256": "sha256:157e684bd10ba20b62d91157910270f4b9db51263c2e4120c8604a1d15e6794b",
+        "start_byte": 22189,
+        "unit_id": "u3c460d52daadd5bcc9fe"
+      }
+    },
+    {
+      "unit_id": "u15be1e1db2d47d494e46",
+      "function": "comparatorDirectionsIdx",
+      "path": "routes.lib",
+      "canonical_tokens": 4,
+      "eligible_for": [
+        "train"
+      ],
+      "license": "LGPL-2.1-or-later",
+      "dependency_closure_unit_ids": [
+        "uedc51f22ca0ace950e1c"
+      ],
+      "dependency_not_in_ledger": [],
+      "blockers": [
+        "independent_source_closure_review",
+        "human_leakage_adjudication",
+        "executable_semantic_contract_required"
+      ],
+      "dependency_comparison_connected": [
+        "uedc51f22ca0ace950e1c"
+      ],
+      "family": "sha256:dc251beb7a0458f1abef0a873d3743c9749cb4c5931f3e3435cf1680b0417b7e",
+      "source_sha256": "sha256:ba31a786d9e582d4acfc07809cad39a8ecaacd2fea73e952b880683fb356feee",
+      "span": {
+        "blob_sha": "b5e22c181d2f18e1a4548c735df05cddcdf490c9",
+        "end_byte": 22385,
+        "function": "comparatorDirectionsIdx",
+        "manifest_digest": "sha256:fbfcc0bf8323b16b68da804858d378c4170408c0f05b303b5808d330f4cef3f9",
+        "path": "routes.lib",
+        "pin": "2edec0537f536eaa130d42c354884d7db971663c",
+        "repo": "grame-cncm/faustlibraries",
+        "sha256": "sha256:ba31a786d9e582d4acfc07809cad39a8ecaacd2fea73e952b880683fb356feee",
+        "start_byte": 22334,
+        "unit_id": "u15be1e1db2d47d494e46"
+      }
+    },
+    {
+      "unit_id": "uea7a2d6d7ed3ca94c797",
+      "function": "comparatorIdx",
+      "path": "routes.lib",
+      "canonical_tokens": 4,
+      "eligible_for": [
+        "train"
+      ],
+      "license": "LGPL-2.1-or-later",
+      "dependency_closure_unit_ids": [
+        "u1e8f01a7d1280dbaff25",
+        "u4231c69c871db9f40d02",
+        "u49d278124afe8f1a3aaa",
+        "u59ced2536e9cb73ffeb8"
+      ],
+      "dependency_not_in_ledger": [],
+      "blockers": [
+        "independent_source_closure_review",
+        "human_leakage_adjudication",
+        "executable_semantic_contract_required"
+      ],
+      "dependency_comparison_connected": [
+        "u1e8f01a7d1280dbaff25",
+        "u4231c69c871db9f40d02",
+        "u49d278124afe8f1a3aaa",
+        "u59ced2536e9cb73ffeb8"
+      ],
+      "family": "sha256:dc251beb7a0458f1abef0a873d3743c9749cb4c5931f3e3435cf1680b0417b7e",
+      "source_sha256": "sha256:2e794a1a0a622d154c8e8d47a8b50e1ca1a6c45161eb53af315fae73cb4ff21d",
+      "span": {
+        "blob_sha": "b5e22c181d2f18e1a4548c735df05cddcdf490c9",
+        "end_byte": 22496,
+        "function": "comparatorIdx",
+        "manifest_digest": "sha256:fbfcc0bf8323b16b68da804858d378c4170408c0f05b303b5808d330f4cef3f9",
+        "path": "routes.lib",
+        "pin": "2edec0537f536eaa130d42c354884d7db971663c",
+        "repo": "grame-cncm/faustlibraries",
+        "sha256": "sha256:2e794a1a0a622d154c8e8d47a8b50e1ca1a6c45161eb53af315fae73cb4ff21d",
+        "start_byte": 22465,
+        "unit_id": "uea7a2d6d7ed3ca94c797"
+      }
+    },
+    {
+      "unit_id": "ud8c5d67761a494ef9926",
+      "function": "route0idx",
+      "path": "routes.lib",
+      "canonical_tokens": 4,
+      "eligible_for": [
+        "train"
+      ],
+      "license": "LGPL-2.1-or-later",
+      "dependency_closure_unit_ids": [
+        "ue8e14fb33149e931e829"
+      ],
+      "dependency_not_in_ledger": [],
+      "blockers": [
+        "independent_source_closure_review",
+        "human_leakage_adjudication",
+        "executable_semantic_contract_required"
+      ],
+      "dependency_comparison_connected": [
+        "ue8e14fb33149e931e829"
+      ],
+      "family": "sha256:dc251beb7a0458f1abef0a873d3743c9749cb4c5931f3e3435cf1680b0417b7e",
+      "source_sha256": "sha256:df3280459335d2314650437518e76e1e16a6f8fbeae685ee7beb46f624a68af7",
+      "span": {
+        "blob_sha": "b5e22c181d2f18e1a4548c735df05cddcdf490c9",
+        "end_byte": 22591,
+        "function": "route0idx",
+        "manifest_digest": "sha256:fbfcc0bf8323b16b68da804858d378c4170408c0f05b303b5808d330f4cef3f9",
+        "path": "routes.lib",
+        "pin": "2edec0537f536eaa130d42c354884d7db971663c",
+        "repo": "grame-cncm/faustlibraries",
+        "sha256": "sha256:df3280459335d2314650437518e76e1e16a6f8fbeae685ee7beb46f624a68af7",
+        "start_byte": 22568,
+        "unit_id": "ud8c5d67761a494ef9926"
+      }
+    },
+    {
+      "unit_id": "u302aaa6ea81f7706474d",
+      "function": "an",
+      "path": "sf.lib",
+      "canonical_tokens": 4,
+      "eligible_for": [
+        "train"
+      ],
+      "license": "LGPL-2.1-or-later",
+      "dependency_closure_unit_ids": [],
+      "dependency_not_in_ledger": [],
+      "blockers": [
+        "independent_source_closure_review",
+        "human_leakage_adjudication",
+        "executable_semantic_contract_required"
+      ],
+      "dependency_comparison_connected": [],
+      "family": "sha256:dc251beb7a0458f1abef0a873d3743c9749cb4c5931f3e3435cf1680b0417b7e",
+      "source_sha256": "sha256:e5d0de7ea83fe3795336f1137a52f98aa5c72e07b8ed343fbc9ee475cbf80bf5",
+      "span": {
+        "blob_sha": "10210974a1e6996d9adb13120af337f44e4c2f6b",
+        "end_byte": 2697,
+        "function": "an",
+        "manifest_digest": "sha256:fbfcc0bf8323b16b68da804858d378c4170408c0f05b303b5808d330f4cef3f9",
+        "path": "sf.lib",
+        "pin": "2edec0537f536eaa130d42c354884d7db971663c",
+        "repo": "grame-cncm/faustlibraries",
+        "sha256": "sha256:e5d0de7ea83fe3795336f1137a52f98aa5c72e07b8ed343fbc9ee475cbf80bf5",
+        "start_byte": 2689,
+        "unit_id": "u302aaa6ea81f7706474d"
+      }
+    },
+    {
+      "unit_id": "u575f44d9df46ac0e0b6c",
+      "function": "ba",
+      "path": "sf.lib",
+      "canonical_tokens": 4,
+      "eligible_for": [
+        "train"
+      ],
+      "license": "LGPL-2.1-or-later",
+      "dependency_closure_unit_ids": [],
+      "dependency_not_in_ledger": [],
+      "blockers": [
+        "independent_source_closure_review",
+        "human_leakage_adjudication",
+        "executable_semantic_contract_required"
+      ],
+      "dependency_comparison_connected": [],
+      "family": "sha256:dc251beb7a0458f1abef0a873d3743c9749cb4c5931f3e3435cf1680b0417b7e",
+      "source_sha256": "sha256:5a36f402a648d1cf81cbb918efc05bf7eeb9b2516191c99f188a04b92119887f",
+      "span": {
+        "blob_sha": "10210974a1e6996d9adb13120af337f44e4c2f6b",
+        "end_byte": 2706,
+        "function": "ba",
+        "manifest_digest": "sha256:fbfcc0bf8323b16b68da804858d378c4170408c0f05b303b5808d330f4cef3f9",
+        "path": "sf.lib",
+        "pin": "2edec0537f536eaa130d42c354884d7db971663c",
+        "repo": "grame-cncm/faustlibraries",
+        "sha256": "sha256:5a36f402a648d1cf81cbb918efc05bf7eeb9b2516191c99f188a04b92119887f",
+        "start_byte": 2698,
+        "unit_id": "u575f44d9df46ac0e0b6c"
+      }
+    },
+    {
+      "unit_id": "ub101f2627017fd753603",
+      "function": "co",
+      "path": "sf.lib",
+      "canonical_tokens": 4,
+      "eligible_for": [
+        "train"
+      ],
+      "license": "LGPL-2.1-or-later",
+      "dependency_closure_unit_ids": [],
+      "dependency_not_in_ledger": [],
+      "blockers": [
+        "independent_source_closure_review",
+        "human_leakage_adjudication",
+        "executable_semantic_contract_required"
+      ],
+      "dependency_comparison_connected": [],
+      "family": "sha256:dc251beb7a0458f1abef0a873d3743c9749cb4c5931f3e3435cf1680b0417b7e",
+      "source_sha256": "sha256:334e6d67f64d572d995305db624f8fe6611e6af038633361cbf2937a976c2667",
+      "span": {
+        "blob_sha": "10210974a1e6996d9adb13120af337f44e4c2f6b",
+        "end_byte": 2715,
+        "function": "co",
+        "manifest_digest": "sha256:fbfcc0bf8323b16b68da804858d378c4170408c0f05b303b5808d330f4cef3f9",
+        "path": "sf.lib",
+        "pin": "2edec0537f536eaa130d42c354884d7db971663c",
+        "repo": "grame-cncm/faustlibraries",
+        "sha256": "sha256:334e6d67f64d572d995305db624f8fe6611e6af038633361cbf2937a976c2667",
+        "start_byte": 2707,
+        "unit_id": "ub101f2627017fd753603"
+      }
+    },
+    {
+      "unit_id": "u46bd6a4a30f33fa1190d",
+      "function": "de",
+      "path": "sf.lib",
+      "canonical_tokens": 4,
+      "eligible_for": [
+        "train"
+      ],
+      "license": "LGPL-2.1-or-later",
+      "dependency_closure_unit_ids": [],
+      "dependency_not_in_ledger": [],
+      "blockers": [
+        "independent_source_closure_review",
+        "human_leakage_adjudication",
+        "executable_semantic_contract_required"
+      ],
+      "dependency_comparison_connected": [],
+      "family": "sha256:dc251beb7a0458f1abef0a873d3743c9749cb4c5931f3e3435cf1680b0417b7e",
+      "source_sha256": "sha256:765339cb9ac6119f7456777dd8c059735b3345cf3d8259ef28a41306bc7f6add",
+      "span": {
+        "blob_sha": "10210974a1e6996d9adb13120af337f44e4c2f6b",
+        "end_byte": 2724,
+        "function": "de",
+        "manifest_digest": "sha256:fbfcc0bf8323b16b68da804858d378c4170408c0f05b303b5808d330f4cef3f9",
+        "path": "sf.lib",
+        "pin": "2edec0537f536eaa130d42c354884d7db971663c",
+        "repo": "grame-cncm/faustlibraries",
+        "sha256": "sha256:765339cb9ac6119f7456777dd8c059735b3345cf3d8259ef28a41306bc7f6add",
+        "start_byte": 2716,
+        "unit_id": "u46bd6a4a30f33fa1190d"
+      }
+    },
+    {
+      "unit_id": "ua2534a6dcb5f1393ef93",
+      "function": "dm",
+      "path": "sf.lib",
+      "canonical_tokens": 4,
+      "eligible_for": [
+        "train"
+      ],
+      "license": "LGPL-2.1-or-later",
+      "dependency_closure_unit_ids": [],
+      "dependency_not_in_ledger": [],
+      "blockers": [
+        "independent_source_closure_review",
+        "human_leakage_adjudication",
+        "executable_semantic_contract_required"
+      ],
+      "dependency_comparison_connected": [],
+      "family": "sha256:dc251beb7a0458f1abef0a873d3743c9749cb4c5931f3e3435cf1680b0417b7e",
+      "source_sha256": "sha256:d20f3240f597554b08a4c2a7cd80aa6d26d84adfc364d3c01c07fef7a2a935b1",
+      "span": {
+        "blob_sha": "10210974a1e6996d9adb13120af337f44e4c2f6b",
+        "end_byte": 2733,
+        "function": "dm",
+        "manifest_digest": "sha256:fbfcc0bf8323b16b68da804858d378c4170408c0f05b303b5808d330f4cef3f9",
+        "path": "sf.lib",
+        "pin": "2edec0537f536eaa130d42c354884d7db971663c",
+        "repo": "grame-cncm/faustlibraries",
+        "sha256": "sha256:d20f3240f597554b08a4c2a7cd80aa6d26d84adfc364d3c01c07fef7a2a935b1",
+        "start_byte": 2725,
+        "unit_id": "ua2534a6dcb5f1393ef93"
+      }
+    },
+    {
+      "unit_id": "ue06b37c1f26887a8a562",
+      "function": "dx",
+      "path": "sf.lib",
+      "canonical_tokens": 4,
+      "eligible_for": [
+        "train"
+      ],
+      "license": "LGPL-2.1-or-later",
+      "dependency_closure_unit_ids": [],
+      "dependency_not_in_ledger": [],
+      "blockers": [
+        "independent_source_closure_review",
+        "human_leakage_adjudication",
+        "executable_semantic_contract_required"
+      ],
+      "dependency_comparison_connected": [],
+      "family": "sha256:dc251beb7a0458f1abef0a873d3743c9749cb4c5931f3e3435cf1680b0417b7e",
+      "source_sha256": "sha256:bfe82e6b6d6ce35780b871a66fb8f7fd99b9a025cb9901d9f3b861692c9b393b",
+      "span": {
+        "blob_sha": "10210974a1e6996d9adb13120af337f44e4c2f6b",
+        "end_byte": 2742,
+        "function": "dx",
+        "manifest_digest": "sha256:fbfcc0bf8323b16b68da804858d378c4170408c0f05b303b5808d330f4cef3f9",
+        "path": "sf.lib",
+        "pin": "2edec0537f536eaa130d42c354884d7db971663c",
+        "repo": "grame-cncm/faustlibraries",
+        "sha256": "sha256:bfe82e6b6d6ce35780b871a66fb8f7fd99b9a025cb9901d9f3b861692c9b393b",
+        "start_byte": 2734,
+        "unit_id": "ue06b37c1f26887a8a562"
+      }
+    },
+    {
+      "unit_id": "u0a7c2c902d12f35264fa",
+      "function": "ef",
+      "path": "sf.lib",
+      "canonical_tokens": 4,
+      "eligible_for": [
+        "train"
+      ],
+      "license": "LGPL-2.1-or-later",
+      "dependency_closure_unit_ids": [],
+      "dependency_not_in_ledger": [],
+      "blockers": [
+        "independent_source_closure_review",
+        "human_leakage_adjudication",
+        "executable_semantic_contract_required"
+      ],
+      "dependency_comparison_connected": [],
+      "family": "sha256:dc251beb7a0458f1abef0a873d3743c9749cb4c5931f3e3435cf1680b0417b7e",
+      "source_sha256": "sha256:bd213652183977bdc57cadb1967e77d2c4df1d8e4d381508622e427c602b2f8f",
+      "span": {
+        "blob_sha": "10210974a1e6996d9adb13120af337f44e4c2f6b",
+        "end_byte": 2751,
+        "function": "ef",
+        "manifest_digest": "sha256:fbfcc0bf8323b16b68da804858d378c4170408c0f05b303b5808d330f4cef3f9",
+        "path": "sf.lib",
+        "pin": "2edec0537f536eaa130d42c354884d7db971663c",
+        "repo": "grame-cncm/faustlibraries",
+        "sha256": "sha256:bd213652183977bdc57cadb1967e77d2c4df1d8e4d381508622e427c602b2f8f",
+        "start_byte": 2743,
+        "unit_id": "u0a7c2c902d12f35264fa"
+      }
+    },
+    {
+      "unit_id": "u3f55f0768005c9d7d060",
+      "function": "el",
+      "path": "sf.lib",
+      "canonical_tokens": 4,
+      "eligible_for": [
+        "train"
+      ],
+      "license": "LGPL-2.1-or-later",
+      "dependency_closure_unit_ids": [],
+      "dependency_not_in_ledger": [],
+      "blockers": [
+        "independent_source_closure_review",
+        "human_leakage_adjudication",
+        "executable_semantic_contract_required"
+      ],
+      "dependency_comparison_connected": [],
+      "family": "sha256:dc251beb7a0458f1abef0a873d3743c9749cb4c5931f3e3435cf1680b0417b7e",
+      "source_sha256": "sha256:2b0cdc86b09573a6cda35e89cf454d4f524dbc594668c73dcb3577f6fd80b959",
+      "span": {
+        "blob_sha": "10210974a1e6996d9adb13120af337f44e4c2f6b",
+        "end_byte": 2657,
+        "function": "el",
+        "manifest_digest": "sha256:fbfcc0bf8323b16b68da804858d378c4170408c0f05b303b5808d330f4cef3f9",
+        "path": "sf.lib",
+        "pin": "2edec0537f536eaa130d42c354884d7db971663c",
+        "repo": "grame-cncm/faustlibraries",
+        "sha256": "sha256:2b0cdc86b09573a6cda35e89cf454d4f524dbc594668c73dcb3577f6fd80b959",
+        "start_byte": 2649,
+        "unit_id": "u3f55f0768005c9d7d060"
+      }
+    },
+    {
+      "unit_id": "u17221e8dc4e823a4069a",
+      "function": "en",
+      "path": "sf.lib",
+      "canonical_tokens": 4,
+      "eligible_for": [
+        "train"
+      ],
+      "license": "LGPL-2.1-or-later",
+      "dependency_closure_unit_ids": [],
+      "dependency_not_in_ledger": [],
+      "blockers": [
+        "independent_source_closure_review",
+        "human_leakage_adjudication",
+        "executable_semantic_contract_required"
+      ],
+      "dependency_comparison_connected": [],
+      "family": "sha256:dc251beb7a0458f1abef0a873d3743c9749cb4c5931f3e3435cf1680b0417b7e",
+      "source_sha256": "sha256:71c9eab99de7b29e78b81768171a04362140ea75bd81b29dfa49d51ee54cb5bb",
+      "span": {
+        "blob_sha": "10210974a1e6996d9adb13120af337f44e4c2f6b",
+        "end_byte": 2760,
+        "function": "en",
+        "manifest_digest": "sha256:fbfcc0bf8323b16b68da804858d378c4170408c0f05b303b5808d330f4cef3f9",
+        "path": "sf.lib",
+        "pin": "2edec0537f536eaa130d42c354884d7db971663c",
+        "repo": "grame-cncm/faustlibraries",
+        "sha256": "sha256:71c9eab99de7b29e78b81768171a04362140ea75bd81b29dfa49d51ee54cb5bb",
+        "start_byte": 2752,
+        "unit_id": "u17221e8dc4e823a4069a"
+      }
+    },
+    {
+      "unit_id": "u7e838be09885cd9ce4ce",
+      "function": "fd",
+      "path": "sf.lib",
+      "canonical_tokens": 4,
+      "eligible_for": [
+        "train"
+      ],
+      "license": "LGPL-2.1-or-later",
+      "dependency_closure_unit_ids": [],
+      "dependency_not_in_ledger": [],
+      "blockers": [
+        "independent_source_closure_review",
+        "human_leakage_adjudication",
+        "executable_semantic_contract_required"
+      ],
+      "dependency_comparison_connected": [],
+      "family": "sha256:dc251beb7a0458f1abef0a873d3743c9749cb4c5931f3e3435cf1680b0417b7e",
+      "source_sha256": "sha256:1c7731cccdd40126b6a0747642696c8fd24faa8947009ec5e299a326ff543171",
+      "span": {
+        "blob_sha": "10210974a1e6996d9adb13120af337f44e4c2f6b",
+        "end_byte": 2769,
+        "function": "fd",
+        "manifest_digest": "sha256:fbfcc0bf8323b16b68da804858d378c4170408c0f05b303b5808d330f4cef3f9",
+        "path": "sf.lib",
+        "pin": "2edec0537f536eaa130d42c354884d7db971663c",
+        "repo": "grame-cncm/faustlibraries",
+        "sha256": "sha256:1c7731cccdd40126b6a0747642696c8fd24faa8947009ec5e299a326ff543171",
+        "start_byte": 2761,
+        "unit_id": "u7e838be09885cd9ce4ce"
+      }
+    },
+    {
+      "unit_id": "u13381f12be568ec60427",
+      "function": "fi",
+      "path": "sf.lib",
+      "canonical_tokens": 4,
+      "eligible_for": [
+        "train"
+      ],
+      "license": "LGPL-2.1-or-later",
+      "dependency_closure_unit_ids": [],
+      "dependency_not_in_ledger": [],
+      "blockers": [
+        "independent_source_closure_review",
+        "human_leakage_adjudication",
+        "executable_semantic_contract_required"
+      ],
+      "dependency_comparison_connected": [],
+      "family": "sha256:dc251beb7a0458f1abef0a873d3743c9749cb4c5931f3e3435cf1680b0417b7e",
+      "source_sha256": "sha256:39df5976618f62f236018e374c507a3f5a043ddd33e40206312e42824dc86117",
+      "span": {
+        "blob_sha": "10210974a1e6996d9adb13120af337f44e4c2f6b",
+        "end_byte": 2778,
+        "function": "fi",
+        "manifest_digest": "sha256:fbfcc0bf8323b16b68da804858d378c4170408c0f05b303b5808d330f4cef3f9",
+        "path": "sf.lib",
+        "pin": "2edec0537f536eaa130d42c354884d7db971663c",
+        "repo": "grame-cncm/faustlibraries",
+        "sha256": "sha256:39df5976618f62f236018e374c507a3f5a043ddd33e40206312e42824dc86117",
+        "start_byte": 2770,
+        "unit_id": "u13381f12be568ec60427"
+      }
+    },
+    {
+      "unit_id": "u55a8b30bd2aa7e33ae93",
+      "function": "fl",
+      "path": "sf.lib",
+      "canonical_tokens": 4,
+      "eligible_for": [
+        "train"
+      ],
+      "license": "LGPL-2.1-or-later",
+      "dependency_closure_unit_ids": [],
+      "dependency_not_in_ledger": [],
+      "blockers": [
+        "independent_source_closure_review",
+        "human_leakage_adjudication",
+        "executable_semantic_contract_required"
+      ],
+      "dependency_comparison_connected": [],
+      "family": "sha256:dc251beb7a0458f1abef0a873d3743c9749cb4c5931f3e3435cf1680b0417b7e",
+      "source_sha256": "sha256:2a6f3a74d249ce0f9faab076637d69673bc6e9795cdc0537b6d545aa4bd56610",
+      "span": {
+        "blob_sha": "10210974a1e6996d9adb13120af337f44e4c2f6b",
+        "end_byte": 2639,
+        "function": "fl",
+        "manifest_digest": "sha256:fbfcc0bf8323b16b68da804858d378c4170408c0f05b303b5808d330f4cef3f9",
+        "path": "sf.lib",
+        "pin": "2edec0537f536eaa130d42c354884d7db971663c",
+        "repo": "grame-cncm/faustlibraries",
+        "sha256": "sha256:2a6f3a74d249ce0f9faab076637d69673bc6e9795cdc0537b6d545aa4bd56610",
+        "start_byte": 2631,
+        "unit_id": "u55a8b30bd2aa7e33ae93"
+      }
+    },
+    {
+      "unit_id": "ua41e8cd1d4fc3d3da75b",
+      "function": "ho",
+      "path": "sf.lib",
+      "canonical_tokens": 4,
+      "eligible_for": [
+        "train"
+      ],
+      "license": "LGPL-2.1-or-later",
+      "dependency_closure_unit_ids": [],
+      "dependency_not_in_ledger": [],
+      "blockers": [
+        "independent_source_closure_review",
+        "human_leakage_adjudication",
+        "executable_semantic_contract_required"
+      ],
+      "dependency_comparison_connected": [],
+      "family": "sha256:dc251beb7a0458f1abef0a873d3743c9749cb4c5931f3e3435cf1680b0417b7e",
+      "source_sha256": "sha256:d235abfa58cb39444c245d00d838cb4c1f4f2d18f2659f741addc90b09e0c7d4",
+      "span": {
+        "blob_sha": "10210974a1e6996d9adb13120af337f44e4c2f6b",
+        "end_byte": 2787,
+        "function": "ho",
+        "manifest_digest": "sha256:fbfcc0bf8323b16b68da804858d378c4170408c0f05b303b5808d330f4cef3f9",
+        "path": "sf.lib",
+        "pin": "2edec0537f536eaa130d42c354884d7db971663c",
+        "repo": "grame-cncm/faustlibraries",
+        "sha256": "sha256:d235abfa58cb39444c245d00d838cb4c1f4f2d18f2659f741addc90b09e0c7d4",
+        "start_byte": 2779,
+        "unit_id": "ua41e8cd1d4fc3d3da75b"
+      }
+    },
+    {
+      "unit_id": "uc0464c0917182f68993a",
+      "function": "ma",
+      "path": "sf.lib",
+      "canonical_tokens": 4,
+      "eligible_for": [
+        "train"
+      ],
+      "license": "LGPL-2.1-or-later",
+      "dependency_closure_unit_ids": [],
+      "dependency_not_in_ledger": [],
+      "blockers": [
+        "independent_source_closure_review",
+        "human_leakage_adjudication",
+        "executable_semantic_contract_required"
+      ],
+      "dependency_comparison_connected": [],
+      "family": "sha256:dc251beb7a0458f1abef0a873d3743c9749cb4c5931f3e3435cf1680b0417b7e",
+      "source_sha256": "sha256:28ad1f454a61c9c37a10db8b6c7130cddda7c34d1cc08a98b877148431031297",
+      "span": {
+        "blob_sha": "10210974a1e6996d9adb13120af337f44e4c2f6b",
+        "end_byte": 2796,
+        "function": "ma",
+        "manifest_digest": "sha256:fbfcc0bf8323b16b68da804858d378c4170408c0f05b303b5808d330f4cef3f9",
+        "path": "sf.lib",
+        "pin": "2edec0537f536eaa130d42c354884d7db971663c",
+        "repo": "grame-cncm/faustlibraries",
+        "sha256": "sha256:28ad1f454a61c9c37a10db8b6c7130cddda7c34d1cc08a98b877148431031297",
+        "start_byte": 2788,
+        "unit_id": "uc0464c0917182f68993a"
+      }
+    },
+    {
+      "unit_id": "u70d80ee2cf1a1133e553",
+      "function": "ml",
+      "path": "sf.lib",
+      "canonical_tokens": 4,
+      "eligible_for": [
+        "train"
+      ],
+      "license": "LGPL-2.1-or-later",
+      "dependency_closure_unit_ids": [],
+      "dependency_not_in_ledger": [],
+      "blockers": [
+        "independent_source_closure_review",
+        "human_leakage_adjudication",
+        "executable_semantic_contract_required"
+      ],
+      "dependency_comparison_connected": [],
+      "family": "sha256:dc251beb7a0458f1abef0a873d3743c9749cb4c5931f3e3435cf1680b0417b7e",
+      "source_sha256": "sha256:c3a6d03a8d32b82002575d1047c5e06aa72d78ef2870df44b83123040215fca2",
+      "span": {
+        "blob_sha": "10210974a1e6996d9adb13120af337f44e4c2f6b",
+        "end_byte": 2648,
+        "function": "ml",
+        "manifest_digest": "sha256:fbfcc0bf8323b16b68da804858d378c4170408c0f05b303b5808d330f4cef3f9",
+        "path": "sf.lib",
+        "pin": "2edec0537f536eaa130d42c354884d7db971663c",
+        "repo": "grame-cncm/faustlibraries",
+        "sha256": "sha256:c3a6d03a8d32b82002575d1047c5e06aa72d78ef2870df44b83123040215fca2",
+        "start_byte": 2640,
+        "unit_id": "u70d80ee2cf1a1133e553"
+      }
+    },
+    {
+      "unit_id": "u96e35142c53ce7ae67fe",
+      "function": "no",
+      "path": "sf.lib",
+      "canonical_tokens": 4,
+      "eligible_for": [
+        "train"
+      ],
+      "license": "LGPL-2.1-or-later",
+      "dependency_closure_unit_ids": [],
+      "dependency_not_in_ledger": [],
+      "blockers": [
+        "independent_source_closure_review",
+        "human_leakage_adjudication",
+        "executable_semantic_contract_required"
+      ],
+      "dependency_comparison_connected": [],
+      "family": "sha256:dc251beb7a0458f1abef0a873d3743c9749cb4c5931f3e3435cf1680b0417b7e",
+      "source_sha256": "sha256:04dc8dcdef5d66bd7bcabb524b4bccad6e648eced96144f7e2c59d2f072de2e2",
+      "span": {
+        "blob_sha": "10210974a1e6996d9adb13120af337f44e4c2f6b",
+        "end_byte": 2814,
+        "function": "no",
+        "manifest_digest": "sha256:fbfcc0bf8323b16b68da804858d378c4170408c0f05b303b5808d330f4cef3f9",
+        "path": "sf.lib",
+        "pin": "2edec0537f536eaa130d42c354884d7db971663c",
+        "repo": "grame-cncm/faustlibraries",
+        "sha256": "sha256:04dc8dcdef5d66bd7bcabb524b4bccad6e648eced96144f7e2c59d2f072de2e2",
+        "start_byte": 2806,
+        "unit_id": "u96e35142c53ce7ae67fe"
+      }
+    },
+    {
+      "unit_id": "u6f2f9565a5a18e13b774",
+      "function": "ol",
+      "path": "sf.lib",
+      "canonical_tokens": 4,
+      "eligible_for": [
+        "train"
+      ],
+      "license": "LGPL-2.1-or-later",
+      "dependency_closure_unit_ids": [],
+      "dependency_not_in_ledger": [],
+      "blockers": [
+        "independent_source_closure_review",
+        "human_leakage_adjudication",
+        "executable_semantic_contract_required"
+      ],
+      "dependency_comparison_connected": [],
+      "family": "sha256:dc251beb7a0458f1abef0a873d3743c9749cb4c5931f3e3435cf1680b0417b7e",
+      "source_sha256": "sha256:fe7f58e41a39542b64c397b6a671bd83357db47884bced013954a7e1fe81308f",
+      "span": {
+        "blob_sha": "10210974a1e6996d9adb13120af337f44e4c2f6b",
+        "end_byte": 2630,
+        "function": "ol",
+        "manifest_digest": "sha256:fbfcc0bf8323b16b68da804858d378c4170408c0f05b303b5808d330f4cef3f9",
+        "path": "sf.lib",
+        "pin": "2edec0537f536eaa130d42c354884d7db971663c",
+        "repo": "grame-cncm/faustlibraries",
+        "sha256": "sha256:fe7f58e41a39542b64c397b6a671bd83357db47884bced013954a7e1fe81308f",
+        "start_byte": 2622,
+        "unit_id": "u6f2f9565a5a18e13b774"
+      }
+    },
+    {
+      "unit_id": "u4c67c94c676328946b64",
+      "function": "os",
+      "path": "sf.lib",
+      "canonical_tokens": 4,
+      "eligible_for": [
+        "train"
+      ],
+      "license": "LGPL-2.1-or-later",
+      "dependency_closure_unit_ids": [],
+      "dependency_not_in_ledger": [],
+      "blockers": [
+        "independent_source_closure_review",
+        "human_leakage_adjudication",
+        "executable_semantic_contract_required"
+      ],
+      "dependency_comparison_connected": [],
+      "family": "sha256:dc251beb7a0458f1abef0a873d3743c9749cb4c5931f3e3435cf1680b0417b7e",
+      "source_sha256": "sha256:dc65b86442d3969d33addd648fbeeaa9715e0f1ebdcb716a9189c80f4d18f513",
+      "span": {
+        "blob_sha": "10210974a1e6996d9adb13120af337f44e4c2f6b",
+        "end_byte": 2805,
+        "function": "os",
+        "manifest_digest": "sha256:fbfcc0bf8323b16b68da804858d378c4170408c0f05b303b5808d330f4cef3f9",
+        "path": "sf.lib",
+        "pin": "2edec0537f536eaa130d42c354884d7db971663c",
+        "repo": "grame-cncm/faustlibraries",
+        "sha256": "sha256:dc65b86442d3969d33addd648fbeeaa9715e0f1ebdcb716a9189c80f4d18f513",
+        "start_byte": 2797,
+        "unit_id": "u4c67c94c676328946b64"
+      }
+    },
+    {
+      "unit_id": "u20d67ba9a4efcf68e389",
+      "function": "pf",
+      "path": "sf.lib",
+      "canonical_tokens": 4,
+      "eligible_for": [
+        "train"
+      ],
+      "license": "LGPL-2.1-or-later",
+      "dependency_closure_unit_ids": [],
+      "dependency_not_in_ledger": [],
+      "blockers": [
+        "independent_source_closure_review",
+        "human_leakage_adjudication",
+        "executable_semantic_contract_required"
+      ],
+      "dependency_comparison_connected": [],
+      "family": "sha256:dc251beb7a0458f1abef0a873d3743c9749cb4c5931f3e3435cf1680b0417b7e",
+      "source_sha256": "sha256:f312b6fba28574e34f286ec9808534eb8e71af2e3431a5b3447dc9bdbb307847",
+      "span": {
+        "blob_sha": "10210974a1e6996d9adb13120af337f44e4c2f6b",
+        "end_byte": 2823,
+        "function": "pf",
+        "manifest_digest": "sha256:fbfcc0bf8323b16b68da804858d378c4170408c0f05b303b5808d330f4cef3f9",
+        "path": "sf.lib",
+        "pin": "2edec0537f536eaa130d42c354884d7db971663c",
+        "repo": "grame-cncm/faustlibraries",
+        "sha256": "sha256:f312b6fba28574e34f286ec9808534eb8e71af2e3431a5b3447dc9bdbb307847",
+        "start_byte": 2815,
+        "unit_id": "u20d67ba9a4efcf68e389"
+      }
+    },
+    {
+      "unit_id": "u34c8a9059af36ae2726a",
+      "function": "pm",
+      "path": "sf.lib",
+      "canonical_tokens": 4,
+      "eligible_for": [
+        "train"
+      ],
+      "license": "LGPL-2.1-or-later",
+      "dependency_closure_unit_ids": [],
+      "dependency_not_in_ledger": [],
+      "blockers": [
+        "independent_source_closure_review",
+        "human_leakage_adjudication",
+        "executable_semantic_contract_required"
+      ],
+      "dependency_comparison_connected": [],
+      "family": "sha256:dc251beb7a0458f1abef0a873d3743c9749cb4c5931f3e3435cf1680b0417b7e",
+      "source_sha256": "sha256:9ea99c291e686856cba8028176656d1c282e4f3013ad065fc76d8a9f71620229",
+      "span": {
+        "blob_sha": "10210974a1e6996d9adb13120af337f44e4c2f6b",
+        "end_byte": 2832,
+        "function": "pm",
+        "manifest_digest": "sha256:fbfcc0bf8323b16b68da804858d378c4170408c0f05b303b5808d330f4cef3f9",
+        "path": "sf.lib",
+        "pin": "2edec0537f536eaa130d42c354884d7db971663c",
+        "repo": "grame-cncm/faustlibraries",
+        "sha256": "sha256:9ea99c291e686856cba8028176656d1c282e4f3013ad065fc76d8a9f71620229",
+        "start_byte": 2824,
+        "unit_id": "u34c8a9059af36ae2726a"
+      }
+    },
+    {
+      "unit_id": "u0fabcdaeae58839b4112",
+      "function": "re",
+      "path": "sf.lib",
+      "canonical_tokens": 4,
+      "eligible_for": [
+        "train"
+      ],
+      "license": "LGPL-2.1-or-later",
+      "dependency_closure_unit_ids": [],
+      "dependency_not_in_ledger": [],
+      "blockers": [
+        "independent_source_closure_review",
+        "human_leakage_adjudication",
+        "executable_semantic_contract_required"
+      ],
+      "dependency_comparison_connected": [],
+      "family": "sha256:dc251beb7a0458f1abef0a873d3743c9749cb4c5931f3e3435cf1680b0417b7e",
+      "source_sha256": "sha256:c082bfd243532b1d051e76725a5a576313d0e15a9b5517141eade7cab13ba851",
+      "span": {
+        "blob_sha": "10210974a1e6996d9adb13120af337f44e4c2f6b",
+        "end_byte": 2841,
+        "function": "re",
+        "manifest_digest": "sha256:fbfcc0bf8323b16b68da804858d378c4170408c0f05b303b5808d330f4cef3f9",
+        "path": "sf.lib",
+        "pin": "2edec0537f536eaa130d42c354884d7db971663c",
+        "repo": "grame-cncm/faustlibraries",
+        "sha256": "sha256:c082bfd243532b1d051e76725a5a576313d0e15a9b5517141eade7cab13ba851",
+        "start_byte": 2833,
+        "unit_id": "u0fabcdaeae58839b4112"
+      }
+    },
+    {
+      "unit_id": "ub5306c099ad089ae34e6",
+      "function": "ro",
+      "path": "sf.lib",
+      "canonical_tokens": 4,
+      "eligible_for": [
+        "train"
+      ],
+      "license": "LGPL-2.1-or-later",
+      "dependency_closure_unit_ids": [],
+      "dependency_not_in_ledger": [],
+      "blockers": [
+        "independent_source_closure_review",
+        "human_leakage_adjudication",
+        "executable_semantic_contract_required"
+      ],
+      "dependency_comparison_connected": [],
+      "family": "sha256:dc251beb7a0458f1abef0a873d3743c9749cb4c5931f3e3435cf1680b0417b7e",
+      "source_sha256": "sha256:c3e985cdf1a2a97215de74d982d506c2e0d80ce60f116ff81542512ccee1db63",
+      "span": {
+        "blob_sha": "10210974a1e6996d9adb13120af337f44e4c2f6b",
+        "end_byte": 2850,
+        "function": "ro",
+        "manifest_digest": "sha256:fbfcc0bf8323b16b68da804858d378c4170408c0f05b303b5808d330f4cef3f9",
+        "path": "sf.lib",
+        "pin": "2edec0537f536eaa130d42c354884d7db971663c",
+        "repo": "grame-cncm/faustlibraries",
+        "sha256": "sha256:c3e985cdf1a2a97215de74d982d506c2e0d80ce60f116ff81542512ccee1db63",
+        "start_byte": 2842,
+        "unit_id": "ub5306c099ad089ae34e6"
+      }
+    },
+    {
+      "unit_id": "u1bb9b3d1925a69eeadb4",
+      "function": "si",
+      "path": "sf.lib",
+      "canonical_tokens": 4,
+      "eligible_for": [
+        "train"
+      ],
+      "license": "LGPL-2.1-or-later",
+      "dependency_closure_unit_ids": [],
+      "dependency_not_in_ledger": [],
+      "blockers": [
+        "independent_source_closure_review",
+        "human_leakage_adjudication",
+        "executable_semantic_contract_required"
+      ],
+      "dependency_comparison_connected": [],
+      "family": "sha256:dc251beb7a0458f1abef0a873d3743c9749cb4c5931f3e3435cf1680b0417b7e",
+      "source_sha256": "sha256:bbe1b7ec78a6f2f29c01fd0fa1a6739e7ce8ea8ec22eb7128b00797df04c89d5",
+      "span": {
+        "blob_sha": "10210974a1e6996d9adb13120af337f44e4c2f6b",
+        "end_byte": 2868,
+        "function": "si",
+        "manifest_digest": "sha256:fbfcc0bf8323b16b68da804858d378c4170408c0f05b303b5808d330f4cef3f9",
+        "path": "sf.lib",
+        "pin": "2edec0537f536eaa130d42c354884d7db971663c",
+        "repo": "grame-cncm/faustlibraries",
+        "sha256": "sha256:bbe1b7ec78a6f2f29c01fd0fa1a6739e7ce8ea8ec22eb7128b00797df04c89d5",
+        "start_byte": 2860,
+        "unit_id": "u1bb9b3d1925a69eeadb4"
+      }
+    },
+    {
+      "unit_id": "u6ca7bd6c22a915bd5dd5",
+      "function": "so",
+      "path": "sf.lib",
+      "canonical_tokens": 4,
+      "eligible_for": [
+        "train"
+      ],
+      "license": "LGPL-2.1-or-later",
+      "dependency_closure_unit_ids": [],
+      "dependency_not_in_ledger": [],
+      "blockers": [
+        "independent_source_closure_review",
+        "human_leakage_adjudication",
+        "executable_semantic_contract_required"
+      ],
+      "dependency_comparison_connected": [],
+      "family": "sha256:dc251beb7a0458f1abef0a873d3743c9749cb4c5931f3e3435cf1680b0417b7e",
+      "source_sha256": "sha256:7003482421edf34804b7a0c3c30f2950bce722b7433bc17d17580e2c62706230",
+      "span": {
+        "blob_sha": "10210974a1e6996d9adb13120af337f44e4c2f6b",
+        "end_byte": 2877,
+        "function": "so",
+        "manifest_digest": "sha256:fbfcc0bf8323b16b68da804858d378c4170408c0f05b303b5808d330f4cef3f9",
+        "path": "sf.lib",
+        "pin": "2edec0537f536eaa130d42c354884d7db971663c",
+        "repo": "grame-cncm/faustlibraries",
+        "sha256": "sha256:7003482421edf34804b7a0c3c30f2950bce722b7433bc17d17580e2c62706230",
+        "start_byte": 2869,
+        "unit_id": "u6ca7bd6c22a915bd5dd5"
+      }
+    },
+    {
+      "unit_id": "uf6a68c5942908f641e3e",
+      "function": "sp",
+      "path": "sf.lib",
+      "canonical_tokens": 4,
+      "eligible_for": [
+        "train"
+      ],
+      "license": "LGPL-2.1-or-later",
+      "dependency_closure_unit_ids": [],
+      "dependency_not_in_ledger": [],
+      "blockers": [
+        "independent_source_closure_review",
+        "human_leakage_adjudication",
+        "executable_semantic_contract_required"
+      ],
+      "dependency_comparison_connected": [],
+      "family": "sha256:dc251beb7a0458f1abef0a873d3743c9749cb4c5931f3e3435cf1680b0417b7e",
+      "source_sha256": "sha256:3b4018f250f612bfa8736be9e9eec1a3d0adc89bd402f1f3476fb115af162da6",
+      "span": {
+        "blob_sha": "10210974a1e6996d9adb13120af337f44e4c2f6b",
+        "end_byte": 2859,
+        "function": "sp",
+        "manifest_digest": "sha256:fbfcc0bf8323b16b68da804858d378c4170408c0f05b303b5808d330f4cef3f9",
+        "path": "sf.lib",
+        "pin": "2edec0537f536eaa130d42c354884d7db971663c",
+        "repo": "grame-cncm/faustlibraries",
+        "sha256": "sha256:3b4018f250f612bfa8736be9e9eec1a3d0adc89bd402f1f3476fb115af162da6",
+        "start_byte": 2851,
+        "unit_id": "uf6a68c5942908f641e3e"
+      }
+    },
+    {
+      "unit_id": "ufa5059a8566a61a5afe1",
+      "function": "sy",
+      "path": "sf.lib",
+      "canonical_tokens": 4,
+      "eligible_for": [
+        "train"
+      ],
+      "license": "LGPL-2.1-or-later",
+      "dependency_closure_unit_ids": [],
+      "dependency_not_in_ledger": [],
+      "blockers": [
+        "independent_source_closure_review",
+        "human_leakage_adjudication",
+        "executable_semantic_contract_required"
+      ],
+      "dependency_comparison_connected": [],
+      "family": "sha256:dc251beb7a0458f1abef0a873d3743c9749cb4c5931f3e3435cf1680b0417b7e",
+      "source_sha256": "sha256:9943f95bd435653040d7a3ac4f4cc3be0852103667825afdcf6e6d20f8f897fa",
+      "span": {
+        "blob_sha": "10210974a1e6996d9adb13120af337f44e4c2f6b",
+        "end_byte": 2886,
+        "function": "sy",
+        "manifest_digest": "sha256:fbfcc0bf8323b16b68da804858d378c4170408c0f05b303b5808d330f4cef3f9",
+        "path": "sf.lib",
+        "pin": "2edec0537f536eaa130d42c354884d7db971663c",
+        "repo": "grame-cncm/faustlibraries",
+        "sha256": "sha256:9943f95bd435653040d7a3ac4f4cc3be0852103667825afdcf6e6d20f8f897fa",
+        "start_byte": 2878,
+        "unit_id": "ufa5059a8566a61a5afe1"
+      }
+    },
+    {
+      "unit_id": "uf3a676c141abdb5977b7",
+      "function": "ve",
+      "path": "sf.lib",
+      "canonical_tokens": 4,
+      "eligible_for": [
+        "train"
+      ],
+      "license": "LGPL-2.1-or-later",
+      "dependency_closure_unit_ids": [],
+      "dependency_not_in_ledger": [],
+      "blockers": [
+        "independent_source_closure_review",
+        "human_leakage_adjudication",
+        "executable_semantic_contract_required"
+      ],
+      "dependency_comparison_connected": [],
+      "family": "sha256:dc251beb7a0458f1abef0a873d3743c9749cb4c5931f3e3435cf1680b0417b7e",
+      "source_sha256": "sha256:28775df4e20dc0b78b2d71c19868be537319f3bcd8f9e60fd6a0864728e2921c",
+      "span": {
+        "blob_sha": "10210974a1e6996d9adb13120af337f44e4c2f6b",
+        "end_byte": 2895,
+        "function": "ve",
+        "manifest_digest": "sha256:fbfcc0bf8323b16b68da804858d378c4170408c0f05b303b5808d330f4cef3f9",
+        "path": "sf.lib",
+        "pin": "2edec0537f536eaa130d42c354884d7db971663c",
+        "repo": "grame-cncm/faustlibraries",
+        "sha256": "sha256:28775df4e20dc0b78b2d71c19868be537319f3bcd8f9e60fd6a0864728e2921c",
+        "start_byte": 2887,
+        "unit_id": "uf3a676c141abdb5977b7"
+      }
+    },
+    {
+      "unit_id": "ua39013345b34a4565b27",
+      "function": "wa",
+      "path": "sf.lib",
+      "canonical_tokens": 4,
+      "eligible_for": [
+        "train"
+      ],
+      "license": "LGPL-2.1-or-later",
+      "dependency_closure_unit_ids": [],
+      "dependency_not_in_ledger": [],
+      "blockers": [
+        "independent_source_closure_review",
+        "human_leakage_adjudication",
+        "executable_semantic_contract_required"
+      ],
+      "dependency_comparison_connected": [],
+      "family": "sha256:dc251beb7a0458f1abef0a873d3743c9749cb4c5931f3e3435cf1680b0417b7e",
+      "source_sha256": "sha256:1b0f80739144985fa0f36a4d860be2dda80ca88e02696ad1b9ebd94f3ed08a72",
+      "span": {
+        "blob_sha": "10210974a1e6996d9adb13120af337f44e4c2f6b",
+        "end_byte": 2904,
+        "function": "wa",
+        "manifest_digest": "sha256:fbfcc0bf8323b16b68da804858d378c4170408c0f05b303b5808d330f4cef3f9",
+        "path": "sf.lib",
+        "pin": "2edec0537f536eaa130d42c354884d7db971663c",
+        "repo": "grame-cncm/faustlibraries",
+        "sha256": "sha256:1b0f80739144985fa0f36a4d860be2dda80ca88e02696ad1b9ebd94f3ed08a72",
+        "start_byte": 2896,
+        "unit_id": "ua39013345b34a4565b27"
+      }
+    }
+  ],
+  "admission": "NOT_GRANTED",
+  "note": "Raw fragments only; full dependency and executable-contract qualification remains required",
+  "inventory_sha256": "ba4a603fdb56fe246d38fd9ee8949cb941747a68b73f953aaba6e9591e4a1ef3",
+  "family_mapping_sha256": "05648f0fee531c7503a8328740d10fa653f3f8181b19f8156756843bccf536fe",
+  "max_canonical_tokens": 4,
+  "eval_rights_above_floor": 0,
+  "eval_rights_with_comparison_dependency": 4,
+  "source_binding_verified": true
+}

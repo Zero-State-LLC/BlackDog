@@ -1,0 +1,32 @@
+{
+  "review_type": "INTERIM_SAME_AGENT_TECHNICAL_REVIEW",
+  "reviewer": "Codex assistant that prepared the repair",
+  "independent": false,
+  "auditory_listening_performed": false,
+  "user_authorization": "User requested assistant review for now and plans another reviewer tomorrow.",
+  "source_sha256": "74f7aef25b5c12a0e077bb407ddf491ea920fa015e3a20eef2884aacdf2a56fe",
+  "adapter_sha256": "7a6c57ab54ae8c8aab6dbd2ab96def2b7486d672a322173d6f03bf00bda4ec6f",
+  "contract_sha256": "3057f164f577befcb8f520205fd1d2465c5b70984af3567cd295bfd7e5aa1938",
+  "packet_manifest_sha256": "f42755b9cad40c5e4c9feda28e0072f5b392285a7cd8d57d7bacff52970ecea6",
+  "verdict": "RECOMMEND_CONTINUED_CONTROLLED_EVALUATION_WITH_RECORDED_CONDITIONS",
+  "recommendations": {
+    "natural_release": "RECOMMEND",
+    "clean_retrigger": "RECOMMEND_WITHIN_TESTED_SCHEDULES",
+    "integer_note_contract": "RECOMMEND",
+    "bounded_epoch_counter": "RECOMMEND_WITHIN_DECLARED_CONTROL_DOMAIN",
+    "eight_voice_stealing": "RETAIN_FOR_INTERIM_EVALUATION; MUSICAL_ACCEPTANCE_PENDING",
+    "export_headroom": "PRESERVE_UPSTREAM_FINAL_BUFFER_PEAK_SCALING; DO_NOT_EXPORT_RAW_ADAPTER_OUTPUT_AS_PCM",
+    "absolute_tuning_and_timbre": "HUMAN_REVIEW_AND_MEASUREMENT_PENDING"
+  },
+  "new_evidence": {
+    "captures": 36,
+    "same_pitch_superposition_error": 0.0,
+    "max_raw_eight_voice_peak": 7.583136558532715,
+    "max_after_pinned_default_limit": 0.9700000286102295,
+    "archive_sha256": "ffbdca918c13ab4f6bed5e3607ab189e362d96089f5368e4ee63b04ff0ccdc10"
+  },
+  "independent_semantic_gate": "PENDING",
+  "admission": "NOT_GRANTED",
+  "pilot_ready": false,
+  "training_authorized": false
+}

@@ -1,0 +1,39 @@
+{
+  "graph": {
+    "identities": 1499,
+    "components": 12,
+    "joining_operations": 27947
+  },
+  "rows": [
+    {
+      "unit_id": "repair:continuous-offset-44100",
+      "source_sha256": "26bab451a3b5ad06e04790e79fa1d4f7d0388bb2032339002d0d045a445916ac",
+      "closure_sha256": "22d3f37e1b457945a7add8b80b0e342aaf7a604bba7536075738ca09aabe3261",
+      "family": "sha256:c2eb72023a059e5a44cdb788cbf9add617a68e9aeaad54375a214bc69ff211e3",
+      "comparison_connected": true
+    },
+    {
+      "unit_id": "repair:continuous-offset-48000",
+      "source_sha256": "df69f7336a2165fa3ad151a837b8c0444d9ff900f223a25d5feb8a0ea234b660",
+      "closure_sha256": "9e1676b5f306363c961a2b8551c3fe79bedcaebc418b797a2e7e0d1dc3e44218",
+      "family": "sha256:c2eb72023a059e5a44cdb788cbf9add617a68e9aeaad54375a214bc69ff211e3",
+      "comparison_connected": true
+    },
+    {
+      "unit_id": "repair:continuous-offset-96000",
+      "source_sha256": "a139868d5854b3c898f802a927ae09e26ff7557e24788479649806509c54f684",
+      "closure_sha256": "690a7bbd4bb1e05ab6079816d15d2129952740b1f98d2afc3286fd9453e8974b",
+      "family": "sha256:c2eb72023a059e5a44cdb788cbf9add617a68e9aeaad54375a214bc69ff211e3",
+      "comparison_connected": true
+    },
+    {
+      "unit_id": "repair:continuous-offset-192000",
+      "source_sha256": "14bc95185f3c50ce33a42dfbb19d9075c43c61b8a0943a919c6a056a65e50533",
+      "closure_sha256": "58627f00077464f592b6659078291d73223c42ef14e379c477035a584968214c",
+      "family": "sha256:c2eb72023a059e5a44cdb788cbf9add617a68e9aeaad54375a214bc69ff211e3",
+      "comparison_connected": true
+    }
+  ],
+  "admission": "NOT_GRANTED",
+  "policy": "unchanged floor40 provisional H1 collective"
+}

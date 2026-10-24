@@ -739,11 +739,18 @@ def cluster_families(items, comparison_ids=(), *, floor: int = TOKEN_FLOOR, evid
             parent[key] = parent[parent[key]]
             key = parent[key]
         return key
-    for mapping in (raw, canonical):
+    for stream, mapping in (("raw", raw), ("canonical", canonical)):
         groups = {}
         for key, family in sorted(mapping.items()):
             if family in groups:
                 a, b = find(key), find(groups[family])
+                if a != b and evidence is not None:
+                    # Stream family identifiers can coincide for disconnected
+                    # components with the same digest set. Record the actual
+                    # wrapper join as well as the stream's joining forest.
+                    evidence.append(dict(left=key, right=groups[family],
+                                         reason="stream_component", stream=stream,
+                                         floor=floor, component_family=family))
                 parent[max(a, b)] = min(a, b)
             else:
                 groups[family] = key

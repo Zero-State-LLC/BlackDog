@@ -1,0 +1,453 @@
+{
+  "source_sha256": "74f7aef25b5c12a0e077bb407ddf491ea920fa015e3a20eef2884aacdf2a56fe",
+  "runner_sha256": "56647c2b95266d9c3211fdb88877f19fdb970615f5bb764f4e040ebb13ea629b",
+  "host": "DawDreamer 0.9.0",
+  "rows": [
+    {
+      "sample_rate": 44100,
+      "pitch": 16,
+      "file": "44100-16.bin",
+      "capture_sha256": "7e7e55492962f26aa467de961fac6df4ce14e5a599b732006540c7abbfcb5128",
+      "model": {
+        "hz": 20.60172230480287,
+        "decay_per_sample": -9.357571502226781e-07,
+        "pole_radius": 0.9999990642432875,
+        "residual": 2.655606694784703e-16,
+        "n": 2138,
+        "a": -0.04658842773605121,
+        "d": 1.0977297781282687
+      },
+      "windows": [
+        {
+          "start": 0.5,
+          "end": 2.0,
+          "cycles": 30.90258346058155,
+          "estimated_hz": 20.60175331886676,
+          "error_cents": 0.0026060279973618085,
+          "model_error_cents": 0.0026062171984938464,
+          "synthetic_bias_cents": 0.0013676832297262814,
+          "boundary": false
+        },
+        {
+          "start": 1.0,
+          "end": 3.5,
+          "cycles": 51.50430576763592,
+          "estimated_hz": 20.60172477762705,
+          "error_cents": 0.00020761076357864527,
+          "model_error_cents": 0.00020779996458838824,
+          "synthetic_bias_cents": 0.00016745059268374887,
+          "boundary": false
+        }
+      ]
+    },
+    {
+      "sample_rate": 44100,
+      "pitch": 24,
+      "file": "44100-24.bin",
+      "capture_sha256": "6f497dbec0a4bf3566b37110c251778fdd864437703bbaf75c352c9176b1b9b1",
+      "model": {
+        "hz": 32.70319565356138,
+        "decay_per_sample": -1.4866357166032385e-06,
+        "pole_radius": 0.9999985133653885,
+        "residual": 4.238455911512509e-16,
+        "n": 1345,
+        "a": -0.33156873056321856,
+        "d": 1.9920695523205723
+      },
+      "windows": [
+        {
+          "start": 0.5,
+          "end": 2.0,
+          "cycles": 49.05479349386225,
+          "estimated_hz": 32.703211191217335,
+          "error_cents": 0.0008220514146850718,
+          "model_error_cents": 0.0008225285663738254,
+          "synthetic_bias_cents": 0.000473265651252797,
+          "boundary": false
+        },
+        {
+          "start": 1.0,
+          "end": 3.5,
+          "cycles": 81.75798915643708,
+          "estimated_hz": 32.70320184865049,
+          "error_cents": 0.0003274769813391837,
+          "model_error_cents": 0.00032795413316424876,
+          "synthetic_bias_cents": 0.00016652424447660097,
+          "boundary": false
+        }
+      ]
+    },
+    {
+      "sample_rate": 44100,
+      "pitch": 36,
+      "file": "44100-36.bin",
+      "capture_sha256": "a1ac27d2e3b7ac8e123b960a327040ef45ea96f1d70485380e7852def5661314",
+      "model": {
+        "hz": 65.40639125274869,
+        "decay_per_sample": -2.985346353597964e-06,
+        "pole_radius": 0.9999970146581025,
+        "residual": 1.2548625952763502e-16,
+        "n": 671,
+        "a": -0.27168396996419614,
+        "d": 1.7460347761602861
+      },
+      "windows": [
+        {
+          "start": 0.5,
+          "end": 2.0,
+          "cycles": 98.1095869877245,
+          "estimated_hz": 65.40638813169687,
+          "error_cents": -8.452712670743892e-05,
+          "model_error_cents": -8.261075403974163e-05,
+          "synthetic_bias_cents": -0.0002540094611321444,
+          "boundary": false
+        },
+        {
+          "start": 1.0,
+          "end": 3.5,
+          "cycles": 163.51597831287415,
+          "estimated_hz": 65.40640332084632,
+          "error_cents": 0.0003175126494543609,
+          "model_error_cents": 0.0003194290222536409,
+          "synthetic_bias_cents": 0.00015769021228639058,
+          "boundary": false
+        }
+      ]
+    },
+    {
+      "sample_rate": 48000,
+      "pitch": 16,
+      "file": "48000-16.bin",
+      "capture_sha256": "86f7b46a3795603d21724479b645c4836ba8e2d098257f1f4cde0d9ef4df02fb",
+      "model": {
+        "hz": 20.601722305154034,
+        "decay_per_sample": -8.59654820639078e-07,
+        "pole_radius": 0.9999991403455488,
+        "residual": 2.7202027548335917e-16,
+        "n": 2327,
+        "a": -0.1674616493096594,
+        "d": 1.4022909149693987
+      },
+      "windows": [
+        {
+          "start": 0.5,
+          "end": 2.0,
+          "cycles": 30.902583460581553,
+          "estimated_hz": 20.60175212758143,
+          "error_cents": 0.002505920314879133,
+          "model_error_cents": 0.0025060800063561504,
+          "synthetic_bias_cents": 0.0013677257305772278,
+          "boundary": false
+        },
+        {
+          "start": 1.0,
+          "end": 3.5,
+          "cycles": 51.50430576763591,
+          "estimated_hz": 20.60172360216853,
+          "error_cents": 0.00010883292351479296,
+          "model_error_cents": 0.00010899261482851013,
+          "synthetic_bias_cents": 0.0001674501913585153,
+          "boundary": false
+        }
+      ]
+    },
+    {
+      "sample_rate": 48000,
+      "pitch": 24,
+      "file": "48000-24.bin",
+      "capture_sha256": "afcfad394ac27e6c73db75005d7be36979c76ed86f3751179fba234ce7e20a4f",
+      "model": {
+        "hz": 32.70319565496823,
+        "decay_per_sample": -1.365558298212666e-06,
+        "pole_radius": 0.9999986344426341,
+        "residual": 7.036571792241351e-16,
+        "n": 1465,
+        "a": -0.10971487298601768,
+        "d": 1.246470261029117
+      },
+      "windows": [
+        {
+          "start": 0.5,
+          "end": 2.0,
+          "cycles": 49.05479349386224,
+          "estimated_hz": 32.70321108109069,
+          "error_cents": 0.0008162215593390004,
+          "model_error_cents": 0.0008166242356268017,
+          "synthetic_bias_cents": 0.000473260000409989,
+          "boundary": false
+        },
+        {
+          "start": 1.0,
+          "end": 3.5,
+          "cycles": 81.75798915643706,
+          "estimated_hz": 32.703201737548994,
+          "error_cents": 0.0003215955179050872,
+          "model_error_cents": 0.000321998193923525,
+          "synthetic_bias_cents": 0.00016652472499053034,
+          "boundary": false
+        }
+      ]
+    },
+    {
+      "sample_rate": 48000,
+      "pitch": 36,
+      "file": "48000-36.bin",
+      "capture_sha256": "662371a6bf73f621cfd557d39f764b315a7a3866683b1effdc059d404ead65cd",
+      "model": {
+        "hz": 65.4063912640878,
+        "decay_per_sample": -2.7404808220769245e-06,
+        "pole_radius": 0.9999972595229331,
+        "residual": 7.761666357302149e-16,
+        "n": 731,
+        "a": -0.1572711390929933,
+        "d": 1.3732351305145585
+      },
+      "windows": [
+        {
+          "start": 0.5,
+          "end": 2.0,
+          "cycles": 98.10958698772448,
+          "estimated_hz": 65.40638792460994,
+          "error_cents": -9.00084863690641e-05,
+          "model_error_cents": -8.839224735267388e-05,
+          "synthetic_bias_cents": -0.00025401184698048597,
+          "boundary": false
+        },
+        {
+          "start": 1.0,
+          "end": 3.5,
+          "cycles": 163.51597831287413,
+          "estimated_hz": 65.40640311365546,
+          "error_cents": 0.00031202853983533415,
+          "model_error_cents": 0.00031364477905300887,
+          "synthetic_bias_cents": 0.00015769191061483116,
+          "boundary": false
+        }
+      ]
+    },
+    {
+      "sample_rate": 96000,
+      "pitch": 16,
+      "file": "96000-16.bin",
+      "capture_sha256": "685dcdeaccac3bfce3369a5119f596d8365b622ad81d61994252abba1a5144dd",
+      "model": {
+        "hz": 20.601722306579447,
+        "decay_per_sample": -4.2968109532477765e-07,
+        "pole_radius": 0.999999570318997,
+        "residual": 3.775083060879681e-19,
+        "n": 4657,
+        "a": -0.1321636517254819,
+        "d": 1.3045818299387975
+      },
+      "windows": [
+        {
+          "start": 0.5,
+          "end": 2.0,
+          "cycles": 30.902583460581553,
+          "estimated_hz": 20.601752120866966,
+          "error_cents": 0.002505356075811855,
+          "model_error_cents": 0.002505395984938444,
+          "synthetic_bias_cents": 0.0013679659954478156,
+          "boundary": false
+        },
+        {
+          "start": 1.0,
+          "end": 3.5,
+          "cycles": 51.50430576763591,
+          "estimated_hz": 20.60172360478595,
+          "error_cents": 0.00010905287435254154,
+          "model_error_cents": 0.00010909278353437108,
+          "synthetic_bias_cents": 0.00016744781492882756,
+          "boundary": false
+        }
+      ]
+    },
+    {
+      "sample_rate": 96000,
+      "pitch": 24,
+      "file": "96000-24.bin",
+      "capture_sha256": "48d15d95fe01cab6684e1e1ef53b580439c08c079dafe448df25d54e473c44d8",
+      "model": {
+        "hz": 32.70319566067481,
+        "decay_per_sample": -6.821938899710252e-07,
+        "pole_radius": 0.9999993178063428,
+        "residual": 1.2238980809503254e-16,
+        "n": 2932,
+        "a": -0.33176136503221354,
+        "d": 1.992940522058234
+      },
+      "windows": [
+        {
+          "start": 0.5,
+          "end": 2.0,
+          "cycles": 49.05479349386224,
+          "estimated_hz": 32.70321109056499,
+          "error_cents": 0.0008167231072890083,
+          "model_error_cents": 0.0008168236899645661,
+          "synthetic_bias_cents": 0.0004732280385511269,
+          "boundary": false
+        },
+        {
+          "start": 1.0,
+          "end": 3.5,
+          "cycles": 81.75798915643706,
+          "estimated_hz": 32.70320174528089,
+          "error_cents": 0.0003220048273216211,
+          "model_error_cents": 0.00032210541002592163,
+          "synthetic_bias_cents": 0.00016652730631135882,
+          "boundary": false
+        }
+      ]
+    },
+    {
+      "sample_rate": 96000,
+      "pitch": 36,
+      "file": "96000-36.bin",
+      "capture_sha256": "2131665e62d82c432d30b6d9ba6b803613921fc75d4cf5df8455f6ecabec64e6",
+      "model": {
+        "hz": 65.40639130993647,
+        "decay_per_sample": -1.365558298212666e-06,
+        "pole_radius": 0.9999986344426341,
+        "residual": 7.036571792241351e-16,
+        "n": 1465,
+        "a": -0.10971487298601768,
+        "d": 1.246470261029117
+      },
+      "windows": [
+        {
+          "start": 0.5,
+          "end": 2.0,
+          "cycles": 98.10958698772448,
+          "estimated_hz": 65.40638797187535,
+          "error_cents": -8.875742396178415e-05,
+          "model_error_cents": -8.83547478479004e-05,
+          "synthetic_bias_cents": -0.0002540244672013921,
+          "boundary": false
+        },
+        {
+          "start": 1.0,
+          "end": 3.5,
+          "cycles": 163.51597831287413,
+          "estimated_hz": 65.4064031586531,
+          "error_cents": 0.0003132195773103512,
+          "model_error_cents": 0.0003136222533307372,
+          "synthetic_bias_cents": 0.00015769910948235186,
+          "boundary": false
+        }
+      ]
+    },
+    {
+      "sample_rate": 192000,
+      "pitch": 16,
+      "file": "192000-16.bin",
+      "capture_sha256": "7b37fd3286e52250c8f36e87036d7e4c2e4248e4086694fcbb9fed47fe961cdf",
+      "model": {
+        "hz": 20.601722306935645,
+        "decay_per_sample": -2.1482225831560098e-07,
+        "pole_radius": 0.9999997851777648,
+        "residual": 1.0480786945628057e-17,
+        "n": 9317,
+        "a": -0.05175685089150998,
+        "d": 1.109163659877595
+      },
+      "windows": [
+        {
+          "start": 0.5,
+          "end": 2.0,
+          "cycles": 30.902583460581553,
+          "estimated_hz": 20.601752125994576,
+          "error_cents": 0.002505786966293347,
+          "model_error_cents": 0.002505796942902273,
+          "synthetic_bias_cents": 0.0013680861080859368,
+          "boundary": false
+        },
+        {
+          "start": 1.0,
+          "end": 3.5,
+          "cycles": 51.50430576763591,
+          "estimated_hz": 20.60172360568413,
+          "error_cents": 0.00010912835117660131,
+          "model_error_cents": 0.00010913832779933883,
+          "synthetic_bias_cents": 0.00016744655867321134,
+          "boundary": false
+        }
+      ]
+    },
+    {
+      "sample_rate": 192000,
+      "pitch": 24,
+      "file": "192000-24.bin",
+      "capture_sha256": "78226a2a79980392318088089b961fb7f9ef5faf926b1e3d223eb5fb6cf08caa",
+      "model": {
+        "hz": 32.70319566209992,
+        "decay_per_sample": -3.4102378713151266e-07,
+        "pole_radius": 0.999999658976271,
+        "residual": 4.199002186000278e-16,
+        "n": 5868,
+        "a": -0.19545632848470945,
+        "d": 1.4858810441164678
+      },
+      "windows": [
+        {
+          "start": 0.5,
+          "end": 2.0,
+          "cycles": 49.05479349386224,
+          "estimated_hz": 32.70321109281212,
+          "error_cents": 0.0008168420651947334,
+          "model_error_cents": 0.0008168672056740732,
+          "synthetic_bias_cents": 0.00047321204781921314,
+          "boundary": false
+        },
+        {
+          "start": 1.0,
+          "end": 3.5,
+          "cycles": 81.75798915643706,
+          "estimated_hz": 32.703201746344135,
+          "error_cents": 0.00032206111279619394,
+          "model_error_cents": 0.0003220862532827188,
+          "synthetic_bias_cents": 0.00016652850836500449,
+          "boundary": false
+        }
+      ]
+    },
+    {
+      "sample_rate": 192000,
+      "pitch": 36,
+      "file": "192000-36.bin",
+      "capture_sha256": "30e93c07abe40ef079db676340b034489bf830c5c2d666c0432d51a85cd5a3a5",
+      "model": {
+        "hz": 65.40639132134962,
+        "decay_per_sample": -6.821938899710252e-07,
+        "pole_radius": 0.9999993178063428,
+        "residual": 1.2238980809503254e-16,
+        "n": 2932,
+        "a": -0.33176136503221354,
+        "d": 1.992940522058234
+      },
+      "windows": [
+        {
+          "start": 0.5,
+          "end": 2.0,
+          "cycles": 98.10958698772448,
+          "estimated_hz": 65.40638798571415,
+          "error_cents": -8.839112640961443e-05,
+          "model_error_cents": -8.829054368147042e-05,
+          "synthetic_bias_cents": -0.00025403022299084164,
+          "boundary": false
+        },
+        {
+          "start": 1.0,
+          "end": 3.5,
+          "cycles": 163.51597831287413,
+          "estimated_hz": 65.40640317214164,
+          "error_cents": 0.00031357660335809345,
+          "model_error_cents": 0.00031367718644729467,
+          "synthetic_bias_cents": 0.0001577011849181261,
+          "boundary": false
+        }
+      ]
+    }
+  ],
+  "scope": "MIDI16/24/36 at four rates, stationary full-velocity notes, natural release; diagnostic pitch estimation only",
+  "admission": "NOT_GRANTED"
+}

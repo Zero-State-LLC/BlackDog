@@ -1,0 +1,74 @@
+{
+  "rows": [
+    {
+      "candidate": "new:pm_single",
+      "comparison": "comparison:2981ea911dcc456b3a154030f3556cc040484857",
+      "longest_exact_token_run": 146,
+      "candidate_offset": 29,
+      "comparison_offset": 69,
+      "run_sha256": "8bb4aaca96df4fba019cd8b1b8d8f851b24baf9ffe06801d147759be6925c013",
+      "independently_sufficient_dependency_spans": [
+        {
+          "symbol": "mi.initState",
+          "longest_run": 68,
+          "span_sha256": "1fbe4beaa3e61a6cbca49a593cb8d715193048aafdc2cb1bbfadf1a354fbb3e6",
+          "file": "mi.lib",
+          "start_byte": 4322,
+          "end_byte": 4470
+        },
+        {
+          "symbol": "mi.mass",
+          "longest_run": 78,
+          "span_sha256": "3140f89c23deed1bcc7a5c90f3afb003201fd464cb6004509bc3be04452df1ee",
+          "file": "mi.lib",
+          "start_byte": 5439,
+          "end_byte": 5622
+        }
+      ]
+    },
+    {
+      "candidate": "new:pm_bounce",
+      "comparison": "comparison:2981ea911dcc456b3a154030f3556cc040484857",
+      "longest_exact_token_run": 147,
+      "candidate_offset": 145,
+      "comparison_offset": 68,
+      "run_sha256": "1f09ba4d2dc091e538ea0d364fcfc3ae051fea4bbcc59bdfb9454a16851fc67e",
+      "independently_sufficient_dependency_spans": [
+        {
+          "symbol": "mi.collision",
+          "longest_run": 67,
+          "span_sha256": "acbea70ff50ee1e06cda0aee147656cea1143615a928d07108031f22a05c42ce",
+          "file": "mi.lib",
+          "start_byte": 20806,
+          "end_byte": 20962
+        },
+        {
+          "symbol": "mi.initState",
+          "longest_run": 68,
+          "span_sha256": "1fbe4beaa3e61a6cbca49a593cb8d715193048aafdc2cb1bbfadf1a354fbb3e6",
+          "file": "mi.lib",
+          "start_byte": 4322,
+          "end_byte": 4470
+        },
+        {
+          "symbol": "mi.mass",
+          "longest_run": 78,
+          "span_sha256": "3140f89c23deed1bcc7a5c90f3afb003201fd464cb6004509bc3be04452df1ee",
+          "file": "mi.lib",
+          "start_byte": 5439,
+          "end_byte": 5622
+        },
+        {
+          "symbol": "mi.springDamper",
+          "longest_run": 67,
+          "span_sha256": "c5fbc292ed68314eeb664926b0f7dc70f33d54102a57c3e3341f83711841097c",
+          "file": "mi.lib",
+          "start_byte": 11750,
+          "end_byte": 11938
+        }
+      ]
+    }
+  ],
+  "method": "Longest contiguous raw token matches with autojunk disabled; unchanged 40-token threshold",
+  "policy_changed": false
+}

@@ -1,0 +1,187 @@
+{
+  "graph": {
+    "identities": 1555,
+    "components": 12,
+    "joining_operations": 30267
+  },
+  "rows": [
+    {
+      "candidate": "mod-matrix-2x2",
+      "unit_id": "new:faustmod:mod-matrix-2x2",
+      "source_commit": "8f068ddc5851c48c377a025c69a2838c69f68169",
+      "source_blob": "daca6aff99551ecda542a7491d953e23a9c3ba62",
+      "source_lines": [
+        805,
+        809
+      ],
+      "closure_sha256": "f9250da1067e5a9f44079284e5b407950c0bf572db39194afbcbd641ef971bd0",
+      "external_dependencies": [],
+      "closure_method": "Named process arguments from catalog; exact primitive-only expression; no library calls",
+      "teacher_provenance": "UNRESOLVED: recent repository commit has AI coauthor; no source-specific generation record",
+      "rights": "QUARANTINED: repository reports GPL-3.0-or-later; no canonical admission",
+      "family": "sha256:93eea5e3aafd3d3322b8dbe782ba1e6d0aa1b279fbaa4c39d643c1c65b5908ac",
+      "comparison_connected": true,
+      "joining_evidence_count": 20,
+      "joining_evidence": [
+        {
+          "reason": "collective_support",
+          "group_id": "sha256:12f8e6e7f8b0550ddc1b7b130df107e786602fb14230bb7f7b04f4517b2a7cfe",
+          "comparison": "comparison:0af91c8e5d9029bd24c099abd65928fa4d250beb",
+          "covered": 2191,
+          "denominator": 2660,
+          "stream": "canonical",
+          "floor": 40
+        },
+        {
+          "left": "new:faustmod:mod-matrix-2x2",
+          "right": "comparison:0af91c8e5d9029bd24c099abd65928fa4d250beb",
+          "reason": "collective_union",
+          "stream": "canonical",
+          "floor": 40,
+          "group_id": "sha256:12f8e6e7f8b0550ddc1b7b130df107e786602fb14230bb7f7b04f4517b2a7cfe"
+        },
+        {
+          "reason": "collective_support",
+          "group_id": "sha256:4b122d69100a3c4cc8b441f1c9f8b4c7194f2ab17e7131dfc8a1a010b406dfaf",
+          "comparison": "comparison:17cfcc6b93848338e623383bb283e51326be8156",
+          "covered": 1759,
+          "denominator": 2280,
+          "stream": "canonical",
+          "floor": 40
+        }
+      ]
+    },
+    {
+      "candidate": "cv-mix-4",
+      "unit_id": "new:faustmod:cv-mix-4",
+      "source_commit": "8f068ddc5851c48c377a025c69a2838c69f68169",
+      "source_blob": "daca6aff99551ecda542a7491d953e23a9c3ba62",
+      "source_lines": [
+        811,
+        814
+      ],
+      "closure_sha256": "d13687786a4b94a0b165c2c09e952825755f680ba34e4b5f04b58f86779437db",
+      "external_dependencies": [],
+      "closure_method": "Named process arguments from catalog; exact primitive-only expression; no library calls",
+      "teacher_provenance": "UNRESOLVED: recent repository commit has AI coauthor; no source-specific generation record",
+      "rights": "QUARANTINED: repository reports GPL-3.0-or-later; no canonical admission",
+      "family": "sha256:93eea5e3aafd3d3322b8dbe782ba1e6d0aa1b279fbaa4c39d643c1c65b5908ac",
+      "comparison_connected": true,
+      "joining_evidence_count": 20,
+      "joining_evidence": [
+        {
+          "reason": "collective_support",
+          "group_id": "sha256:12f8e6e7f8b0550ddc1b7b130df107e786602fb14230bb7f7b04f4517b2a7cfe",
+          "comparison": "comparison:0af91c8e5d9029bd24c099abd65928fa4d250beb",
+          "covered": 2191,
+          "denominator": 2660,
+          "stream": "canonical",
+          "floor": 40
+        },
+        {
+          "left": "new:faustmod:cv-mix-4",
+          "right": "comparison:0af91c8e5d9029bd24c099abd65928fa4d250beb",
+          "reason": "collective_union",
+          "stream": "canonical",
+          "floor": 40,
+          "group_id": "sha256:12f8e6e7f8b0550ddc1b7b130df107e786602fb14230bb7f7b04f4517b2a7cfe"
+        },
+        {
+          "reason": "collective_support",
+          "group_id": "sha256:4b122d69100a3c4cc8b441f1c9f8b4c7194f2ab17e7131dfc8a1a010b406dfaf",
+          "comparison": "comparison:17cfcc6b93848338e623383bb283e51326be8156",
+          "covered": 1759,
+          "denominator": 2280,
+          "stream": "canonical",
+          "floor": 40
+        }
+      ]
+    },
+    {
+      "candidate": "math-smoothstep",
+      "unit_id": "new:faustmod:math-smoothstep",
+      "source_commit": "8f068ddc5851c48c377a025c69a2838c69f68169",
+      "source_blob": "daca6aff99551ecda542a7491d953e23a9c3ba62",
+      "source_lines": [
+        342,
+        342
+      ],
+      "closure_sha256": "e3be0ee3b3acb85fa55284982006ced3b824a6d377aef219c23f4fd2d9768308",
+      "external_dependencies": [],
+      "closure_method": "Named process arguments from catalog; exact primitive-only expression; no library calls",
+      "teacher_provenance": "UNRESOLVED: recent repository commit has AI coauthor; no source-specific generation record",
+      "rights": "QUARANTINED: repository reports GPL-3.0-or-later; no canonical admission",
+      "family": "sha256:93eea5e3aafd3d3322b8dbe782ba1e6d0aa1b279fbaa4c39d643c1c65b5908ac",
+      "comparison_connected": true,
+      "joining_evidence_count": 21,
+      "joining_evidence": [
+        {
+          "reason": "collective_support",
+          "group_id": "sha256:bae11b6706190073ca6e04de0f57b263fb1e968e542465b39c3d8e26233afe77",
+          "comparison": "comparison:64bb5871522c191cb97741271a41dbe4bc6b1c11",
+          "covered": 2343,
+          "denominator": 4672,
+          "stream": "raw",
+          "floor": 40
+        },
+        {
+          "left": "new:faustmod:math-smoothstep",
+          "right": "comparison:64bb5871522c191cb97741271a41dbe4bc6b1c11",
+          "reason": "collective_union",
+          "stream": "raw",
+          "floor": 40,
+          "group_id": "sha256:bae11b6706190073ca6e04de0f57b263fb1e968e542465b39c3d8e26233afe77"
+        },
+        {
+          "reason": "collective_support",
+          "group_id": "sha256:12f8e6e7f8b0550ddc1b7b130df107e786602fb14230bb7f7b04f4517b2a7cfe",
+          "comparison": "comparison:0af91c8e5d9029bd24c099abd65928fa4d250beb",
+          "covered": 2191,
+          "denominator": 2660,
+          "stream": "canonical",
+          "floor": 40
+        }
+      ]
+    },
+    {
+      "candidate": "pluck_bounded_epoch",
+      "unit_id": "new:pluck_bounded_epoch",
+      "source_sha256": "74f7aef25b5c12a0e077bb407ddf491ea920fa015e3a20eef2884aacdf2a56fe",
+      "external_dependencies": [],
+      "admission": "NOT_GRANTED",
+      "family": "sha256:93eea5e3aafd3d3322b8dbe782ba1e6d0aa1b279fbaa4c39d643c1c65b5908ac",
+      "comparison_connected": true,
+      "joining_evidence_count": 25,
+      "joining_evidence": [
+        {
+          "left": "new:pluck_bounded_epoch",
+          "right": "new:pluck_reset",
+          "reason": "token_jaccard",
+          "stream": "raw",
+          "floor": 40,
+          "intersection": 304,
+          "union": 323
+        },
+        {
+          "reason": "collective_support",
+          "group_id": "sha256:bae11b6706190073ca6e04de0f57b263fb1e968e542465b39c3d8e26233afe77",
+          "comparison": "comparison:64bb5871522c191cb97741271a41dbe4bc6b1c11",
+          "covered": 2343,
+          "denominator": 4672,
+          "stream": "raw",
+          "floor": 40
+        },
+        {
+          "left": "new:pluck_bounded_epoch",
+          "right": "comparison:64bb5871522c191cb97741271a41dbe4bc6b1c11",
+          "reason": "collective_union",
+          "stream": "raw",
+          "floor": 40,
+          "group_id": "sha256:bae11b6706190073ca6e04de0f57b263fb1e968e542465b39c3d8e26233afe77"
+        }
+      ]
+    }
+  ],
+  "admission": "NOT_GRANTED",
+  "policy": "unchanged floor40 provisional H1 collective"
+}

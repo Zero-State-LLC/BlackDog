@@ -1,0 +1,96 @@
+{
+  "graph": {
+    "identities": 1528,
+    "components": 12,
+    "joining_operations": 28538
+  },
+  "rows": [
+    {
+      "unit_id": "new:omi:oscGroup",
+      "source_url": "https://github.com/scottericpetersen/OMI-Faust-Workshop/blob/28d952b574cd8f08c82416b6fdbfbc8fa9f9de74/examples/omi/pulsee_v2.dsp",
+      "source_blob": "92de947e5d1a628caae065fd6467c30c83f55c2a",
+      "source_sha256": "3a9f356497df9453a8cd301f66188f9958085844188e43603e159a6b80b050f1",
+      "spans": [
+        [
+          1662,
+          1697
+        ],
+        [
+          1463,
+          1514
+        ]
+      ],
+      "closure_sha256": "cb4a57b9afa1d066043d2bdf1ad814dfcef1050316e51c71b74513faaf63d44d",
+      "external_dependencies": [],
+      "rights": "File declares bare BSD and Scott E. Petersen copyright; D-013 permits train/eval after review, no redistribution; no admission",
+      "scope": "Complete GUI wrapper closure, not the dependency-heavy full synthesizer",
+      "family": "sha256:0774ff19ab8e28a3f4554d9ee16c32c9dbe1db8ff5940bc8dd2d07328fa5cdb6",
+      "comparison_connected": true,
+      "joining_evidence_count": 20,
+      "joining_evidence": [
+        {
+          "reason": "collective_support",
+          "group_id": "sha256:1ed78942b8ba40819099c9c473143dcf93977633af1f8e871a8c54063806e0b0",
+          "comparison": "comparison:0af91c8e5d9029bd24c099abd65928fa4d250beb",
+          "covered": 2085,
+          "denominator": 2660,
+          "stream": "canonical",
+          "floor": 40
+        },
+        {
+          "left": "new:omi:oscGroup",
+          "right": "comparison:0af91c8e5d9029bd24c099abd65928fa4d250beb",
+          "reason": "collective_union",
+          "stream": "canonical",
+          "floor": 40,
+          "group_id": "sha256:1ed78942b8ba40819099c9c473143dcf93977633af1f8e871a8c54063806e0b0"
+        }
+      ]
+    },
+    {
+      "unit_id": "new:omi:filtGroup",
+      "source_url": "https://github.com/scottericpetersen/OMI-Faust-Workshop/blob/28d952b574cd8f08c82416b6fdbfbc8fa9f9de74/examples/omi/pulsee_v2.dsp",
+      "source_blob": "92de947e5d1a628caae065fd6467c30c83f55c2a",
+      "source_sha256": "3a9f356497df9453a8cd301f66188f9958085844188e43603e159a6b80b050f1",
+      "spans": [
+        [
+          1662,
+          1697
+        ],
+        [
+          1515,
+          1563
+        ]
+      ],
+      "closure_sha256": "5fbe7ec2e959fd3727e1d770346743831435b8c0e3323a7cb39d27a911a6f09e",
+      "external_dependencies": [],
+      "rights": "File declares bare BSD and Scott E. Petersen copyright; D-013 permits train/eval after review, no redistribution; no admission",
+      "scope": "Complete GUI wrapper closure, not the dependency-heavy full synthesizer",
+      "family": "sha256:0774ff19ab8e28a3f4554d9ee16c32c9dbe1db8ff5940bc8dd2d07328fa5cdb6",
+      "comparison_connected": true,
+      "joining_evidence_count": 20,
+      "joining_evidence": [
+        {
+          "reason": "collective_support",
+          "group_id": "sha256:1ed78942b8ba40819099c9c473143dcf93977633af1f8e871a8c54063806e0b0",
+          "comparison": "comparison:0af91c8e5d9029bd24c099abd65928fa4d250beb",
+          "covered": 2085,
+          "denominator": 2660,
+          "stream": "canonical",
+          "floor": 40
+        },
+        {
+          "left": "new:omi:filtGroup",
+          "right": "comparison:0af91c8e5d9029bd24c099abd65928fa4d250beb",
+          "reason": "collective_union",
+          "stream": "canonical",
+          "floor": 40,
+          "group_id": "sha256:1ed78942b8ba40819099c9c473143dcf93977633af1f8e871a8c54063806e0b0"
+        }
+      ]
+    }
+  ],
+  "admission": "NOT_GRANTED",
+  "policy": "unchanged floor40 provisional H1 collective",
+  "scope": "Previous 1526 identities plus two complete closures"
+}

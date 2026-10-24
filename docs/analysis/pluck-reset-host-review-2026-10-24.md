@@ -1,0 +1,23 @@
+# Host retrigger failure and reset repair — 2026-10-24
+
+The pinned Shipwright engine source (blob 526864e97e865f509453340fd071aaa9bcad79e7) creates a Faust processor, sets DSP source and num_voices, then adds integer MIDI notes. Its exact reviewed `_make_source` function was extracted with Python AST and exercised against an isolated DawDreamer 0.9.0 / Python 3.12 / macOS arm64 environment. Wheel URLs and hashes are in the contract. This is an explicit diagnostic host pin; upstream Shipwright leaves DawDreamer unpinned. No installed project environment was changed.
+
+The former single-loop source fails fresh-note superposition on same-pitch retrigger: maximum mixed-minus-solo-sum error is 0.0534413457. Before retrigger, overlapping notes sum exactly. Its prior numerical evidence remains valid for those narrower tests, but its host contract is now rejected.
+
+A separate reset source, SHA-256 83cd856eaf46228903180244b2e5002e139f87decb39d2235a6df980d0b85ab8, tags the delay line with a note epoch and invalidates older-note samples on a rising gate. It suppresses stale averaging-filter history and resets the allpass recurrence. This changes retrigger semantics explicitly. It does not establish unbounded counter lifetime or arbitrary same-sample MIDI-event behavior.
+
+The three-note eight-voice host matrix now has exact fresh-note superposition at all four rates. An expanded six-note matrix covers integer MIDI 16, 69 and 119 with overlap, short gaps, retriggers and multiple velocities; maximum error is 5.960464477539063e-8. Both are one-second offline tests with block size 64. An independent verifier checked 92 captures across the original negative, reset, expanded-range and proposed-natural-policy matrices. No-note and pre-note controls are silent, channels agree, interfaces are zero-input stereo, and samples are finite.
+
+Fresh source-bound checks pass 40 static native cases, 24 four-second live-control cases and four 131072-frame native/WASM comparisons. Reset WASM maximum difference is 7.264316082000732e-8 under the unchanged tolerance. Maximum observed live amplitude is 0.4999987781. These results were independently verified from the changed source's captures.
+
+The user requested a recommendation on note-off behavior. Recommendation: natural decay after note-off, with clean state on note-on. This remains a proposed musical contract pending independent semantic review. Default-host output is silent in the tested release window. Holding velocity alone produces identical captures and does not fix it. Setting proc.dynamic_voices=False with the reset source unchanged preserves a nonzero natural tail and exact three-note superposition at all four rates. It keeps released voices computing; the eight-voice limit and stealing behavior remain unqualified. No unlimited tail or polyphony guarantee is claimed.
+
+DawDreamer v0.9.0 comments out the old setReleaseLength call in its release_length setter after the Faust 2.81.10 API change. The exposed 0.5 value is therefore not evidence of an applied release policy. The observed dynamic_voices intervention is the direct evidence for the proposed policy. Source: <https://github.com/DBraun/DawDreamer/blob/v0.9.0/Source/FaustProcessor.cpp>. Historical Faust poly-dsp code frees released voices using block-level output magnitude, consistent with the observed premature tail loss.
+
+Shipwright casts pitch to int despite its Note comment describing fractional pitches as microtonal. Integer MIDI 16–119 lies within the preserved 20–8000 Hz DSP range. Preflight rejection or intentional handling of fractional/out-of-range notes remains unimplemented. No microtonal or all-MIDI-range support is claimed.
+
+The Stratus tester was Git-blob verified and replayed with the reset source in the complete family population: 1551 identities, 12 components, 30183 joins under the unchanged policy. Both are comparison-connected. Stratus is not an independent evaluation candidate.
+
+Designing Sound issue #1 remains open with zero comments. The exact ds.mulk packet and readiness validator still report NOT_ADMITTED, pilot_ready=false, training_authorized=false. All 37 review/readiness tests pass. No new signed artifact was supplied or verified. Remaining work includes musical semantic acceptance, longer tails and voice exhaustion, input preflight, dense/long-history checks, canonical admission, independent evaluation families and authenticated signed readiness. The active goal remains incomplete.
+
+Evidence archives work/pluck-host-evidence.tar.gz and work/pluck-reset-evidence.tar.gz are hash-bound in pluck-reset-host-contract-2026-10-24.json. The host archive retains the unsuccessful velocity-hold experiment for traceability; it is not the selected repair.

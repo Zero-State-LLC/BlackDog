@@ -8,6 +8,46 @@ See [docs/VERSIONING.md](docs/VERSIONING.md).
 
 ## [Unreleased]
 
+- Localize spectral middle-band float32 discrepancies, reject section-order repairs, and bind two inferred helper notices to byte-identical licensed predecessors; fix checkpoint Markdown lint.
+
+- Record float32 ladder and bounded modular semantic diagnostics; complete five pinned notices while retaining unresolved rights, spectral, family and signed-readiness blockers.
+
+- Add bounded structural replay for dependency-supplied modular targets without admission authority; document original-source double-precision diagnostics while retaining production float32 blockers.
+
+- Document explicit TPT low-pass diagnostics, actual bargraph capture and proposed dependency-supplied targets while preserving default-path and end-to-end qualification failures.
+
+- Record exact analyzer/elliptic closures, fixed-tolerance signal diagnostics and expanded candidate qualification; retain boundary, sequence-length and admission blockers. Repair dead publisher citations.
+
+- Record previously implicit stream-family wrapper joins so emitted family evidence reconstructs unchanged assignments; document a separately bound Goertzel DC diagnostic repair.
+
+- Intersect recorded dependency permissions in outside-family readiness and expose unresolved metadata; preserve numerical and family-reconstruction failures in external-dependency diagnostics.
+
+- Record resolved decimal helper diagnostics and a pinned independent-source search; retain family and admission blocks for every new candidate.
+
+- Bind outside-family inventory and source definitions to readiness; expose training-only eligibility and unresolved alias dependencies without granting admission.
+
+- Reconstruct recorded public family joins in readiness and report infeasible single-family partitions without granting admission.
+
+- Replay saved public signal evidence inside readiness with exact bindings, bounded affine checks and preserved admission blockers.
+
+- Add CPU-only, exact-Qwen-tokenizer preflight for public instruction candidates, with pinned assets, canonical loss-mask encoding and readiness replay. Tokenizer success clears no admission or training gates.
+
+- Replay bounded public source/behavior/closure/notice receipts in readiness and derive provenance-bound instruction candidates. Preserve import corrections and separate MIT/LGPL notices; keep pair qualification and training authorization blocked pending canonical evidence.
+
+- Add immutable completion-only causal-model batches with prompt/padding loss masking, explicit EOS, target hash binding, fixed pilot bounds and no truncation or packing. Synthetic tests verify shifted label positions; production pair qualification and training remain gated.
+
+- Prepare reproducible bounded pilot source partitions from externally trusted signed public snapshots. Preserve notices/provenance, exclude holdout examples, refuse truncation and overwrites, and retain explicit qualification/training blockers.
+
+- Replay canonical signed-snapshot semantics in readiness through a bounded, read-only public artifact view and independently supplied custodian public key. Add strict run-scope/bundle contracts and an exporter that preflights existing signatures and emits the next replay command. Only signed T07 and family-separation gates can clear; training authorization stays separate.
+
+- Add a fail-early whole-file diagnostic evaluation funnel using canonical inventory/notice, pinned compiler and both-rate signal contracts. Chain attributable stage receipts; independent replay remains explicitly blocked and no training or promotion is granted.
+
+- Validate and bind reward TaskSpec before execution and before any signal-commit artifact writes; propagate sealed native evidence and reject malformed compiler/signal provenance. Fix diagnostic routed-input budgeting, mandatory clipping checks and explicit zero-input routing from PR #113 review. Frozen reward profiles remain unchanged.
+
+- Add strict, no-follow external readiness manifest verification and hash-bound batch accounting replay. Integrity never grants authorization; semantic adapters and real-batch replay remain pending. Add a bounded, unapproved Qwen pilot recipe and execution runbook.
+
+- Preserve the canonical provisional T07 freeze route in proposed Spec 002; require final leakage certification before P3 exit or promotion.
+
 - Record seven-span bounded compiler/signal validation: 28 positive runs, five negative controls, receipt locations and preservation results. Independent production approval, 958 missing ranges and T06/T07 qualification gates remain open; TOKEN_FLOOR stays 40/provisional and T07 unfrozen.
 
 - Document the unapproved seven-span production candidate, 958 missing spans, verified source blobs, receipt locations and remaining qualification gaps. Full-inventory validation still refuses incomplete coverage; TOKEN_FLOOR stays 40/provisional and T07 remains unfrozen.

@@ -1,0 +1,40 @@
+{
+  "status": "BOUNDED_CANDIDATE_HOST_PASS",
+  "source_sha256": "74f7aef25b5c12a0e077bb407ddf491ea920fa015e3a20eef2884aacdf2a56fe",
+  "adapter_sha256": "7a6c57ab54ae8c8aab6dbd2ab96def2b7486d672a322173d6f03bf00bda4ec6f",
+  "input_contract_tests": 40,
+  "test_sha256": "4e6c230d8e5d80952f950710e47bbc8e78f27567111eeae38c12223d7fd32575",
+  "captures": 916,
+  "sets": [
+    {
+      "name": "dense",
+      "captures": 836,
+      "new_report_sha256": "3059f1de1247bf4839af995dfb9807ea01849d02643cae1b0422b1f68022a3aa",
+      "prior_report_sha256": "de3f01902efa0933b24cecd564ba53ae3b62ad4fb3a956f791c3d9a79886bd01",
+      "byte_identical_to_previous_source": true
+    },
+    {
+      "name": "histories",
+      "captures": 20,
+      "new_report_sha256": "b988303b836accedc931f039067c2b0637d87cc07dac87ee44f4241b92beb3cd",
+      "prior_report_sha256": "28815068006eb7c219a86a3b875d4cd6e3d7b296decf5f419d333d2545b33467",
+      "byte_identical_to_previous_source": true
+    },
+    {
+      "name": "exhaustion",
+      "captures": 60,
+      "new_report_sha256": "3fdb28700c88efe56c018a6c9881ce89d78adbb51c795e8c215e939fee901471",
+      "prior_report_sha256": "b722b0657249bb688fcd709329ca5aa569fbfb5ae66c924f056e3e2258a06752",
+      "byte_identical_to_previous_source": true
+    }
+  ],
+  "archive_sha256": "fce319780b443c5b8fcb37e4679368f79e6eea74de14c2ed47da944eec378afd",
+  "host": "DawDreamer0.9.0, macOS arm64, Python3.12, block64, eight voices with dynamic_voices=False; sixteen-voice exhaustion reference only",
+  "admission": "NOT_GRANTED",
+  "remaining": [
+    "Exact new-source native/WASM and live-control qualification",
+    "Absolute pitch and musical review",
+    "Family and canonical admission review",
+    "Signed readiness artifacts"
+  ]
+}

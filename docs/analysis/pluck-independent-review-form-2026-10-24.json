@@ -1,0 +1,48 @@
+{
+  "status": "UNFILLED_NOT_APPROVED",
+  "reviewer_name": null,
+  "reviewed_at": null,
+  "independence_statement": null,
+  "source_sha256": "74f7aef25b5c12a0e077bb407ddf491ea920fa015e3a20eef2884aacdf2a56fe",
+  "listening_packet_sha256": "674ea3d4d2022acc870dc5eb839d1fb2555e84df2eb9126e51b707ae0a65575f",
+  "decisions": {
+    "natural_release": {
+      "decision": null,
+      "rationale": null,
+      "samples_reviewed": []
+    },
+    "clean_retrigger": {
+      "decision": null,
+      "rationale": null,
+      "samples_reviewed": []
+    },
+    "eight_voice_tail_stealing": {
+      "decision": null,
+      "rationale": null,
+      "samples_reviewed": []
+    },
+    "integer_note_contract": {
+      "decision": null,
+      "rationale": null,
+      "samples_reviewed": []
+    },
+    "tuning": {
+      "decision": null,
+      "rationale": null,
+      "samples_reviewed": []
+    },
+    "decay_and_timbre": {
+      "decision": null,
+      "rationale": null,
+      "samples_reviewed": []
+    },
+    "whole_buffer_peak_scaling": {
+      "decision": null,
+      "rationale": null,
+      "samples_reviewed": []
+    }
+  },
+  "overall_decision": null,
+  "required_changes": [],
+  "note": "Template only. Do not interpret null decisions as approval. Completing this form does not itself provide canonical rights admission or signed T07 membership."
+}

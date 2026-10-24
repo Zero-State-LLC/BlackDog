@@ -1,0 +1,19 @@
+{
+  "archive": "/Users/appliedalchemylabs/Documents/Codex/2026-10-23/pic/work/pluck-api-and-sk-review-evidence.tar.gz",
+  "archive_sha256": "0e4e10211b873219e7d6b31fad4661c81aba26225eeee590a40a848e7e5d33d2",
+  "patched_upstream_base": "eef7b31e2b82974172d8c562412069624861950a",
+  "patch_sha256": "eab20306d7f606030d3da08b6023793f128cb55b04656505049bc8d74ef33753",
+  "factory_sha256": "f6117b31f9429e68ba56c67fee9a5c32af166dc9fe6e065f8a18052268225bf4",
+  "test_sha256": "20b154d5055e5b0c9d59bf2c91f4a8c089e0c52fc8b557f2a01caa22484992c5",
+  "source_sha256": "74f7aef25b5c12a0e077bb407ddf491ea920fa015e3a20eef2884aacdf2a56fe",
+  "scope": "Local proposed API, exact bounded-pluck preflight and 12 full render/export cases; sk filter family screen",
+  "independent_review": false,
+  "admission": "NOT_GRANTED",
+  "provenance_issue": {
+    "url": "https://github.com/materializepath/designing-sound-experiments/issues/1",
+    "state": "open",
+    "comments": 0
+  },
+  "pilot_ready": false,
+  "training_authorized": false
+}

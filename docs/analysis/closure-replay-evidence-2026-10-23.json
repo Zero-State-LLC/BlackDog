@@ -1,0 +1,33 @@
+{
+  "status": "DIAGNOSTIC_NOT_ADMITTED",
+  "files": [
+    {
+      "path": "outputs/blackdog-full-closure-family-replay.json",
+      "sha256": "dd591a7377798c367e1b8cbbd91916ef83cd4fbc0f9a46768806842200371b1d"
+    },
+    {
+      "path": "outputs/blackdog-branch-sections-verification.json",
+      "sha256": "baedac63939ddcd6b00d72c211cfa71465367b98329deedf1d8651bbb1ce4e08"
+    },
+    {
+      "path": "outputs/blackdog-branch-sections-channel-analysis.json",
+      "sha256": "2805b3fefbdd5cb8355b1bf2a18acfef34e58d6ccd3d4f4867e22eb8f1ac688b"
+    },
+    {
+      "path": "outputs/blackdog-current-readiness.json",
+      "sha256": "3ca0db7ab619ffbd14172275bd1a0a1dd140cba50829118a1d189d5b34e6c0e9"
+    },
+    {
+      "path": "outputs/blackdog-spark-custody-research.json",
+      "sha256": "35d2a28cd250b0d5cee0653af8efb6aa1602fd90ee06aab1aa115961022f0229"
+    },
+    {
+      "path": "work/extended-qualification/full-closure-families.json",
+      "sha256": "a31620313fd4f44f64ad677eadb824a14b1d96ec190b82e98ea86ecd5c8ad6a5"
+    },
+    {
+      "path": "work/extended-qualification/full-closure-edges.json",
+      "sha256": "82be20b291d6d04f408fda9387cc766a1bc7d1641162843837f0b887306772cf"
+    }
+  ]
+}

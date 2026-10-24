@@ -1,0 +1,1476 @@
+{
+  "rows": [
+    {
+      "sample_rate": 44100,
+      "passed": true,
+      "failures": [],
+      "max_absolute_error": 5.960464477539063e-08,
+      "native_sha256": "ecc0134557bbf427409337e9c73e90c7ca0a7760ee336b8df36bed88a456d24f",
+      "wasm_sha256": "c01fa9f612b565016187051154ad65f11e847a71bdd9e079d8b1901470ce0bf5",
+      "receipt": {
+        "source_sha256": "ddb0f318fd77ce19c025ee0525bf41f6086f017ad670405898ea5a6b92e8767b",
+        "test_suite_digest": "sha256:db06aba637ca6d1141dbf66548f668192094f1a74d95e0ef92c39e8bbb679c7c",
+        "sample_rate": 44100,
+        "block_size": 64,
+        "seed": 1,
+        "metrics": {
+          "comparison": "diagnostic-signed-full",
+          "failures": [],
+          "frame_count": 131072,
+          "head_frames": 131072,
+          "input_channels": 0,
+          "output_channels": 2,
+          "press_buttons_first_block": false,
+          "quantization_nano": 1000000000,
+          "renders": {
+            "impulse": {
+              "denormal_count": 164,
+              "finite": true,
+              "inf_count": 0,
+              "nan_count": 0,
+              "sample_sha256": "sha256:0c8e1817dce16903c27d69fe76cbf17aec707628bceffb2dd53966e9a8d1d98a",
+              "clipping": false,
+              "dc": false,
+              "peak_nano": 464363933,
+              "rms_nano": 5954021,
+              "silence": false,
+              "spectral": {
+                "band_count": 16,
+                "bands_nano": [
+                  1043641,
+                  836316,
+                  799370,
+                  752198,
+                  694790,
+                  649009,
+                  617262,
+                  596278,
+                  590440,
+                  555057,
+                  524916,
+                  508607,
+                  498350,
+                  492302,
+                  489840,
+                  490065
+                ],
+                "centroid_millihz": 9610450,
+                "window": 1024
+              },
+              "compared_frames": 131072,
+              "coarse": {
+                "band_max_abs_error_nano": 1,
+                "block_rms_max_abs_error_nano": 14
+              },
+              "max_abs_error_nano": 60
+            }
+          },
+          "stimuli": [
+            "impulse"
+          ],
+          "render_ms": {
+            "impulse": 10
+          },
+          "toolchain": {
+            "faustwasm": "0.19.0",
+            "node": "v22.23.3",
+            "node_flags": [
+              "--disallow-code-generation-from-strings",
+              "--permission",
+              "--stack-size=8192"
+            ],
+            "v8": "12.4.254.21-node.57"
+          },
+          "diagnostic_case": {
+            "spec": {
+              "version": 1,
+              "case_id": "pluck-live-wasm",
+              "controls": [
+                {
+                  "block": 0,
+                  "address": "/input/freq",
+                  "value_hex": "0x1.b800000000000p+8"
+                },
+                {
+                  "block": 0,
+                  "address": "/input/gain",
+                  "value_hex": "0x1.0000000000000p-1"
+                },
+                {
+                  "block": 0,
+                  "address": "/input/gate",
+                  "value_hex": "0x0.0p+0"
+                },
+                {
+                  "block": 1,
+                  "address": "/input/gate",
+                  "value_hex": "0x1.0000000000000p+0"
+                },
+                {
+                  "block": 512,
+                  "address": "/input/gate",
+                  "value_hex": "0x0.0p+0"
+                },
+                {
+                  "block": 1024,
+                  "address": "/input/gain",
+                  "value_hex": "0x1.0000000000000p-2"
+                },
+                {
+                  "block": 1024,
+                  "address": "/input/gate",
+                  "value_hex": "0x1.0000000000000p+0"
+                },
+                {
+                  "block": 1280,
+                  "address": "/input/freq",
+                  "value_hex": "0x1.f400000000000p+12"
+                },
+                {
+                  "block": 1536,
+                  "address": "/input/freq",
+                  "value_hex": "0x1.4000000000000p+4"
+                },
+                {
+                  "block": 1792,
+                  "address": "/input/gate",
+                  "value_hex": "0x0.0p+0"
+                }
+              ],
+              "input_stimuli": [],
+              "zero_companion": null
+            },
+            "descriptor_digest": "sha256:561891a73e9cd244b5aa38a9fcef2c5165ac49777c241c55d865fba6a6733f64",
+            "applied_controls": {
+              "impulse": [
+                {
+                  "block": 0,
+                  "address": "/input/freq",
+                  "value_hex": "0x1.b800000000000p+8"
+                },
+                {
+                  "block": 0,
+                  "address": "/input/gain",
+                  "value_hex": "0x1.0000000000000p-1"
+                },
+                {
+                  "block": 0,
+                  "address": "/input/gate",
+                  "value_hex": "0x0.0p+0"
+                },
+                {
+                  "block": 1,
+                  "address": "/input/gate",
+                  "value_hex": "0x1.0000000000000p+0"
+                },
+                {
+                  "block": 512,
+                  "address": "/input/gate",
+                  "value_hex": "0x0.0p+0"
+                },
+                {
+                  "block": 1024,
+                  "address": "/input/gain",
+                  "value_hex": "0x1.0000000000000p-2"
+                },
+                {
+                  "block": 1024,
+                  "address": "/input/gate",
+                  "value_hex": "0x1.0000000000000p+0"
+                },
+                {
+                  "block": 1280,
+                  "address": "/input/freq",
+                  "value_hex": "0x1.f400000000000p+12"
+                },
+                {
+                  "block": 1536,
+                  "address": "/input/freq",
+                  "value_hex": "0x1.4000000000000p+4"
+                },
+                {
+                  "block": 1792,
+                  "address": "/input/gate",
+                  "value_hex": "0x0.0p+0"
+                }
+              ]
+            },
+            "stimulus_sha256": {
+              "impulse": "763075f2259042b116195a653bb7d0c10d35c752a9cea7de26b87a5276f777af"
+            },
+            "input_definitions": {
+              "multitone": {
+                "frequencies_hz": [
+                  431,
+                  997
+                ],
+                "amplitudes_hex": [
+                  "0x1.0000000000000p-3",
+                  "0x1.0000000000000p-3"
+                ],
+                "phase": 0
+              },
+              "alternating": {
+                "amplitude_hex": "0x1.0000000000000p-2",
+                "first_sign": 1
+              }
+            },
+            "companion_receipt_digest": null,
+            "compiler_digest": "sha256:95885b8baf86fc1ac7e51ee861a07aabaf09faf50184f0486c00e6b464332ed2"
+          },
+          "compile_flags": [
+            "-ftz",
+            "0"
+          ],
+          "unshare_path": "/opt/faustcoder/bin/fc-unshare",
+          "unshare_sha256": "e0c145c3d4c06686544b1362ed64da819539166a5e1e6fd96093aea4d2539b6a"
+        },
+        "thresholds": {
+          "absolute_tolerance_nano": 2000,
+          "clip_peak_nano": 1000000000,
+          "head_frames": 131072,
+          "relative_tolerance_nano": 10000,
+          "silence_rms_nano": 10,
+          "tail_threshold_nano": 10,
+          "expected_channels": 2,
+          "max_inf_count": 0,
+          "max_nan_count": 0,
+          "reject_silence": true,
+          "reject_dc": true,
+          "reject_clipping": true,
+          "require_reference": true,
+          "reward_graded": false,
+          "reward_allowlisted": false
+        },
+        "passed": true,
+        "harness_digest": "sha256:8e7d086b0e5c0f0f7a00a99e486a67471c6d382ba6d076e807b9722993c5742a",
+        "renderer": "faustwasm",
+        "purpose": "diagnostic",
+        "profile": {
+          "absolute_tolerance_nano": 2000,
+          "block_size": 64,
+          "clip_peak_nano": 1000000000,
+          "expected_channels": 2,
+          "frames": 131072,
+          "head_frames": 131072,
+          "max_frames": 131072,
+          "impulse_amplitude_nano": 1000000000,
+          "max_denormal_count": null,
+          "metric_version": 2,
+          "noise_amplitude_nano": 1000000000,
+          "press_buttons_first_block": false,
+          "reject_clipping": true,
+          "reject_dc": true,
+          "reject_nonfinite": true,
+          "reject_silence": true,
+          "relative_tolerance_nano": 10000,
+          "require_reference": true,
+          "sample_rate": 44100,
+          "seed": 1,
+          "silence_rms_nano": 10,
+          "tail_threshold_nano": 10,
+          "sine_amplitude_nano": 500000000,
+          "sine_hz": 440,
+          "stimuli": [
+            "impulse"
+          ],
+          "version": 2,
+          "diagnostic_case": {
+            "version": 1,
+            "case_id": "pluck-live-wasm",
+            "controls": [
+              {
+                "block": 0,
+                "address": "/input/freq",
+                "value_hex": "0x1.b800000000000p+8"
+              },
+              {
+                "block": 0,
+                "address": "/input/gain",
+                "value_hex": "0x1.0000000000000p-1"
+              },
+              {
+                "block": 0,
+                "address": "/input/gate",
+                "value_hex": "0x0.0p+0"
+              },
+              {
+                "block": 1,
+                "address": "/input/gate",
+                "value_hex": "0x1.0000000000000p+0"
+              },
+              {
+                "block": 512,
+                "address": "/input/gate",
+                "value_hex": "0x0.0p+0"
+              },
+              {
+                "block": 1024,
+                "address": "/input/gain",
+                "value_hex": "0x1.0000000000000p-2"
+              },
+              {
+                "block": 1024,
+                "address": "/input/gate",
+                "value_hex": "0x1.0000000000000p+0"
+              },
+              {
+                "block": 1280,
+                "address": "/input/freq",
+                "value_hex": "0x1.f400000000000p+12"
+              },
+              {
+                "block": 1536,
+                "address": "/input/freq",
+                "value_hex": "0x1.4000000000000p+4"
+              },
+              {
+                "block": 1792,
+                "address": "/input/gate",
+                "value_hex": "0x0.0p+0"
+              }
+            ],
+            "input_stimuli": [],
+            "zero_companion": null
+          }
+        },
+        "reference_digest": "sha256:94a95e4f55cbd77a55d502396090f7947739e21c05a2b2f417cec263642a6add"
+      },
+      "compiler": {
+        "source_sha256": "ddb0f318fd77ce19c025ee0525bf41f6086f017ad670405898ea5a6b92e8767b",
+        "faust_version": "2.90.0",
+        "command": [
+          "libfaust-wasm",
+          "--faustwasm=0.19.0",
+          "--libfaust=2.90.0",
+          "--faustlibraries=2edec0537f53",
+          "-lang",
+          "wasm",
+          "-ftz",
+          "0"
+        ],
+        "exit_code": 0,
+        "stdout_digest": "sha256:801401ac62d30f20a55b5bfde24ebea5e07a5e095295e2bca361a23f70d714b1",
+        "stderr_digest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "duration_ms": 167,
+        "environment_digest": "sha256:5daaf11ee32792baa9a1fceb1f994cebafdb2e6edd12f383f63dc273ce186883",
+        "compiler": "libfaust-wasm",
+        "lang": "wasm",
+        "options": [
+          "-ftz",
+          "0"
+        ],
+        "diagnostic_class": "ok"
+      }
+    },
+    {
+      "sample_rate": 48000,
+      "passed": true,
+      "failures": [],
+      "max_absolute_error": 1.7462298274040222e-10,
+      "native_sha256": "0aa03f76e24b8a361acef5c5fd6ad4efb0c8a0fcfd2d7d7a7de9cda2f3ba95a0",
+      "wasm_sha256": "3229539b8fb725041ab3a09402a6dc9f7fa4834b4bf82092f71c12a2c228a3b0",
+      "receipt": {
+        "source_sha256": "ddb0f318fd77ce19c025ee0525bf41f6086f017ad670405898ea5a6b92e8767b",
+        "test_suite_digest": "sha256:2546f44b4859960ad791b7de78e6d9d385a20008921fb74c79922d1f5032fb27",
+        "sample_rate": 48000,
+        "block_size": 64,
+        "seed": 1,
+        "metrics": {
+          "comparison": "diagnostic-signed-full",
+          "failures": [],
+          "frame_count": 131072,
+          "head_frames": 131072,
+          "input_channels": 0,
+          "output_channels": 2,
+          "press_buttons_first_block": false,
+          "quantization_nano": 1000000000,
+          "renders": {
+            "impulse": {
+              "denormal_count": 278,
+              "finite": true,
+              "inf_count": 0,
+              "nan_count": 0,
+              "sample_sha256": "sha256:1ac901d5ae2896d0cd01147d1ca94342ed080540e74e9521881101c88f57b1ea",
+              "clipping": false,
+              "dc": false,
+              "peak_nano": 473946005,
+              "rms_nano": 5941883,
+              "silence": false,
+              "spectral": {
+                "band_count": 16,
+                "bands_nano": [
+                  954532,
+                  793107,
+                  890690,
+                  714343,
+                  702192,
+                  691822,
+                  585146,
+                  633082,
+                  540996,
+                  533300,
+                  549168,
+                  495918,
+                  513841,
+                  494358,
+                  487231,
+                  490924
+                ],
+                "centroid_millihz": 10515285,
+                "window": 1024
+              },
+              "compared_frames": 131072,
+              "coarse": {
+                "band_max_abs_error_nano": 1,
+                "block_rms_max_abs_error_nano": 0
+              },
+              "max_abs_error_nano": 1
+            }
+          },
+          "stimuli": [
+            "impulse"
+          ],
+          "render_ms": {
+            "impulse": 11
+          },
+          "toolchain": {
+            "faustwasm": "0.19.0",
+            "node": "v22.23.3",
+            "node_flags": [
+              "--disallow-code-generation-from-strings",
+              "--permission",
+              "--stack-size=8192"
+            ],
+            "v8": "12.4.254.21-node.57"
+          },
+          "diagnostic_case": {
+            "spec": {
+              "version": 1,
+              "case_id": "pluck-live-wasm",
+              "controls": [
+                {
+                  "block": 0,
+                  "address": "/input/freq",
+                  "value_hex": "0x1.b800000000000p+8"
+                },
+                {
+                  "block": 0,
+                  "address": "/input/gain",
+                  "value_hex": "0x1.0000000000000p-1"
+                },
+                {
+                  "block": 0,
+                  "address": "/input/gate",
+                  "value_hex": "0x0.0p+0"
+                },
+                {
+                  "block": 1,
+                  "address": "/input/gate",
+                  "value_hex": "0x1.0000000000000p+0"
+                },
+                {
+                  "block": 512,
+                  "address": "/input/gate",
+                  "value_hex": "0x0.0p+0"
+                },
+                {
+                  "block": 1024,
+                  "address": "/input/gain",
+                  "value_hex": "0x1.0000000000000p-2"
+                },
+                {
+                  "block": 1024,
+                  "address": "/input/gate",
+                  "value_hex": "0x1.0000000000000p+0"
+                },
+                {
+                  "block": 1280,
+                  "address": "/input/freq",
+                  "value_hex": "0x1.f400000000000p+12"
+                },
+                {
+                  "block": 1536,
+                  "address": "/input/freq",
+                  "value_hex": "0x1.4000000000000p+4"
+                },
+                {
+                  "block": 1792,
+                  "address": "/input/gate",
+                  "value_hex": "0x0.0p+0"
+                }
+              ],
+              "input_stimuli": [],
+              "zero_companion": null
+            },
+            "descriptor_digest": "sha256:561891a73e9cd244b5aa38a9fcef2c5165ac49777c241c55d865fba6a6733f64",
+            "applied_controls": {
+              "impulse": [
+                {
+                  "block": 0,
+                  "address": "/input/freq",
+                  "value_hex": "0x1.b800000000000p+8"
+                },
+                {
+                  "block": 0,
+                  "address": "/input/gain",
+                  "value_hex": "0x1.0000000000000p-1"
+                },
+                {
+                  "block": 0,
+                  "address": "/input/gate",
+                  "value_hex": "0x0.0p+0"
+                },
+                {
+                  "block": 1,
+                  "address": "/input/gate",
+                  "value_hex": "0x1.0000000000000p+0"
+                },
+                {
+                  "block": 512,
+                  "address": "/input/gate",
+                  "value_hex": "0x0.0p+0"
+                },
+                {
+                  "block": 1024,
+                  "address": "/input/gain",
+                  "value_hex": "0x1.0000000000000p-2"
+                },
+                {
+                  "block": 1024,
+                  "address": "/input/gate",
+                  "value_hex": "0x1.0000000000000p+0"
+                },
+                {
+                  "block": 1280,
+                  "address": "/input/freq",
+                  "value_hex": "0x1.f400000000000p+12"
+                },
+                {
+                  "block": 1536,
+                  "address": "/input/freq",
+                  "value_hex": "0x1.4000000000000p+4"
+                },
+                {
+                  "block": 1792,
+                  "address": "/input/gate",
+                  "value_hex": "0x0.0p+0"
+                }
+              ]
+            },
+            "stimulus_sha256": {
+              "impulse": "763075f2259042b116195a653bb7d0c10d35c752a9cea7de26b87a5276f777af"
+            },
+            "input_definitions": {
+              "multitone": {
+                "frequencies_hz": [
+                  431,
+                  997
+                ],
+                "amplitudes_hex": [
+                  "0x1.0000000000000p-3",
+                  "0x1.0000000000000p-3"
+                ],
+                "phase": 0
+              },
+              "alternating": {
+                "amplitude_hex": "0x1.0000000000000p-2",
+                "first_sign": 1
+              }
+            },
+            "companion_receipt_digest": null,
+            "compiler_digest": "sha256:95885b8baf86fc1ac7e51ee861a07aabaf09faf50184f0486c00e6b464332ed2"
+          },
+          "compile_flags": [
+            "-ftz",
+            "0"
+          ],
+          "unshare_path": "/opt/faustcoder/bin/fc-unshare",
+          "unshare_sha256": "e0c145c3d4c06686544b1362ed64da819539166a5e1e6fd96093aea4d2539b6a"
+        },
+        "thresholds": {
+          "absolute_tolerance_nano": 2000,
+          "clip_peak_nano": 1000000000,
+          "head_frames": 131072,
+          "relative_tolerance_nano": 10000,
+          "silence_rms_nano": 10,
+          "tail_threshold_nano": 10,
+          "expected_channels": 2,
+          "max_inf_count": 0,
+          "max_nan_count": 0,
+          "reject_silence": true,
+          "reject_dc": true,
+          "reject_clipping": true,
+          "require_reference": true,
+          "reward_graded": false,
+          "reward_allowlisted": false
+        },
+        "passed": true,
+        "harness_digest": "sha256:8e7d086b0e5c0f0f7a00a99e486a67471c6d382ba6d076e807b9722993c5742a",
+        "renderer": "faustwasm",
+        "purpose": "diagnostic",
+        "profile": {
+          "absolute_tolerance_nano": 2000,
+          "block_size": 64,
+          "clip_peak_nano": 1000000000,
+          "expected_channels": 2,
+          "frames": 131072,
+          "head_frames": 131072,
+          "max_frames": 131072,
+          "impulse_amplitude_nano": 1000000000,
+          "max_denormal_count": null,
+          "metric_version": 2,
+          "noise_amplitude_nano": 1000000000,
+          "press_buttons_first_block": false,
+          "reject_clipping": true,
+          "reject_dc": true,
+          "reject_nonfinite": true,
+          "reject_silence": true,
+          "relative_tolerance_nano": 10000,
+          "require_reference": true,
+          "sample_rate": 48000,
+          "seed": 1,
+          "silence_rms_nano": 10,
+          "tail_threshold_nano": 10,
+          "sine_amplitude_nano": 500000000,
+          "sine_hz": 440,
+          "stimuli": [
+            "impulse"
+          ],
+          "version": 2,
+          "diagnostic_case": {
+            "version": 1,
+            "case_id": "pluck-live-wasm",
+            "controls": [
+              {
+                "block": 0,
+                "address": "/input/freq",
+                "value_hex": "0x1.b800000000000p+8"
+              },
+              {
+                "block": 0,
+                "address": "/input/gain",
+                "value_hex": "0x1.0000000000000p-1"
+              },
+              {
+                "block": 0,
+                "address": "/input/gate",
+                "value_hex": "0x0.0p+0"
+              },
+              {
+                "block": 1,
+                "address": "/input/gate",
+                "value_hex": "0x1.0000000000000p+0"
+              },
+              {
+                "block": 512,
+                "address": "/input/gate",
+                "value_hex": "0x0.0p+0"
+              },
+              {
+                "block": 1024,
+                "address": "/input/gain",
+                "value_hex": "0x1.0000000000000p-2"
+              },
+              {
+                "block": 1024,
+                "address": "/input/gate",
+                "value_hex": "0x1.0000000000000p+0"
+              },
+              {
+                "block": 1280,
+                "address": "/input/freq",
+                "value_hex": "0x1.f400000000000p+12"
+              },
+              {
+                "block": 1536,
+                "address": "/input/freq",
+                "value_hex": "0x1.4000000000000p+4"
+              },
+              {
+                "block": 1792,
+                "address": "/input/gate",
+                "value_hex": "0x0.0p+0"
+              }
+            ],
+            "input_stimuli": [],
+            "zero_companion": null
+          }
+        },
+        "reference_digest": "sha256:749e0c87afef3e650cf50437484ef52eda0303335e91c8105d51bde0270538a1"
+      },
+      "compiler": {
+        "source_sha256": "ddb0f318fd77ce19c025ee0525bf41f6086f017ad670405898ea5a6b92e8767b",
+        "faust_version": "2.90.0",
+        "command": [
+          "libfaust-wasm",
+          "--faustwasm=0.19.0",
+          "--libfaust=2.90.0",
+          "--faustlibraries=2edec0537f53",
+          "-lang",
+          "wasm",
+          "-ftz",
+          "0"
+        ],
+        "exit_code": 0,
+        "stdout_digest": "sha256:801401ac62d30f20a55b5bfde24ebea5e07a5e095295e2bca361a23f70d714b1",
+        "stderr_digest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "duration_ms": 168,
+        "environment_digest": "sha256:5daaf11ee32792baa9a1fceb1f994cebafdb2e6edd12f383f63dc273ce186883",
+        "compiler": "libfaust-wasm",
+        "lang": "wasm",
+        "options": [
+          "-ftz",
+          "0"
+        ],
+        "diagnostic_class": "ok"
+      }
+    },
+    {
+      "sample_rate": 96000,
+      "passed": true,
+      "failures": [],
+      "max_absolute_error": 4.3655745685100555e-10,
+      "native_sha256": "5ee8ace1bf756b988ecbd4b1afc44ae4b3e71c0551b291c744c0dd9911ca4a40",
+      "wasm_sha256": "b1f7a516ba3f6c286bdccb0a8e66a96a081df333362777da3f6969ce0356e887",
+      "receipt": {
+        "source_sha256": "ddb0f318fd77ce19c025ee0525bf41f6086f017ad670405898ea5a6b92e8767b",
+        "test_suite_digest": "sha256:bbbbf8d5eb9625b6234e292cd148c49152b128fa7c8b196871c5d6e9300caab6",
+        "sample_rate": 96000,
+        "block_size": 64,
+        "seed": 1,
+        "metrics": {
+          "comparison": "diagnostic-signed-full",
+          "failures": [],
+          "frame_count": 131072,
+          "head_frames": 131072,
+          "input_channels": 0,
+          "output_channels": 2,
+          "press_buttons_first_block": false,
+          "quantization_nano": 1000000000,
+          "renders": {
+            "impulse": {
+              "denormal_count": 1318,
+              "finite": true,
+              "inf_count": 0,
+              "nan_count": 0,
+              "sample_sha256": "sha256:eb73e2bfd50cd96b45f29c531dfbbb038b404861583f7378a3c9cc73042511a1",
+              "clipping": false,
+              "dc": false,
+              "peak_nano": 467666268,
+              "rms_nano": 5596612,
+              "silence": false,
+              "spectral": {
+                "band_count": 16,
+                "bands_nano": [
+                  764522,
+                  747960,
+                  732633,
+                  720343,
+                  643084,
+                  633910,
+                  619120,
+                  596424,
+                  568883,
+                  527134,
+                  526467,
+                  518293,
+                  506614,
+                  494003,
+                  488750,
+                  489716
+                ],
+                "centroid_millihz": 21789860,
+                "window": 1024
+              },
+              "compared_frames": 131072,
+              "coarse": {
+                "band_max_abs_error_nano": 0,
+                "block_rms_max_abs_error_nano": 0
+              },
+              "max_abs_error_nano": 1
+            }
+          },
+          "stimuli": [
+            "impulse"
+          ],
+          "render_ms": {
+            "impulse": 10
+          },
+          "toolchain": {
+            "faustwasm": "0.19.0",
+            "node": "v22.23.3",
+            "node_flags": [
+              "--disallow-code-generation-from-strings",
+              "--permission",
+              "--stack-size=8192"
+            ],
+            "v8": "12.4.254.21-node.57"
+          },
+          "diagnostic_case": {
+            "spec": {
+              "version": 1,
+              "case_id": "pluck-live-wasm",
+              "controls": [
+                {
+                  "block": 0,
+                  "address": "/input/freq",
+                  "value_hex": "0x1.b800000000000p+8"
+                },
+                {
+                  "block": 0,
+                  "address": "/input/gain",
+                  "value_hex": "0x1.0000000000000p-1"
+                },
+                {
+                  "block": 0,
+                  "address": "/input/gate",
+                  "value_hex": "0x0.0p+0"
+                },
+                {
+                  "block": 1,
+                  "address": "/input/gate",
+                  "value_hex": "0x1.0000000000000p+0"
+                },
+                {
+                  "block": 512,
+                  "address": "/input/gate",
+                  "value_hex": "0x0.0p+0"
+                },
+                {
+                  "block": 1024,
+                  "address": "/input/gain",
+                  "value_hex": "0x1.0000000000000p-2"
+                },
+                {
+                  "block": 1024,
+                  "address": "/input/gate",
+                  "value_hex": "0x1.0000000000000p+0"
+                },
+                {
+                  "block": 1280,
+                  "address": "/input/freq",
+                  "value_hex": "0x1.f400000000000p+12"
+                },
+                {
+                  "block": 1536,
+                  "address": "/input/freq",
+                  "value_hex": "0x1.4000000000000p+4"
+                },
+                {
+                  "block": 1792,
+                  "address": "/input/gate",
+                  "value_hex": "0x0.0p+0"
+                }
+              ],
+              "input_stimuli": [],
+              "zero_companion": null
+            },
+            "descriptor_digest": "sha256:561891a73e9cd244b5aa38a9fcef2c5165ac49777c241c55d865fba6a6733f64",
+            "applied_controls": {
+              "impulse": [
+                {
+                  "block": 0,
+                  "address": "/input/freq",
+                  "value_hex": "0x1.b800000000000p+8"
+                },
+                {
+                  "block": 0,
+                  "address": "/input/gain",
+                  "value_hex": "0x1.0000000000000p-1"
+                },
+                {
+                  "block": 0,
+                  "address": "/input/gate",
+                  "value_hex": "0x0.0p+0"
+                },
+                {
+                  "block": 1,
+                  "address": "/input/gate",
+                  "value_hex": "0x1.0000000000000p+0"
+                },
+                {
+                  "block": 512,
+                  "address": "/input/gate",
+                  "value_hex": "0x0.0p+0"
+                },
+                {
+                  "block": 1024,
+                  "address": "/input/gain",
+                  "value_hex": "0x1.0000000000000p-2"
+                },
+                {
+                  "block": 1024,
+                  "address": "/input/gate",
+                  "value_hex": "0x1.0000000000000p+0"
+                },
+                {
+                  "block": 1280,
+                  "address": "/input/freq",
+                  "value_hex": "0x1.f400000000000p+12"
+                },
+                {
+                  "block": 1536,
+                  "address": "/input/freq",
+                  "value_hex": "0x1.4000000000000p+4"
+                },
+                {
+                  "block": 1792,
+                  "address": "/input/gate",
+                  "value_hex": "0x0.0p+0"
+                }
+              ]
+            },
+            "stimulus_sha256": {
+              "impulse": "763075f2259042b116195a653bb7d0c10d35c752a9cea7de26b87a5276f777af"
+            },
+            "input_definitions": {
+              "multitone": {
+                "frequencies_hz": [
+                  431,
+                  997
+                ],
+                "amplitudes_hex": [
+                  "0x1.0000000000000p-3",
+                  "0x1.0000000000000p-3"
+                ],
+                "phase": 0
+              },
+              "alternating": {
+                "amplitude_hex": "0x1.0000000000000p-2",
+                "first_sign": 1
+              }
+            },
+            "companion_receipt_digest": null,
+            "compiler_digest": "sha256:95885b8baf86fc1ac7e51ee861a07aabaf09faf50184f0486c00e6b464332ed2"
+          },
+          "compile_flags": [
+            "-ftz",
+            "0"
+          ],
+          "unshare_path": "/opt/faustcoder/bin/fc-unshare",
+          "unshare_sha256": "e0c145c3d4c06686544b1362ed64da819539166a5e1e6fd96093aea4d2539b6a"
+        },
+        "thresholds": {
+          "absolute_tolerance_nano": 2000,
+          "clip_peak_nano": 1000000000,
+          "head_frames": 131072,
+          "relative_tolerance_nano": 10000,
+          "silence_rms_nano": 10,
+          "tail_threshold_nano": 10,
+          "expected_channels": 2,
+          "max_inf_count": 0,
+          "max_nan_count": 0,
+          "reject_silence": true,
+          "reject_dc": true,
+          "reject_clipping": true,
+          "require_reference": true,
+          "reward_graded": false,
+          "reward_allowlisted": false
+        },
+        "passed": true,
+        "harness_digest": "sha256:8e7d086b0e5c0f0f7a00a99e486a67471c6d382ba6d076e807b9722993c5742a",
+        "renderer": "faustwasm",
+        "purpose": "diagnostic",
+        "profile": {
+          "absolute_tolerance_nano": 2000,
+          "block_size": 64,
+          "clip_peak_nano": 1000000000,
+          "expected_channels": 2,
+          "frames": 131072,
+          "head_frames": 131072,
+          "max_frames": 131072,
+          "impulse_amplitude_nano": 1000000000,
+          "max_denormal_count": null,
+          "metric_version": 2,
+          "noise_amplitude_nano": 1000000000,
+          "press_buttons_first_block": false,
+          "reject_clipping": true,
+          "reject_dc": true,
+          "reject_nonfinite": true,
+          "reject_silence": true,
+          "relative_tolerance_nano": 10000,
+          "require_reference": true,
+          "sample_rate": 96000,
+          "seed": 1,
+          "silence_rms_nano": 10,
+          "tail_threshold_nano": 10,
+          "sine_amplitude_nano": 500000000,
+          "sine_hz": 440,
+          "stimuli": [
+            "impulse"
+          ],
+          "version": 2,
+          "diagnostic_case": {
+            "version": 1,
+            "case_id": "pluck-live-wasm",
+            "controls": [
+              {
+                "block": 0,
+                "address": "/input/freq",
+                "value_hex": "0x1.b800000000000p+8"
+              },
+              {
+                "block": 0,
+                "address": "/input/gain",
+                "value_hex": "0x1.0000000000000p-1"
+              },
+              {
+                "block": 0,
+                "address": "/input/gate",
+                "value_hex": "0x0.0p+0"
+              },
+              {
+                "block": 1,
+                "address": "/input/gate",
+                "value_hex": "0x1.0000000000000p+0"
+              },
+              {
+                "block": 512,
+                "address": "/input/gate",
+                "value_hex": "0x0.0p+0"
+              },
+              {
+                "block": 1024,
+                "address": "/input/gain",
+                "value_hex": "0x1.0000000000000p-2"
+              },
+              {
+                "block": 1024,
+                "address": "/input/gate",
+                "value_hex": "0x1.0000000000000p+0"
+              },
+              {
+                "block": 1280,
+                "address": "/input/freq",
+                "value_hex": "0x1.f400000000000p+12"
+              },
+              {
+                "block": 1536,
+                "address": "/input/freq",
+                "value_hex": "0x1.4000000000000p+4"
+              },
+              {
+                "block": 1792,
+                "address": "/input/gate",
+                "value_hex": "0x0.0p+0"
+              }
+            ],
+            "input_stimuli": [],
+            "zero_companion": null
+          }
+        },
+        "reference_digest": "sha256:f89942ad9443983a762e77014b34391c49297b53cedd808419550ba506a5b219"
+      },
+      "compiler": {
+        "source_sha256": "ddb0f318fd77ce19c025ee0525bf41f6086f017ad670405898ea5a6b92e8767b",
+        "faust_version": "2.90.0",
+        "command": [
+          "libfaust-wasm",
+          "--faustwasm=0.19.0",
+          "--libfaust=2.90.0",
+          "--faustlibraries=2edec0537f53",
+          "-lang",
+          "wasm",
+          "-ftz",
+          "0"
+        ],
+        "exit_code": 0,
+        "stdout_digest": "sha256:801401ac62d30f20a55b5bfde24ebea5e07a5e095295e2bca361a23f70d714b1",
+        "stderr_digest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "duration_ms": 168,
+        "environment_digest": "sha256:5daaf11ee32792baa9a1fceb1f994cebafdb2e6edd12f383f63dc273ce186883",
+        "compiler": "libfaust-wasm",
+        "lang": "wasm",
+        "options": [
+          "-ftz",
+          "0"
+        ],
+        "diagnostic_class": "ok"
+      }
+    },
+    {
+      "sample_rate": 192000,
+      "passed": true,
+      "failures": [],
+      "max_absolute_error": 2.0194839173657902e-28,
+      "native_sha256": "c4936ef227108241ec0d1dbdd0cfb75ae14e9b43e608871705b3387223e550d6",
+      "wasm_sha256": "a71be534dece6ce9dd26366129ce92c606953402d99eb712830b3c51ed13aab3",
+      "receipt": {
+        "source_sha256": "ddb0f318fd77ce19c025ee0525bf41f6086f017ad670405898ea5a6b92e8767b",
+        "test_suite_digest": "sha256:c15e4b1f80243514322b7b271bbdcca400edd7270df9e16ca44fba1ede036fad",
+        "sample_rate": 192000,
+        "block_size": 64,
+        "seed": 1,
+        "metrics": {
+          "comparison": "diagnostic-signed-full",
+          "failures": [],
+          "frame_count": 131072,
+          "head_frames": 131072,
+          "input_channels": 0,
+          "output_channels": 2,
+          "press_buttons_first_block": false,
+          "quantization_nano": 1000000000,
+          "renders": {
+            "impulse": {
+              "denormal_count": 9522,
+              "finite": true,
+              "inf_count": 0,
+              "nan_count": 0,
+              "sample_sha256": "sha256:79aa0d728ae95cbabeb541ea5b32f1f6230f1a27a78cdc21e40d84cd97db1c40",
+              "clipping": false,
+              "dc": false,
+              "peak_nano": 454515874,
+              "rms_nano": 5052937,
+              "silence": false,
+              "spectral": {
+                "band_count": 16,
+                "bands_nano": [
+                  630439,
+                  614902,
+                  601059,
+                  623535,
+                  584280,
+                  580789,
+                  575920,
+                  550410,
+                  555296,
+                  527294,
+                  519936,
+                  514615,
+                  498237,
+                  499345,
+                  489395,
+                  488941
+                ],
+                "centroid_millihz": 45548720,
+                "window": 1024
+              },
+              "compared_frames": 131072,
+              "coarse": {
+                "band_max_abs_error_nano": 0,
+                "block_rms_max_abs_error_nano": 0
+              },
+              "max_abs_error_nano": 0
+            }
+          },
+          "stimuli": [
+            "impulse"
+          ],
+          "render_ms": {
+            "impulse": 10
+          },
+          "toolchain": {
+            "faustwasm": "0.19.0",
+            "node": "v22.23.3",
+            "node_flags": [
+              "--disallow-code-generation-from-strings",
+              "--permission",
+              "--stack-size=8192"
+            ],
+            "v8": "12.4.254.21-node.57"
+          },
+          "diagnostic_case": {
+            "spec": {
+              "version": 1,
+              "case_id": "pluck-live-wasm",
+              "controls": [
+                {
+                  "block": 0,
+                  "address": "/input/freq",
+                  "value_hex": "0x1.b800000000000p+8"
+                },
+                {
+                  "block": 0,
+                  "address": "/input/gain",
+                  "value_hex": "0x1.0000000000000p-1"
+                },
+                {
+                  "block": 0,
+                  "address": "/input/gate",
+                  "value_hex": "0x0.0p+0"
+                },
+                {
+                  "block": 1,
+                  "address": "/input/gate",
+                  "value_hex": "0x1.0000000000000p+0"
+                },
+                {
+                  "block": 512,
+                  "address": "/input/gate",
+                  "value_hex": "0x0.0p+0"
+                },
+                {
+                  "block": 1024,
+                  "address": "/input/gain",
+                  "value_hex": "0x1.0000000000000p-2"
+                },
+                {
+                  "block": 1024,
+                  "address": "/input/gate",
+                  "value_hex": "0x1.0000000000000p+0"
+                },
+                {
+                  "block": 1280,
+                  "address": "/input/freq",
+                  "value_hex": "0x1.f400000000000p+12"
+                },
+                {
+                  "block": 1536,
+                  "address": "/input/freq",
+                  "value_hex": "0x1.4000000000000p+4"
+                },
+                {
+                  "block": 1792,
+                  "address": "/input/gate",
+                  "value_hex": "0x0.0p+0"
+                }
+              ],
+              "input_stimuli": [],
+              "zero_companion": null
+            },
+            "descriptor_digest": "sha256:561891a73e9cd244b5aa38a9fcef2c5165ac49777c241c55d865fba6a6733f64",
+            "applied_controls": {
+              "impulse": [
+                {
+                  "block": 0,
+                  "address": "/input/freq",
+                  "value_hex": "0x1.b800000000000p+8"
+                },
+                {
+                  "block": 0,
+                  "address": "/input/gain",
+                  "value_hex": "0x1.0000000000000p-1"
+                },
+                {
+                  "block": 0,
+                  "address": "/input/gate",
+                  "value_hex": "0x0.0p+0"
+                },
+                {
+                  "block": 1,
+                  "address": "/input/gate",
+                  "value_hex": "0x1.0000000000000p+0"
+                },
+                {
+                  "block": 512,
+                  "address": "/input/gate",
+                  "value_hex": "0x0.0p+0"
+                },
+                {
+                  "block": 1024,
+                  "address": "/input/gain",
+                  "value_hex": "0x1.0000000000000p-2"
+                },
+                {
+                  "block": 1024,
+                  "address": "/input/gate",
+                  "value_hex": "0x1.0000000000000p+0"
+                },
+                {
+                  "block": 1280,
+                  "address": "/input/freq",
+                  "value_hex": "0x1.f400000000000p+12"
+                },
+                {
+                  "block": 1536,
+                  "address": "/input/freq",
+                  "value_hex": "0x1.4000000000000p+4"
+                },
+                {
+                  "block": 1792,
+                  "address": "/input/gate",
+                  "value_hex": "0x0.0p+0"
+                }
+              ]
+            },
+            "stimulus_sha256": {
+              "impulse": "763075f2259042b116195a653bb7d0c10d35c752a9cea7de26b87a5276f777af"
+            },
+            "input_definitions": {
+              "multitone": {
+                "frequencies_hz": [
+                  431,
+                  997
+                ],
+                "amplitudes_hex": [
+                  "0x1.0000000000000p-3",
+                  "0x1.0000000000000p-3"
+                ],
+                "phase": 0
+              },
+              "alternating": {
+                "amplitude_hex": "0x1.0000000000000p-2",
+                "first_sign": 1
+              }
+            },
+            "companion_receipt_digest": null,
+            "compiler_digest": "sha256:95885b8baf86fc1ac7e51ee861a07aabaf09faf50184f0486c00e6b464332ed2"
+          },
+          "compile_flags": [
+            "-ftz",
+            "0"
+          ],
+          "unshare_path": "/opt/faustcoder/bin/fc-unshare",
+          "unshare_sha256": "e0c145c3d4c06686544b1362ed64da819539166a5e1e6fd96093aea4d2539b6a"
+        },
+        "thresholds": {
+          "absolute_tolerance_nano": 2000,
+          "clip_peak_nano": 1000000000,
+          "head_frames": 131072,
+          "relative_tolerance_nano": 10000,
+          "silence_rms_nano": 10,
+          "tail_threshold_nano": 10,
+          "expected_channels": 2,
+          "max_inf_count": 0,
+          "max_nan_count": 0,
+          "reject_silence": true,
+          "reject_dc": true,
+          "reject_clipping": true,
+          "require_reference": true,
+          "reward_graded": false,
+          "reward_allowlisted": false
+        },
+        "passed": true,
+        "harness_digest": "sha256:8e7d086b0e5c0f0f7a00a99e486a67471c6d382ba6d076e807b9722993c5742a",
+        "renderer": "faustwasm",
+        "purpose": "diagnostic",
+        "profile": {
+          "absolute_tolerance_nano": 2000,
+          "block_size": 64,
+          "clip_peak_nano": 1000000000,
+          "expected_channels": 2,
+          "frames": 131072,
+          "head_frames": 131072,
+          "max_frames": 131072,
+          "impulse_amplitude_nano": 1000000000,
+          "max_denormal_count": null,
+          "metric_version": 2,
+          "noise_amplitude_nano": 1000000000,
+          "press_buttons_first_block": false,
+          "reject_clipping": true,
+          "reject_dc": true,
+          "reject_nonfinite": true,
+          "reject_silence": true,
+          "relative_tolerance_nano": 10000,
+          "require_reference": true,
+          "sample_rate": 192000,
+          "seed": 1,
+          "silence_rms_nano": 10,
+          "tail_threshold_nano": 10,
+          "sine_amplitude_nano": 500000000,
+          "sine_hz": 440,
+          "stimuli": [
+            "impulse"
+          ],
+          "version": 2,
+          "diagnostic_case": {
+            "version": 1,
+            "case_id": "pluck-live-wasm",
+            "controls": [
+              {
+                "block": 0,
+                "address": "/input/freq",
+                "value_hex": "0x1.b800000000000p+8"
+              },
+              {
+                "block": 0,
+                "address": "/input/gain",
+                "value_hex": "0x1.0000000000000p-1"
+              },
+              {
+                "block": 0,
+                "address": "/input/gate",
+                "value_hex": "0x0.0p+0"
+              },
+              {
+                "block": 1,
+                "address": "/input/gate",
+                "value_hex": "0x1.0000000000000p+0"
+              },
+              {
+                "block": 512,
+                "address": "/input/gate",
+                "value_hex": "0x0.0p+0"
+              },
+              {
+                "block": 1024,
+                "address": "/input/gain",
+                "value_hex": "0x1.0000000000000p-2"
+              },
+              {
+                "block": 1024,
+                "address": "/input/gate",
+                "value_hex": "0x1.0000000000000p+0"
+              },
+              {
+                "block": 1280,
+                "address": "/input/freq",
+                "value_hex": "0x1.f400000000000p+12"
+              },
+              {
+                "block": 1536,
+                "address": "/input/freq",
+                "value_hex": "0x1.4000000000000p+4"
+              },
+              {
+                "block": 1792,
+                "address": "/input/gate",
+                "value_hex": "0x0.0p+0"
+              }
+            ],
+            "input_stimuli": [],
+            "zero_companion": null
+          }
+        },
+        "reference_digest": "sha256:af704f9f842b53c043e75695b603fe3184ad0cceed0c93d1d653bfd5ecc901dd"
+      },
+      "compiler": {
+        "source_sha256": "ddb0f318fd77ce19c025ee0525bf41f6086f017ad670405898ea5a6b92e8767b",
+        "faust_version": "2.90.0",
+        "command": [
+          "libfaust-wasm",
+          "--faustwasm=0.19.0",
+          "--libfaust=2.90.0",
+          "--faustlibraries=2edec0537f53",
+          "-lang",
+          "wasm",
+          "-ftz",
+          "0"
+        ],
+        "exit_code": 0,
+        "stdout_digest": "sha256:801401ac62d30f20a55b5bfde24ebea5e07a5e095295e2bca361a23f70d714b1",
+        "stderr_digest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "duration_ms": 220,
+        "environment_digest": "sha256:5daaf11ee32792baa9a1fceb1f994cebafdb2e6edd12f383f63dc273ce186883",
+        "compiler": "libfaust-wasm",
+        "lang": "wasm",
+        "options": [
+          "-ftz",
+          "0"
+        ],
+        "diagnostic_class": "ok"
+      }
+    }
+  ],
+  "source_sha256": "ddb0f318fd77ce19c025ee0525bf41f6086f017ad670405898ea5a6b92e8767b",
+  "runner_sha256": "0fecfbac308132b27deb9723624116957fb947197cc581b842ebd6fd2a127d06",
+  "runtime_pin": {
+    "faust_version": "2.90.0",
+    "faustlibraries_version": "2.80.0",
+    "bundled_faustlibraries_version": "2.74.2",
+    "faustlibraries_commit": "2edec0537f53",
+    "faustlibraries_tree_sha256": "edf8f43966942ec96ec2e46341af49454c311586a62879b430687c9ffd434173",
+    "node": "22.23",
+    "js_sha256": "73b9ee9ba0368f8a52d1e5feeeaee528930e38420acc9ea65b1198b480ed9e25",
+    "wasm_sha256": "db7bde14b2553826ebcc30d8bd967aee98b37f3f0fce98182e5f574eb14bc217",
+    "data_sha256": "12e89b91e9b9fce899b1cdf6f62fdea18d95ce1ae63a69a61d76c3d365e52050"
+  },
+  "admission": "NOT_GRANTED",
+  "independent_verification": {
+    "status": "PASS",
+    "samples_per_channel_per_rate": 131072,
+    "archive_sha256": "224f19dec5064fd21b22322b569f7959a4e98b4f8ff388aa20856ff3fad0974d",
+    "comparison_tolerance": "2e-6 absolute + 1e-5 relative, unchanged from earlier numerical diagnostics"
+  }
+}

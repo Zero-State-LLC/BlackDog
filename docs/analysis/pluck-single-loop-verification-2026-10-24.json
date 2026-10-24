@@ -1,0 +1,416 @@
+{
+  "status": "BOUNDED_ZERO_INPUT_REPAIR_PASS",
+  "source_sha256": "ddb0f318fd77ce19c025ee0525bf41f6086f017ad670405898ea5a6b92e8767b",
+  "runner_sha256": "1a4f0d4c83ec594cbb5003e7dfcbc4cdc68943b1582982e71ee48ae827978376",
+  "rows": [
+    {
+      "sample_rate": 44100,
+      "frequency": 20,
+      "gain": 0.5,
+      "gate_mode": 1,
+      "frames": 88200,
+      "file": "44100-20-0.5-1.bin",
+      "sha256": "9a60bca519ac403d3bb40cc0712dcf64f8b34f13a0a4f9c54cc35b64ef5eb76d",
+      "peak": 0.5586800575256348
+    },
+    {
+      "sample_rate": 44100,
+      "frequency": 50,
+      "gain": 0.5,
+      "gate_mode": 1,
+      "frames": 88200,
+      "file": "44100-50-0.5-1.bin",
+      "sha256": "a7b65b964e58d0e23e1c57d4e60cfb602d337071a03c2f472ad4cb9bc4042265",
+      "peak": 0.5285981297492981
+    },
+    {
+      "sample_rate": 44100,
+      "frequency": 110,
+      "gain": 0.5,
+      "gate_mode": 1,
+      "frames": 88200,
+      "file": "44100-110-0.5-1.bin",
+      "sha256": "3ac6bb3cfbd3269620cf7543923c09f6a20dbcad589471f6cbdaccbeb1c99dbe",
+      "peak": 0.5155162215232849
+    },
+    {
+      "sample_rate": 44100,
+      "frequency": 440,
+      "gain": 0.5,
+      "gate_mode": 1,
+      "frames": 88200,
+      "file": "44100-440-0.5-1.bin",
+      "sha256": "fb4fe34a42fc3c1b3567a9f0c05a99d67a3c63ea6e5c2f6b51872ea61cbbb053",
+      "peak": 0.472028911113739
+    },
+    {
+      "sample_rate": 44100,
+      "frequency": 1000,
+      "gain": 0.5,
+      "gate_mode": 1,
+      "frames": 88200,
+      "file": "44100-1000-0.5-1.bin",
+      "sha256": "aed8a1068375b5d77aab7f0733fcce8fd31aa8643f9d013141d18dc4c919a256",
+      "peak": 0.4748493432998657
+    },
+    {
+      "sample_rate": 44100,
+      "frequency": 4000,
+      "gain": 0.5,
+      "gate_mode": 1,
+      "frames": 88200,
+      "file": "44100-4000-0.5-1.bin",
+      "sha256": "5cc1b26cf77b3dcfe065e2d78cf3ed5fefad88b52d76d1266368fdefa256f7d4",
+      "peak": 0.47444140911102295
+    },
+    {
+      "sample_rate": 44100,
+      "frequency": 8000,
+      "gain": 0.5,
+      "gate_mode": 1,
+      "frames": 88200,
+      "file": "44100-8000-0.5-1.bin",
+      "sha256": "031dd121361b265429c7729bf97bddf1f8e7600b27c47c43b38afc87772e0caf",
+      "peak": 0.4999694526195526
+    },
+    {
+      "sample_rate": 44100,
+      "frequency": 110,
+      "gain": 0.25,
+      "gate_mode": 1,
+      "frames": 88200,
+      "file": "44100-110-0.25-1.bin",
+      "sha256": "914a5e679b887119651cc3942580682c4db9c4798901d1e4a1534fcedf4b45ac",
+      "peak": 0.25775811076164246
+    },
+    {
+      "sample_rate": 44100,
+      "frequency": 110,
+      "gain": 0.0,
+      "gate_mode": 1,
+      "frames": 88200,
+      "file": "44100-110-0.0-1.bin",
+      "sha256": "4ae778a09963d84b5501eaa45b31e368da73aa6f7f03af366915e1969a0fd414",
+      "peak": 0.0
+    },
+    {
+      "sample_rate": 44100,
+      "frequency": 110,
+      "gain": 0.5,
+      "gate_mode": 0,
+      "frames": 88200,
+      "file": "44100-110-0.5-0.bin",
+      "sha256": "bbbf3baab8a5dc22f0ccabe9c9e753a0ec5a58713d6eab66ea37813498a1625a",
+      "peak": 0.0
+    },
+    {
+      "sample_rate": 48000,
+      "frequency": 20,
+      "gain": 0.5,
+      "gate_mode": 1,
+      "frames": 96000,
+      "file": "48000-20-0.5-1.bin",
+      "sha256": "ef1395214739d67774fa0ef7bb469ec3b1696b03c88285003831ae2faa8bc8ab",
+      "peak": 0.5586800575256348
+    },
+    {
+      "sample_rate": 48000,
+      "frequency": 50,
+      "gain": 0.5,
+      "gate_mode": 1,
+      "frames": 96000,
+      "file": "48000-50-0.5-1.bin",
+      "sha256": "29d113c7565169bfb3e34e08fdb32b386bc71c6d345a178c936cdad6716dd489",
+      "peak": 0.5285982489585876
+    },
+    {
+      "sample_rate": 48000,
+      "frequency": 110,
+      "gain": 0.5,
+      "gate_mode": 1,
+      "frames": 96000,
+      "file": "48000-110-0.5-1.bin",
+      "sha256": "b78fc4b8bc2f1ea5e4b7f8fae374ca5754e446097f5839e75b990b981e58ff07",
+      "peak": 0.48186194896698
+    },
+    {
+      "sample_rate": 48000,
+      "frequency": 440,
+      "gain": 0.5,
+      "gate_mode": 1,
+      "frames": 96000,
+      "file": "48000-440-0.5-1.bin",
+      "sha256": "d631283802ebcfe1ab670dfddb8e7c6dd9591c55ae5d0d8cb09f54e4bbbcd49e",
+      "peak": 0.4817078411579132
+    },
+    {
+      "sample_rate": 48000,
+      "frequency": 1000,
+      "gain": 0.5,
+      "gate_mode": 1,
+      "frames": 96000,
+      "file": "48000-1000-0.5-1.bin",
+      "sha256": "3df54843d1294b25f1009513f156dcbeaf5cb817488b8eac6d979bf57e3a1a5a",
+      "peak": 0.48155826330184937
+    },
+    {
+      "sample_rate": 48000,
+      "frequency": 4000,
+      "gain": 0.5,
+      "gate_mode": 1,
+      "frames": 96000,
+      "file": "48000-4000-0.5-1.bin",
+      "sha256": "780d6666e6c66dd9dca42d6be3db9e6fe033a7db93ee2612bc0b1749e674834f",
+      "peak": 0.4770278334617615
+    },
+    {
+      "sample_rate": 48000,
+      "frequency": 8000,
+      "gain": 0.5,
+      "gate_mode": 1,
+      "frames": 96000,
+      "file": "48000-8000-0.5-1.bin",
+      "sha256": "c25f3f6272d6362e857a6ec95e042a0170830040c115a8392387f2db86a8ee44",
+      "peak": 0.4641016125679016
+    },
+    {
+      "sample_rate": 48000,
+      "frequency": 110,
+      "gain": 0.25,
+      "gate_mode": 1,
+      "frames": 96000,
+      "file": "48000-110-0.25-1.bin",
+      "sha256": "25eae8edbe11e3716383933447b587f9d21b9ebd2466437aa2921b1bbd44b5d5",
+      "peak": 0.24093097448349
+    },
+    {
+      "sample_rate": 48000,
+      "frequency": 110,
+      "gain": 0.0,
+      "gate_mode": 1,
+      "frames": 96000,
+      "file": "48000-110-0.0-1.bin",
+      "sha256": "9b8af274fc8d3b642807d5d084c81b721b42c070e3119eca5f77b9c771794e5f",
+      "peak": 0.0
+    },
+    {
+      "sample_rate": 48000,
+      "frequency": 110,
+      "gain": 0.5,
+      "gate_mode": 0,
+      "frames": 96000,
+      "file": "48000-110-0.5-0.bin",
+      "sha256": "351a8054b23144894668c6a51d5dbba82f56523ef43cc45b6f4d7060a969c31a",
+      "peak": 0.0
+    },
+    {
+      "sample_rate": 96000,
+      "frequency": 20,
+      "gain": 0.5,
+      "gate_mode": 1,
+      "frames": 192000,
+      "file": "96000-20-0.5-1.bin",
+      "sha256": "150dcd6e8b7164bfe454f2051c7c4298db9c8a051d40776cea9f3f885a274257",
+      "peak": 0.5586801767349243
+    },
+    {
+      "sample_rate": 96000,
+      "frequency": 50,
+      "gain": 0.5,
+      "gate_mode": 1,
+      "frames": 192000,
+      "file": "96000-50-0.5-1.bin",
+      "sha256": "4c82fb4f985816d168e5f86a63a83fec0f744a71a9cd5e7e02c7753c6d29a480",
+      "peak": 0.5285986661911011
+    },
+    {
+      "sample_rate": 96000,
+      "frequency": 110,
+      "gain": 0.5,
+      "gate_mode": 1,
+      "frames": 192000,
+      "file": "96000-110-0.5-1.bin",
+      "sha256": "f2b394ed464a0446aa1086c07467c00e7922566fb22f274b98da7e752758ed3b",
+      "peak": 0.5249042510986328
+    },
+    {
+      "sample_rate": 96000,
+      "frequency": 440,
+      "gain": 0.5,
+      "gate_mode": 1,
+      "frames": 192000,
+      "file": "96000-440-0.5-1.bin",
+      "sha256": "cd1f4efde184f426e8c8699ce6fb4aa59e0def6436d8c9100879bdd65558dac0",
+      "peak": 0.475352019071579
+    },
+    {
+      "sample_rate": 96000,
+      "frequency": 1000,
+      "gain": 0.5,
+      "gate_mode": 1,
+      "frames": 192000,
+      "file": "96000-1000-0.5-1.bin",
+      "sha256": "634fb8f7bad2de6df5293fc25c0ee37b92cbe7c548162e81aaf1f3484e8cb865",
+      "peak": 0.4816528856754303
+    },
+    {
+      "sample_rate": 96000,
+      "frequency": 4000,
+      "gain": 0.5,
+      "gate_mode": 1,
+      "frames": 192000,
+      "file": "96000-4000-0.5-1.bin",
+      "sha256": "0601c6c97d4fb59e85963f4b76f25c78d537a3323379eea54518b86529593eef",
+      "peak": 0.47930705547332764
+    },
+    {
+      "sample_rate": 96000,
+      "frequency": 8000,
+      "gain": 0.5,
+      "gate_mode": 1,
+      "frames": 192000,
+      "file": "96000-8000-0.5-1.bin",
+      "sha256": "c6c91f473a4719064c49755a65f51ec64fee050c7918da1ba9187ebbb1c70b13",
+      "peak": 0.47701358795166016
+    },
+    {
+      "sample_rate": 96000,
+      "frequency": 110,
+      "gain": 0.25,
+      "gate_mode": 1,
+      "frames": 192000,
+      "file": "96000-110-0.25-1.bin",
+      "sha256": "14bbc3e4ca9d072d753d8a27f5dae2c54656bd1e46948cb4551787c2b48fcddf",
+      "peak": 0.2624521255493164
+    },
+    {
+      "sample_rate": 96000,
+      "frequency": 110,
+      "gain": 0.0,
+      "gate_mode": 1,
+      "frames": 192000,
+      "file": "96000-110-0.0-1.bin",
+      "sha256": "f1cbfa1e11bfd79a44861927a03cd66612c6c09cb8cedd4c674be10caaa7e198",
+      "peak": 0.0
+    },
+    {
+      "sample_rate": 96000,
+      "frequency": 110,
+      "gain": 0.5,
+      "gate_mode": 0,
+      "frames": 192000,
+      "file": "96000-110-0.5-0.bin",
+      "sha256": "626db8bea999709c8faead0ec9d60025604676fcc44130abe6c1168b90989b3b",
+      "peak": 0.0
+    },
+    {
+      "sample_rate": 192000,
+      "frequency": 20,
+      "gain": 0.5,
+      "gate_mode": 1,
+      "frames": 384000,
+      "file": "192000-20-0.5-1.bin",
+      "sha256": "1adc5e69a2e38b947a6b507fa0d663d0fe8ea4674beaf20c0e75383332d3c917",
+      "peak": 0.5586802363395691
+    },
+    {
+      "sample_rate": 192000,
+      "frequency": 50,
+      "gain": 0.5,
+      "gate_mode": 1,
+      "frames": 384000,
+      "file": "192000-50-0.5-1.bin",
+      "sha256": "b7ebba9562fbb64c01e1950f4ad5d7794c36adb4e0644ef602bbbe2e2252cc80",
+      "peak": 0.5285987257957458
+    },
+    {
+      "sample_rate": 192000,
+      "frequency": 110,
+      "gain": 0.5,
+      "gate_mode": 1,
+      "frames": 384000,
+      "file": "192000-110-0.5-1.bin",
+      "sha256": "a580a9b0517ed30fd9e64e1fc94fdaf02d4fa6cc61877c40eb305e2b78bfe0cf",
+      "peak": 0.4744192957878113
+    },
+    {
+      "sample_rate": 192000,
+      "frequency": 440,
+      "gain": 0.5,
+      "gate_mode": 1,
+      "frames": 384000,
+      "file": "192000-440-0.5-1.bin",
+      "sha256": "46520cb7fcb60a0f7bc8d549b3a05935a0532ee416fbcec3813e6f5ef0ba5094",
+      "peak": 0.46199458837509155
+    },
+    {
+      "sample_rate": 192000,
+      "frequency": 1000,
+      "gain": 0.5,
+      "gate_mode": 1,
+      "frames": 384000,
+      "file": "192000-1000-0.5-1.bin",
+      "sha256": "873399a62baead770210a5c1036457e1ab57654e35f217fa6011a69391657147",
+      "peak": 0.4816854000091553
+    },
+    {
+      "sample_rate": 192000,
+      "frequency": 4000,
+      "gain": 0.5,
+      "gate_mode": 1,
+      "frames": 384000,
+      "file": "192000-4000-0.5-1.bin",
+      "sha256": "397f949f07c9fcbbc73504caa2bbab27dfb75a5d869e751afbcf132a3737104c",
+      "peak": 0.4798312187194824
+    },
+    {
+      "sample_rate": 192000,
+      "frequency": 8000,
+      "gain": 0.5,
+      "gate_mode": 1,
+      "frames": 384000,
+      "file": "192000-8000-0.5-1.bin",
+      "sha256": "680b25722215e83495fe0e13428ed40381f5462a78c8320cb197a5df8a21e435",
+      "peak": 0.4793000817298889
+    },
+    {
+      "sample_rate": 192000,
+      "frequency": 110,
+      "gain": 0.25,
+      "gate_mode": 1,
+      "frames": 384000,
+      "file": "192000-110-0.25-1.bin",
+      "sha256": "a65c46e8c33348f608efcc8554897019f15a6e3b3e26d5c5c3d95a3dab1bf402",
+      "peak": 0.23720964789390564
+    },
+    {
+      "sample_rate": 192000,
+      "frequency": 110,
+      "gain": 0.0,
+      "gate_mode": 1,
+      "frames": 384000,
+      "file": "192000-110-0.0-1.bin",
+      "sha256": "5ddf2689a00b1caf236b545691f9b6f1b6939cce604d22ddfab343e5aa819182",
+      "peak": 0.0
+    },
+    {
+      "sample_rate": 192000,
+      "frequency": 110,
+      "gain": 0.5,
+      "gate_mode": 0,
+      "frames": 384000,
+      "file": "192000-110-0.5-0.bin",
+      "sha256": "76ed5c9c326ba62322d464a22d3fcf7b76c7352c6d33badc36ccea7a33325e97",
+      "peak": 0.0
+    }
+  ],
+  "gain_linearity": "float32-rounded half amplitude at110Hz across four rates",
+  "scope": "two-second two-gate histories; seven static frequencies including original endpoints; native single precision only",
+  "admission": "NOT_GRANTED",
+  "independent_verification": {
+    "status": "PASS",
+    "cases": 40,
+    "archive_sha256": "e2b8b1820b2bd5420ad8296538aa58ce137aabf981c30c5e0941821824f024f1",
+    "oracle_precision": "Half-amplitude comparison explicitly rounds to float32, including subnormals."
+  }
+}

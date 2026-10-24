@@ -1,5 +1,112 @@
 # BlackDog implementation backlog
 
+## Qualification recovery workstream (proposed 2026-10-23)
+
+Governing spec: [qualification recovery](docs/specs/qualification-recovery-2026-10-23.md). These are planning tasks, not evidence of completion or training approval. Preserve S1-S7 and existing historical dispositions.
+
+| ID | Priority | Task | Depends on | Exit evidence | Status |
+| --- | --- | --- | --- | --- | --- |
+| QR-01 | P0 | Reconcile PR #112/#113/#114/#76/#73 and review #33; inspect overlap, review threads, SHA-bound CI and merge order | current main | PR matrix, regression and mutation results | In progress: #112/#114/#113/#76/#73 integrated on recovery branch; #73 provisional-freeze correction and three #113 findings fixed; integration CI passed at `0cc1a0c` (1,000 tests); independent review pending |
+| QR-02 | P1 | Complete reward TaskSpec boundary and negative tests for #76 | QR-01 | reward/diagnostic separation and frozen profile verification | In progress: TaskSpec validation/binding, whole-suite preflight and sealed-native propagation implemented; 90 focused reward tests pass; pinned Linux CI passed at `0cc1a0c`; independent review pending |
+| QR-03 | P0 | Generate canonical source-eligibility ledger and full 1,430-unit accounting | S1/S2 receipts | checksum, unique-unit and denominator reconciliation | In progress: hash-bound replay and accounting report implemented; real off-host batch and approval semantics not yet verified |
+| QR-04 | P0 | Resolve remaining dependency/notice closures and family/leakage splits | QR-03 | independent scoped approvals and reproducible negative checks | Blocked: rights/review |
+| QR-05 | P0 | Clear two host projects and ratify fixed gold/FLOOR protocol | QR-03, QR-04 | host rights, disjoint families, gold/label receipt | Blocked: host approvals |
+| QR-06 | P0 | Establish independent private author and custody; execute FLOOR; assemble S7 dossier | QR-05 | human-only access proof, both-host metrics, PASS/FAIL/BLOCKED | Blocked: human custody |
+| QR-07 | P1 | Qualify repaired isolated Spark candidate with approved local model and checkpoint probes | operator/model approval | pinned provenance, VRAM/throughput and restore receipts | Blocked: Spark unavailable here; approved pinned Qwen candidate recorded, formal representative replay pending |
+| QR-08 | P1 | Implement tiered static/compiler/signal/independent evaluation reporting | QR-01, QR-02 | mutation-backed guards and immutable stage receipts | In progress: canonical rights/blob, compiler and both-rate diagnostic stages emit chained receipts and fail early; independent replay adapter and real sandbox execution pending |
+| QR-09 | P0 | Implement automated readiness report and exception-only owner queue; preserve fail-closed red gates | QR-03 | one-command evidence/blocked-action report with hashes | In progress: typed integrity checks plus canonical signed-snapshot replay/export implemented; T07/family gates require an external trusted key and exact scope; other semantic/authority adapters remain pending |
+| QR-10 | P1 | Define synthetic diagnostic and small rights-cleared pilot training lanes; reconcile canonical training gates | QR-07, QR-09 | bounded pilot plan, isolation tests and one approval packet | In progress: bounded recipe, signed-snapshot source preparation and completion-only batch encoder implemented; qualified instruction pairs, real snapshot/model replay and authorized launcher remain pending |
+
+## Recovery implementation checkpoint
+
+OBSERVED: recovery branch integrates the five input PR heads without textual
+conflicts. No PR was merged into main. See
+[execution runbook](docs/runbooks/qualification-recovery-execution.md).
+
+- 336 focused regressions passed; 53 portable diagnostic checks passed (14
+  hardware-dependent checks deselected), including ten compiled worker fixtures.
+- Final focused reward checks: 90 passed, two namespace-dependent checks
+  deselected. All nine targeted guard-removal mutants were killed.
+- Full regression invocation: 787 passed, 154 failed, two skipped. This is not a
+  green suite: the workspace denies namespace mapping and sudo/ownership
+  operations required by compiler and credential tests; native Faust is absent.
+  Subsequent compiler-provenance checks passed the focused reward suite.
+- Spec Kit and changed-document Markdown lint pass. PR #115's prior Markdown
+  failure is repaired locally; fresh remote CI remains required.
+- Off-host batch/approval payloads and Spark are unavailable here. The real
+  denominator, qualification dossier, approved snapshot, signed T07, T08,
+  representative model qualification and pilot authorization remain unverified.
+- QR-04/05/06 remain open. QR-08 now has a diagnostic staged reporter; the
+  independent adapter remains blocked, so it is not a qualified evaluation result.
+- QR-08 follow-up: 135 focused tests passed (one sandbox integration deselected);
+  all three funnel guard-removal mutants killed. Independent replay remains blocked.
+- Actual training: technical readiness NOT VERIFIED, authorization NOT VERIFIED.
+  A recipe with null dataset/split bindings is not permission or an executable
+  production training configuration. No model downloads or training ran here.
+
+## Signed-snapshot semantic replay checkpoint
+
+OBSERVED: published integration `9ed7fc8` passed all eight CI checks with 945
+runtime tests; published funnel head `092e324` passed all eight with 959 tests.
+The follow-up readiness adapter passed 434 focused/broad regressions and killed
+all eight targeted guard-removal mutants. Spec Kit and changed-document lint
+passed; published semantic head `0cc1a0c` passed the complete CI runtime suite
+(1,000 tests). It reuses signed snapshots
+and existing decisions;
+it never converts fixture evidence or a self-declared PASS into training approval.
+Real off-host snapshot/approval stores and Spark remain unavailable in this
+workspace. Production T07, baseline and training gates remain unverified.
+
+## Bounded pilot preparation checkpoint
+
+OBSERVED: the public signed-snapshot exporter passes 183 related preparation,
+readiness, snapshot, split, rights and accounting regressions. Eight targeted
+guard-removal mutants are killed, including exact descriptor scope binding.
+Spec Kit and changed-document lint pass. Fresh-head CI remains required after
+publication. No real off-host source snapshot was consumed and no training ran.
+The preparation manifest reports remaining qualification/authorization blockers;
+source-only JSONL does not supply the pending instruction-pair contract.
+
+## Completion-only batch checkpoint
+
+OBSERVED: completion-only encoding passed 252 related regressions, then 45
+final focused checks after adding defensive tokenizer-buffer copying. Eight
+targeted mutants were killed across masking, EOS, target integrity, length,
+special-token, duplicate-ID and causal-boundary guards. Spec Kit and changed-doc
+lint pass. The bounded proposal now declares the encoding, right padding,
+no packing and rejection of oversized examples. No model was loaded or trained;
+semantic instruction-pair qualification and training authorization remain open.
+Published preparation head `40dbba7` passed the complete CI runtime suite:
+1,026 tests in 236.82 seconds. Fresh encoding-head CI is still required.
+
+## Public receipt and instruction-pair checkpoint
+
+OBSERVED: public-pair readiness replay verifies 29 exact public payloads for
+seven candidate pairs. Source, original behavior contract, dossier, revision,
+Git blob, scoped closure decisions and MIT/imported notices are joined without
+rewriting historical receipts. The approved import correction is a separately
+bound prompt overlay. Candidate pairs remain outside Git and unpartitioned.
+
+The adapter passes 52 focused tests and catches all nine targeted mutants.
+All 213 related regressions passed; fresh current-head CI remains required.
+No source-rights, signed-split, dataset-admission or training gate is cleared.
+Qualified pairs: zero. Remaining work: canonical Example admission, signed
+partition membership, prompt semantic validation, compiler/signal replay and
+real-tokenizer bounds. Existing family restrictions remain; no training ran.
+
+## Exact-tokenizer and bounded runtime replay checkpoint
+
+OBSERVED: all seven public candidates pass the pinned Qwen tokenizer preflight
+at 130-379 tokens, with no truncation or implicit formatting. Their token IDs
+match the existing offline Spark Transformers tokenizer exactly. Readiness now
+replays this check and removes only the tokenizer subcheck, not admission gates.
+
+Local numerical replay verified 1,129 archive payloads and recomputed 98 preserved
+cases/554 states, including rejection of all 14 compiled-mutant cases. This is
+bounded raw-sample replay, not fresh compiler execution or independent human
+review. Canonical Example admission, signed partition membership and complete
+prompt/runtime qualification remain pending; qualified pairs remain zero.
+
 ## Current milestone: qualification sprint
 
 [Ten-working-day sprint](docs/runbooks/qualification-sprint.md): one consolidated
@@ -430,3 +537,75 @@ Mirrors the decision items on the [project board](https://github.com/orgs/Zero-S
 | Q4 | ADR-0002 accepted in full (Jev's default; Danny may still choose P3 PROPOSED); only the ~5M-token threshold ratified | ACCEPTED 2026-10-17 7:40 PM PT (Jev; Danny "use jev to make decisions" 7:37 PM PT) | docs/adr/0002, spec §24 verbatim |
 | D3-H2 | Sampled rerun audit rules (spec §26 0.3.9) | ACCEPTED 2026-10-18 8:10 AM PT (Danny, "Approve the §26 0.3.9 amendment as recommended"). Implemented in #57 (`63aac31`) and the follow-ups in Done | [danny-d3h2-audit-2026-10-18.md](docs/decisions/danny-d3h2-audit-2026-10-18.md), spec §26 |
 | D3-H2-C | Human triage credential (spec §26 0.3.10) | ACCEPTED as spec text 2026-10-18 5:11 PM PT (Danny, "approved the BlackDog §26 option C spec amendment with ADVERSARY's defaults"), #66 (`fab50c2`). Implementation merged in #71 (`cf319f3`); follow-ups remain open. Later ruling 2026-10-18 5:45 PM PT, issue #68: a software key is fine for Danny's key | [danny-d3h2-option-c-2026-10-18.md](docs/decisions/danny-d3h2-option-c-2026-10-18.md), spec §26, issues #64 and #68 |
+
+### Issue #108 bounded harness amendment
+
+Owner approved spec §27 / ADR-0008 and bounded implementation on 2026-10-22 PT.
+Review implementation: per-block controls, per-input deterministic stimuli and
+expected-zero cases guarded by runner-executed nonzero companions. Legacy reward
+profile digests remain frozen; enabled cases are diagnostic-only. Validation and
+remaining CI status belong to the separate review PR. No host/production admission;
+TOKEN_FLOOR=40 provisional; T07 unfrozen. Experimental evidence stays outside Git.
+
+## QR-03 saved-signal adapter
+
+- Implemented strict public sample descriptors and advisory readiness replay.
+- Reverified 98 cases / 554 states / 14 mutant rejections from 506 referenced
+  payloads; source archives and samples remain outside Git.
+- Compiler provenance, independent semantics, canonical admission and signed
+  partitions remain pending; no training authorization.
+
+## QR-03 recorded-family feasibility
+
+- Reconstructed all 1,449 recorded identities and 12 components; seven selected
+  candidates occupy one family. Readiness now reports the specific split blocker.
+- Fresh Spark checks passed seven native compiles, 42 positive runs and 14
+  wrong-reference controls; 63 receipt hashes verified locally.
+- 117 outside-family inventory units remain unqualified. No admission, signed
+  partition, independent semantic approval or training authorization inferred.
+
+## QR-10 outside-family inventory
+
+- Replayed all 117 source hashes and the accounting-bound candidate ledger.
+- Twelve self-contained definitions passed bounded diagnostics and tokenization;
+  one attempted helper alias failed native compilation and remains blocked.
+- All four evaluation-eligible aliases have proposed large-family dependencies;
+  113 inventory rows remain training-only. Readiness reports inventory qualification
+  separately from the selected-family split blocker. No admission or T07 freeze.
+
+## QR-10 closure and evaluation search
+
+- Decimal/frac now has a passing explicit diagnostic closure and omitted-helper
+  rejection; its training-only and family restrictions remain.
+- Four evaluation aliases have exact local-member bindings and named external
+  closure frontiers. Five new public candidates passed bounded diagnostics but
+  remain comparison-connected in the unchanged detector's expanded screen.
+- No independent evaluation candidate established; no admission or T07 freeze.
+
+## External dependency checkpoint
+
+62 diagnostic receipts verified; peak-envelope and N=64 Goertzel checks passed, N=16 failed fixed tolerance. 13 interfaces compile on both backends. Member eligibility now intersects dependencies. Rights, minimal analyzer/elliptic closures, independent family evidence and signed readiness remain blocked. See [review](docs/analysis/external-dependency-readiness-2026-10-23.md).
+
+## Numerical and graph checkpoint
+
+Missing wrapper join evidence fixed; full active graph replays without assignment changes. Authored Goertzel DC repair passes 18 positive and 18 wrong-reference controls; original failure preserved. Source admission, analyzer/elliptic closures and reviewed split policy remain blocked.
+
+## Analyzer closure checkpoint
+
+Four standalone closures compile; 81 omissions reject. 53/54 positive numerical checks pass with one low-pass boundary failure; all 54 wrong references reject. Goertzel fits 414 tokens but remains comparison-connected/unadmitted. Four larger closures exceed 512 tokens. See [qualification](docs/analysis/analyzer-closure-qualification-2026-10-23.md).
+
+## Low-pass and meter checkpoint
+
+132 receipts verified. Explicit TPT low-pass alternative passes the bounded sweep; default direct-form failure remains. Controlled-band meter chain passes meter-specific negatives; full sine-meter comparison remains blocked. Four modular target proposals fit 106–313 tokens but require a reviewed dependency-supplied contract.
+
+## Precision and modular replay checkpoint
+
+Original low-pass/spectral definitions pass isolated double diagnostics; production float32 failures remain. Four modular contracts structurally replay their compiled harnesses and fit 154–355 tokens with explicit interfaces. 318 focused tests pass. Rights, independent semantics/families and signed readiness remain blocked.
+
+## Float32 and modular semantics checkpoint
+
+Separate ladder low-pass candidate passes 18 positive/18 wrong-reference cases in production float32; spectral sine failures persist. Fifteen controlled modular fixtures pass 90 positive/90 negative cases. Five notices added, four internal helper rights unresolved. Both ladder closures remain comparison-connected. Readiness gates remain unverified; see docs/analysis/float32-modular-semantics-2026-10-23.md.
+
+## Spectral localization checkpoint
+
+Middle-band float32 error localized with 48 hash-verified captures; all six section orders still fail. Exact predecessor-body identity resolves two elliptic helper notices; `fi._tanhalf` and `fi._tpt_df` remain unresolved. Readiness remains blocked. See docs/analysis/spectral-localization-2026-10-23.md.

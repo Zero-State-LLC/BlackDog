@@ -1,0 +1,56 @@
+{
+  "source_sha256": "d4fdfcc5b44cb5d9d4a5ecf98fdec76c88376410dcc574811b2b4e45f10e075e",
+  "target_sha256": "e53eb44125c66681b6d413aa7578d83cd4d3c15e81eef1ca68d8a7a5632e11da",
+  "direct_dependency_spans": [
+    {
+      "symbol": "ds.r",
+      "span": [
+        543,
+        571
+      ],
+      "source_sha256": "d0c17fe8839e91855f919d1a6771a90f77d37e87df03fe60effedd4d498a84fb",
+      "text": "r(x)=max(-1e30,min(1e30,x));",
+      "scope": "ds environment, not cutctl"
+    },
+    {
+      "symbol": "ds.renorm",
+      "span": [
+        915,
+        951
+      ],
+      "source_sha256": "745ac7c5a33731f3ddce8d22d0fa74d350b3ad119ba851ae056d7633f2b60c54",
+      "text": "renorm(s,e)=r(s+e),r(e-r(r(s+e)-s));",
+      "scope": "ds environment, not cutctl"
+    }
+  ],
+  "library_dependencies_of_target": [],
+  "primitive_dependencies": [
+    "max",
+    "min",
+    "arithmetic and composition operators"
+  ],
+  "integration_calls": [
+    {
+      "byte": 3588,
+      "line": 56
+    },
+    {
+      "byte": 3706,
+      "line": 58
+    },
+    {
+      "byte": 3776,
+      "line": 59
+    },
+    {
+      "byte": 3911,
+      "line": 61
+    }
+  ],
+  "limitations": [
+    "Direct helper dependency closure is not the full supplied context rights closure",
+    "Pinned source contains an historical comment naming 44100/48000 only; retained later four-rate evidence governs diagnostic scope, and source bytes are unchanged",
+    "Native product probes do not replace compiler provenance or independent human semantic review"
+  ],
+  "admission": "NOT_GRANTED"
+}

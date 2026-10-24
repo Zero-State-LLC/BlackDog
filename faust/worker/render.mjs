@@ -157,7 +157,7 @@ async function main() {
   const blockSize = request.block_size;
   const frames = request.frames;
   const stimuli = request.stimuli;
-  if (sampleRate !== 44100 && sampleRate !== 48000) failClosed("sample_rate is not 44100 or 48000");
+  if (![8000, 32000, 44100, 48000, 88200, 96000, 192000].includes(sampleRate)) failClosed("unsupported sample_rate");
   if (!Number.isInteger(blockSize) || blockSize < 1 || blockSize > 4096) {
     failClosed("block_size is out of range");
   }
@@ -217,6 +217,7 @@ async function main() {
   let inputCount = 0;
   let outputCount = 0;
   let buttonAddresses = [];
+  let diagnosticInfo;
   try {
     for (const name of stimuli) {
       const started = performance.now();
@@ -225,7 +226,22 @@ async function main() {
       outputCount = processor.getNumOutputs();
       buttonAddresses = buttonsOf(processor);
       const mono = readMono(workdir, name, frames);
-      const channels = renderOne(processor, mono, frames, blockSize, buttonAddresses, pressFirst);
+      let channels;
+      if (request.diagnostic_case !== undefined) {
+        const { validateDiagnostic, renderDiagnostic } = await import("./diagnostic-cases.mjs");
+        const spec = request.diagnostic_case;
+        const descriptors = processor.getDescriptors() || [];
+        validateDiagnostic(spec, descriptors, frames, blockSize, inputCount, pressFirst);
+        const channelInputs = spec.input_stimuli === null
+          ? Array.from({length: inputCount}, () => mono)
+          : spec.input_stimuli.map((_, i) => readMono(workdir, `channel-${i}`, frames));
+        const rendered = renderDiagnostic(processor, channelInputs, frames, blockSize, buttonAddresses, pressFirst, spec.controls);
+        channels = rendered.channels;
+        diagnosticInfo ??= {spec, descriptors, applied_controls: {}};
+        diagnosticInfo.applied_controls[name] = rendered.applied;
+      } else {
+        channels = renderOne(processor, mono, frames, blockSize, buttonAddresses, pressFirst);
+      }
       const fileName = `out-${name}.f32`;
       writeFileSync(join(workdir, fileName), planarBytes(channels));
       written.push(name);
@@ -274,6 +290,7 @@ async function main() {
     stimuli: written,
     buttons: buttonAddresses,
     stimulus_ms: stimulusMs,
+    ...(diagnosticInfo === undefined ? {} : {diagnostic_case: diagnosticInfo}),
   });
 }
 

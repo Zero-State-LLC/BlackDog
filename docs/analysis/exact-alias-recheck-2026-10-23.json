@@ -1,0 +1,9 @@
+{
+  "raw_unconnected_units": 117,
+  "all_below_token_floor": true,
+  "eval_rights_candidates": 4,
+  "eval_candidates_all_have_comparison_dependencies": true,
+  "prior_audit_sha256": "15bd3b8fa36ce4a8c55f11ed690dd350758d35d194ffbc42a56a263c1e22c90e",
+  "current_family_mapping_sha256": "2be750163f04c63c9e6aa59e1f846d39f6de73f8acde9120feba1597428c8e13",
+  "admission": "NOT_GRANTED"
+}

@@ -1,0 +1,41 @@
+{
+  "cases": [
+    {
+      "case": "live-controls-switch-alternating",
+      "passed": 12,
+      "failed": [],
+      "negative_rejections": 12,
+      "filter_only_strict_rejections": null,
+      "max_meter_error_db": 0.0012516975402832031,
+      "max_tolerance_ratio": 0.7014679760628663,
+      "compile_ms_range": [
+        3744,
+        4085
+      ],
+      "render_ms_range": [
+        595,
+        620
+      ]
+    },
+    {
+      "case": "live-controls-switch-threshold-walk",
+      "passed": 12,
+      "failed": [],
+      "negative_rejections": 12,
+      "filter_only_strict_rejections": null,
+      "max_meter_error_db": 0.0012636184692382812,
+      "max_tolerance_ratio": 0.7091431742808595,
+      "compile_ms_range": [
+        3781,
+        4085
+      ],
+      "render_ms_range": [
+        559,
+        583
+      ]
+    }
+  ],
+  "archive_sha256": "80032ee9224709224b3520e7379ee2c2f80bd694cbdfbd356ffb4a837852a31b",
+  "admission": "NOT_GRANTED",
+  "native_max_abs_error": 2.8900155490951818e-08
+}

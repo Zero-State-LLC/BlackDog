@@ -1,0 +1,266 @@
+[
+  {
+    "returncode": 0,
+    "stdout": "",
+    "stderr": "",
+    "label": "live",
+    "source_sha256": "f2b8c4f511cff6d234fe97b74785b31efd9912fa36f47590bd67677813329c97",
+    "command": [
+      "faust",
+      "-single",
+      "-ftz",
+      "0",
+      "/home/delphi/blackdog-pair-qualification-m8e1n43a/paired-crossover-live.dsp",
+      "-o",
+      "/home/delphi/blackdog-pair-qualification-m8e1n43a/crossover-compile-audit/live.hpp"
+    ],
+    "elapsed_s": 5.388759740162641,
+    "header_sha256": "f1cb34a4f61f0349f846da8dae727d1b5b371e4d718bad3f6e5a4a08a8929a6c",
+    "limits": {
+      "cpu_s": 20,
+      "address_space_bytes": 1073741824,
+      "file_bytes": 16777216,
+      "wall_s": 30
+    }
+  },
+  {
+    "returncode": -6,
+    "stdout": "",
+    "stderr": "terminate called after throwing an instance of 'std::bad_alloc'\n  what():  std::bad_alloc\n",
+    "label": "full-live",
+    "source_sha256": "05bcd74a49fae6c69dae5ac9553a615f81a4c15068b5f509d611058c19810c38",
+    "command": [
+      "faust",
+      "-single",
+      "-ftz",
+      "0",
+      "/home/delphi/blackdog-pair-qualification-m8e1n43a/paired-crossover-full-live.dsp",
+      "-o",
+      "/home/delphi/blackdog-pair-qualification-m8e1n43a/crossover-compile-audit/full-live.hpp"
+    ],
+    "elapsed_s": 4.03913759579882,
+    "header_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "limits": {
+      "cpu_s": 20,
+      "address_space_bytes": 1073741824,
+      "file_bytes": 16777216,
+      "wall_s": 30
+    }
+  },
+  {
+    "returncode": -6,
+    "stdout": "",
+    "stderr": "terminate called after throwing an instance of 'St9bad_alloc'\n  what():  std::bad_alloc\n",
+    "label": "tangent-live",
+    "source_sha256": "c1c45c1a496a0da733528f46daaa340f55ecc49417da9714335c1a4814bcd4fd",
+    "command": [
+      "faust",
+      "-single",
+      "-ftz",
+      "0",
+      "/home/delphi/blackdog-pair-qualification-m8e1n43a/paired-crossover-tangent-live.dsp",
+      "-o",
+      "/home/delphi/blackdog-pair-qualification-m8e1n43a/crossover-compile-audit/tangent-live.hpp"
+    ],
+    "elapsed_s": 4.619909410364926,
+    "header_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "limits": {
+      "cpu_s": 20,
+      "address_space_bytes": 1073741824,
+      "file_bytes": 16777216,
+      "wall_s": 30
+    }
+  },
+  {
+    "returncode": -6,
+    "stdout": "",
+    "stderr": "terminate called after throwing an instance of 'std::bad_alloc'\n  what():  std::bad_alloc\n",
+    "label": "unit-live",
+    "source_sha256": "4e85d72f4d76a62ff7c4a8ea56e19cd31fdfef38f6c587c25804e2667d819459",
+    "command": [
+      "faust",
+      "-single",
+      "-ftz",
+      "0",
+      "/home/delphi/blackdog-pair-qualification-m8e1n43a/paired-crossover-unit-live.dsp",
+      "-o",
+      "/home/delphi/blackdog-pair-qualification-m8e1n43a/crossover-compile-audit/unit-live.hpp"
+    ],
+    "elapsed_s": 4.823878930415958,
+    "header_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "limits": {
+      "cpu_s": 20,
+      "address_space_bytes": 1073741824,
+      "file_bytes": 16777216,
+      "wall_s": 30
+    }
+  },
+  {
+    "returncode": -6,
+    "stdout": "",
+    "stderr": "terminate called after throwing an instance of 'St9bad_alloc'\n  what():  std::bad_alloc\n",
+    "label": "stream-live",
+    "source_sha256": "f806aeca5c96ba53844f15f1458b43d1e0d9b214f33767f5f62e4041cedad9ce",
+    "command": [
+      "faust",
+      "-single",
+      "-ftz",
+      "0",
+      "/home/delphi/blackdog-pair-qualification-m8e1n43a/paired-crossover-stream-live.dsp",
+      "-o",
+      "/home/delphi/blackdog-pair-qualification-m8e1n43a/crossover-compile-audit/stream-live.hpp"
+    ],
+    "elapsed_s": 4.851408060640097,
+    "header_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "limits": {
+      "cpu_s": 20,
+      "address_space_bytes": 1073741824,
+      "file_bytes": 16777216,
+      "wall_s": 30
+    }
+  },
+  {
+    "returncode": -6,
+    "stdout": "",
+    "stderr": "terminate called after throwing an instance of 'std::bad_alloc'\n  what():  std::bad_alloc\n",
+    "label": "rational-live",
+    "source_sha256": "c44c30461202c61e39dae717718a0f819672dca861807303bae48ee6b04b0c55",
+    "command": [
+      "faust",
+      "-single",
+      "-ftz",
+      "0",
+      "/home/delphi/blackdog-pair-qualification-m8e1n43a/paired-crossover-rational-live.dsp",
+      "-o",
+      "/home/delphi/blackdog-pair-qualification-m8e1n43a/crossover-compile-audit/rational-live.hpp"
+    ],
+    "elapsed_s": 4.769970059860498,
+    "header_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "limits": {
+      "cpu_s": 20,
+      "address_space_bytes": 1073741824,
+      "file_bytes": 16777216,
+      "wall_s": 30
+    }
+  },
+  {
+    "returncode": 0,
+    "stdout": "",
+    "stderr": "",
+    "label": "hybrid-live",
+    "source_sha256": "30320cf0db2a1dc461232c9bcb973f0aa953480513de3ec24d95ee11a68c618b",
+    "command": [
+      "faust",
+      "-single",
+      "-ftz",
+      "0",
+      "/home/delphi/blackdog-pair-qualification-m8e1n43a/paired-crossover-hybrid-live.dsp",
+      "-o",
+      "/home/delphi/blackdog-pair-qualification-m8e1n43a/crossover-compile-audit/hybrid-live.hpp"
+    ],
+    "elapsed_s": 3.609701991081238,
+    "header_sha256": "1590e634893370e4e9ac391ddb132a7bcf58e482d4f123c7b3898030c2a0c974",
+    "limits": {
+      "cpu_s": 20,
+      "address_space_bytes": 1073741824,
+      "file_bytes": 16777216,
+      "wall_s": 30
+    }
+  },
+  {
+    "returncode": 0,
+    "stdout": "",
+    "stderr": "",
+    "label": "meter-live",
+    "source_sha256": "e29850b5aaaa0ffaf2f7d19dd5d7f9c2036fec7e2c015d116c5f6ed4eb31334a",
+    "command": [
+      "faust",
+      "-single",
+      "-ftz",
+      "0",
+      "/home/delphi/blackdog-pair-qualification-m8e1n43a/paired-crossover-meter-live.dsp",
+      "-o",
+      "/home/delphi/blackdog-pair-qualification-m8e1n43a/crossover-compile-audit/meter-live.hpp"
+    ],
+    "elapsed_s": 5.4104790892452,
+    "header_sha256": "abc0054e6f18db4bcaccaa97c19d08a0beb1bb9c4d52550477e9aab6d1de04f8",
+    "limits": {
+      "cpu_s": 20,
+      "address_space_bytes": 1073741824,
+      "file_bytes": 16777216,
+      "wall_s": 30
+    }
+  },
+  {
+    "returncode": 0,
+    "stdout": "",
+    "stderr": "",
+    "label": "product-live",
+    "source_sha256": "1e731b1a2779989252cb93bef5a1e062656f96480d132a851b1ca51fd2dbd589",
+    "command": [
+      "faust",
+      "-single",
+      "-ftz",
+      "0",
+      "/home/delphi/blackdog-pair-qualification-m8e1n43a/paired-crossover-product-live.dsp",
+      "-o",
+      "/home/delphi/blackdog-pair-qualification-m8e1n43a/crossover-compile-audit/product-live.hpp"
+    ],
+    "elapsed_s": 5.389781278092414,
+    "header_sha256": "78d020bcd8d35c143bb1233606b6ab8cada36ea4c36345aa81e9f89a370f13de",
+    "limits": {
+      "cpu_s": 20,
+      "address_space_bytes": 1073741824,
+      "file_bytes": 16777216,
+      "wall_s": 30
+    }
+  },
+  {
+    "returncode": -6,
+    "stdout": "",
+    "stderr": "terminate called after throwing an instance of 'St9bad_alloc'\n  what():  std::bad_alloc\n",
+    "label": "twosum-live",
+    "source_sha256": "200564de6159050dd63542fe50961ab841e6ae737103171b955ab331266ba665",
+    "command": [
+      "faust",
+      "-single",
+      "-ftz",
+      "0",
+      "/home/delphi/blackdog-pair-qualification-m8e1n43a/paired-crossover-twosum-live.dsp",
+      "-o",
+      "/home/delphi/blackdog-pair-qualification-m8e1n43a/crossover-compile-audit/twosum-live.hpp"
+    ],
+    "elapsed_s": 5.9964730138890445,
+    "header_sha256": "8d8d43de8c8912337fcc9e49db697783a368d31cfe4343c84ad3921d39a1132b",
+    "limits": {
+      "cpu_s": 20,
+      "address_space_bytes": 1073741824,
+      "file_bytes": 16777216,
+      "wall_s": 30
+    }
+  },
+  {
+    "returncode": 0,
+    "stdout": "",
+    "stderr": "",
+    "label": "module",
+    "source_sha256": "681b8cd35a651468c8322b8159e54a4bb86730e77d8575d39865bd26cf2170f5",
+    "command": [
+      "faust",
+      "-single",
+      "-ftz",
+      "0",
+      "/home/delphi/blackdog-pair-qualification-m8e1n43a/paired-crossover-module.dsp",
+      "-o",
+      "/home/delphi/blackdog-pair-qualification-m8e1n43a/crossover-compile-audit/module.hpp"
+    ],
+    "elapsed_s": 0.29072950733825564,
+    "header_sha256": "907f4bf6da132e614d6499ccfe9335c9fafc596648dccef5fa1c0553ca27ac77",
+    "limits": {
+      "cpu_s": 20,
+      "address_space_bytes": 1073741824,
+      "file_bytes": 16777216,
+      "wall_s": 30
+    }
+  }
+]

@@ -1,0 +1,14 @@
+{
+  "date": "2026-10-24",
+  "spark_public_scan_sha256": "abe6d64818e92045320a4220dc5276e56371bef6dd0cffa73930233f5349bd25",
+  "spark_changed": false,
+  "gmail_query": "(\"BlackDog\" OR \"FaustCoder\") (\"signed\" OR \"custodian\" OR \"public key\" OR \"T07\" OR \"semantic review\") after:2026/10/23 -from:notifications@github.com",
+  "gmail_matches": 0,
+  "pr115_reviews": 0,
+  "new_authenticated_signed_artifacts_found": 0,
+  "exact_pair_packet_sha256": "8b1fea3f7afb1ddf85bf1fe03047594eaac3cb472774e6c0e9dd9c7c9d1e2467",
+  "readiness_replay_sha256": "3ca0db7ab619ffbd14172275bd1a0a1dd140cba50829118a1d189d5b34e6c0e9",
+  "pilot_ready": false,
+  "training_authorized": false,
+  "limits": "Scoped public searches; no private holdout access; prior semantic and signed membership blockers remain"
+}

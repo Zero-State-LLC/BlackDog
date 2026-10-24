@@ -1,0 +1,94 @@
+{
+  "admission": "NOT_GRANTED",
+  "diagnostic_only": true,
+  "reference_sha256": "c3642f5dc3106899148e3970a6a06020e6d6642d27d7ce94247cc8d0dd17dae5",
+  "rows": [
+    {
+      "control_address": "/input/cutoff_hz",
+      "rate": 48000,
+      "runs": [
+        {
+          "failures": [],
+          "frozen_rejected": true,
+          "max_meter_error_db": 3.5762786865234375e-05,
+          "max_tolerance_ratio": 0.04783093524569065,
+          "negative_receipt": {
+            "path": "48000-noise-frozen-receipt.json",
+            "sha256": "3e2ddff8f5df691d90b6de4200c97e7ce9a969aae5652204f546a42d5d59798a"
+          },
+          "passed": true,
+          "receipt": {
+            "path": "48000-noise-receipt.json",
+            "sha256": "eee41c7215cb7b7a07bee01cb116cddde7e80db12f44efdd7275cf4f4b862407"
+          },
+          "stimulus": "noise",
+          "worst": {
+            "actual": -0.17384596168994904,
+            "channel": 3,
+            "frame": 128,
+            "reference": -0.1738457828760147
+          }
+        },
+        {
+          "failures": [],
+          "frozen_rejected": true,
+          "max_meter_error_db": 0.0002980232238769531,
+          "max_tolerance_ratio": 0.19203721232575943,
+          "negative_receipt": {
+            "path": "48000-impulse-frozen-receipt.json",
+            "sha256": "e7056f3343203f5e99d57f4e5c25ef77eada9212b2362b452ebe45377aabec20"
+          },
+          "passed": true,
+          "receipt": {
+            "path": "48000-impulse-receipt.json",
+            "sha256": "c8e5f9a9628549704500a2a3e4d62be037173fcfbcde7ff83564bd38f1e3493f"
+          },
+          "stimulus": "impulse",
+          "worst": {
+            "actual": -0.5759502649307251,
+            "channel": 3,
+            "frame": 3904,
+            "reference": -0.5759517550468445
+          }
+        },
+        {
+          "failures": [],
+          "frozen_rejected": true,
+          "max_meter_error_db": 0.00016689300537109375,
+          "max_tolerance_ratio": 0.13342064507414267,
+          "negative_receipt": {
+            "path": "48000-sine-frozen-receipt.json",
+            "sha256": "dfa627e6a85a0d28afb123b5ee192b0578a01f4d65cf9fcd3e1af611b4b79cc5"
+          },
+          "passed": true,
+          "receipt": {
+            "path": "48000-sine-receipt.json",
+            "sha256": "bfe370939ca5df6cac78ba517e826a2a223971e0c75d5b8b13495848428359f1"
+          },
+          "stimulus": "sine",
+          "worst": {
+            "actual": -0.42543837428092957,
+            "channel": 2,
+            "frame": 2496,
+            "reference": -0.4254392087459564
+          }
+        }
+      ],
+      "status": "DIAGNOSTIC_PASS"
+    }
+  ],
+  "runner_sha256": "867b939c1e3793883c7260c63d5a01b7f52a2c4ab270b8c0ffcda2bd98d4fe3e",
+  "runtime_pin": {
+    "bundled_faustlibraries_version": "2.74.2",
+    "data_sha256": "12e89b91e9b9fce899b1cdf6f62fdea18d95ce1ae63a69a61d76c3d365e52050",
+    "faust_version": "2.90.0",
+    "faustlibraries_commit": "2edec0537f53",
+    "faustlibraries_tree_sha256": "edf8f43966942ec96ec2e46341af49454c311586a62879b430687c9ffd434173",
+    "faustlibraries_version": "2.80.0",
+    "js_sha256": "73b9ee9ba0368f8a52d1e5feeeaee528930e38420acc9ea65b1198b480ed9e25",
+    "node": "22.23",
+    "wasm_sha256": "db7bde14b2553826ebcc30d8bd967aee98b37f3f0fce98182e5f574eb14bc217"
+  },
+  "source_sha256": "40fa58b1ffdbb6537de120959c8ab5797f67c1dd4c4024f63674d05355310d5e",
+  "worker_sha256": "bbe37e5a0367757868ba74250222a4875e0a7d4c637aa01e6cf238f6a826eeee"
+}

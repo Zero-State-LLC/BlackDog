@@ -1,0 +1,58 @@
+[
+  {
+    "name": "phasor_phase",
+    "receipt": {
+      "source_sha256": "02a24d930a825604158e51e1691ce2c474e5d59d325c6de2e516bcf1cde22af8",
+      "faust_version": "2.88.0",
+      "command": [
+        "faust",
+        "--faust=2.88.0",
+        "--faustlibraries=2edec0537f53",
+        "-lang",
+        "cpp",
+        "-ftz",
+        "0"
+      ],
+      "exit_code": 0,
+      "stdout_digest": "sha256:68fc95d5e0474f5f618f4d5ecff3f126c1b8ba8dc52b7921d8aba0a110c70853",
+      "stderr_digest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "duration_ms": 112,
+      "environment_digest": "sha256:bf3f38d23eda24276c18f3f0e6cd60d7b86d1d12a6be8396b4bafb285e228df6",
+      "compiler": "faust-cli",
+      "lang": "cpp",
+      "options": [
+        "-ftz",
+        "0"
+      ],
+      "diagnostic_class": "ok"
+    }
+  },
+  {
+    "name": "indexphasor",
+    "receipt": {
+      "source_sha256": "c84b34b2e9af786227126ea8391660d8d4c43f45fb6fb77634f723bb9b0ea268",
+      "faust_version": "2.88.0",
+      "command": [
+        "faust",
+        "--faust=2.88.0",
+        "--faustlibraries=2edec0537f53",
+        "-lang",
+        "cpp",
+        "-ftz",
+        "0"
+      ],
+      "exit_code": 0,
+      "stdout_digest": "sha256:42e86c62e76cbf57c42e7711b39588a6e7614796c80f080e2de6460a1fde7160",
+      "stderr_digest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "duration_ms": 78,
+      "environment_digest": "sha256:bf3f38d23eda24276c18f3f0e6cd60d7b86d1d12a6be8396b4bafb285e228df6",
+      "compiler": "faust-cli",
+      "lang": "cpp",
+      "options": [
+        "-ftz",
+        "0"
+      ],
+      "diagnostic_class": "ok"
+    }
+  }
+]

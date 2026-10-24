@@ -1,0 +1,17 @@
+{
+  "source_sha256": "74f7aef25b5c12a0e077bb407ddf491ea920fa015e3a20eef2884aacdf2a56fe",
+  "parameter_points": 416,
+  "max_abs_allpass_coefficient": 0.44519180428265775,
+  "loop_frequency_response_bound": 0.998,
+  "ideal_gain_margin": 0.002,
+  "scope": "Constant controls, inactive reset, exact real arithmetic with analyzed coefficients",
+  "excludes": [
+    "floating-point roundoff and limit cycles",
+    "arbitrary time-varying coefficients",
+    "reset/tag transitions",
+    "musical acceptance"
+  ],
+  "provenance_issue_state": "open",
+  "provenance_issue_comments": 0,
+  "admission": "NOT_GRANTED"
+}

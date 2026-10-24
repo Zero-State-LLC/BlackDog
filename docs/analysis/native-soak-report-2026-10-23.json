@@ -1,0 +1,793 @@
+{
+  "diagnostic_only": true,
+  "backend": "native float32; separate from production WASM frame-limited admission",
+  "admission": "NOT_GRANTED",
+  "builds": {
+    "paired": {
+      "source_sha256": "40a1342836429fb8969b6737abf226a2b5ccfe19556d1882c4ced37421c1c515",
+      "header_sha256": "1f33cf84e4a15d48ef0c606d9fd2527d62946e677dfd083283cbe196e44edb9e",
+      "driver_sha256": "20688ba51cbb3ac43b769a4296e9df5131e5e22159812f67ffc2f0afeb50e1ba",
+      "binary_sha256": "f661210fce290cb15afe5d4665d3858b592a166d6f556ecab08745da692e73d8",
+      "compile_ms": 12028
+    },
+    "stock": {
+      "source_sha256": "e20aea8091786c0113ce6c9a102fae9a549f431ffd92780bbd8feb46e2f9220b",
+      "header_sha256": "04a74e2a83ae0e2ef0e6f9c1f9c961f610abb69b0c5bbb4e053a5ca12f8b2222",
+      "driver_sha256": "e5b21725ea0163b452f7be2e2f4b2a027d85b528d0dbc0099419ca67d0336c2a",
+      "binary_sha256": "7aa8a5d659e583740f74b8290ed97b08062b337b478e77568674de92cd5e9879",
+      "compile_ms": 363
+    }
+  },
+  "runner_sha256": "5a04519df37c599c5c1bb439bd967cc1b7cd2c3ad9ded797e94f4a14f553c7a3",
+  "events_sha256": "3733d9bf5a470ba1609970d19d0964abcce2645ea235f19a8e52b9218fde9db9",
+  "rows": [
+    {
+      "schedule": "alternating",
+      "rate": 44100,
+      "stimulus": "looped-noise",
+      "frames": 720000,
+      "seconds": 16.3265306122449,
+      "passed": true,
+      "prefix_wasm_passed": true,
+      "prefix_wasm_ratio": 0.00915674827533104,
+      "reset_rejected": true,
+      "reset_ratio": 25656.939187618158,
+      "max_tolerance_ratio": 0.11985353113998853,
+      "max_meter_error_db": 0.00010728836059570312,
+      "worst": {
+        "block": 0,
+        "channel": 2,
+        "actual": -0.21028320491313934,
+        "reference": -0.21028271317481995
+      },
+      "capture_sha256": {
+        "paired": "0b71808cc4ecc4883cc6bb285925ec8cca1054435cf3c88f2a5fc4928d03f05d",
+        "stock": "a5e149dbef5d5fc34abf1a43555476cc0edc43188d7e5f11715cb7614f65dd02",
+        "reset": "b4f6069b885bf7885f1350fe262b2291cb933f835f9f95c2420558ebb61532cb"
+      },
+      "input_sha256": "7bb85d0318f0c2de9210f4ffe4dfed4d4188c0231e1939092fa4a577d8a7d30d",
+      "controls_sha256": "0c18f2b34bf17789499663f2744e1cd9f899e706692b1185e502b8eb8937f867",
+      "render_ms": {
+        "paired": 11517,
+        "stock": 113,
+        "reset": 11509
+      }
+    },
+    {
+      "schedule": "alternating",
+      "rate": 44100,
+      "stimulus": "looped-impulse",
+      "frames": 720000,
+      "seconds": 16.3265306122449,
+      "passed": true,
+      "prefix_wasm_passed": true,
+      "prefix_wasm_ratio": 0.008045035335484651,
+      "reset_rejected": true,
+      "reset_ratio": 282.2415663281962,
+      "max_tolerance_ratio": 0.6115218566782004,
+      "max_meter_error_db": 0.0010848045349121094,
+      "worst": {
+        "block": 2324,
+        "channel": 2,
+        "actual": -0.6869657635688782,
+        "reference": -0.6869711875915527
+      },
+      "capture_sha256": {
+        "paired": "ca69108803eb09238db0d5642ed30cd823a1c7e664196676db6661babdaa034a",
+        "stock": "4a54a5b836f664e2c8d20e170b7aac0f2991a7bc07ce3882cd9e57bc83ae2481",
+        "reset": "dfe82fcaa37f68772aa204cd2c7985997b70155035b064504ff7222d5f8670f6"
+      },
+      "input_sha256": "b2ff9d875336c259be1d6be91f9b4d97ff7549d9f04f230e6705e6ef265fe38b",
+      "controls_sha256": "0c18f2b34bf17789499663f2744e1cd9f899e706692b1185e502b8eb8937f867",
+      "render_ms": {
+        "paired": 11603,
+        "stock": 98,
+        "reset": 11531
+      }
+    },
+    {
+      "schedule": "alternating",
+      "rate": 44100,
+      "stimulus": "looped-sine",
+      "frames": 720000,
+      "seconds": 16.3265306122449,
+      "passed": true,
+      "prefix_wasm_passed": true,
+      "prefix_wasm_ratio": 0.011794364268256351,
+      "reset_rejected": true,
+      "reset_ratio": 28870.262274312176,
+      "max_tolerance_ratio": 0.1506476734222827,
+      "max_meter_error_db": 0.0001043081283569336,
+      "worst": {
+        "block": 1,
+        "channel": 0,
+        "actual": -0.11652521789073944,
+        "reference": -0.11652474105358124
+      },
+      "capture_sha256": {
+        "paired": "9dc46dc4cd47ff011b10a817b895a7f309671e9714b39a6f92d43b43e3f6ceac",
+        "stock": "780fe9afd28400631bb1d9f72f7a9e59d1a2df32d1e0c5fba12292ba654fdc4e",
+        "reset": "77bbb6cbc0c90ce33d7db79edbdc4fde2a647251734ee1127182158204983992"
+      },
+      "input_sha256": "c1dad030e38e732eac5981b3336a11b65ef6efa500bf14d2a51503ad6da5438a",
+      "controls_sha256": "0c18f2b34bf17789499663f2744e1cd9f899e706692b1185e502b8eb8937f867",
+      "render_ms": {
+        "paired": 11722,
+        "stock": 99,
+        "reset": 11571
+      }
+    },
+    {
+      "schedule": "alternating",
+      "rate": 48000,
+      "stimulus": "looped-noise",
+      "frames": 720000,
+      "seconds": 15.0,
+      "passed": true,
+      "prefix_wasm_passed": true,
+      "prefix_wasm_ratio": 0.009128239524347886,
+      "reset_rejected": true,
+      "reset_ratio": 26140.957925756495,
+      "max_tolerance_ratio": 0.04781913693009063,
+      "max_meter_error_db": 3.5762786865234375e-05,
+      "worst": {
+        "block": 2,
+        "channel": 2,
+        "actual": -0.17393819987773895,
+        "reference": -0.17393802106380463
+      },
+      "capture_sha256": {
+        "paired": "33b5f92ccd27b22b8bf51957610cacf3b041333cab0163dd4df320687177fe89",
+        "stock": "784960d4c6eaa15d1f26777c652ab895c7c71db86edc618dac6ead2a65cdbe5c",
+        "reset": "af11bc93df4a3ec804707f48c3e386ced1001864e7ea990b83967449b40851e5"
+      },
+      "input_sha256": "7bb85d0318f0c2de9210f4ffe4dfed4d4188c0231e1939092fa4a577d8a7d30d",
+      "controls_sha256": "0c18f2b34bf17789499663f2744e1cd9f899e706692b1185e502b8eb8937f867",
+      "render_ms": {
+        "paired": 11607,
+        "stock": 99,
+        "reset": 11595
+      }
+    },
+    {
+      "schedule": "alternating",
+      "rate": 48000,
+      "stimulus": "looped-impulse",
+      "frames": 720000,
+      "seconds": 15.0,
+      "passed": true,
+      "prefix_wasm_passed": true,
+      "prefix_wasm_ratio": 0.013228898878843763,
+      "reset_rejected": true,
+      "reset_ratio": 369.51641551851696,
+      "max_tolerance_ratio": 0.20858111873115504,
+      "max_meter_error_db": 0.0003695487976074219,
+      "worst": {
+        "block": 80,
+        "channel": 2,
+        "actual": -0.6858616471290588,
+        "reference": -0.6858634948730469
+      },
+      "capture_sha256": {
+        "paired": "2c403c9c4c199317ec6d03d1200f8d6da46bd9a2a8baff728812a81db4905f17",
+        "stock": "4b38784d33c64fa3b3485675b6cbe32614adb4b6ce17fa6ee320d4288a23e6f8",
+        "reset": "4e97f69d8e6902718f0e489ceeb8822a108a38b5dd10617fb382ad4fb621c297"
+      },
+      "input_sha256": "b2ff9d875336c259be1d6be91f9b4d97ff7549d9f04f230e6705e6ef265fe38b",
+      "controls_sha256": "0c18f2b34bf17789499663f2744e1cd9f899e706692b1185e502b8eb8937f867",
+      "render_ms": {
+        "paired": 11513,
+        "stock": 114,
+        "reset": 11839
+      }
+    },
+    {
+      "schedule": "alternating",
+      "rate": 48000,
+      "stimulus": "looped-sine",
+      "frames": 720000,
+      "seconds": 15.0,
+      "passed": true,
+      "prefix_wasm_passed": true,
+      "prefix_wasm_ratio": 0.01219143746093711,
+      "reset_rejected": true,
+      "reset_ratio": 29815.455475790382,
+      "max_tolerance_ratio": 0.05378080244880691,
+      "max_meter_error_db": 3.5762786865234375e-05,
+      "worst": {
+        "block": 3,
+        "channel": 0,
+        "actual": -0.09092588722705841,
+        "reference": -0.09092573076486588
+      },
+      "capture_sha256": {
+        "paired": "446148641fe747667665d3c79a1781758b122aa596165e88d1cd9b284d51ff3c",
+        "stock": "7ec10dd409a00dfa7782a5ed733d035e7e01ed300d79db38860eb73b2608aa66",
+        "reset": "e5dfc1221f41b33f5b81eb5c126f9ff500f626e434d970f5ffbeb5e5e354a04a"
+      },
+      "input_sha256": "3c0da8ffb9d31adf465d512e458a21759e6cf7228565de1c6a4f1911a220a28c",
+      "controls_sha256": "0c18f2b34bf17789499663f2744e1cd9f899e706692b1185e502b8eb8937f867",
+      "render_ms": {
+        "paired": 11518,
+        "stock": 99,
+        "reset": 11822
+      }
+    },
+    {
+      "schedule": "alternating",
+      "rate": 96000,
+      "stimulus": "looped-noise",
+      "frames": 720000,
+      "seconds": 7.5,
+      "passed": true,
+      "prefix_wasm_passed": true,
+      "prefix_wasm_ratio": 0.011164172853429504,
+      "reset_rejected": true,
+      "reset_ratio": 37378.19839220811,
+      "max_tolerance_ratio": 0.092476280835792,
+      "max_meter_error_db": 8.344650268554688e-05,
+      "worst": {
+        "block": 3,
+        "channel": 2,
+        "actual": -0.1867242455482483,
+        "reference": -0.18672388792037964
+      },
+      "capture_sha256": {
+        "paired": "4b730a43caf2576083165e6c6f15e9198fdaa44b19383dca21c3301a3fbdf314",
+        "stock": "5efa3bcf13e4303b4f41ffd31bd1208b44ed97144a4d9be2f47a10bd7093a88a",
+        "reset": "d22c77048f06b241f05715db286798f2371587c509d5e45f68073f1281f3edd3"
+      },
+      "input_sha256": "7bb85d0318f0c2de9210f4ffe4dfed4d4188c0231e1939092fa4a577d8a7d30d",
+      "controls_sha256": "0c18f2b34bf17789499663f2744e1cd9f899e706692b1185e502b8eb8937f867",
+      "render_ms": {
+        "paired": 11496,
+        "stock": 115,
+        "reset": 11667
+      }
+    },
+    {
+      "schedule": "alternating",
+      "rate": 96000,
+      "stimulus": "looped-impulse",
+      "frames": 720000,
+      "seconds": 7.5,
+      "passed": true,
+      "prefix_wasm_passed": true,
+      "prefix_wasm_ratio": 0.009255515317614068,
+      "reset_rejected": true,
+      "reset_ratio": 1458.3907058988161,
+      "max_tolerance_ratio": 0.4419661542051251,
+      "max_meter_error_db": 0.0007867813110351562,
+      "worst": {
+        "block": 154,
+        "channel": 2,
+        "actual": -0.6900883316993713,
+        "reference": -0.6900922656059265
+      },
+      "capture_sha256": {
+        "paired": "5809378a465557d1f041261c7ff61440f83cc5f6cfc68b60ed46cfe2b582fb68",
+        "stock": "291846ba8ffa51be78f1b0596a89580dde174d19357dd1656b5ec491c2c3453b",
+        "reset": "02f386bd61a3dff197a936d0e0f61adec07214f052cf62559c33bf1ab3517477"
+      },
+      "input_sha256": "b2ff9d875336c259be1d6be91f9b4d97ff7549d9f04f230e6705e6ef265fe38b",
+      "controls_sha256": "0c18f2b34bf17789499663f2744e1cd9f899e706692b1185e502b8eb8937f867",
+      "render_ms": {
+        "paired": 11646,
+        "stock": 99,
+        "reset": 11640
+      }
+    },
+    {
+      "schedule": "alternating",
+      "rate": 96000,
+      "stimulus": "looped-sine",
+      "frames": 720000,
+      "seconds": 7.5,
+      "passed": true,
+      "prefix_wasm_passed": true,
+      "prefix_wasm_ratio": 0.012918324076880459,
+      "reset_rejected": true,
+      "reset_ratio": 45660.4316591271,
+      "max_tolerance_ratio": 0.12491351330083568,
+      "max_meter_error_db": 8.344650268554688e-05,
+      "worst": {
+        "block": 3,
+        "channel": 0,
+        "actual": -0.1161237359046936,
+        "reference": -0.11612334102392197
+      },
+      "capture_sha256": {
+        "paired": "2b6872588d996f410ae40f683b17ff839bbde0c1b111176fd410e16d5bfbd487",
+        "stock": "b8c0ef42468f97126b349c54373dfd98c7dcd44171abfaa0156ba6b8636c5d49",
+        "reset": "aed122bfa0348f1ad18d687903911485afc04732fbd02cc3a145de747969cae6"
+      },
+      "input_sha256": "07e76538a08fa8075eaee90231d06ec6116460c5e0552b25d64d6a27075f0d47",
+      "controls_sha256": "0c18f2b34bf17789499663f2744e1cd9f899e706692b1185e502b8eb8937f867",
+      "render_ms": {
+        "paired": 11527,
+        "stock": 100,
+        "reset": 11507
+      }
+    },
+    {
+      "schedule": "alternating",
+      "rate": 192000,
+      "stimulus": "looped-noise",
+      "frames": 720000,
+      "seconds": 3.75,
+      "passed": true,
+      "prefix_wasm_passed": true,
+      "prefix_wasm_ratio": 0.011164151664881283,
+      "reset_rejected": true,
+      "reset_ratio": 51391.94399039486,
+      "max_tolerance_ratio": 0.16281481029246164,
+      "max_meter_error_db": 0.00014901161193847656,
+      "worst": {
+        "block": 6,
+        "channel": 2,
+        "actual": -0.19354459643363953,
+        "reference": -0.19354523718357086
+      },
+      "capture_sha256": {
+        "paired": "d92062ba0cbb20247a82a8e26940f9f2044dd63a68c1f8b0b4597552926c53c3",
+        "stock": "8f00992b36f1f8c9a62f29d4b90301065caee6c9adb69f9ba7d77e9068e5347a",
+        "reset": "e7d925739093ef840a9f65e13a3667ab67bc08ada63bff51da79edccb5c08747"
+      },
+      "input_sha256": "7bb85d0318f0c2de9210f4ffe4dfed4d4188c0231e1939092fa4a577d8a7d30d",
+      "controls_sha256": "0c18f2b34bf17789499663f2744e1cd9f899e706692b1185e502b8eb8937f867",
+      "render_ms": {
+        "paired": 11610,
+        "stock": 92,
+        "reset": 11505
+      }
+    },
+    {
+      "schedule": "alternating",
+      "rate": 192000,
+      "stimulus": "looped-impulse",
+      "frames": 720000,
+      "seconds": 3.75,
+      "passed": true,
+      "prefix_wasm_passed": true,
+      "prefix_wasm_ratio": 0.014928064419255526,
+      "reset_rejected": true,
+      "reset_ratio": 4856.942472598822,
+      "max_tolerance_ratio": 0.7099563107621298,
+      "max_meter_error_db": 0.0012636184692382812,
+      "worst": {
+        "block": 2540,
+        "channel": 2,
+        "actual": -0.6899332404136658,
+        "reference": -0.6899269223213196
+      },
+      "capture_sha256": {
+        "paired": "38013c6a23ef46e298358e2ce2b7c1da6d2c19295bd8fc9f83f14bf52915cb30",
+        "stock": "12594e11801c795cfe2ebe13c54d5f62a12d758dabd307cac910d116ae1870de",
+        "reset": "c8503946cf781c96ea951d0f33105162d62d3adab0fcb92124acd2a17e3aa3d1"
+      },
+      "input_sha256": "b2ff9d875336c259be1d6be91f9b4d97ff7549d9f04f230e6705e6ef265fe38b",
+      "controls_sha256": "0c18f2b34bf17789499663f2744e1cd9f899e706692b1185e502b8eb8937f867",
+      "render_ms": {
+        "paired": 11519,
+        "stock": 92,
+        "reset": 11626
+      }
+    },
+    {
+      "schedule": "alternating",
+      "rate": 192000,
+      "stimulus": "looped-sine",
+      "frames": 720000,
+      "seconds": 3.75,
+      "passed": true,
+      "prefix_wasm_passed": true,
+      "prefix_wasm_ratio": 0.01072292502179113,
+      "reset_rejected": true,
+      "reset_ratio": 63740.23838238816,
+      "max_tolerance_ratio": 0.1996097230694546,
+      "max_meter_error_db": 0.00014901161193847656,
+      "worst": {
+        "block": 6,
+        "channel": 0,
+        "actual": -0.12100072205066681,
+        "reference": -0.12100136280059814
+      },
+      "capture_sha256": {
+        "paired": "c72702ef9dd0d30de3ff43f23c8b7e8f62883e3287bdada2e761f04b08bf9622",
+        "stock": "1ec76ef4e0ecc03a2a8015dda3cb7d625c7d7238c4681e49a31d92a5d3250105",
+        "reset": "63699ed4d1d33b9b5ab5b566d18e5406c5089074bab72f691cae4c869c73fb3b"
+      },
+      "input_sha256": "3381b28ab3b1ab053914056b173480f7003c56b38c3bc869e0de692423b7134a",
+      "controls_sha256": "0c18f2b34bf17789499663f2744e1cd9f899e706692b1185e502b8eb8937f867",
+      "render_ms": {
+        "paired": 11524,
+        "stock": 92,
+        "reset": 11568
+      }
+    },
+    {
+      "schedule": "threshold-walk",
+      "rate": 44100,
+      "stimulus": "looped-noise",
+      "frames": 720000,
+      "seconds": 16.3265306122449,
+      "passed": true,
+      "prefix_wasm_passed": true,
+      "prefix_wasm_ratio": 0.0091583755968708,
+      "reset_rejected": true,
+      "reset_ratio": 24800.110008989035,
+      "max_tolerance_ratio": 0.12386175498451053,
+      "max_meter_error_db": 0.00010728836059570312,
+      "worst": {
+        "block": 1,
+        "channel": 2,
+        "actual": -0.1849757730960846,
+        "reference": -0.1849752962589264
+      },
+      "capture_sha256": {
+        "paired": "34954f3c9fe7512db44a71dcdfe90e7644a1a019bbc8aef3292684565e09186c",
+        "stock": "c4691c5aa00046fd57a2a3f829ea0a1424f68230d2aa274c117c44bdb2b612ee",
+        "reset": "5ddfbaf657281ab014107c44a24c646265b2740d80fb1fb01c4dec069df587fd"
+      },
+      "input_sha256": "7bb85d0318f0c2de9210f4ffe4dfed4d4188c0231e1939092fa4a577d8a7d30d",
+      "controls_sha256": "2db6778a3122b1cdedcec275f638762b9c99dee7b49adde1ed3b247b90e8cc77",
+      "render_ms": {
+        "paired": 11540,
+        "stock": 99,
+        "reset": 11520
+      }
+    },
+    {
+      "schedule": "threshold-walk",
+      "rate": 44100,
+      "stimulus": "looped-impulse",
+      "frames": 720000,
+      "seconds": 16.3265306122449,
+      "passed": true,
+      "prefix_wasm_passed": true,
+      "prefix_wasm_ratio": 0.010672705767419199,
+      "reset_rejected": true,
+      "reset_ratio": 729.5974404236783,
+      "max_tolerance_ratio": 0.5972407130109265,
+      "max_meter_error_db": 0.0010609626770019531,
+      "worst": {
+        "block": 2324,
+        "channel": 2,
+        "actual": -0.6882150173187256,
+        "reference": -0.6882203221321106
+      },
+      "capture_sha256": {
+        "paired": "da1e8859d36dee80a4fb8eed846d91217311633d0b56c3f2cd3b0d533ce11f89",
+        "stock": "fbad305589c94bff832771dc9f74d252515237a3a461a65248321a16f0d85f13",
+        "reset": "7315f80bd973a9913c2856c0bbc71a1ab29c4a2fcdb7985d9f806c2c13b7a5e5"
+      },
+      "input_sha256": "b2ff9d875336c259be1d6be91f9b4d97ff7549d9f04f230e6705e6ef265fe38b",
+      "controls_sha256": "2db6778a3122b1cdedcec275f638762b9c99dee7b49adde1ed3b247b90e8cc77",
+      "render_ms": {
+        "paired": 11843,
+        "stock": 116,
+        "reset": 11631
+      }
+    },
+    {
+      "schedule": "threshold-walk",
+      "rate": 44100,
+      "stimulus": "looped-sine",
+      "frames": 720000,
+      "seconds": 16.3265306122449,
+      "passed": true,
+      "prefix_wasm_passed": true,
+      "prefix_wasm_ratio": 0.018912464810285946,
+      "reset_rejected": true,
+      "reset_ratio": 29281.85292566176,
+      "max_tolerance_ratio": 0.2285060700012107,
+      "max_meter_error_db": 0.00028014183044433594,
+      "worst": {
+        "block": 2277,
+        "channel": 2,
+        "actual": -0.41298413276672363,
+        "reference": -0.41298553347587585
+      },
+      "capture_sha256": {
+        "paired": "fc83e3562016ea38fcb420ac9ccec8c66882e2f7106a9804ecf5f83b646593d6",
+        "stock": "bdd54c39184a8dcc6a8b2408a4e78e32f3bff30ca7b92c027a9ea2610c80afa2",
+        "reset": "6dcd21c6f719b6f2b4ed1f2b718a0a2851ac0678ede4b5d0d00d9ab38d78f3bb"
+      },
+      "input_sha256": "c1dad030e38e732eac5981b3336a11b65ef6efa500bf14d2a51503ad6da5438a",
+      "controls_sha256": "2db6778a3122b1cdedcec275f638762b9c99dee7b49adde1ed3b247b90e8cc77",
+      "render_ms": {
+        "paired": 11654,
+        "stock": 115,
+        "reset": 11613
+      }
+    },
+    {
+      "schedule": "threshold-walk",
+      "rate": 48000,
+      "stimulus": "looped-noise",
+      "frames": 720000,
+      "seconds": 15.0,
+      "passed": true,
+      "prefix_wasm_passed": true,
+      "prefix_wasm_ratio": 0.011174951206810547,
+      "reset_rejected": true,
+      "reset_ratio": 25214.857655524545,
+      "max_tolerance_ratio": 0.04506180427185741,
+      "max_meter_error_db": 3.5762786865234375e-05,
+      "worst": {
+        "block": 3,
+        "channel": 2,
+        "actual": -0.16375118494033813,
+        "reference": -0.163751021027565
+      },
+      "capture_sha256": {
+        "paired": "78c489b70154bfac52a1afff59684ba4f5015c7e3f8edfe1955f1504524ce5a2",
+        "stock": "273c48c3a19659ec40da7ade853f40c20f455c0cea1a4c272e4e05a0eee91d6a",
+        "reset": "bc9352dab763cae8075f030b9f072f3d7d4f25a445ff91f3a8e6b51a6a9beed8"
+      },
+      "input_sha256": "7bb85d0318f0c2de9210f4ffe4dfed4d4188c0231e1939092fa4a577d8a7d30d",
+      "controls_sha256": "2db6778a3122b1cdedcec275f638762b9c99dee7b49adde1ed3b247b90e8cc77",
+      "render_ms": {
+        "paired": 11827,
+        "stock": 121,
+        "reset": 11608
+      }
+    },
+    {
+      "schedule": "threshold-walk",
+      "rate": 48000,
+      "stimulus": "looped-impulse",
+      "frames": 720000,
+      "seconds": 15.0,
+      "passed": true,
+      "prefix_wasm_passed": true,
+      "prefix_wasm_ratio": 0.00700218955666561,
+      "reset_rejected": true,
+      "reset_ratio": 743.6945945992004,
+      "max_tolerance_ratio": 0.2148032866406479,
+      "max_meter_error_db": 0.0003814697265625,
+      "worst": {
+        "block": 2330,
+        "channel": 2,
+        "actual": -0.6879494190216064,
+        "reference": -0.6879513263702393
+      },
+      "capture_sha256": {
+        "paired": "2c5e05ed12bd9a058e57bca5ed0cae98f51cc30ecd1b97d472a49d7a0afda78f",
+        "stock": "2618f2bbe45357f1759837539c8c09a5ef545c72fa402b4f67a06ee4b352ae4f",
+        "reset": "3f8596dbaab7ffdbd71264d308b79c2402d559aa16428545ca095a3c585f0fb4"
+      },
+      "input_sha256": "b2ff9d875336c259be1d6be91f9b4d97ff7549d9f04f230e6705e6ef265fe38b",
+      "controls_sha256": "2db6778a3122b1cdedcec275f638762b9c99dee7b49adde1ed3b247b90e8cc77",
+      "render_ms": {
+        "paired": 11662,
+        "stock": 101,
+        "reset": 11615
+      }
+    },
+    {
+      "schedule": "threshold-walk",
+      "rate": 48000,
+      "stimulus": "looped-sine",
+      "frames": 720000,
+      "seconds": 15.0,
+      "passed": true,
+      "prefix_wasm_passed": true,
+      "prefix_wasm_ratio": 0.018579902387138428,
+      "reset_rejected": true,
+      "reset_ratio": 30278.816588615686,
+      "max_tolerance_ratio": 0.23388039704509142,
+      "max_meter_error_db": 0.0002980232238769531,
+      "worst": {
+        "block": 554,
+        "channel": 1,
+        "actual": -0.43712592124938965,
+        "reference": -0.43712741136550903
+      },
+      "capture_sha256": {
+        "paired": "dbb6efc16e8f8ca7785cc5587a2769874a46af1fc7148f6165bc713af5ebf227",
+        "stock": "b93229162668baa79f14e15d454dae29adbda90682b95a3445f81a4bb9a68e34",
+        "reset": "6967cfc771fd13a124a92bec2d7cf6dbcae53e4bd36dfa787595db92534329fe"
+      },
+      "input_sha256": "3c0da8ffb9d31adf465d512e458a21759e6cf7228565de1c6a4f1911a220a28c",
+      "controls_sha256": "2db6778a3122b1cdedcec275f638762b9c99dee7b49adde1ed3b247b90e8cc77",
+      "render_ms": {
+        "paired": 11679,
+        "stock": 99,
+        "reset": 11644
+      }
+    },
+    {
+      "schedule": "threshold-walk",
+      "rate": 96000,
+      "stimulus": "looped-noise",
+      "frames": 720000,
+      "seconds": 7.5,
+      "passed": true,
+      "prefix_wasm_passed": true,
+      "prefix_wasm_ratio": 0.01102710993658831,
+      "reset_rejected": true,
+      "reset_ratio": 36107.064039556106,
+      "max_tolerance_ratio": 0.10384243628693476,
+      "max_meter_error_db": 8.344650268554688e-05,
+      "worst": {
+        "block": 3,
+        "channel": 2,
+        "actual": -0.18744446337223053,
+        "reference": -0.1874440610408783
+      },
+      "capture_sha256": {
+        "paired": "fceb31c05332754b749a13679b9b2e757b48762722c3be9ba55ba41e67be8c8b",
+        "stock": "cfbe3558a4aadc759fa735b0cb121a7ecb93d9adc41a95e63f9354d6f1848883",
+        "reset": "fd327d6c66d15381e76ca8939ae3aa7bb2237122cde41afc0091e3fd8b3aae09"
+      },
+      "input_sha256": "7bb85d0318f0c2de9210f4ffe4dfed4d4188c0231e1939092fa4a577d8a7d30d",
+      "controls_sha256": "2db6778a3122b1cdedcec275f638762b9c99dee7b49adde1ed3b247b90e8cc77",
+      "render_ms": {
+        "paired": 11550,
+        "stock": 99,
+        "reset": 11725
+      }
+    },
+    {
+      "schedule": "threshold-walk",
+      "rate": 96000,
+      "stimulus": "looped-impulse",
+      "frames": 720000,
+      "seconds": 7.5,
+      "passed": true,
+      "prefix_wasm_passed": true,
+      "prefix_wasm_ratio": 0.013529938127051748,
+      "reset_rejected": true,
+      "reset_ratio": 4269.36141096108,
+      "max_tolerance_ratio": 0.4153625121210485,
+      "max_meter_error_db": 0.0007390975952148438,
+      "worst": {
+        "block": 2397,
+        "channel": 0,
+        "actual": -0.6896981596946716,
+        "reference": -0.6897018551826477
+      },
+      "capture_sha256": {
+        "paired": "80997816c5702d11304b057f58e3271de53faa5fdf5fb1711231a2b4a28dfd56",
+        "stock": "b8c6483710cad4296554f744d5d64d6d26fb5d26dfdb4cae66537f9d62e12840",
+        "reset": "dfb0fbe640c436c0153dd55adf06045cab5819adbd73e2bd1cc74a0bcecba89a"
+      },
+      "input_sha256": "b2ff9d875336c259be1d6be91f9b4d97ff7549d9f04f230e6705e6ef265fe38b",
+      "controls_sha256": "2db6778a3122b1cdedcec275f638762b9c99dee7b49adde1ed3b247b90e8cc77",
+      "render_ms": {
+        "paired": 11549,
+        "stock": 98,
+        "reset": 11883
+      }
+    },
+    {
+      "schedule": "threshold-walk",
+      "rate": 96000,
+      "stimulus": "looped-sine",
+      "frames": 720000,
+      "seconds": 7.5,
+      "passed": true,
+      "prefix_wasm_passed": true,
+      "prefix_wasm_ratio": 0.01468754495306727,
+      "reset_rejected": true,
+      "reset_ratio": 46005.822293499135,
+      "max_tolerance_ratio": 0.13703086600229114,
+      "max_meter_error_db": 0.00015497207641601562,
+      "worst": {
+        "block": 1657,
+        "channel": 1,
+        "actual": -0.36546334624290466,
+        "reference": -0.36546412110328674
+      },
+      "capture_sha256": {
+        "paired": "41c2fc6d14d7f2b30e30eea1990c68b509e9d2cde2e3a46881cc2843fc487556",
+        "stock": "b0676b4f678b71c3cf738a03e51417f36f23a7b5965325c78d9c3a2e151883ff",
+        "reset": "74a96dda8208a022e3640855a98d71dd47087ca3616a33665a36eff5f14fd332"
+      },
+      "input_sha256": "07e76538a08fa8075eaee90231d06ec6116460c5e0552b25d64d6a27075f0d47",
+      "controls_sha256": "2db6778a3122b1cdedcec275f638762b9c99dee7b49adde1ed3b247b90e8cc77",
+      "render_ms": {
+        "paired": 11656,
+        "stock": 99,
+        "reset": 11523
+      }
+    },
+    {
+      "schedule": "threshold-walk",
+      "rate": 192000,
+      "stimulus": "looped-noise",
+      "frames": 720000,
+      "seconds": 3.75,
+      "passed": true,
+      "prefix_wasm_passed": true,
+      "prefix_wasm_ratio": 0.01116545927360023,
+      "reset_rejected": true,
+      "reset_ratio": 50499.31637972271,
+      "max_tolerance_ratio": 0.15894852498908044,
+      "max_meter_error_db": 0.0001430511474609375,
+      "worst": {
+        "block": 10,
+        "channel": 2,
+        "actual": -0.17499278485774994,
+        "reference": -0.1749933809041977
+      },
+      "capture_sha256": {
+        "paired": "c5a537525d8b82f503eb6ec9da5d9cde50800f694e41079250856190232bc718",
+        "stock": "f406e800434f6d8fc6a6a6a6a5f86bbde81d2a67889af0aa14eb518bfcea722d",
+        "reset": "761b22f0bf88759fa050ef45f458095028559ad9e00c807786e8d451931803d6"
+      },
+      "input_sha256": "7bb85d0318f0c2de9210f4ffe4dfed4d4188c0231e1939092fa4a577d8a7d30d",
+      "controls_sha256": "2db6778a3122b1cdedcec275f638762b9c99dee7b49adde1ed3b247b90e8cc77",
+      "render_ms": {
+        "paired": 11679,
+        "stock": 89,
+        "reset": 11707
+      }
+    },
+    {
+      "schedule": "threshold-walk",
+      "rate": 192000,
+      "stimulus": "looped-impulse",
+      "frames": 720000,
+      "seconds": 3.75,
+      "passed": true,
+      "prefix_wasm_passed": true,
+      "prefix_wasm_ratio": 0.010682045165566999,
+      "reset_rejected": true,
+      "reset_ratio": 10090.581608559469,
+      "max_tolerance_ratio": 0.7091431742808595,
+      "max_meter_error_db": 0.0012636184692382812,
+      "worst": {
+        "block": 293,
+        "channel": 2,
+        "actual": -0.6909536719322205,
+        "reference": -0.6909473538398743
+      },
+      "capture_sha256": {
+        "paired": "3e56ea5efdf317f838b48f7987d0d127e42ac80f41bbd59cb438e5b644a01a72",
+        "stock": "f484aa5c9b31ba3434ddbb2946fab1b2b689e5f37584154bc8ecca096d197643",
+        "reset": "f6932e3b9095765012e8c6cc8cc1b582fbc3b2f65ae38ce67e25fb84c06fc575"
+      },
+      "input_sha256": "b2ff9d875336c259be1d6be91f9b4d97ff7549d9f04f230e6705e6ef265fe38b",
+      "controls_sha256": "2db6778a3122b1cdedcec275f638762b9c99dee7b49adde1ed3b247b90e8cc77",
+      "render_ms": {
+        "paired": 11693,
+        "stock": 91,
+        "reset": 11615
+      }
+    },
+    {
+      "schedule": "threshold-walk",
+      "rate": 192000,
+      "stimulus": "looped-sine",
+      "frames": 720000,
+      "seconds": 3.75,
+      "passed": true,
+      "prefix_wasm_passed": true,
+      "prefix_wasm_ratio": 0.013154674091831227,
+      "reset_rejected": true,
+      "reset_ratio": 63927.35261612826,
+      "max_tolerance_ratio": 0.21108971698893703,
+      "max_meter_error_db": 0.00019669532775878906,
+      "worst": {
+        "block": 11,
+        "channel": 0,
+        "actual": -0.10001367330551147,
+        "reference": -0.10001430660486221
+      },
+      "capture_sha256": {
+        "paired": "3ae3aa1a882de5e454206752bf4cc31169acf73813327038ba0d1c618de6212b",
+        "stock": "17aadcc8c8c73048db9c6f4923b85adffd557f85c96a7c6eb80dd3eeb0815a6d",
+        "reset": "7deab54eba52043e8c1ebb41df153a613a2c3fde34c5d7968cab230b600e7dba"
+      },
+      "input_sha256": "3381b28ab3b1ab053914056b173480f7003c56b38c3bc869e0de692423b7134a",
+      "controls_sha256": "2db6778a3122b1cdedcec275f638762b9c99dee7b49adde1ed3b247b90e8cc77",
+      "render_ms": {
+        "paired": 11635,
+        "stock": 89,
+        "reset": 11613
+      }
+    }
+  ]
+}

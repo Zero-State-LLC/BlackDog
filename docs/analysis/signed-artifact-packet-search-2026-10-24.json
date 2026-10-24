@@ -1,0 +1,12 @@
+{
+  "date": "2026-10-24",
+  "spark_public_scan_sha256": "abe6d64818e92045320a4220dc5276e56371bef6dd0cffa73930233f5349bd25",
+  "spark_changed": false,
+  "gmail_query": "(\"BlackDog\" OR \"FaustCoder\") (\"signed\" OR \"custodian\" OR \"public key\" OR \"T07\") after:2026/10/23 -from:notifications@github.com",
+  "gmail_matches": 0,
+  "notion_query": "BlackDog signed",
+  "notion_collection": "collection://f42162c7-08fc-4362-aed3-94fbc4838fc0",
+  "notion_results": 9,
+  "new_authenticated_signed_artifact_references": 0,
+  "limitations": "Bounded searches only. Existing approvals and custody notes are not signed split artifacts. No private holdout content accessed."
+}

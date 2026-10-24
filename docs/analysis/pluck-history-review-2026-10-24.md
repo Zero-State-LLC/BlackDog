@@ -1,0 +1,9 @@
+# Bounded long-history host qualification
+
+The unchanged reset DSP and current time-checked host adapter passed 20 captures at 44.1, 48, 96 and 192 kHz. Each capture is 12 seconds. Cases include silence, one MIDI16 note, one MIDI119 note, and a 256-note sequence repeated exactly. The sequence alternates MIDI16/69/119/69, starts notes every25ms, releases each after10ms, and cycles velocity1..127. The host remains eight voices with dynamic voice removal disabled. All captures are finite stereo; silent controls are exactly zero; repeated rapid histories are byte-identical.
+
+Low-pitch last-second RMS ranges from0.001250 to0.002608. High-pitch residuals are around1e-42, consistent with tiny floating-point remnants, not exact silence. Rapid-history last-second RMS ranges from0.000213 to0.000445. Maximum peak across all captures is0.997833. These are measurements of this schedule; they do not impose a new quality threshold or prove stability for all controls. Eight-voice tail stealing remains audible-policy work, and no semantic approval is inferred from finite or repeatable output.
+
+The source, adapter, runner and capture hashes are bound in the JSON receipt. The local archive `work/pluck-history-evidence.tar.gz` includes those inputs and the verifier. This is same-workflow verification, not an independent reviewer decision. DSP epoch-counter lifetime and histories beyond these bounds remain open.
+
+The Designing Sound issue was checked again and remains open with zero comments: <https://github.com/materializepath/designing-sound-experiments/issues/1> . A read-only Spark custody refresh failed because `ssh-spark2.zer0state.com` did not resolve. No fresh custody result or signed-artifact absence is claimed from that failure. Independent evaluation families, canonical admission, semantic decisions and authenticated signed readiness artifacts remain unresolved.

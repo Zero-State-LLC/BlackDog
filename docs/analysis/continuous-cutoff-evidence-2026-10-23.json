@@ -1,0 +1,135 @@
+{
+  "rows": [
+    {
+      "unit_id": "cutoff-48000",
+      "sample_rate": 48000,
+      "modulation": {
+        "parameter": "top_hz",
+        "period": 64,
+        "depth": 0.1,
+        "shape": "sine",
+        "update": "every-sample",
+        "coefficient_preparation": "offline-double",
+        "runtime_control": "none"
+      },
+      "source_sha256": "e8ce457ec6ac0f55e2426570aec2f1fc9bc91575bc2d1c4b2eef067e63738081",
+      "source_bytes": 319178,
+      "native_compile_ms": 655,
+      "captures": 3,
+      "frozen_cutoff_reference_rejected": [
+        "noise",
+        "impulse",
+        "sine"
+      ],
+      "worst_meter_error_db": 0.0003457069396972656
+    },
+    {
+      "unit_id": "cutoff-192000",
+      "sample_rate": 192000,
+      "modulation": {
+        "parameter": "top_hz",
+        "period": 64,
+        "depth": 0.1,
+        "shape": "sine",
+        "update": "every-sample",
+        "coefficient_preparation": "offline-double",
+        "runtime_control": "none"
+      },
+      "source_sha256": "a6e5034e007fd7c336e768765343cb03cfafb628f3a9307160073bd41dc09e8e",
+      "source_bytes": 319419,
+      "native_compile_ms": 652,
+      "captures": 3,
+      "frozen_cutoff_reference_rejected": [
+        "noise",
+        "impulse",
+        "sine"
+      ],
+      "worst_meter_error_db": 0.0010967254638671875
+    },
+    {
+      "unit_id": "cutoff-deep-44100",
+      "sample_rate": 44100,
+      "modulation": {
+        "parameter": "top_hz",
+        "period": 64,
+        "depth": 0.5,
+        "shape": "sine",
+        "update": "every-sample",
+        "coefficient_preparation": "offline-double",
+        "runtime_control": "none"
+      },
+      "source_sha256": "97fcb09358b6cadb790e25b7195cc09a740b76afe508f90efe2f21328c4cd9a5",
+      "source_bytes": 319160,
+      "native_compile_ms": 650,
+      "captures": 3,
+      "frozen_cutoff_reference_rejected": [
+        "noise",
+        "impulse",
+        "sine"
+      ],
+      "worst_meter_error_db": 0.0010609626770019531
+    },
+    {
+      "unit_id": "cutoff-deep-96000",
+      "sample_rate": 96000,
+      "modulation": {
+        "parameter": "top_hz",
+        "period": 64,
+        "depth": 0.5,
+        "shape": "sine",
+        "update": "every-sample",
+        "coefficient_preparation": "offline-double",
+        "runtime_control": "none"
+      },
+      "source_sha256": "e18db5e16cfb818a7207faa6e1df3a203fa0bba486ade00fcd016d9afdb6f504",
+      "source_bytes": 319339,
+      "native_compile_ms": 600,
+      "captures": 3,
+      "frozen_cutoff_reference_rejected": [
+        "noise",
+        "impulse",
+        "sine"
+      ],
+      "worst_meter_error_db": 0.0007748603820800781
+    }
+  ],
+  "admission": "NOT_GRANTED",
+  "limits": "Offline coefficients, fixed periodic trajectory, block-end spectral meters; not general live controls or intermediate-state bound proof.",
+  "evidence_bundles": [
+    {
+      "inputs_sha256": "9415afd1430f467c0f4cd33e6a9fbca6b564b63b5b3e257e5e2e6dee00efd776",
+      "runner_sha256": "45327b3b206d13018f4443c569d7d327e4a1e27783d2ace447d43874bdd571fb",
+      "reference_sha256": "eabdb1c87b7ff11dc2b3600fc451ffed04b100ee96c8f04bce883442e6ab2d98",
+      "runtime_pin": {
+        "bundled_faustlibraries_version": "2.74.2",
+        "data_sha256": "12e89b91e9b9fce899b1cdf6f62fdea18d95ce1ae63a69a61d76c3d365e52050",
+        "faust_version": "2.90.0",
+        "faustlibraries_commit": "2edec0537f53",
+        "faustlibraries_tree_sha256": "edf8f43966942ec96ec2e46341af49454c311586a62879b430687c9ffd434173",
+        "faustlibraries_version": "2.80.0",
+        "js_sha256": "73b9ee9ba0368f8a52d1e5feeeaee528930e38420acc9ea65b1198b480ed9e25",
+        "node": "22.23",
+        "wasm_sha256": "db7bde14b2553826ebcc30d8bd967aee98b37f3f0fce98182e5f574eb14bc217"
+      },
+      "worker_sha256": "bbe37e5a0367757868ba74250222a4875e0a7d4c637aa01e6cf238f6a826eeee"
+    },
+    {
+      "inputs_sha256": "f104269ac431b2b8c806fd6e116e173d6c8cc6d43733e179d036d1f95114613e",
+      "runner_sha256": "3f573d13e4a200c47e094e9c380a852b5408404e96c33e0760d20e7bbd1f4738",
+      "reference_sha256": "eabdb1c87b7ff11dc2b3600fc451ffed04b100ee96c8f04bce883442e6ab2d98",
+      "runtime_pin": {
+        "bundled_faustlibraries_version": "2.74.2",
+        "data_sha256": "12e89b91e9b9fce899b1cdf6f62fdea18d95ce1ae63a69a61d76c3d365e52050",
+        "faust_version": "2.90.0",
+        "faustlibraries_commit": "2edec0537f53",
+        "faustlibraries_tree_sha256": "edf8f43966942ec96ec2e46341af49454c311586a62879b430687c9ffd434173",
+        "faustlibraries_version": "2.80.0",
+        "js_sha256": "73b9ee9ba0368f8a52d1e5feeeaee528930e38420acc9ea65b1198b480ed9e25",
+        "node": "22.23",
+        "wasm_sha256": "db7bde14b2553826ebcc30d8bd967aee98b37f3f0fce98182e5f574eb14bc217"
+      },
+      "worker_sha256": "bbe37e5a0367757868ba74250222a4875e0a7d4c637aa01e6cf238f6a826eeee"
+    }
+  ],
+  "semantics_limit": "Time-varying direct-form recurrence only; equivalence to dynamically switching TPT/default analyzer not established."
+}

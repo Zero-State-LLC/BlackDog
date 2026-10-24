@@ -1,0 +1,86 @@
+{
+  "graph": {
+    "identities": 1558,
+    "components": 12,
+    "joining_operations": 30337
+  },
+  "rows": [
+    {
+      "candidate": "pm_single",
+      "unit_id": "new:pm_single",
+      "source_sha256": "9572ede82163f4868edbfd4894f2f6ba2ae987353029a316502c80cd939905b2",
+      "admission": "NOT_GRANTED",
+      "family": "sha256:ca108667175f5770c687909734d18775a21347fea275b3304e8d0decde81e027",
+      "comparison_connected": true,
+      "joining_evidence_count": 23,
+      "joining_evidence": [
+        {
+          "left": "new:pm_single",
+          "right": "comparison:2981ea911dcc456b3a154030f3556cc040484857",
+          "reason": "verbatim_run",
+          "stream": "raw",
+          "floor": 40,
+          "intersection": 132,
+          "denominator": 194
+        },
+        {
+          "reason": "collective_support",
+          "group_id": "sha256:0c6b499210343183692d7cfd740f034e06050eba7923aed88fde18de7e010506",
+          "comparison": "comparison:64bb5871522c191cb97741271a41dbe4bc6b1c11",
+          "covered": 2343,
+          "denominator": 4672,
+          "stream": "raw",
+          "floor": 40
+        },
+        {
+          "reason": "collective_support",
+          "group_id": "sha256:0b73a2cdb58196abe55d3c1f9f48724dd64128900cbfbb167badaf55cd17e4c7",
+          "comparison": "comparison:6d0c5543b7ad20a2493914b2017933192cdb6337",
+          "covered": 538,
+          "denominator": 590,
+          "stream": "raw",
+          "floor": 40
+        }
+      ]
+    },
+    {
+      "candidate": "pm_bounce",
+      "unit_id": "new:pm_bounce",
+      "source_sha256": "8db0b46f300c4532922ee7a396312f3fc1df87f892aa7d2c2c29a765cd4b5fc6",
+      "admission": "NOT_GRANTED",
+      "family": "sha256:ca108667175f5770c687909734d18775a21347fea275b3304e8d0decde81e027",
+      "comparison_connected": true,
+      "joining_evidence_count": 24,
+      "joining_evidence": [
+        {
+          "left": "new:pm_bounce",
+          "right": "comparison:2981ea911dcc456b3a154030f3556cc040484857",
+          "reason": "verbatim_run",
+          "stream": "raw",
+          "floor": 40,
+          "intersection": 265,
+          "denominator": 538
+        },
+        {
+          "reason": "collective_support",
+          "group_id": "sha256:0c6b499210343183692d7cfd740f034e06050eba7923aed88fde18de7e010506",
+          "comparison": "comparison:64bb5871522c191cb97741271a41dbe4bc6b1c11",
+          "covered": 2343,
+          "denominator": 4672,
+          "stream": "raw",
+          "floor": 40
+        },
+        {
+          "left": "new:pm_bounce",
+          "right": "comparison:64bb5871522c191cb97741271a41dbe4bc6b1c11",
+          "reason": "collective_union",
+          "stream": "raw",
+          "floor": 40,
+          "group_id": "sha256:0c6b499210343183692d7cfd740f034e06050eba7923aed88fde18de7e010506"
+        }
+      ]
+    }
+  ],
+  "admission": "NOT_GRANTED",
+  "policy": "unchanged floor40 provisional H1 collective"
+}

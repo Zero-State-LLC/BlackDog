@@ -1,0 +1,243 @@
+{
+  "status": "SEEDED_AUDIO_AND_COUNTER_WRAP_PASS",
+  "production_source_sha256": "74f7aef25b5c12a0e077bb407ddf491ea920fa015e3a20eef2884aacdf2a56fe",
+  "previous_source_sha256": "83cd856eaf46228903180244b2e5002e139f87decb39d2235a6df980d0b85ab8",
+  "runner_sha256": "03cf92a63d80d18e08179ef92b3ecc9a5004fef1598f62da033ce8ac288cc4d9",
+  "rows": [
+    {
+      "sample_rate": 44100,
+      "frequency": 20.0,
+      "variant": "unbounded",
+      "file": "44100-20.0-unbounded.bin",
+      "source_sha256": "ebcc467d3c986b61ac43369c0ddc2f8d137649b276e7596ddbd403ef7ba3e540",
+      "capture_sha256": "fd6f479534cdd14635e88dfedf25c3859c01062b645f2a85570f20451b4a95bc",
+      "peak": 0.0
+    },
+    {
+      "sample_rate": 44100,
+      "frequency": 20.0,
+      "variant": "bounded",
+      "file": "44100-20.0-bounded.bin",
+      "source_sha256": "1c8acdaa48a22de68cc1b841c7c59b6bb1422510ac816513b25fd7d0c42912f2",
+      "capture_sha256": "fd6f479534cdd14635e88dfedf25c3859c01062b645f2a85570f20451b4a95bc",
+      "peak": 0.0
+    },
+    {
+      "sample_rate": 44100,
+      "frequency": 440.0,
+      "variant": "unbounded",
+      "file": "44100-440.0-unbounded.bin",
+      "source_sha256": "ebcc467d3c986b61ac43369c0ddc2f8d137649b276e7596ddbd403ef7ba3e540",
+      "capture_sha256": "a1800a6d12109e445085479171b5e548c41b41161a245158a34b4c1c8ce11b6a",
+      "peak": 0.4643639326095581
+    },
+    {
+      "sample_rate": 44100,
+      "frequency": 440.0,
+      "variant": "bounded",
+      "file": "44100-440.0-bounded.bin",
+      "source_sha256": "1c8acdaa48a22de68cc1b841c7c59b6bb1422510ac816513b25fd7d0c42912f2",
+      "capture_sha256": "a1800a6d12109e445085479171b5e548c41b41161a245158a34b4c1c8ce11b6a",
+      "peak": 0.4643639326095581
+    },
+    {
+      "sample_rate": 44100,
+      "frequency": 7902.132820097988,
+      "variant": "unbounded",
+      "file": "44100-7902.132820097988-unbounded.bin",
+      "source_sha256": "ebcc467d3c986b61ac43369c0ddc2f8d137649b276e7596ddbd403ef7ba3e540",
+      "capture_sha256": "8c91d9f14049f79aac4dbb552ed876eb775c3e0125ceda537b82b8cc84788c93",
+      "peak": 0.4987829029560089
+    },
+    {
+      "sample_rate": 44100,
+      "frequency": 7902.132820097988,
+      "variant": "bounded",
+      "file": "44100-7902.132820097988-bounded.bin",
+      "source_sha256": "1c8acdaa48a22de68cc1b841c7c59b6bb1422510ac816513b25fd7d0c42912f2",
+      "capture_sha256": "8c91d9f14049f79aac4dbb552ed876eb775c3e0125ceda537b82b8cc84788c93",
+      "peak": 0.4987829029560089
+    },
+    {
+      "sample_rate": 48000,
+      "frequency": 20.0,
+      "variant": "unbounded",
+      "file": "48000-20.0-unbounded.bin",
+      "source_sha256": "ebcc467d3c986b61ac43369c0ddc2f8d137649b276e7596ddbd403ef7ba3e540",
+      "capture_sha256": "ea0787f65f73b0013d03b359490e3125211b28ad5c1502ffb1544c0ded4192f5",
+      "peak": 0.0
+    },
+    {
+      "sample_rate": 48000,
+      "frequency": 20.0,
+      "variant": "bounded",
+      "file": "48000-20.0-bounded.bin",
+      "source_sha256": "1c8acdaa48a22de68cc1b841c7c59b6bb1422510ac816513b25fd7d0c42912f2",
+      "capture_sha256": "ea0787f65f73b0013d03b359490e3125211b28ad5c1502ffb1544c0ded4192f5",
+      "peak": 0.0
+    },
+    {
+      "sample_rate": 48000,
+      "frequency": 440.0,
+      "variant": "unbounded",
+      "file": "48000-440.0-unbounded.bin",
+      "source_sha256": "ebcc467d3c986b61ac43369c0ddc2f8d137649b276e7596ddbd403ef7ba3e540",
+      "capture_sha256": "2a887bfc5d63a6ad92d95df3cfdc13f12ec76ff929bb92f9fc19de37654281fa",
+      "peak": 0.4739460051059723
+    },
+    {
+      "sample_rate": 48000,
+      "frequency": 440.0,
+      "variant": "bounded",
+      "file": "48000-440.0-bounded.bin",
+      "source_sha256": "1c8acdaa48a22de68cc1b841c7c59b6bb1422510ac816513b25fd7d0c42912f2",
+      "capture_sha256": "2a887bfc5d63a6ad92d95df3cfdc13f12ec76ff929bb92f9fc19de37654281fa",
+      "peak": 0.4739460051059723
+    },
+    {
+      "sample_rate": 48000,
+      "frequency": 7902.132820097988,
+      "variant": "unbounded",
+      "file": "48000-7902.132820097988-unbounded.bin",
+      "source_sha256": "ebcc467d3c986b61ac43369c0ddc2f8d137649b276e7596ddbd403ef7ba3e540",
+      "capture_sha256": "66e87601d258f3b54f7636816ef4ad7b049d0b150bd911cf795e3a13526ec054",
+      "peak": 0.45461779832839966
+    },
+    {
+      "sample_rate": 48000,
+      "frequency": 7902.132820097988,
+      "variant": "bounded",
+      "file": "48000-7902.132820097988-bounded.bin",
+      "source_sha256": "1c8acdaa48a22de68cc1b841c7c59b6bb1422510ac816513b25fd7d0c42912f2",
+      "capture_sha256": "66e87601d258f3b54f7636816ef4ad7b049d0b150bd911cf795e3a13526ec054",
+      "peak": 0.45461779832839966
+    },
+    {
+      "sample_rate": 96000,
+      "frequency": 20.0,
+      "variant": "unbounded",
+      "file": "96000-20.0-unbounded.bin",
+      "source_sha256": "ebcc467d3c986b61ac43369c0ddc2f8d137649b276e7596ddbd403ef7ba3e540",
+      "capture_sha256": "fec9afb531a8e036eba1d81651896e1b2c1f78b0234dbadc8e7549563f09407b",
+      "peak": 0.0
+    },
+    {
+      "sample_rate": 96000,
+      "frequency": 20.0,
+      "variant": "bounded",
+      "file": "96000-20.0-bounded.bin",
+      "source_sha256": "1c8acdaa48a22de68cc1b841c7c59b6bb1422510ac816513b25fd7d0c42912f2",
+      "capture_sha256": "fec9afb531a8e036eba1d81651896e1b2c1f78b0234dbadc8e7549563f09407b",
+      "peak": 0.0
+    },
+    {
+      "sample_rate": 96000,
+      "frequency": 440.0,
+      "variant": "unbounded",
+      "file": "96000-440.0-unbounded.bin",
+      "source_sha256": "ebcc467d3c986b61ac43369c0ddc2f8d137649b276e7596ddbd403ef7ba3e540",
+      "capture_sha256": "104e69d5018601dd95ab11bfd7e7826aeca7d9933898540b675b4464ab5de88b",
+      "peak": 0.46766626834869385
+    },
+    {
+      "sample_rate": 96000,
+      "frequency": 440.0,
+      "variant": "bounded",
+      "file": "96000-440.0-bounded.bin",
+      "source_sha256": "1c8acdaa48a22de68cc1b841c7c59b6bb1422510ac816513b25fd7d0c42912f2",
+      "capture_sha256": "104e69d5018601dd95ab11bfd7e7826aeca7d9933898540b675b4464ab5de88b",
+      "peak": 0.46766626834869385
+    },
+    {
+      "sample_rate": 96000,
+      "frequency": 7902.132820097988,
+      "variant": "unbounded",
+      "file": "96000-7902.132820097988-unbounded.bin",
+      "source_sha256": "ebcc467d3c986b61ac43369c0ddc2f8d137649b276e7596ddbd403ef7ba3e540",
+      "capture_sha256": "870283105a9f1faf5b7c4c468ec46201b704e9f364c7bb8e04073c0f59158dee",
+      "peak": 0.46517905592918396
+    },
+    {
+      "sample_rate": 96000,
+      "frequency": 7902.132820097988,
+      "variant": "bounded",
+      "file": "96000-7902.132820097988-bounded.bin",
+      "source_sha256": "1c8acdaa48a22de68cc1b841c7c59b6bb1422510ac816513b25fd7d0c42912f2",
+      "capture_sha256": "870283105a9f1faf5b7c4c468ec46201b704e9f364c7bb8e04073c0f59158dee",
+      "peak": 0.46517905592918396
+    },
+    {
+      "sample_rate": 192000,
+      "frequency": 20.0,
+      "variant": "unbounded",
+      "file": "192000-20.0-unbounded.bin",
+      "source_sha256": "ebcc467d3c986b61ac43369c0ddc2f8d137649b276e7596ddbd403ef7ba3e540",
+      "capture_sha256": "351a8054b23144894668c6a51d5dbba82f56523ef43cc45b6f4d7060a969c31a",
+      "peak": 0.0
+    },
+    {
+      "sample_rate": 192000,
+      "frequency": 20.0,
+      "variant": "bounded",
+      "file": "192000-20.0-bounded.bin",
+      "source_sha256": "1c8acdaa48a22de68cc1b841c7c59b6bb1422510ac816513b25fd7d0c42912f2",
+      "capture_sha256": "351a8054b23144894668c6a51d5dbba82f56523ef43cc45b6f4d7060a969c31a",
+      "peak": 0.0
+    },
+    {
+      "sample_rate": 192000,
+      "frequency": 440.0,
+      "variant": "unbounded",
+      "file": "192000-440.0-unbounded.bin",
+      "source_sha256": "ebcc467d3c986b61ac43369c0ddc2f8d137649b276e7596ddbd403ef7ba3e540",
+      "capture_sha256": "64649ec1ce9fe1c272302e4672b471cc3a7748f65fa4f4e54d81594d290c47d6",
+      "peak": 0.45451587438583374
+    },
+    {
+      "sample_rate": 192000,
+      "frequency": 440.0,
+      "variant": "bounded",
+      "file": "192000-440.0-bounded.bin",
+      "source_sha256": "1c8acdaa48a22de68cc1b841c7c59b6bb1422510ac816513b25fd7d0c42912f2",
+      "capture_sha256": "64649ec1ce9fe1c272302e4672b471cc3a7748f65fa4f4e54d81594d290c47d6",
+      "peak": 0.45451587438583374
+    },
+    {
+      "sample_rate": 192000,
+      "frequency": 7902.132820097988,
+      "variant": "unbounded",
+      "file": "192000-7902.132820097988-unbounded.bin",
+      "source_sha256": "ebcc467d3c986b61ac43369c0ddc2f8d137649b276e7596ddbd403ef7ba3e540",
+      "capture_sha256": "73c320f1c771f1163af0ccdf1132bb4b247fefe127e0c2a3956bdf84da72c48a",
+      "peak": 0.45771679282188416
+    },
+    {
+      "sample_rate": 192000,
+      "frequency": 7902.132820097988,
+      "variant": "bounded",
+      "file": "192000-7902.132820097988-bounded.bin",
+      "source_sha256": "1c8acdaa48a22de68cc1b841c7c59b6bb1422510ac816513b25fd7d0c42912f2",
+      "capture_sha256": "73c320f1c771f1163af0ccdf1132bb4b247fefe127e0c2a3956bdf84da72c48a",
+      "peak": 0.45771679282188416
+    }
+  ],
+  "counter_probe_sha256": "15d297772e58fd6406b53906fdba8f23a3b00e4efbaf95c0db06b66ae9579ae7",
+  "counter_capture_sha256": "ccde3c7fd4d0e42e5de9c3f76455e5c5e69f974d40078ba0af0cc67586c65411",
+  "counter_wrap_index": 131071,
+  "counter_frames": 131200,
+  "scope": "24 instrumented half-second audio captures, 12 bit-identical pairs; seeded early tag rollover, plus unseeded counter-only wrap probe. Does not transfer prior production source validation.",
+  "admission": "NOT_GRANTED",
+  "verification": {
+    "status": "PASS",
+    "audio_captures": 24,
+    "nonzero_audio_captures": 16,
+    "counter_samples": 131200,
+    "counter_every_sample_matches_integer_oracle": true,
+    "scope": "Instrumented boundary diagnostics; production qualification remains separate"
+  },
+  "archive_sha256": "16eeb668beb7d979bd8b3ba9f05a97efa72b513c54492f815ac72e1d497d9af9",
+  "uninstrumented_direct_capture_comparison": {
+    "cases": 416,
+    "byte_identical_to_previous_source": true
+  }
+}

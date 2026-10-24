@@ -1,0 +1,23 @@
+{
+  "graph": {
+    "identities": 1511,
+    "components": 12,
+    "joining_operations": 28196
+  },
+  "rows": [
+    {
+      "unit_id": "repair:switch-live",
+      "source_sha256": "e7ab0cb2ad59c3744a6b96c1ee2265b04c573478c68489b4f8194034e8110c94",
+      "family": "sha256:a0b2d97128f6d33d5a8ee5786205593ce22d1bac878cd2746968e7c8b762e13a",
+      "comparison_connected": true
+    },
+    {
+      "unit_id": "repair:switch-pair-live",
+      "source_sha256": "40fa58b1ffdbb6537de120959c8ab5797f67c1dd4c4024f63674d05355310d5e",
+      "family": "sha256:a0b2d97128f6d33d5a8ee5786205593ce22d1bac878cd2746968e7c8b762e13a",
+      "comparison_connected": true
+    }
+  ],
+  "admission": "NOT_GRANTED",
+  "policy": "unchanged floor40 provisional H1 collective"
+}

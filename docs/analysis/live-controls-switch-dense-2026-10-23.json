@@ -1,0 +1,573 @@
+{
+  "admission": "NOT_GRANTED",
+  "diagnostic_only": true,
+  "events": [
+    [
+      0,
+      2000.0
+    ],
+    [
+      1,
+      2250.0
+    ],
+    [
+      2,
+      2500.0
+    ],
+    [
+      3,
+      2750.0
+    ],
+    [
+      4,
+      3000.0
+    ],
+    [
+      5,
+      3250.0
+    ],
+    [
+      6,
+      3500.0
+    ],
+    [
+      7,
+      3750.0
+    ],
+    [
+      8,
+      4000.0
+    ],
+    [
+      9,
+      4250.0
+    ],
+    [
+      10,
+      4500.0
+    ],
+    [
+      11,
+      4750.0
+    ],
+    [
+      12,
+      5000.0
+    ],
+    [
+      13,
+      5250.0
+    ],
+    [
+      14,
+      5500.0
+    ],
+    [
+      15,
+      5750.0
+    ],
+    [
+      16,
+      6000.0
+    ],
+    [
+      17,
+      5750.0
+    ],
+    [
+      18,
+      5500.0
+    ],
+    [
+      19,
+      5250.0
+    ],
+    [
+      20,
+      5000.0
+    ],
+    [
+      21,
+      4750.0
+    ],
+    [
+      22,
+      4500.0
+    ],
+    [
+      23,
+      4250.0
+    ],
+    [
+      24,
+      4000.0
+    ],
+    [
+      25,
+      3750.0
+    ],
+    [
+      26,
+      3500.0
+    ],
+    [
+      27,
+      3250.0
+    ],
+    [
+      28,
+      3000.0
+    ],
+    [
+      29,
+      2750.0
+    ],
+    [
+      30,
+      2500.0
+    ],
+    [
+      31,
+      2250.0
+    ],
+    [
+      32,
+      2000.0
+    ],
+    [
+      33,
+      2250.0
+    ],
+    [
+      34,
+      2500.0
+    ],
+    [
+      35,
+      2750.0
+    ],
+    [
+      36,
+      3000.0
+    ],
+    [
+      37,
+      3250.0
+    ],
+    [
+      38,
+      3500.0
+    ],
+    [
+      39,
+      3750.0
+    ],
+    [
+      40,
+      4000.0
+    ],
+    [
+      41,
+      4250.0
+    ],
+    [
+      42,
+      4500.0
+    ],
+    [
+      43,
+      4750.0
+    ],
+    [
+      44,
+      5000.0
+    ],
+    [
+      45,
+      5250.0
+    ],
+    [
+      46,
+      5500.0
+    ],
+    [
+      47,
+      5750.0
+    ],
+    [
+      48,
+      6000.0
+    ],
+    [
+      49,
+      5750.0
+    ],
+    [
+      50,
+      5500.0
+    ],
+    [
+      51,
+      5250.0
+    ],
+    [
+      52,
+      5000.0
+    ],
+    [
+      53,
+      4750.0
+    ],
+    [
+      54,
+      4500.0
+    ],
+    [
+      55,
+      4250.0
+    ],
+    [
+      56,
+      4000.0
+    ],
+    [
+      57,
+      3750.0
+    ],
+    [
+      58,
+      3500.0
+    ],
+    [
+      59,
+      3250.0
+    ],
+    [
+      60,
+      3000.0
+    ],
+    [
+      61,
+      2750.0
+    ],
+    [
+      62,
+      2500.0
+    ],
+    [
+      63,
+      2250.0
+    ]
+  ],
+  "mode": "switch",
+  "reference_sha256": "c3642f5dc3106899148e3970a6a06020e6d6642d27d7ce94247cc8d0dd17dae5",
+  "rows": [
+    {
+      "control_address": "/input/cutoff_hz",
+      "rate": 44100,
+      "runs": [
+        {
+          "failures": [],
+          "frozen_rejected": true,
+          "max_meter_error_db": 0.00010728836059570312,
+          "max_tolerance_ratio": 0.12445316983387807,
+          "negative_receipt": {
+            "path": "44100-noise-frozen-receipt.json",
+            "sha256": "aa0cbe41865cdcd2ba8f951117f28144c09344b5a2f46037de62b470d6d06925"
+          },
+          "passed": true,
+          "receipt": {
+            "path": "44100-noise-receipt.json",
+            "sha256": "315342fcba79b4f57e95715508af443ac061d682bf1c86cee19bbb72a64ed8bf"
+          },
+          "stimulus": "noise",
+          "worst": {
+            "actual": -0.17117300629615784,
+            "channel": 3,
+            "frame": 128,
+            "reference": -0.17117254436016083
+          }
+        },
+        {
+          "failures": [],
+          "frozen_rejected": true,
+          "max_meter_error_db": 0.0008940696716308594,
+          "max_tolerance_ratio": 0.5473549538929351,
+          "negative_receipt": {
+            "path": "44100-impulse-frozen-receipt.json",
+            "sha256": "1115753fd2d936b26cadc561cf4aae46aa406b8e45eb02642f89e5466a2d26ac"
+          },
+          "passed": true,
+          "receipt": {
+            "path": "44100-impulse-receipt.json",
+            "sha256": "e4755e387f714e3eb5b0e03d261fb09c7bd625b95b86a99a59a8298d63313ee4"
+          },
+          "stimulus": "impulse",
+          "worst": {
+            "actual": -0.6167138814926147,
+            "channel": 3,
+            "frame": 4032,
+            "reference": -0.6167183518409729
+          }
+        },
+        {
+          "failures": [],
+          "frozen_rejected": true,
+          "max_meter_error_db": 0.0005304813385009766,
+          "max_tolerance_ratio": 0.40512722829420944,
+          "negative_receipt": {
+            "path": "44100-sine-frozen-receipt.json",
+            "sha256": "08e2b0d20099a2d926b685e9d923938804c5cf8713b099232c8958d305039719"
+          },
+          "passed": true,
+          "receipt": {
+            "path": "44100-sine-receipt.json",
+            "sha256": "27ec6ac243ead6e974e3e386fa5e5b32f97b76ab14628c5d281c5067bdfabf2f"
+          },
+          "stimulus": "sine",
+          "worst": {
+            "actual": -0.4547122120857239,
+            "channel": 3,
+            "frame": 3968,
+            "reference": -0.45470955967903137
+          }
+        }
+      ],
+      "status": "DIAGNOSTIC_PASS"
+    },
+    {
+      "control_address": "/input/cutoff_hz",
+      "rate": 48000,
+      "runs": [
+        {
+          "failures": [],
+          "frozen_rejected": true,
+          "max_meter_error_db": 3.5762786865234375e-05,
+          "max_tolerance_ratio": 0.04226931859452917,
+          "negative_receipt": {
+            "path": "48000-noise-frozen-receipt.json",
+            "sha256": "b85507bec70c654ff8ee906d8c4cd95bcebf5d73a66cfdc2cd5467685bcab84c"
+          },
+          "passed": true,
+          "receipt": {
+            "path": "48000-noise-receipt.json",
+            "sha256": "aa15eb7e51648b0f30837468aafc39c1e2767d82d031e3e307264582e017d0a0"
+          },
+          "stimulus": "noise",
+          "worst": {
+            "actual": -0.18778207898139954,
+            "channel": 3,
+            "frame": 64,
+            "reference": -0.1877819150686264
+          }
+        },
+        {
+          "failures": [],
+          "frozen_rejected": true,
+          "max_meter_error_db": 0.0002741813659667969,
+          "max_tolerance_ratio": 0.17664795181461684,
+          "negative_receipt": {
+            "path": "48000-impulse-frozen-receipt.json",
+            "sha256": "2fc18c94758adf5d2886ae437a7cd580e071ff0dd948cf818ad33d67de161cca"
+          },
+          "passed": true,
+          "receipt": {
+            "path": "48000-impulse-receipt.json",
+            "sha256": "ac6adf41cb40dad3e81e51e85c24a03b49a9d9bc6bc1f940a3d8beb166437d29"
+          },
+          "stimulus": "impulse",
+          "worst": {
+            "actual": -0.5760658383369446,
+            "channel": 3,
+            "frame": 3904,
+            "reference": -0.5760672092437744
+          }
+        },
+        {
+          "failures": [],
+          "frozen_rejected": true,
+          "max_meter_error_db": 0.0003993511199951172,
+          "max_tolerance_ratio": 0.303149939625201,
+          "negative_receipt": {
+            "path": "48000-sine-frozen-receipt.json",
+            "sha256": "9cae76a9d8e43c4f42b2d8649bd23741145f815e18a4ddd5cf281186199af22b"
+          },
+          "passed": true,
+          "receipt": {
+            "path": "48000-sine-receipt.json",
+            "sha256": "613da29e0bf4dabec2df064676e4f122d714d6deee77e1d745cc3b22a5dd822c"
+          },
+          "stimulus": "sine",
+          "worst": {
+            "actual": -0.4586673080921173,
+            "channel": 3,
+            "frame": 3776,
+            "reference": -0.4586693048477173
+          }
+        }
+      ],
+      "status": "DIAGNOSTIC_PASS"
+    },
+    {
+      "control_address": "/input/cutoff_hz",
+      "rate": 96000,
+      "runs": [
+        {
+          "failures": [],
+          "frozen_rejected": true,
+          "max_meter_error_db": 8.344650268554688e-05,
+          "max_tolerance_ratio": 0.1034165741559006,
+          "negative_receipt": {
+            "path": "96000-noise-frozen-receipt.json",
+            "sha256": "72f9cf485a91e7ed5c12e7821c9fbb859c5497ddedacd3f4a40506cc0334b747"
+          },
+          "passed": true,
+          "receipt": {
+            "path": "96000-noise-receipt.json",
+            "sha256": "ffed93327d648bd1762a44bbe7a6bb8d0734b30f7669b523fed4931cfb2a744e"
+          },
+          "stimulus": "noise",
+          "worst": {
+            "actual": -0.1746310442686081,
+            "channel": 3,
+            "frame": 320,
+            "reference": -0.17463065683841705
+          }
+        },
+        {
+          "failures": [],
+          "frozen_rejected": true,
+          "max_meter_error_db": 0.0002682209014892578,
+          "max_tolerance_ratio": 0.21577072651403728,
+          "negative_receipt": {
+            "path": "96000-impulse-frozen-receipt.json",
+            "sha256": "ab7eae1483d2dfa9a3ed48f9565a99e52dc8d57070da68459fa4dd24e327ae41"
+          },
+          "passed": true,
+          "receipt": {
+            "path": "96000-impulse-receipt.json",
+            "sha256": "98283de6a8b69d772c7acea74d2a585e3c49fa4a2d50324e858e0c13ba764482"
+          },
+          "stimulus": "impulse",
+          "worst": {
+            "actual": -0.42154011130332947,
+            "channel": 3,
+            "frame": 3904,
+            "reference": -0.4215414524078369
+          }
+        },
+        {
+          "failures": [],
+          "frozen_rejected": true,
+          "max_meter_error_db": 9.5367431640625e-05,
+          "max_tolerance_ratio": 0.1185740628329913,
+          "negative_receipt": {
+            "path": "96000-sine-frozen-receipt.json",
+            "sha256": "6223420443793605ff06bee07952f880cc3a43540920bee1c4c3209f5965558a"
+          },
+          "passed": true,
+          "receipt": {
+            "path": "96000-sine-receipt.json",
+            "sha256": "bc2487178a8fc2a66de2437f769305e13a56a8f4a06cd81facb128fdfc3f3ea2"
+          },
+          "stimulus": "sine",
+          "worst": {
+            "actual": -0.09532403200864792,
+            "channel": 1,
+            "frame": 384,
+            "reference": -0.09532368183135986
+          }
+        }
+      ],
+      "status": "DIAGNOSTIC_PASS"
+    },
+    {
+      "control_address": "/input/cutoff_hz",
+      "rate": 192000,
+      "runs": [
+        {
+          "failures": [],
+          "frozen_rejected": true,
+          "max_meter_error_db": 0.00014901161193847656,
+          "max_tolerance_ratio": 0.16211454546892945,
+          "negative_receipt": {
+            "path": "192000-noise-frozen-receipt.json",
+            "sha256": "eb1d4decdd650872ab212266893e0c552b53dd346a96089e9c57692bdbc59d28"
+          },
+          "passed": true,
+          "receipt": {
+            "path": "192000-noise-receipt.json",
+            "sha256": "9e9b8c61a2979d1cb47eb3f8cbd01165da618480b0e20678254ea78869cf55d7"
+          },
+          "stimulus": "noise",
+          "worst": {
+            "actual": -0.21362800896167755,
+            "channel": 3,
+            "frame": 192,
+            "reference": -0.21362867951393127
+          }
+        },
+        {
+          "failures": [],
+          "frozen_rejected": true,
+          "max_meter_error_db": 0.00017881393432617188,
+          "max_tolerance_ratio": 0.15390041170164478,
+          "negative_receipt": {
+            "path": "192000-impulse-frozen-receipt.json",
+            "sha256": "dddfc2c3159ea96743d50243262167b85903bef9ad600ced55e282cd772f5c84"
+          },
+          "passed": true,
+          "receipt": {
+            "path": "192000-impulse-receipt.json",
+            "sha256": "748eb513a4c4b632126343f242f7946406f23942f8f9fb5ec568dad6764f5fad"
+          },
+          "stimulus": "impulse",
+          "worst": {
+            "actual": -0.3615765869617462,
+            "channel": 3,
+            "frame": 4032,
+            "reference": -0.361575722694397
+          }
+        },
+        {
+          "failures": [],
+          "frozen_rejected": true,
+          "max_meter_error_db": 0.00014901161193847656,
+          "max_tolerance_ratio": 0.2162847831557683,
+          "negative_receipt": {
+            "path": "192000-sine-frozen-receipt.json",
+            "sha256": "8dde8c6993ea4cf151d2b056588ec4ae6917ea7d27817b7fa18e806667b57e52"
+          },
+          "passed": true,
+          "receipt": {
+            "path": "192000-sine-receipt.json",
+            "sha256": "635426144b1adbc38dea4fddd8a2e6ef5661e0a234e37b9246099ef63a989f77"
+          },
+          "stimulus": "sine",
+          "worst": {
+            "actual": -0.10658663511276245,
+            "channel": 1,
+            "frame": 576,
+            "reference": -0.10658729821443558
+          }
+        }
+      ],
+      "status": "DIAGNOSTIC_PASS"
+    }
+  ],
+  "runner_sha256": "debe25746bf412701051cc91f0abb5183a75e4b71bb7672dcafbc6f98e6900de",
+  "runtime_pin": {
+    "bundled_faustlibraries_version": "2.74.2",
+    "data_sha256": "12e89b91e9b9fce899b1cdf6f62fdea18d95ce1ae63a69a61d76c3d365e52050",
+    "faust_version": "2.90.0",
+    "faustlibraries_commit": "2edec0537f53",
+    "faustlibraries_tree_sha256": "edf8f43966942ec96ec2e46341af49454c311586a62879b430687c9ffd434173",
+    "faustlibraries_version": "2.80.0",
+    "js_sha256": "73b9ee9ba0368f8a52d1e5feeeaee528930e38420acc9ea65b1198b480ed9e25",
+    "node": "22.23",
+    "wasm_sha256": "db7bde14b2553826ebcc30d8bd967aee98b37f3f0fce98182e5f574eb14bc217"
+  },
+  "schedule": "dense",
+  "source_sha256": "40fa58b1ffdbb6537de120959c8ab5797f67c1dd4c4024f63674d05355310d5e",
+  "worker_sha256": "bbe37e5a0367757868ba74250222a4875e0a7d4c637aa01e6cf238f6a826eeee"
+}

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+import json
 from pathlib import Path
 
 import pytest
@@ -110,6 +111,8 @@ def _delayed(samples: list[float], delay: int, gain: float) -> list[float]:
 
 
 def _run(source: str, profile: SignalProfile, reference: SignalReference | None = None, **kwargs):
+    if kwargs.get("reward_graded"):
+        kwargs["task"] = json.loads((ROOT / "tests/fixtures/valid/task-spec.json").read_text())
     return run_signal(source, profile, reference, **kwargs)
 
 
@@ -135,7 +138,7 @@ def test_stimuli_are_deterministic_float32() -> None:
 
 
 def test_sample_rate_is_closed() -> None:
-    with pytest.raises(ValueError, match="44100 or 48000"):
+    with pytest.raises(ValueError, match="SUPPORTED_SAMPLE_RATES"):
         SignalProfile(sample_rate=22050)
 
 

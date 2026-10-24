@@ -1,0 +1,63 @@
+{
+  "status": "BOUNDED_HOST_VERIFICATION_PASS",
+  "host": "DawDreamer0.9.0 macOS arm64 Python3.12",
+  "rows": [
+    {
+      "evidence": "pluck-host-evidence",
+      "source_sha256": "ddb0f318fd77ce19c025ee0525bf41f6086f017ad670405898ea5a6b92e8767b",
+      "captures": 20,
+      "superposition_max_error": 0.05344134569168091,
+      "release_tail_peaks": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "expected_superposition_pass": false,
+      "report_sha256": "cce90de1d3debd05385f2565d6cbab3c86541606d80a22278712067a9ebbf39c"
+    },
+    {
+      "evidence": "pluck-reset-host-evidence",
+      "source_sha256": "83cd856eaf46228903180244b2e5002e139f87decb39d2235a6df980d0b85ab8",
+      "captures": 20,
+      "superposition_max_error": 0.0,
+      "release_tail_peaks": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "expected_superposition_pass": true,
+      "report_sha256": "9d6d1c630f2c769d3ca459f7cd6cd2b45a823e328bb90235aafd3e5b946b6a6a"
+    },
+    {
+      "evidence": "pluck-reset-host-range-evidence",
+      "source_sha256": "83cd856eaf46228903180244b2e5002e139f87decb39d2235a6df980d0b85ab8",
+      "captures": 32,
+      "superposition_max_error": 5.960464477539063e-08,
+      "release_tail_peaks": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "expected_superposition_pass": true,
+      "report_sha256": "00b58733c77e462ee4378af771beddfa2a3da85f2e5930452b8fc6fac4f8f908"
+    },
+    {
+      "evidence": "pluck-natural-policy-host-evidence",
+      "source_sha256": "83cd856eaf46228903180244b2e5002e139f87decb39d2235a6df980d0b85ab8",
+      "captures": 20,
+      "superposition_max_error": 0.0,
+      "release_tail_peaks": [
+        0.05062343180179596,
+        0.05197281390428543,
+        0.05112841725349426,
+        0.04917151480913162
+      ],
+      "expected_superposition_pass": true,
+      "report_sha256": "66f1da384cb24b5457213dd49d8c81ee01fa5dc8adc1f0efb0b1e40f3144a2c6"
+    }
+  ],
+  "admission": "NOT_GRANTED"
+}

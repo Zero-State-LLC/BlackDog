@@ -1,0 +1,39 @@
+{
+  "status": "EXACT_PAIR_REVIEW_PACKET_NOT_ADMITTED",
+  "assembled_sha256": "d4fdfcc5b44cb5d9d4a5ecf98fdec76c88376410dcc574811b2b4e45f10e075e",
+  "target_sha256": "e53eb44125c66681b6d413aa7578d83cd4d3c15e81eef1ca68d8a7a5632e11da",
+  "prompt_sha256": "cd5fdfd76bddb0c8ea91616833191c26e8db4c9c144ffec0a283ff7bc3e01e1e",
+  "dependency_context_sha256": "43fab3a0e66bb720813467a32320798c86dce63d00c6e67223429359d26f0db3",
+  "pair_digest": "sha256:5604a3dd5bb97a94728437cc8667e03dd46bc62dcf0137105c788d16ee7a08b6",
+  "products_verified": 41328,
+  "sequence_tokens": 363,
+  "full_history_source_bound": true,
+  "comparison_connected": true,
+  "independent_semantic_approval": false,
+  "canonical_admission": false,
+  "signed_partition_membership": false,
+  "admission": "NOT_GRANTED",
+  "pilot_ready": false,
+  "training_authorized": false,
+  "authority": "LOCAL_DIAGNOSTIC_CONSISTENCY_NOT_AUTHENTICATION",
+  "review_questions": [
+    "Does the exact prompt specify the desired operation order and supplied helper behavior?",
+    "Is the pinned-coefficient and bounded analyzer domain appropriate, without claiming arbitrary-range multiplication?",
+    "Do canonical rights cover this exact target, prompt and complete supplied dependency context?",
+    "Does the full family replay prevent this comparison-connected closure from entering evaluation?",
+    "Does an authenticated signed partition bind this exact pair and context?"
+  ],
+  "input_sha256": {
+    "rights": "c9a02cc63184b4c50b4e84764274a77b1852651f311d2ad37938f36059e4b232",
+    "family": "3d14dd54930fcfd4ce6d623e5a66407588bc6133bbf6e1c64af30bdcf3e69a0b",
+    "wasm": "4a89a484433e559624ff1e8ad4482889787c834514adbaea699a4357e6e5d69f",
+    "modular": "89733d0fb94b1ea816c618affb9f6351f820bfd3aaa0e867fb3db3f0e82a107b",
+    "contracts": "1047160c9084177c91aa1f761107ea06f37774ec626aa79716f4cc209b7f853d",
+    "exact_contract": "a21d4866f9444d77f9fd1a599f25b31b0fdf29cd02db04e254855194f3b42511",
+    "contract_report": "43a494ac7265ab8cb9bb0b1d46a802a4c8a5457fe47b4ce97ea611fc87cf5bc3",
+    "product_verification": "e873eec50c296e612565b093d818b9a30b0e912bf6cf14ef2d690b961958d1fa",
+    "prompt_order": "69f3922f9ffc4bc0861a90335a88296adcfb519cddcdf6c32fae8f678043a23c",
+    "direct_dependency_context": "6422f2639d7740d2b749b49d509ead26a741a34cf25763167aac461f67dfebc9"
+  },
+  "source_of_semantic_approval": "ABSENT; automated consistency and agent review cannot populate this field"
+}

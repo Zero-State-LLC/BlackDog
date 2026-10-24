@@ -1,0 +1,49 @@
+{
+  "graph": {
+    "identities": 1556,
+    "components": 12,
+    "joining_operations": 30290
+  },
+  "rows": [
+    {
+      "candidate": "sk_filter_closed",
+      "unit_id": "new:sk_filter_closed",
+      "source_sha256": "b9d19b5c12f735836e312772fdb60330abe7ad4193be5bfa05074029568b51c5",
+      "admission": "NOT_GRANTED",
+      "family": "sha256:4080f2c495966e6d0e26d66e3caeb18e4e3cafa383597503d023fb236ff16a13",
+      "comparison_connected": true,
+      "joining_evidence_count": 23,
+      "joining_evidence": [
+        {
+          "left": "new:sk_filter_closed",
+          "right": "comparison:0af91c8e5d9029bd24c099abd65928fa4d250beb",
+          "reason": "verbatim_run",
+          "stream": "raw",
+          "floor": 40,
+          "intersection": 260,
+          "denominator": 598
+        },
+        {
+          "reason": "collective_support",
+          "group_id": "sha256:715ab6b9112151e6b57cf2b8a767e4dff13526f3b95205cf3bf7831cf3b6a3b9",
+          "comparison": "comparison:64bb5871522c191cb97741271a41dbe4bc6b1c11",
+          "covered": 2343,
+          "denominator": 4672,
+          "stream": "raw",
+          "floor": 40
+        },
+        {
+          "reason": "collective_support",
+          "group_id": "sha256:396594c28db1b234006881a50b10207dfc94178ec8931d949079f22fafa0e4dd",
+          "comparison": "comparison:6d0c5543b7ad20a2493914b2017933192cdb6337",
+          "covered": 538,
+          "denominator": 590,
+          "stream": "raw",
+          "floor": 40
+        }
+      ]
+    }
+  ],
+  "admission": "NOT_GRANTED",
+  "policy": "unchanged floor40 provisional H1 collective"
+}

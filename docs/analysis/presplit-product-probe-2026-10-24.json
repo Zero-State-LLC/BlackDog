@@ -1,0 +1,16 @@
+{
+  "static_relative_error": 5.881720227985345e-08,
+  "dynamic_relative_error": 4.2907762451229295e-15,
+  "presplit_relative_error": 4.2907762451229295e-15,
+  "header_sha256": {
+    "Static": "285b3fdf14f7b6dc44642dbc4e5b70d03322fe2310fa64c127c8e9120c2e3427",
+    "Dynamic": "ca7c3b4e6d11700cd70460c22fe1ac0a42ef9f64199038690469676b2f324c37",
+    "Fixed": "3ecee4cd4db255940fa41443cd2aa73746c720d224c581005fb478cba22e6431"
+  },
+  "observed_constant_split": {
+    "static_emitted_high": "0.78241307f",
+    "correct_presplit_high": "0.7824707f",
+    "correct_presplit_remainder": "-5.763769e-05f"
+  },
+  "scope": "10,000 positive finite multipliers; pinned native compiler, no universal range claim"
+}

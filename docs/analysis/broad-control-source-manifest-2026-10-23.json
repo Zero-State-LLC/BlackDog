@@ -1,0 +1,20 @@
+[
+  {
+    "file": "pmstring.dsp",
+    "revision": "3e8c61947e121f1b66f0a7c69ffced211a9f505f",
+    "url": "https://gist.github.com/SpotlightKid/58a0ae69c94c2a2d54d363206ab82d07/3e8c61947e121f1b66f0a7c69ffced211a9f505f",
+    "sha256": "05a927162f442788538b6ff489840e85fd77d4bbd88a131f183ab6459dacb473",
+    "bytes": 5048,
+    "declared_license": "MIT License",
+    "status": "Exploratory provenance only; no admission"
+  },
+  {
+    "file": "fbnfm_drumvoice.dsp",
+    "revision": "4065845d38db1121f52687816072d87ae90ba203",
+    "url": "https://gist.github.com/SpotlightKid/9e3b14d5cda5c763c9db7e5e24cfe352/4065845d38db1121f52687816072d87ae90ba203",
+    "sha256": "b28ebda436a2d7a56b278c810f0fb1301c22875d9a6d9fa4fa4b28b15d1fa3c9",
+    "bytes": 3981,
+    "declared_license": "MIT License",
+    "status": "Exploratory provenance only; no admission"
+  }
+]

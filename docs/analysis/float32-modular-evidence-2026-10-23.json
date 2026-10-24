@@ -1,0 +1,15 @@
+{
+  "kind": "diagnostic-checkpoint.v1",
+  "artifacts": {
+    "blackdog-ladder-diagnosis.json": "000b975f994b863ec2559f7f3617ed95a8756b5f8b147941746cfef154282fc3",
+    "blackdog-ladder-sweep-verification.json": "adc5d97a82b61e7b985a9b2a28d3c54303b56467f2b187ebdb989230948c5aba",
+    "blackdog-modular-semantics-verification.json": "d6f02e408609fe00b27011eeeb581cbe2ad65e97557fbd1192bccb135563d427",
+    "blackdog-modular-semantics-bounded-verification.json": "82f972d6f2faebcecdc87102824441bba221023a6f4080fdbaa12927d4fe7003",
+    "blackdog-modular-rights-review.json": "1f117638c1382ab64ea74394e683481c86f0a5711b28800aa982851ad52a470f",
+    "blackdog-bound-modular-contracts.json": "364f76a77f8ea0952243bb48b834661b8af9577129e006b79d1859eb6eb965bc",
+    "blackdog-ladder-family-screen.json": "250ed34d2607f2368679a79bc256a23e09f0c357b4ae1506edd8b4b32f2e9ef7",
+    "blackdog-current-readiness.json": "3ca0db7ab619ffbd14172275bd1a0a1dd140cba50829118a1d189d5b34e6c0e9"
+  },
+  "admission": "NOT_GRANTED",
+  "note": "Hashes identify locally preserved reports; this index is neither a signed readiness receipt nor an admission authority."
+}

@@ -1,0 +1,41 @@
+{
+  "source_sha256": "83cd856eaf46228903180244b2e5002e139f87decb39d2235a6df980d0b85ab8",
+  "runner_sha256": "28054bdd1c037216ce42c21dbdbf60cf6e5fda569dcd6bc938504b5247ac096f",
+  "dense_report_sha256": "de3f01902efa0933b24cecd564ba53ae3b62ad4fb3a956f791c3d9a79886bd01",
+  "scope": "Pinned host direct monophonic frequency control vs eight-voice MIDI output, all integer pitches, full gain, 0.5seconds minus MIDI onset; direct gate held high vs MIDI note-off natural decay; no pitch-estimator or perceptual acceptance",
+  "admission": "NOT_GRANTED",
+  "tolerance": {
+    "absolute": 2e-06,
+    "relative": 1e-05
+  },
+  "status": "PASS",
+  "report_sha256": "78aa5e3c71242b273de9b7b1b016e29cadb795dc520d7168267e45aa7d4228e7",
+  "rates": [
+    {
+      "sample_rate": 44100,
+      "cases": 104,
+      "failures": 0,
+      "max_abs_error": 1.7136335372924805e-07
+    },
+    {
+      "sample_rate": 48000,
+      "cases": 104,
+      "failures": 0,
+      "max_abs_error": 1.7136335372924805e-07
+    },
+    {
+      "sample_rate": 96000,
+      "cases": 104,
+      "failures": 0,
+      "max_abs_error": 1.043081283569336e-07
+    },
+    {
+      "sample_rate": 192000,
+      "cases": 104,
+      "failures": 0,
+      "max_abs_error": 1.043081283569336e-07
+    }
+  ],
+  "verification_scope": "Same-workflow capture verification, not independent semantic approval",
+  "archive_sha256": "be7f024b27f9e03207860db82b0091e5ea567db8b49b074ada94a848b20e7e20"
+}

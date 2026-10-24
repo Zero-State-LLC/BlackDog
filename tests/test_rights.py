@@ -546,7 +546,7 @@ def test_inventory_rows_match_policy_and_transition(store: ArtifactStore) -> Non
             assert set(store.list()) == before
             assert current_state(store, source["artifact_id"]) == "DISCOVERED"
     assert counts == {
-        "rights_cleared": 30,
+        "rights_cleared": 31,
         "rights_rejected": 14,
         "needs_human": 2,
     }
@@ -897,3 +897,33 @@ def test_stk_redistribution_bundles_the_permission_notice() -> None:
             else:
                 assert "license_notice" not in row
     assert seen > 0
+
+
+@pytest.mark.parametrize("function", ["_tanhalf", "_tpt_df"])
+def test_author_confirmed_helpers_require_exact_notice(store: ArtifactStore, function: str) -> None:
+    inventory = load_inventory(INVENTORY)
+    entry = next(row for row in inventory["entries"] if row["id"] == "faustlibraries-author-confirmed-helpers-mit")
+    unit = next(row for row in entry["functions"] if row["function"] == function)
+    source = register_source(store, _source(
+        "MIT", commit=entry["pin"]["commit"], path=unit["path"],
+        blob=unit["blob_sha"], function=function, repo=entry["pin"]["repo"],
+    ), created_at=WHEN)
+    evidence = _evidence(
+        evidence_uri=entry["evidence_uri"], attribution=entry["attribution"],
+        reason=entry["reason"], inventory_id=entry["id"], reviewer=entry["reviewer"],
+    )
+    notice = json.loads((ROOT / "corpus" / "notice-manifest.v1.json").read_text())
+    missing = dict(notice, entries=[row for row in notice["entries"] if not (
+        row["commit"] == entry["pin"]["commit"] and row["path"] == "filters.lib"
+        and row["function"] == function
+    )])
+    with pytest.raises(LicenseEvidenceError):
+        apply_transition(store, source["artifact_id"], "rights_cleared", evidence,
+                         actor=ACTOR, timestamp="2026-10-24T08:00:00Z",
+                         inventory=inventory, notice=missing)
+    assert current_state(store, source["artifact_id"]) == "DISCOVERED"
+    result = apply_transition(store, source["artifact_id"], "rights_cleared", evidence,
+                              actor=ACTOR, timestamp="2026-10-24T08:00:00Z",
+                              inventory=inventory, notice=notice)
+    assert result.state == "RIGHTS_CLEARED"
+    assert entry["eligible_for"] == ["train", "eval", "redistribute"]
