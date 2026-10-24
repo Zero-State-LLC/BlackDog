@@ -1,0 +1,124 @@
+{
+  "status": "BOUNDED_REPAIR_VERIFIED_NOT_ADMITTED",
+  "source_sha256": "d4fdfcc5b44cb5d9d4a5ecf98fdec76c88376410dcc574811b2b4e45f10e075e",
+  "numerical_scope": "three bands, M=3, tau=.01, offset=0, 2\u20136kHz, four rates, two retained schedules",
+  "wasm_cases": 24,
+  "modular_cases": 24,
+  "bounded_wasm_jobs": 149,
+  "original_closure_rights": [
+    {
+      "name": "analyzer",
+      "eligible_for": [
+        "train"
+      ],
+      "unresolved": [],
+      "training_only_members": [
+        "ma.MAX",
+        "ma.PI",
+        "ma.SR",
+        "ma.sub",
+        "pl.SR"
+      ]
+    },
+    {
+      "name": "spectral",
+      "eligible_for": [
+        "train"
+      ],
+      "unresolved": [],
+      "training_only_members": [
+        "ba.linear2db",
+        "ma.EPSILON",
+        "ma.MAX",
+        "ma.MIN",
+        "ma.PI",
+        "ma.SR",
+        "ma.sub",
+        "pl.SR"
+      ]
+    },
+    {
+      "name": "lowpass",
+      "eligible_for": [
+        "train"
+      ],
+      "unresolved": [],
+      "training_only_members": [
+        "ma.MAX",
+        "ma.PI",
+        "ma.SR",
+        "ma.sub",
+        "pl.SR"
+      ]
+    },
+    {
+      "name": "highpass",
+      "eligible_for": [
+        "train"
+      ],
+      "unresolved": [],
+      "training_only_members": [
+        "ma.MAX",
+        "ma.PI",
+        "ma.SR",
+        "ma.sub",
+        "pl.SR"
+      ]
+    }
+  ],
+  "original_modular_pairs": [
+    {
+      "unit_id": "module:an.mth_octave_analyzer6e_tpt_df",
+      "target_sha256": "d3b2129d242a6901695f30433c69ffb051609e6be568cd9569d295ca5f6c18f2",
+      "qualified": false,
+      "numerical_evidence_transferred": false,
+      "reason": "Repaired source differs from this original modular target/context"
+    },
+    {
+      "unit_id": "module:an.mth_octave_spectral_level6e",
+      "target_sha256": "fcf03b29336a661cc6c0e7100871cb2f04069cb82b45b3350d15a6b85ffb248a",
+      "qualified": false,
+      "numerical_evidence_transferred": false,
+      "reason": "Repaired source differs from this original modular target/context"
+    },
+    {
+      "unit_id": "module:fi.lowpass6e_tpt_df",
+      "target_sha256": "258959a63ba098fcc394fb33df9f3125148190bb8c416d64e03a537cab4a4bd7",
+      "qualified": false,
+      "numerical_evidence_transferred": false,
+      "reason": "Repaired source differs from this original modular target/context"
+    },
+    {
+      "unit_id": "module:fi.highpass6e_tpt_df",
+      "target_sha256": "537f2f4309503bf762dc8697ca769950c8f5694e9b68e8040159f8d9b3b7d392",
+      "qualified": false,
+      "numerical_evidence_transferred": false,
+      "reason": "Repaired source differs from this original modular target/context"
+    }
+  ],
+  "comparison_connected": true,
+  "family": "sha256:7099173a5cc770cb54d0315ff6a822cf2c76d0dd997a1da47f8bce63702b6e6c",
+  "family_graph": {
+    "identities": 1529,
+    "components": 12,
+    "joining_operations": 28560
+  },
+  "remaining": [
+    "canonical repaired-source and prompt/context admission",
+    "training-only dependency policy prevents evaluation eligibility",
+    "independent evaluation families",
+    "authenticated signed split and trusted key binding",
+    "scoped baseline, reward, environment and pilot evidence"
+  ],
+  "admission": "NOT_GRANTED",
+  "pilot_ready": false,
+  "training_authorized": false,
+  "authority": "LOCAL_DIAGNOSTIC_BINDING_NOT_CRYPTOGRAPHIC_AUTHENTICATION",
+  "input_sha256": {
+    "rights": "152022626d9df43c0f28d56485cc3d6313f48b3443e24c5db2187a18c1ef85aa",
+    "family": "3d14dd54930fcfd4ce6d623e5a66407588bc6133bbf6e1c64af30bdcf3e69a0b",
+    "wasm": "4a89a484433e559624ff1e8ad4482889787c834514adbaea699a4357e6e5d69f",
+    "modular": "89733d0fb94b1ea816c618affb9f6351f820bfd3aaa0e867fb3db3f0e82a107b",
+    "contracts": "364f76a77f8ea0952243bb48b834661b8af9577129e006b79d1859eb6eb965bc"
+  }
+}

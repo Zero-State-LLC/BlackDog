@@ -1,0 +1,1131 @@
+{
+  "status": "EXACT_SPAN_POLICY_REVIEW_NOT_ADMISSION",
+  "policy": "docs/adr/0003-licensing-and-data-rights.md#d-013",
+  "notice_manifest_sha256": "0c99a3f250538fa6f5c171ee9fe7f65d6e4a93dfcb95014533c479a3902a9490",
+  "prior_notice_manifest_sha256": "0c99a3f250538fa6f5c171ee9fe7f65d6e4a93dfcb95014533c479a3902a9490",
+  "added_notices": [],
+  "member_records": [
+    {
+      "member": "an.mth_octave_analyzer6e",
+      "file": "analyzers.lib",
+      "blob_sha": "ac7f0c9142ad3ac82e1b8fdf8feb1d281aac09c7",
+      "start_byte": 28927,
+      "end_byte": 29015,
+      "source_sha256": "42150daca41c536288a615ae75aaaaefa65f8041317ee2106765c87c5c48c95d",
+      "notice": {
+        "repo": "grame-cncm/faustlibraries",
+        "commit": "2edec0537f536eaa130d42c354884d7db971663c",
+        "path": "analyzers.lib",
+        "blob_sha": "ac7f0c9142ad3ac82e1b8fdf8feb1d281aac09c7",
+        "function": "mth_octave_analyzer6e",
+        "copyright": "section are Copyright (C) 2003-2017 by Julius O. Smith III <jos@ccrma.stanford.edu>",
+        "license": "STK-4.3",
+        "evidence_label": "OBSERVED",
+        "license_notice": "Redistribution bundles the STK-4.3 permission notice recorded in license_texts."
+      },
+      "status": "NOTICE_BOUND_POLICY_REVIEWED",
+      "eligible_for": [
+        "train",
+        "eval",
+        "redistribute"
+      ],
+      "reviewer": "Codex, applying existing ADR-0003 D-013; no new owner decision"
+    },
+    {
+      "member": "an.mth_octave_analyzer_default",
+      "file": "analyzers.lib",
+      "blob_sha": "ac7f0c9142ad3ac82e1b8fdf8feb1d281aac09c7",
+      "start_byte": 29359,
+      "end_byte": 29411,
+      "source_sha256": "62457c2f782d8a87c70470c8396aec7e32396ffdfe0ea3f66507c99f2f43d1c4",
+      "notice": {
+        "repo": "grame-cncm/faustlibraries",
+        "commit": "2edec0537f536eaa130d42c354884d7db971663c",
+        "path": "analyzers.lib",
+        "blob_sha": "ac7f0c9142ad3ac82e1b8fdf8feb1d281aac09c7",
+        "function": "mth_octave_analyzer_default",
+        "copyright": "section are Copyright (C) 2003-2017 by Julius O. Smith III <jos@ccrma.stanford.edu>",
+        "license": "STK-4.3",
+        "evidence_label": "OBSERVED",
+        "license_notice": "Redistribution bundles the STK-4.3 permission notice recorded in license_texts."
+      },
+      "status": "NOTICE_BOUND_POLICY_REVIEWED",
+      "eligible_for": [
+        "train",
+        "eval",
+        "redistribute"
+      ],
+      "reviewer": "Codex, applying existing ADR-0003 D-013; no new owner decision"
+    },
+    {
+      "member": "an.mth_octave_analyzer6e_tpt_df",
+      "file": "analyzers.lib",
+      "blob_sha": "ac7f0c9142ad3ac82e1b8fdf8feb1d281aac09c7",
+      "start_byte": 31416,
+      "end_byte": 31802,
+      "source_sha256": "d3b2129d242a6901695f30433c69ffb051609e6be568cd9569d295ca5f6c18f2",
+      "notice": {
+        "repo": "grame-cncm/faustlibraries",
+        "commit": "2edec0537f536eaa130d42c354884d7db971663c",
+        "path": "analyzers.lib",
+        "blob_sha": "ac7f0c9142ad3ac82e1b8fdf8feb1d281aac09c7",
+        "function": "mth_octave_analyzer6e_tpt_df",
+        "copyright": "Julius O. Smith III",
+        "license": "MIT",
+        "evidence_label": "OBSERVED"
+      },
+      "status": "NOTICE_BOUND_POLICY_REVIEWED",
+      "eligible_for": [
+        "train",
+        "eval",
+        "redistribute"
+      ],
+      "reviewer": "Codex, applying existing ADR-0003 D-013; no new owner decision"
+    },
+    {
+      "member": "an.mth_octave_spectral_level6e",
+      "file": "analyzers.lib",
+      "blob_sha": "ac7f0c9142ad3ac82e1b8fdf8feb1d281aac09c7",
+      "start_byte": 33392,
+      "end_byte": 34026,
+      "source_sha256": "fcf03b29336a661cc6c0e7100871cb2f04069cb82b45b3350d15a6b85ffb248a",
+      "notice": {
+        "repo": "grame-cncm/faustlibraries",
+        "commit": "2edec0537f536eaa130d42c354884d7db971663c",
+        "path": "analyzers.lib",
+        "blob_sha": "ac7f0c9142ad3ac82e1b8fdf8feb1d281aac09c7",
+        "function": "mth_octave_spectral_level6e",
+        "copyright": "section are Copyright (C) 2003-2017 by Julius O. Smith III <jos@ccrma.stanford.edu>",
+        "license": "STK-4.3",
+        "evidence_label": "OBSERVED",
+        "license_notice": "Redistribution bundles the STK-4.3 permission notice recorded in license_texts."
+      },
+      "status": "NOTICE_BOUND_POLICY_REVIEWED",
+      "eligible_for": [
+        "train",
+        "eval",
+        "redistribute"
+      ],
+      "reviewer": "Codex, applying existing ADR-0003 D-013; no new owner decision"
+    },
+    {
+      "member": "an.mth_octave_spectral_level_default",
+      "file": "analyzers.lib",
+      "blob_sha": "ac7f0c9142ad3ac82e1b8fdf8feb1d281aac09c7",
+      "start_byte": 34028,
+      "end_byte": 34092,
+      "source_sha256": "c1af6676d46d5cd310f741be6260806a36b3571028775d59d508be12a7642f39",
+      "notice": {
+        "repo": "grame-cncm/faustlibraries",
+        "commit": "2edec0537f536eaa130d42c354884d7db971663c",
+        "path": "analyzers.lib",
+        "blob_sha": "ac7f0c9142ad3ac82e1b8fdf8feb1d281aac09c7",
+        "function": "mth_octave_spectral_level_default",
+        "copyright": "section are Copyright (C) 2003-2017 by Julius O. Smith III <jos@ccrma.stanford.edu>",
+        "license": "STK-4.3",
+        "evidence_label": "OBSERVED",
+        "license_notice": "Redistribution bundles the STK-4.3 permission notice recorded in license_texts."
+      },
+      "status": "NOTICE_BOUND_POLICY_REVIEWED",
+      "eligible_for": [
+        "train",
+        "eval",
+        "redistribute"
+      ],
+      "reviewer": "Codex, applying existing ADR-0003 D-013; no new owner decision"
+    },
+    {
+      "member": "fi.iir",
+      "file": "filters.lib",
+      "blob_sha": "0af91c8e5d9029bd24c099abd65928fa4d250beb",
+      "start_byte": 38663,
+      "end_byte": 38703,
+      "source_sha256": "95e9ddc92595c6d1404cbb2abde26b411e60d3ef6da7fcb95ad88e5d9c469e01",
+      "notice": {
+        "repo": "grame-cncm/faustlibraries",
+        "commit": "2edec0537f536eaa130d42c354884d7db971663c",
+        "path": "filters.lib",
+        "blob_sha": "0af91c8e5d9029bd24c099abd65928fa4d250beb",
+        "function": "iir",
+        "copyright": "Copyright (C) 2003-2019 by Julius O. Smith III <jos@ccrma.stanford.edu>",
+        "license": "STK-4.3",
+        "evidence_label": "OBSERVED",
+        "license_notice": "Redistribution bundles the STK-4.3 permission notice recorded in license_texts."
+      },
+      "status": "NOTICE_BOUND_POLICY_REVIEWED",
+      "eligible_for": [
+        "train",
+        "eval",
+        "redistribute"
+      ],
+      "reviewer": "Codex, applying existing ADR-0003 D-013; no new owner decision"
+    },
+    {
+      "member": "fi.fir",
+      "file": "filters.lib",
+      "blob_sha": "0af91c8e5d9029bd24c099abd65928fa4d250beb",
+      "start_byte": 39851,
+      "end_byte": 39977,
+      "source_sha256": "45d155d81639bc0c2639873dd9b8965f5e8e9cff61b4cb9ce54f6c81dcbdda8b",
+      "notice": {
+        "repo": "grame-cncm/faustlibraries",
+        "commit": "2edec0537f536eaa130d42c354884d7db971663c",
+        "path": "filters.lib",
+        "blob_sha": "0af91c8e5d9029bd24c099abd65928fa4d250beb",
+        "function": "fir",
+        "copyright": "Copyright (C) 2003-2019 by Julius O. Smith III <jos@ccrma.stanford.edu>",
+        "license": "STK-4.3",
+        "evidence_label": "OBSERVED",
+        "license_notice": "Redistribution bundles the STK-4.3 permission notice recorded in license_texts."
+      },
+      "status": "NOTICE_BOUND_POLICY_REVIEWED",
+      "eligible_for": [
+        "train",
+        "eval",
+        "redistribute"
+      ],
+      "reviewer": "Codex, applying existing ADR-0003 D-013; no new owner decision"
+    },
+    {
+      "member": "fi.fir",
+      "file": "filters.lib",
+      "blob_sha": "0af91c8e5d9029bd24c099abd65928fa4d250beb",
+      "start_byte": 39978,
+      "end_byte": 39994,
+      "source_sha256": "ad32fb5ca602a60ef392d78fd122e432b4f14ed44ad9e06a5beb1076786d8489",
+      "notice": {
+        "repo": "grame-cncm/faustlibraries",
+        "commit": "2edec0537f536eaa130d42c354884d7db971663c",
+        "path": "filters.lib",
+        "blob_sha": "0af91c8e5d9029bd24c099abd65928fa4d250beb",
+        "function": "fir",
+        "copyright": "Copyright (C) 2003-2019 by Julius O. Smith III <jos@ccrma.stanford.edu>",
+        "license": "STK-4.3",
+        "evidence_label": "OBSERVED",
+        "license_notice": "Redistribution bundles the STK-4.3 permission notice recorded in license_texts."
+      },
+      "status": "NOTICE_BOUND_POLICY_REVIEWED",
+      "eligible_for": [
+        "train",
+        "eval",
+        "redistribute"
+      ],
+      "reviewer": "Codex, applying existing ADR-0003 D-013; no new owner decision"
+    },
+    {
+      "member": "fi.tf2",
+      "file": "filters.lib",
+      "blob_sha": "0af91c8e5d9029bd24c099abd65928fa4d250beb",
+      "start_byte": 43243,
+      "end_byte": 43289,
+      "source_sha256": "1b410b60cfae036e68727ccb27f4cb6836f4bafcee7086d39bfe64590040d960",
+      "notice": {
+        "repo": "grame-cncm/faustlibraries",
+        "commit": "2edec0537f536eaa130d42c354884d7db971663c",
+        "path": "filters.lib",
+        "blob_sha": "0af91c8e5d9029bd24c099abd65928fa4d250beb",
+        "function": "tf2",
+        "copyright": "Copyright (C) 2003-2019 by Julius O. Smith III <jos@ccrma.stanford.edu>",
+        "license": "STK-4.3",
+        "evidence_label": "OBSERVED",
+        "license_notice": "Redistribution bundles the STK-4.3 permission notice recorded in license_texts."
+      },
+      "status": "NOTICE_BOUND_POLICY_REVIEWED",
+      "eligible_for": [
+        "train",
+        "eval",
+        "redistribute"
+      ],
+      "reviewer": "Codex, applying existing ADR-0003 D-013; no new owner decision"
+    },
+    {
+      "member": "fi.tf2s",
+      "file": "filters.lib",
+      "blob_sha": "0af91c8e5d9029bd24c099abd65928fa4d250beb",
+      "start_byte": 104264,
+      "end_byte": 104845,
+      "source_sha256": "10887b0c3a0dcb9e44bce498cb06ac0a94996ff8daaf661c4bd2c583e9bfaa50",
+      "notice": {
+        "repo": "grame-cncm/faustlibraries",
+        "commit": "2edec0537f536eaa130d42c354884d7db971663c",
+        "path": "filters.lib",
+        "blob_sha": "0af91c8e5d9029bd24c099abd65928fa4d250beb",
+        "function": "tf2s",
+        "copyright": "Copyright (C) 2003-2019 by Julius O. Smith III <jos@ccrma.stanford.edu>",
+        "license": "STK-4.3",
+        "evidence_label": "OBSERVED",
+        "license_notice": "Redistribution bundles the STK-4.3 permission notice recorded in license_texts."
+      },
+      "status": "NOTICE_BOUND_POLICY_REVIEWED",
+      "eligible_for": [
+        "train",
+        "eval",
+        "redistribute"
+      ],
+      "reviewer": "Codex, applying existing ADR-0003 D-013; no new owner decision"
+    },
+    {
+      "member": "fi._tanhalf",
+      "file": "filters.lib",
+      "blob_sha": "0af91c8e5d9029bd24c099abd65928fa4d250beb",
+      "start_byte": 118028,
+      "end_byte": 118085,
+      "source_sha256": "0c89477593eced7da48c6773299000b714b02b3e082c7001342adee4614c83bf",
+      "notice": {
+        "repo": "grame-cncm/faustlibraries",
+        "commit": "2edec0537f536eaa130d42c354884d7db971663c",
+        "path": "filters.lib",
+        "blob_sha": "0af91c8e5d9029bd24c099abd65928fa4d250beb",
+        "function": "_tanhalf",
+        "copyright": "Julius O. Smith III",
+        "license": "MIT",
+        "evidence_label": "INFERRED",
+        "license_notice": "Preserve the MIT permission notice and Julius O. Smith III attribution. Ownership is confirmed in issue 321 comment 6381252161; the author-name copyright attribution is inferred from that statement."
+      },
+      "status": "NOTICE_BOUND_POLICY_REVIEWED",
+      "eligible_for": [
+        "train",
+        "eval",
+        "redistribute"
+      ],
+      "reviewer": "Codex, applying existing ADR-0003 D-013; no new owner decision"
+    },
+    {
+      "member": "fi.tf2s_df",
+      "file": "filters.lib",
+      "blob_sha": "0af91c8e5d9029bd24c099abd65928fa4d250beb",
+      "start_byte": 123049,
+      "end_byte": 123353,
+      "source_sha256": "eef55ed4eea8249ba942220b10288f2aa1ef96bada9fb57342360d5332a24baa",
+      "notice": {
+        "repo": "grame-cncm/faustlibraries",
+        "commit": "2edec0537f536eaa130d42c354884d7db971663c",
+        "path": "filters.lib",
+        "blob_sha": "0af91c8e5d9029bd24c099abd65928fa4d250beb",
+        "function": "tf2s_df",
+        "copyright": "Copyright (C) 2003-2019 by Julius O. Smith III <jos@ccrma.stanford.edu>",
+        "license": "STK-4.3",
+        "evidence_label": "OBSERVED",
+        "license_notice": "Redistribution bundles the STK-4.3 permission notice recorded in license_texts."
+      },
+      "status": "NOTICE_BOUND_POLICY_REVIEWED",
+      "eligible_for": [
+        "train",
+        "eval",
+        "redistribute"
+      ],
+      "reviewer": "Codex, applying existing ADR-0003 D-013; no new owner decision"
+    },
+    {
+      "member": "fi.tpt_df_fmin",
+      "file": "filters.lib",
+      "blob_sha": "0af91c8e5d9029bd24c099abd65928fa4d250beb",
+      "start_byte": 126070,
+      "end_byte": 126111,
+      "source_sha256": "551666e317e1e8b367be40f74fee335f8fd23049b98be7653802dc594ab35918",
+      "notice": {
+        "repo": "grame-cncm/faustlibraries",
+        "commit": "2edec0537f536eaa130d42c354884d7db971663c",
+        "path": "filters.lib",
+        "blob_sha": "0af91c8e5d9029bd24c099abd65928fa4d250beb",
+        "function": "tpt_df_fmin",
+        "copyright": "Julius O. Smith III",
+        "license": "MIT",
+        "evidence_label": "OBSERVED"
+      },
+      "status": "NOTICE_BOUND_POLICY_REVIEWED",
+      "eligible_for": [
+        "train",
+        "eval",
+        "redistribute"
+      ],
+      "reviewer": "Codex, applying existing ADR-0003 D-013; no new owner decision"
+    },
+    {
+      "member": "fi.tpt_df_fmin",
+      "file": "filters.lib",
+      "blob_sha": "0af91c8e5d9029bd24c099abd65928fa4d250beb",
+      "start_byte": 126158,
+      "end_byte": 126196,
+      "source_sha256": "e57876ee74602fd62256988789f22526a5b65291e29cb87b7e7d838c04505301",
+      "notice": {
+        "repo": "grame-cncm/faustlibraries",
+        "commit": "2edec0537f536eaa130d42c354884d7db971663c",
+        "path": "filters.lib",
+        "blob_sha": "0af91c8e5d9029bd24c099abd65928fa4d250beb",
+        "function": "tpt_df_fmin",
+        "copyright": "Julius O. Smith III",
+        "license": "MIT",
+        "evidence_label": "OBSERVED"
+      },
+      "status": "NOTICE_BOUND_POLICY_REVIEWED",
+      "eligible_for": [
+        "train",
+        "eval",
+        "redistribute"
+      ],
+      "reviewer": "Codex, applying existing ADR-0003 D-013; no new owner decision"
+    },
+    {
+      "member": "fi.tpt_df_fmin",
+      "file": "filters.lib",
+      "blob_sha": "0af91c8e5d9029bd24c099abd65928fa4d250beb",
+      "start_byte": 126226,
+      "end_byte": 126264,
+      "source_sha256": "dca6bd6a1bd936c321a73ba25ce9c873ab3e15f682ea4b968f46d5f477230b8b",
+      "notice": {
+        "repo": "grame-cncm/faustlibraries",
+        "commit": "2edec0537f536eaa130d42c354884d7db971663c",
+        "path": "filters.lib",
+        "blob_sha": "0af91c8e5d9029bd24c099abd65928fa4d250beb",
+        "function": "tpt_df_fmin",
+        "copyright": "Julius O. Smith III",
+        "license": "MIT",
+        "evidence_label": "OBSERVED"
+      },
+      "status": "NOTICE_BOUND_POLICY_REVIEWED",
+      "eligible_for": [
+        "train",
+        "eval",
+        "redistribute"
+      ],
+      "reviewer": "Codex, applying existing ADR-0003 D-013; no new owner decision"
+    },
+    {
+      "member": "fi.tpt_df_fmin",
+      "file": "filters.lib",
+      "blob_sha": "0af91c8e5d9029bd24c099abd65928fa4d250beb",
+      "start_byte": 126265,
+      "end_byte": 126303,
+      "source_sha256": "376d0d354ab75800d218d74d6342c8cc4cda9f3142d4d317b11d4b0ab1954666",
+      "notice": {
+        "repo": "grame-cncm/faustlibraries",
+        "commit": "2edec0537f536eaa130d42c354884d7db971663c",
+        "path": "filters.lib",
+        "blob_sha": "0af91c8e5d9029bd24c099abd65928fa4d250beb",
+        "function": "tpt_df_fmin",
+        "copyright": "Julius O. Smith III",
+        "license": "MIT",
+        "evidence_label": "OBSERVED"
+      },
+      "status": "NOTICE_BOUND_POLICY_REVIEWED",
+      "eligible_for": [
+        "train",
+        "eval",
+        "redistribute"
+      ],
+      "reviewer": "Codex, applying existing ADR-0003 D-013; no new owner decision"
+    },
+    {
+      "member": "fi._tpt_df",
+      "file": "filters.lib",
+      "blob_sha": "0af91c8e5d9029bd24c099abd65928fa4d250beb",
+      "start_byte": 126781,
+      "end_byte": 126960,
+      "source_sha256": "f852afa526ee4f90eff343cc44db814fa83041d6bca12b29533e547b837e5694",
+      "notice": {
+        "repo": "grame-cncm/faustlibraries",
+        "commit": "2edec0537f536eaa130d42c354884d7db971663c",
+        "path": "filters.lib",
+        "blob_sha": "0af91c8e5d9029bd24c099abd65928fa4d250beb",
+        "function": "_tpt_df",
+        "copyright": "Julius O. Smith III",
+        "license": "MIT",
+        "evidence_label": "INFERRED",
+        "license_notice": "Preserve the MIT permission notice and Julius O. Smith III attribution. Ownership is confirmed in issue 321 comment 6381252161; the author-name copyright attribution is inferred from that statement."
+      },
+      "status": "NOTICE_BOUND_POLICY_REVIEWED",
+      "eligible_for": [
+        "train",
+        "eval",
+        "redistribute"
+      ],
+      "reviewer": "Codex, applying existing ADR-0003 D-013; no new owner decision"
+    },
+    {
+      "member": "fi.lowpass6e",
+      "file": "filters.lib",
+      "blob_sha": "0af91c8e5d9029bd24c099abd65928fa4d250beb",
+      "start_byte": 172187,
+      "end_byte": 172224,
+      "source_sha256": "5f083e30aa734becef54b344eb7d5c7ba5a3af1723e861006806cd44a0ea2d34",
+      "notice": {
+        "repo": "grame-cncm/faustlibraries",
+        "commit": "2edec0537f536eaa130d42c354884d7db971663c",
+        "path": "filters.lib",
+        "blob_sha": "0af91c8e5d9029bd24c099abd65928fa4d250beb",
+        "function": "lowpass6e",
+        "copyright": "Copyright (C) 2003-2019 by Julius O. Smith III <jos@ccrma.stanford.edu>",
+        "license": "STK-4.3",
+        "evidence_label": "OBSERVED",
+        "license_notice": "Redistribution bundles the STK-4.3 permission notice recorded in license_texts."
+      },
+      "status": "NOTICE_BOUND_POLICY_REVIEWED",
+      "eligible_for": [
+        "train",
+        "eval",
+        "redistribute"
+      ],
+      "reviewer": "Codex, applying existing ADR-0003 D-013; no new owner decision"
+    },
+    {
+      "member": "fi._lowpass6e",
+      "file": "filters.lib",
+      "blob_sha": "0af91c8e5d9029bd24c099abd65928fa4d250beb",
+      "start_byte": 172290,
+      "end_byte": 172825,
+      "source_sha256": "b3b56e614f7d4ffa24d0db66e3c88d5a511a8f1afe26d8f55aa3bfdeaeec1aab",
+      "notice": {
+        "repo": "grame-cncm/faustlibraries",
+        "commit": "2edec0537f536eaa130d42c354884d7db971663c",
+        "path": "filters.lib",
+        "blob_sha": "0af91c8e5d9029bd24c099abd65928fa4d250beb",
+        "function": "_lowpass6e",
+        "copyright": "Copyright (C) 2003-2019 by Julius O. Smith III <jos@ccrma.stanford.edu>",
+        "license": "STK-4.3",
+        "evidence_label": "INFERRED",
+        "license_notice": "Redistribution bundles the STK-4.3 permission notice recorded in license_texts."
+      },
+      "status": "NOTICE_BOUND_POLICY_REVIEWED",
+      "eligible_for": [
+        "train",
+        "eval",
+        "redistribute"
+      ],
+      "reviewer": "Codex, applying existing ADR-0003 D-013; no new owner decision"
+    },
+    {
+      "member": "fi.highpass6e",
+      "file": "filters.lib",
+      "blob_sha": "0af91c8e5d9029bd24c099abd65928fa4d250beb",
+      "start_byte": 175825,
+      "end_byte": 175864,
+      "source_sha256": "d847f37d45e18dc95c65248f1015a6d19b2732b9fcdc5b4b5ebda6986c9278b2",
+      "notice": {
+        "repo": "grame-cncm/faustlibraries",
+        "commit": "2edec0537f536eaa130d42c354884d7db971663c",
+        "path": "filters.lib",
+        "blob_sha": "0af91c8e5d9029bd24c099abd65928fa4d250beb",
+        "function": "highpass6e",
+        "copyright": "Copyright (C) 2003-2019 by Julius O. Smith III <jos@ccrma.stanford.edu>",
+        "license": "STK-4.3",
+        "evidence_label": "OBSERVED",
+        "license_notice": "Redistribution bundles the STK-4.3 permission notice recorded in license_texts."
+      },
+      "status": "NOTICE_BOUND_POLICY_REVIEWED",
+      "eligible_for": [
+        "train",
+        "eval",
+        "redistribute"
+      ],
+      "reviewer": "Codex, applying existing ADR-0003 D-013; no new owner decision"
+    },
+    {
+      "member": "fi._highpass6e",
+      "file": "filters.lib",
+      "blob_sha": "0af91c8e5d9029bd24c099abd65928fa4d250beb",
+      "start_byte": 175931,
+      "end_byte": 176521,
+      "source_sha256": "aa3cac757c2917cca09cd83f49372cc79d202d8d17b14e11a22529f81e38900b",
+      "notice": {
+        "repo": "grame-cncm/faustlibraries",
+        "commit": "2edec0537f536eaa130d42c354884d7db971663c",
+        "path": "filters.lib",
+        "blob_sha": "0af91c8e5d9029bd24c099abd65928fa4d250beb",
+        "function": "_highpass6e",
+        "copyright": "Copyright (C) 2003-2019 by Julius O. Smith III <jos@ccrma.stanford.edu>",
+        "license": "STK-4.3",
+        "evidence_label": "INFERRED",
+        "license_notice": "Redistribution bundles the STK-4.3 permission notice recorded in license_texts."
+      },
+      "status": "NOTICE_BOUND_POLICY_REVIEWED",
+      "eligible_for": [
+        "train",
+        "eval",
+        "redistribute"
+      ],
+      "reviewer": "Codex, applying existing ADR-0003 D-013; no new owner decision"
+    },
+    {
+      "member": "fi.lowpass6e_tpt_df",
+      "file": "filters.lib",
+      "blob_sha": "0af91c8e5d9029bd24c099abd65928fa4d250beb",
+      "start_byte": 178599,
+      "end_byte": 178685,
+      "source_sha256": "258959a63ba098fcc394fb33df9f3125148190bb8c416d64e03a537cab4a4bd7",
+      "notice": {
+        "repo": "grame-cncm/faustlibraries",
+        "commit": "2edec0537f536eaa130d42c354884d7db971663c",
+        "path": "filters.lib",
+        "blob_sha": "0af91c8e5d9029bd24c099abd65928fa4d250beb",
+        "function": "lowpass6e_tpt_df",
+        "copyright": "Julius O. Smith III",
+        "license": "MIT",
+        "evidence_label": "OBSERVED"
+      },
+      "status": "NOTICE_BOUND_POLICY_REVIEWED",
+      "eligible_for": [
+        "train",
+        "eval",
+        "redistribute"
+      ],
+      "reviewer": "Codex, applying existing ADR-0003 D-013; no new owner decision"
+    },
+    {
+      "member": "fi.highpass6e_tpt_df",
+      "file": "filters.lib",
+      "blob_sha": "0af91c8e5d9029bd24c099abd65928fa4d250beb",
+      "start_byte": 178784,
+      "end_byte": 178873,
+      "source_sha256": "537f2f4309503bf762dc8697ca769950c8f5694e9b68e8040159f8d9b3b7d392",
+      "notice": {
+        "repo": "grame-cncm/faustlibraries",
+        "commit": "2edec0537f536eaa130d42c354884d7db971663c",
+        "path": "filters.lib",
+        "blob_sha": "0af91c8e5d9029bd24c099abd65928fa4d250beb",
+        "function": "highpass6e_tpt_df",
+        "copyright": "Julius O. Smith III",
+        "license": "MIT",
+        "evidence_label": "OBSERVED"
+      },
+      "status": "NOTICE_BOUND_POLICY_REVIEWED",
+      "eligible_for": [
+        "train",
+        "eval",
+        "redistribute"
+      ],
+      "reviewer": "Codex, applying existing ADR-0003 D-013; no new owner decision"
+    },
+    {
+      "member": "ma.SR",
+      "file": "maths.lib",
+      "blob_sha": "bdaca8b89c2b1ce246916cfc466a744b3c8b7696",
+      "start_byte": 4128,
+      "end_byte": 4139,
+      "source_sha256": "5f93632249161d88f2b000bb4bcca10e6d5e49aeaf2375a8acdddc961ea746c2",
+      "notice": {
+        "repo": "grame-cncm/faustlibraries",
+        "commit": "2edec0537f536eaa130d42c354884d7db971663c",
+        "path": "maths.lib",
+        "blob_sha": "bdaca8b89c2b1ce246916cfc466a744b3c8b7696",
+        "function": "SR",
+        "copyright": "Copyright (C) 2003-2016 GRAME, Centre National de Creation Musicale",
+        "license": "LGPL-2.1-or-later",
+        "evidence_label": "OBSERVED"
+      },
+      "status": "NOTICE_BOUND_POLICY_REVIEWED",
+      "eligible_for": [
+        "train"
+      ],
+      "reviewer": "Codex, applying existing ADR-0003 D-013; no new owner decision"
+    },
+    {
+      "member": "ma.PI",
+      "file": "maths.lib",
+      "blob_sha": "bdaca8b89c2b1ce246916cfc466a744b3c8b7696",
+      "start_byte": 5434,
+      "end_byte": 5462,
+      "source_sha256": "6bd98d96e6803b039673963c8b8194bb7027778c7fe3c6fb832acad6319292c3",
+      "notice": {
+        "repo": "grame-cncm/faustlibraries",
+        "commit": "2edec0537f536eaa130d42c354884d7db971663c",
+        "path": "maths.lib",
+        "blob_sha": "bdaca8b89c2b1ce246916cfc466a744b3c8b7696",
+        "function": "PI",
+        "copyright": "Copyright (C) 2003-2016 GRAME, Centre National de Creation Musicale",
+        "license": "LGPL-2.1-or-later",
+        "evidence_label": "OBSERVED"
+      },
+      "status": "NOTICE_BOUND_POLICY_REVIEWED",
+      "eligible_for": [
+        "train"
+      ],
+      "reviewer": "Codex, applying existing ADR-0003 D-013; no new owner decision"
+    },
+    {
+      "member": "ma.EPSILON",
+      "file": "maths.lib",
+      "blob_sha": "bdaca8b89c2b1ce246916cfc466a744b3c8b7696",
+      "start_byte": 7434,
+      "end_byte": 7476,
+      "source_sha256": "43447e181ae82df321c32119ea2e5db9450192c325bef6c9ba6f9b91adbcb125",
+      "notice": {
+        "repo": "grame-cncm/faustlibraries",
+        "commit": "2edec0537f536eaa130d42c354884d7db971663c",
+        "path": "maths.lib",
+        "blob_sha": "bdaca8b89c2b1ce246916cfc466a744b3c8b7696",
+        "function": "EPSILON",
+        "copyright": "Copyright (C) 2003-2016 GRAME, Centre National de Creation Musicale",
+        "license": "LGPL-2.1-or-later",
+        "evidence_label": "OBSERVED"
+      },
+      "status": "NOTICE_BOUND_POLICY_REVIEWED",
+      "eligible_for": [
+        "train"
+      ],
+      "reviewer": "Codex, applying existing ADR-0003 D-013; no new owner decision"
+    },
+    {
+      "member": "ma.EPSILON",
+      "file": "maths.lib",
+      "blob_sha": "bdaca8b89c2b1ce246916cfc466a744b3c8b7696",
+      "start_byte": 7477,
+      "end_byte": 7527,
+      "source_sha256": "a46474b7a12029661b69163afecac276df4b6898a08fdd4101742c5e04116917",
+      "notice": {
+        "repo": "grame-cncm/faustlibraries",
+        "commit": "2edec0537f536eaa130d42c354884d7db971663c",
+        "path": "maths.lib",
+        "blob_sha": "bdaca8b89c2b1ce246916cfc466a744b3c8b7696",
+        "function": "EPSILON",
+        "copyright": "Copyright (C) 2003-2016 GRAME, Centre National de Creation Musicale",
+        "license": "LGPL-2.1-or-later",
+        "evidence_label": "OBSERVED"
+      },
+      "status": "NOTICE_BOUND_POLICY_REVIEWED",
+      "eligible_for": [
+        "train"
+      ],
+      "reviewer": "Codex, applying existing ADR-0003 D-013; no new owner decision"
+    },
+    {
+      "member": "ma.EPSILON",
+      "file": "maths.lib",
+      "blob_sha": "bdaca8b89c2b1ce246916cfc466a744b3c8b7696",
+      "start_byte": 7528,
+      "end_byte": 7584,
+      "source_sha256": "250f36faa708a953f4b6a7e1d0c7deea5cc5ab250948066c37b909629be20f49",
+      "notice": {
+        "repo": "grame-cncm/faustlibraries",
+        "commit": "2edec0537f536eaa130d42c354884d7db971663c",
+        "path": "maths.lib",
+        "blob_sha": "bdaca8b89c2b1ce246916cfc466a744b3c8b7696",
+        "function": "EPSILON",
+        "copyright": "Copyright (C) 2003-2016 GRAME, Centre National de Creation Musicale",
+        "license": "LGPL-2.1-or-later",
+        "evidence_label": "OBSERVED"
+      },
+      "status": "NOTICE_BOUND_POLICY_REVIEWED",
+      "eligible_for": [
+        "train"
+      ],
+      "reviewer": "Codex, applying existing ADR-0003 D-013; no new owner decision"
+    },
+    {
+      "member": "ma.EPSILON",
+      "file": "maths.lib",
+      "blob_sha": "bdaca8b89c2b1ce246916cfc466a744b3c8b7696",
+      "start_byte": 7585,
+      "end_byte": 7639,
+      "source_sha256": "39aee16bcf161203590db5e3f350f4c4ad79e1619e45921d72ad4bc17874d891",
+      "notice": {
+        "repo": "grame-cncm/faustlibraries",
+        "commit": "2edec0537f536eaa130d42c354884d7db971663c",
+        "path": "maths.lib",
+        "blob_sha": "bdaca8b89c2b1ce246916cfc466a744b3c8b7696",
+        "function": "EPSILON",
+        "copyright": "Copyright (C) 2003-2016 GRAME, Centre National de Creation Musicale",
+        "license": "LGPL-2.1-or-later",
+        "evidence_label": "OBSERVED"
+      },
+      "status": "NOTICE_BOUND_POLICY_REVIEWED",
+      "eligible_for": [
+        "train"
+      ],
+      "reviewer": "Codex, applying existing ADR-0003 D-013; no new owner decision"
+    },
+    {
+      "member": "ma.MIN",
+      "file": "maths.lib",
+      "blob_sha": "bdaca8b89c2b1ce246916cfc466a744b3c8b7696",
+      "start_byte": 8114,
+      "end_byte": 8152,
+      "source_sha256": "7ed8492a04a68c6bae67887fe8808a858c01b4ad043c2f0d8539b3cbc229aaa5",
+      "notice": {
+        "repo": "grame-cncm/faustlibraries",
+        "commit": "2edec0537f536eaa130d42c354884d7db971663c",
+        "path": "maths.lib",
+        "blob_sha": "bdaca8b89c2b1ce246916cfc466a744b3c8b7696",
+        "function": "MIN",
+        "copyright": "Copyright (C) 2003-2016 GRAME, Centre National de Creation Musicale",
+        "license": "LGPL-2.1-or-later",
+        "evidence_label": "OBSERVED"
+      },
+      "status": "NOTICE_BOUND_POLICY_REVIEWED",
+      "eligible_for": [
+        "train"
+      ],
+      "reviewer": "Codex, applying existing ADR-0003 D-013; no new owner decision"
+    },
+    {
+      "member": "ma.MIN",
+      "file": "maths.lib",
+      "blob_sha": "bdaca8b89c2b1ce246916cfc466a744b3c8b7696",
+      "start_byte": 8153,
+      "end_byte": 8199,
+      "source_sha256": "9ce4e9ef2bb5d3122aba16ec5754b5f997a89e83bc25218f5f06f56f013978fc",
+      "notice": {
+        "repo": "grame-cncm/faustlibraries",
+        "commit": "2edec0537f536eaa130d42c354884d7db971663c",
+        "path": "maths.lib",
+        "blob_sha": "bdaca8b89c2b1ce246916cfc466a744b3c8b7696",
+        "function": "MIN",
+        "copyright": "Copyright (C) 2003-2016 GRAME, Centre National de Creation Musicale",
+        "license": "LGPL-2.1-or-later",
+        "evidence_label": "OBSERVED"
+      },
+      "status": "NOTICE_BOUND_POLICY_REVIEWED",
+      "eligible_for": [
+        "train"
+      ],
+      "reviewer": "Codex, applying existing ADR-0003 D-013; no new owner decision"
+    },
+    {
+      "member": "ma.MIN",
+      "file": "maths.lib",
+      "blob_sha": "bdaca8b89c2b1ce246916cfc466a744b3c8b7696",
+      "start_byte": 8200,
+      "end_byte": 8244,
+      "source_sha256": "92736350050196002638ea5fc1f25affc601ed845fbfc6c4e24f5814cc070d3a",
+      "notice": {
+        "repo": "grame-cncm/faustlibraries",
+        "commit": "2edec0537f536eaa130d42c354884d7db971663c",
+        "path": "maths.lib",
+        "blob_sha": "bdaca8b89c2b1ce246916cfc466a744b3c8b7696",
+        "function": "MIN",
+        "copyright": "Copyright (C) 2003-2016 GRAME, Centre National de Creation Musicale",
+        "license": "LGPL-2.1-or-later",
+        "evidence_label": "OBSERVED"
+      },
+      "status": "NOTICE_BOUND_POLICY_REVIEWED",
+      "eligible_for": [
+        "train"
+      ],
+      "reviewer": "Codex, applying existing ADR-0003 D-013; no new owner decision"
+    },
+    {
+      "member": "ma.MIN",
+      "file": "maths.lib",
+      "blob_sha": "bdaca8b89c2b1ce246916cfc466a744b3c8b7696",
+      "start_byte": 8245,
+      "end_byte": 8295,
+      "source_sha256": "7137b7dd61e849fcb3ac3b495730a260c7044feb38e916e58912af5ff5a67f0d",
+      "notice": {
+        "repo": "grame-cncm/faustlibraries",
+        "commit": "2edec0537f536eaa130d42c354884d7db971663c",
+        "path": "maths.lib",
+        "blob_sha": "bdaca8b89c2b1ce246916cfc466a744b3c8b7696",
+        "function": "MIN",
+        "copyright": "Copyright (C) 2003-2016 GRAME, Centre National de Creation Musicale",
+        "license": "LGPL-2.1-or-later",
+        "evidence_label": "OBSERVED"
+      },
+      "status": "NOTICE_BOUND_POLICY_REVIEWED",
+      "eligible_for": [
+        "train"
+      ],
+      "reviewer": "Codex, applying existing ADR-0003 D-013; no new owner decision"
+    },
+    {
+      "member": "ma.MAX",
+      "file": "maths.lib",
+      "blob_sha": "bdaca8b89c2b1ce246916cfc466a744b3c8b7696",
+      "start_byte": 8740,
+      "end_byte": 8778,
+      "source_sha256": "ce6fbde56ba1b688d90b05c4bd448e0c52a50fcd9c6506b8e184114e37de2fc7",
+      "notice": {
+        "repo": "grame-cncm/faustlibraries",
+        "commit": "2edec0537f536eaa130d42c354884d7db971663c",
+        "path": "maths.lib",
+        "blob_sha": "bdaca8b89c2b1ce246916cfc466a744b3c8b7696",
+        "function": "MAX",
+        "copyright": "Copyright (C) 2003-2016 GRAME, Centre National de Creation Musicale",
+        "license": "LGPL-2.1-or-later",
+        "evidence_label": "OBSERVED"
+      },
+      "status": "NOTICE_BOUND_POLICY_REVIEWED",
+      "eligible_for": [
+        "train"
+      ],
+      "reviewer": "Codex, applying existing ADR-0003 D-013; no new owner decision"
+    },
+    {
+      "member": "ma.MAX",
+      "file": "maths.lib",
+      "blob_sha": "bdaca8b89c2b1ce246916cfc466a744b3c8b7696",
+      "start_byte": 8779,
+      "end_byte": 8825,
+      "source_sha256": "13204d4cc626fddf71e1704b9532a580b2bcc346b1b209858e95f3ac45c8255a",
+      "notice": {
+        "repo": "grame-cncm/faustlibraries",
+        "commit": "2edec0537f536eaa130d42c354884d7db971663c",
+        "path": "maths.lib",
+        "blob_sha": "bdaca8b89c2b1ce246916cfc466a744b3c8b7696",
+        "function": "MAX",
+        "copyright": "Copyright (C) 2003-2016 GRAME, Centre National de Creation Musicale",
+        "license": "LGPL-2.1-or-later",
+        "evidence_label": "OBSERVED"
+      },
+      "status": "NOTICE_BOUND_POLICY_REVIEWED",
+      "eligible_for": [
+        "train"
+      ],
+      "reviewer": "Codex, applying existing ADR-0003 D-013; no new owner decision"
+    },
+    {
+      "member": "ma.MAX",
+      "file": "maths.lib",
+      "blob_sha": "bdaca8b89c2b1ce246916cfc466a744b3c8b7696",
+      "start_byte": 8826,
+      "end_byte": 8870,
+      "source_sha256": "4e965e0640c10e0450dcacfde9ead960373dcaead5524c35a474b7996eb1745e",
+      "notice": {
+        "repo": "grame-cncm/faustlibraries",
+        "commit": "2edec0537f536eaa130d42c354884d7db971663c",
+        "path": "maths.lib",
+        "blob_sha": "bdaca8b89c2b1ce246916cfc466a744b3c8b7696",
+        "function": "MAX",
+        "copyright": "Copyright (C) 2003-2016 GRAME, Centre National de Creation Musicale",
+        "license": "LGPL-2.1-or-later",
+        "evidence_label": "OBSERVED"
+      },
+      "status": "NOTICE_BOUND_POLICY_REVIEWED",
+      "eligible_for": [
+        "train"
+      ],
+      "reviewer": "Codex, applying existing ADR-0003 D-013; no new owner decision"
+    },
+    {
+      "member": "ma.MAX",
+      "file": "maths.lib",
+      "blob_sha": "bdaca8b89c2b1ce246916cfc466a744b3c8b7696",
+      "start_byte": 8871,
+      "end_byte": 8921,
+      "source_sha256": "0cc638ac5e19358ef56c6e98878a7abb22708ad4f4607128b3cdd7508bf1b9ff",
+      "notice": {
+        "repo": "grame-cncm/faustlibraries",
+        "commit": "2edec0537f536eaa130d42c354884d7db971663c",
+        "path": "maths.lib",
+        "blob_sha": "bdaca8b89c2b1ce246916cfc466a744b3c8b7696",
+        "function": "MAX",
+        "copyright": "Copyright (C) 2003-2016 GRAME, Centre National de Creation Musicale",
+        "license": "LGPL-2.1-or-later",
+        "evidence_label": "OBSERVED"
+      },
+      "status": "NOTICE_BOUND_POLICY_REVIEWED",
+      "eligible_for": [
+        "train"
+      ],
+      "reviewer": "Codex, applying existing ADR-0003 D-013; no new owner decision"
+    },
+    {
+      "member": "ma.sub",
+      "file": "maths.lib",
+      "blob_sha": "bdaca8b89c2b1ce246916cfc466a744b3c8b7696",
+      "start_byte": 12178,
+      "end_byte": 12193,
+      "source_sha256": "22b53f0a3bcf663029e8c6ac1b2ac7bb6ad649470def5ce4f75530f8c6351a01",
+      "notice": {
+        "repo": "grame-cncm/faustlibraries",
+        "commit": "2edec0537f536eaa130d42c354884d7db971663c",
+        "path": "maths.lib",
+        "blob_sha": "bdaca8b89c2b1ce246916cfc466a744b3c8b7696",
+        "function": "sub",
+        "copyright": "Copyright (C) 2003-2016 GRAME, Centre National de Creation Musicale",
+        "license": "LGPL-2.1-or-later",
+        "evidence_label": "OBSERVED"
+      },
+      "status": "NOTICE_BOUND_POLICY_REVIEWED",
+      "eligible_for": [
+        "train"
+      ],
+      "reviewer": "Codex, applying existing ADR-0003 D-013; no new owner decision"
+    },
+    {
+      "member": "ba.linear2db",
+      "file": "basics.lib",
+      "blob_sha": "c092fd6fdb9c4bd2371fd7fc610b8f7f13308da8",
+      "start_byte": 5079,
+      "end_byte": 5121,
+      "source_sha256": "618a6f95630084cfba50f348cee00eb96e24009b2b6f40c1edb079e78d7a013d",
+      "notice": {
+        "repo": "grame-cncm/faustlibraries",
+        "commit": "2edec0537f536eaa130d42c354884d7db971663c",
+        "path": "basics.lib",
+        "blob_sha": "c092fd6fdb9c4bd2371fd7fc610b8f7f13308da8",
+        "function": "linear2db",
+        "copyright": "Except where noted otherwise, Copyright (C) 2003-2017 by GRAME,",
+        "license": "LGPL-2.1-or-later",
+        "evidence_label": "OBSERVED"
+      },
+      "status": "NOTICE_BOUND_POLICY_REVIEWED",
+      "eligible_for": [
+        "train"
+      ],
+      "reviewer": "Codex, applying existing ADR-0003 D-013; no new owner decision"
+    },
+    {
+      "member": "ba.tau2pole",
+      "file": "basics.lib",
+      "blob_sha": "c092fd6fdb9c4bd2371fd7fc610b8f7f13308da8",
+      "start_byte": 7115,
+      "end_byte": 7333,
+      "source_sha256": "35a6854e5b5c323e4aa2c2062c527e58389e0b9d9a7fc2550e9f616216eb2c1d",
+      "notice": {
+        "repo": "grame-cncm/faustlibraries",
+        "commit": "2edec0537f536eaa130d42c354884d7db971663c",
+        "path": "basics.lib",
+        "blob_sha": "c092fd6fdb9c4bd2371fd7fc610b8f7f13308da8",
+        "function": "tau2pole",
+        "copyright": "section are Copyright (C) 2003-2017 by Julius O. Smith III <jos@ccrma.stanford.edu>",
+        "license": "STK-4.3",
+        "evidence_label": "OBSERVED",
+        "license_notice": "Redistribution bundles the STK-4.3 permission notice recorded in license_texts."
+      },
+      "status": "NOTICE_BOUND_POLICY_REVIEWED",
+      "eligible_for": [
+        "train",
+        "eval",
+        "redistribute"
+      ],
+      "reviewer": "Codex, applying existing ADR-0003 D-013; no new owner decision"
+    },
+    {
+      "member": "ba.if",
+      "file": "basics.lib",
+      "blob_sha": "c092fd6fdb9c4bd2371fd7fc610b8f7f13308da8",
+      "start_byte": 70875,
+      "end_byte": 70920,
+      "source_sha256": "7a9e262917433a607b90d10ff3e937e3bb9204cce254d9edb58f09f109413c42",
+      "notice": {
+        "repo": "grame-cncm/faustlibraries",
+        "commit": "2edec0537f536eaa130d42c354884d7db971663c",
+        "path": "basics.lib",
+        "blob_sha": "c092fd6fdb9c4bd2371fd7fc610b8f7f13308da8",
+        "function": "if",
+        "copyright": "section are Copyright (C) 2003-2017 by Julius O. Smith III <jos@ccrma.stanford.edu>",
+        "license": "STK-4.3",
+        "evidence_label": "OBSERVED",
+        "license_notice": "Redistribution bundles the STK-4.3 permission notice recorded in license_texts."
+      },
+      "status": "NOTICE_BOUND_POLICY_REVIEWED",
+      "eligible_for": [
+        "train",
+        "eval",
+        "redistribute"
+      ],
+      "reviewer": "Codex, applying existing ADR-0003 D-013; no new owner decision"
+    },
+    {
+      "member": "si.smooth",
+      "file": "signals.lib",
+      "blob_sha": "25679491349e746ee528d11a1cae23635a0524b3",
+      "start_byte": 12339,
+      "end_byte": 12726,
+      "source_sha256": "3569582c5aa60128c0dcb42e9464f8b8ca8f93c677a9b1b8e99ebcdc19e65c99",
+      "notice": {
+        "repo": "grame-cncm/faustlibraries",
+        "commit": "2edec0537f536eaa130d42c354884d7db971663c",
+        "path": "signals.lib",
+        "blob_sha": "25679491349e746ee528d11a1cae23635a0524b3",
+        "function": "smooth",
+        "copyright": "section are Copyright (C) 2003-2017 by Julius O. Smith III <jos@ccrma.stanford.edu>",
+        "license": "STK-4.3",
+        "evidence_label": "OBSERVED",
+        "license_notice": "Redistribution bundles the STK-4.3 permission notice recorded in license_texts."
+      },
+      "status": "NOTICE_BOUND_POLICY_REVIEWED",
+      "eligible_for": [
+        "train",
+        "eval",
+        "redistribute"
+      ],
+      "reviewer": "Codex, applying existing ADR-0003 D-013; no new owner decision"
+    },
+    {
+      "member": "pl.SR",
+      "file": "platform.lib",
+      "blob_sha": "8d86e6940ac1e32edde54ec24b8475ed806dad41",
+      "start_byte": 3071,
+      "end_byte": 3141,
+      "source_sha256": "a14037af7019e67bbfedeea8d145ef6f23a121c009d193ba252507c5dc4deb0e",
+      "notice": {
+        "repo": "grame-cncm/faustlibraries",
+        "commit": "2edec0537f536eaa130d42c354884d7db971663c",
+        "path": "platform.lib",
+        "blob_sha": "8d86e6940ac1e32edde54ec24b8475ed806dad41",
+        "function": "SR",
+        "copyright": "Copyright (C) 2020 GRAME, Centre National de Creation Musicale",
+        "license": "LGPL-2.1-or-later",
+        "evidence_label": "OBSERVED"
+      },
+      "status": "NOTICE_BOUND_POLICY_REVIEWED",
+      "eligible_for": [
+        "train"
+      ],
+      "reviewer": "Codex, applying existing ADR-0003 D-013; no new owner decision"
+    }
+  ],
+  "closures": [
+    {
+      "name": "analyzer",
+      "eligible_for": [
+        "train"
+      ],
+      "unresolved": [],
+      "training_only_members": [
+        "ma.MAX",
+        "ma.PI",
+        "ma.SR",
+        "ma.sub",
+        "pl.SR"
+      ]
+    },
+    {
+      "name": "spectral",
+      "eligible_for": [
+        "train"
+      ],
+      "unresolved": [],
+      "training_only_members": [
+        "ba.linear2db",
+        "ma.EPSILON",
+        "ma.MAX",
+        "ma.MIN",
+        "ma.PI",
+        "ma.SR",
+        "ma.sub",
+        "pl.SR"
+      ]
+    },
+    {
+      "name": "lowpass",
+      "eligible_for": [
+        "train"
+      ],
+      "unresolved": [],
+      "training_only_members": [
+        "ma.MAX",
+        "ma.PI",
+        "ma.SR",
+        "ma.sub",
+        "pl.SR"
+      ]
+    },
+    {
+      "name": "highpass",
+      "eligible_for": [
+        "train"
+      ],
+      "unresolved": [],
+      "training_only_members": [
+        "ma.MAX",
+        "ma.PI",
+        "ma.SR",
+        "ma.sub",
+        "pl.SR"
+      ]
+    }
+  ],
+  "admission": "NOT_GRANTED"
+}

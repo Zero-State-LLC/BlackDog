@@ -1,0 +1,44 @@
+{
+  "graph": {
+    "identities": 1529,
+    "components": 12,
+    "joining_operations": 28560
+  },
+  "source_sha256": "d4fdfcc5b44cb5d9d4a5ecf98fdec76c88376410dcc574811b2b4e45f10e075e",
+  "unit_id": "repair:presplit-complete",
+  "family": "sha256:7099173a5cc770cb54d0315ff6a822cf2c76d0dd997a1da47f8bce63702b6e6c",
+  "comparison_connected": true,
+  "joining_evidence_count": 22,
+  "joining_evidence": [
+    {
+      "left": "repair:presplit-complete",
+      "right": "comparison:0af91c8e5d9029bd24c099abd65928fa4d250beb",
+      "reason": "verbatim_run",
+      "stream": "raw",
+      "floor": 40,
+      "intersection": 882,
+      "denominator": 3401
+    },
+    {
+      "reason": "collective_support",
+      "group_id": "sha256:7895be2d3630192189ecbbe6e45b202bf5672745c0503c71061dc0d29439bb0d",
+      "comparison": "comparison:6d0c5543b7ad20a2493914b2017933192cdb6337",
+      "covered": 538,
+      "denominator": 590,
+      "stream": "raw",
+      "floor": 40
+    },
+    {
+      "left": "repair:paired-tpt-live",
+      "right": "repair:presplit-complete",
+      "reason": "token_jaccard",
+      "stream": "canonical",
+      "floor": 40,
+      "intersection": 844,
+      "union": 1017
+    }
+  ],
+  "admission": "NOT_GRANTED",
+  "policy": "unchanged floor40 provisional H1 collective",
+  "scope": "Prior 1528 identities plus complete repaired source"
+}

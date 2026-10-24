@@ -100,5 +100,5 @@ main=struct.unpack('<6750f',(out/(tag+'-0.bin')).read_bytes())
 assert tuple(arrays['full'][ch+1][b*64] for b in range(2250) for ch in range(3))==main
 assert jobs==149
 
-result=dict(passed=sum(r['passed'] for r in rows),cases=len(rows),bounded_jobs=jobs,reset_rejections=sum(r['reset_rejected'] for r in rows),max_tolerance_ratio=max(r['max_tolerance_ratio'] for r in rows),max_meter_error_db=max(r['max_meter_error_db'] for r in rows),rows=rows,archive_sha256=sha(Path('work/presplit-wasm-evidence.tar.gz').read_bytes()),admission='NOT_GRANTED',split_full_audio_exact=True,split_archive_sha256=sha(splitarchive.read_bytes()))
+result=dict(source_sha256=report['source_sha256'],passed=sum(r['passed'] for r in rows),cases=len(rows),bounded_jobs=jobs,reset_rejections=sum(r['reset_rejected'] for r in rows),max_tolerance_ratio=max(r['max_tolerance_ratio'] for r in rows),max_meter_error_db=max(r['max_meter_error_db'] for r in rows),rows=rows,archive_sha256=sha(Path('work/presplit-wasm-evidence.tar.gz').read_bytes()),admission='NOT_GRANTED',split_full_audio_exact=True,split_archive_sha256=sha(splitarchive.read_bytes()))
 Path('outputs/blackdog-presplit-wasm-verification.json').write_text(json.dumps(result,indent=2)+'\n');print(json.dumps({k:v for k,v in result.items() if k!='rows'},indent=2))

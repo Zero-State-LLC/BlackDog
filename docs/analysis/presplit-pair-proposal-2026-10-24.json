@@ -1,0 +1,47 @@
+{
+  "status": "PROPOSED_EXACT_REPAIR_TARGET_NOT_QUALIFIED",
+  "unit_id": "repair-module:ds.mulk",
+  "target_sha256": "e53eb44125c66681b6d413aa7578d83cd4d3c15e81eef1ca68d8a7a5632e11da",
+  "prompt_sha256": "36436fadc5180f4af8741ce7c90d37c6914d40de1c97c43d85bf4264eeed2821",
+  "dependency_context_sha256": "32bf6c7e32a17ab50e9943a95a68f12f023de2faa4b659b16c1e3a8c7d605d8f",
+  "assembled_sha256": "d4fdfcc5b44cb5d9d4a5ecf98fdec76c88376410dcc574811b2b4e45f10e075e",
+  "target_span": [
+    3131,
+    3376
+  ],
+  "reconstruction_exact": true,
+  "tokenizer": {
+    "status": "TOKENIZER_VERIFIED_NOT_QUALIFIED",
+    "accepted_encodings": 1,
+    "rejected_encodings": 0,
+    "max_sequence_length": 512,
+    "encoding": "completion-only.v1",
+    "runtime_version": "0.23.3",
+    "eos_token_id": 151643,
+    "pad_token_id": 151643,
+    "vocabulary_size": 151665,
+    "rows": [
+      {
+        "unit_id": "repair-module:ds.mulk",
+        "pair_digest": "sha256:6025183a1c6f5248bfd4fefe2cfd72fbc624a1dbea5f9aba925afde5bd1b0a08",
+        "prompt_digest": "sha256:36436fadc5180f4af8741ce7c90d37c6914d40de1c97c43d85bf4264eeed2821",
+        "target_digest": "sha256:e53eb44125c66681b6d413aa7578d83cd4d3c15e81eef1ca68d8a7a5632e11da",
+        "prompt_tokens": 171,
+        "target_tokens": 107,
+        "total_tokens_with_eos": 279,
+        "status": "TOKENIZER_VERIFIED_NOT_QUALIFIED",
+        "encoding_digest": "sha256:f4eb922d356d8a3c920a58561c5ce11ba187bbc4772727f303efccb41ad275fd"
+      }
+    ]
+  },
+  "numerical_scope": "Full assembled source verified by retained 149-job matrix; standalone generic multiplication not qualified",
+  "full_closure_family_report": "presplit-closure-family-2026-10-24.json",
+  "remaining": [
+    "independent prompt semantic review",
+    "canonical repaired-source rights and admission",
+    "signed partition membership",
+    "comparison-connected complete closure"
+  ],
+  "admission": "NOT_GRANTED",
+  "training_authorized": false
+}

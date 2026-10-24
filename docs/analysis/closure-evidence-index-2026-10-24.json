@@ -1,0 +1,16 @@
+{
+  "artifacts": {
+    "outputs/blackdog-repaired-closure-rights.json": "152022626d9df43c0f28d56485cc3d6313f48b3443e24c5db2187a18c1ef85aa",
+    "outputs/blackdog-presplit-closure-family.json": "3d14dd54930fcfd4ce6d623e5a66407588bc6133bbf6e1c64af30bdcf3e69a0b",
+    "outputs/blackdog-bitbus-family.json": "64bf6aed28a444bf247b998cded3ecd799e42e800b06edf26dfbe277b4cdba63",
+    "outputs/blackdog-repaired-closure-binding.json": "73d89c29e70362ddfe14d6ea86a3b2e330cfbcdcd8c10407787294f28d1be18e",
+    "work/evaluation-search/presplit-families.json": "ac6b00651191ff5c2fa38abdf2e77c5229949b0feabee927e5db90c167eb62bc",
+    "work/evaluation-search/presplit-edges.json": "2b66206b01d924e43638034f6c0e118c9ff02ea5bb91caa751a68e7249b6ddc4",
+    "work/evaluation-search/bitbus/families.json": "525ae568a56175a9fb6d894f289bed385c2d1385145d9c6a447a99c319cbd573",
+    "work/evaluation-search/bitbus/edges.json": "bf598bb56374aed226a601bc3bf235d1e06aa8124fe4849c1ffe953659f22381",
+    "outputs/blackdog-presplit-pair-proposal.json": "b98dbbf447cb7c492f595be9e0d7cda998c335929e395ff8cab997ae15cd78bf",
+    "work/presplit-pair-proposal/pair.json": "8e035a2672873ce34f6523d676c94d88d196da041359b50d947a75d6d3bac7b4",
+    "work/presplit-pair-proposal/context.dsp": "32bf6c7e32a17ab50e9943a95a68f12f023de2faa4b659b16c1e3a8c7d605d8f"
+  },
+  "admission": "NOT_GRANTED"
+}
