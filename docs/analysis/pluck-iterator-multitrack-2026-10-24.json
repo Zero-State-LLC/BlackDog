@@ -1,0 +1,77 @@
+{
+  "source_sha256": "74f7aef25b5c12a0e077bb407ddf491ea920fa015e3a20eef2884aacdf2a56fe",
+  "factory_sha256": "4ed7220082acc6219072c2d1d3a26c95e56670ceea7f6bf75bdb66e54ef201b9",
+  "runner_sha256": "c9008b11bc5be4e6ddb795e60f1a4a10eda4c63f33f732da5ee5406fcb18df4e",
+  "rows": [
+    {
+      "sample_rate": 44100,
+      "stem_errors": [
+        0.0,
+        0.0
+      ],
+      "mix_error": 0.0,
+      "raw_sum_peak": 1.8574557304382324,
+      "mix_peak": 0.9700000286102295,
+      "captures": {
+        "44100-stem0.bin": "d3b7ec778b8e6d8993caf3cc41454791d422be43da87d2b6e88bda1e6671b10e",
+        "44100-stem1.bin": "31ea19e5c7d87124982e5f6fa88ba06a7a5a4eb3c4fde430e9c115c501733644",
+        "44100-mix.bin": "944eaa8a45e096341ef8f9ce0c8c576e167a7cad5a534a6522f2590fead13703",
+        "44100-reference0.bin": "d3b7ec778b8e6d8993caf3cc41454791d422be43da87d2b6e88bda1e6671b10e",
+        "44100-reference1.bin": "31ea19e5c7d87124982e5f6fa88ba06a7a5a4eb3c4fde430e9c115c501733644"
+      }
+    },
+    {
+      "sample_rate": 48000,
+      "stem_errors": [
+        0.0,
+        0.0
+      ],
+      "mix_error": 0.0,
+      "raw_sum_peak": 1.8957840204238892,
+      "mix_peak": 0.9699999690055847,
+      "captures": {
+        "48000-stem0.bin": "36d8067cc80449f20baadba2a6ab35391422116032f6f62a9026e7318040ca74",
+        "48000-stem1.bin": "72b724c65a56dff1fbb5f1ce8fa2a961b95415ee32a32b16969260586840a78f",
+        "48000-mix.bin": "7a9837682e22e3dbdb558f0568263a2dc830717a7b9e4e9eea8febe738f67400",
+        "48000-reference0.bin": "36d8067cc80449f20baadba2a6ab35391422116032f6f62a9026e7318040ca74",
+        "48000-reference1.bin": "72b724c65a56dff1fbb5f1ce8fa2a961b95415ee32a32b16969260586840a78f"
+      }
+    },
+    {
+      "sample_rate": 96000,
+      "stem_errors": [
+        0.0,
+        0.0
+      ],
+      "mix_error": 0.0,
+      "raw_sum_peak": 1.8706650733947754,
+      "mix_peak": 0.9699999690055847,
+      "captures": {
+        "96000-stem0.bin": "5507d2a95b98937620b6e1795cf0fb001422c81c0eab756a55d2ece9cea1aafc",
+        "96000-stem1.bin": "7d04b2c3d6e940b28e7aea2ab23dbfbdfca56350413e64aeb42c78edd040990a",
+        "96000-mix.bin": "55a106075411a8e9fc0466284b7d29ed5913e599eb1a8e7d95e9e39358b50b96",
+        "96000-reference0.bin": "5507d2a95b98937620b6e1795cf0fb001422c81c0eab756a55d2ece9cea1aafc",
+        "96000-reference1.bin": "7d04b2c3d6e940b28e7aea2ab23dbfbdfca56350413e64aeb42c78edd040990a"
+      }
+    },
+    {
+      "sample_rate": 192000,
+      "stem_errors": [
+        0.0,
+        0.0
+      ],
+      "mix_error": 0.0,
+      "raw_sum_peak": 1.818063497543335,
+      "mix_peak": 0.9699999690055847,
+      "captures": {
+        "192000-stem0.bin": "364223d92fe0cb214a807db2b8b747e5e104c14a12256b205fe1149acf2f11bf",
+        "192000-stem1.bin": "3c078e94e395cfc0cb148f4bb7d1234a012500687a2b1d0841ff0ab8fedbecb0",
+        "192000-mix.bin": "ae51d15d6b39aaa555c8872eb54e69c95af0d1d635dfcae0d2ad4da05f434186",
+        "192000-reference0.bin": "364223d92fe0cb214a807db2b8b747e5e104c14a12256b205fe1149acf2f11bf",
+        "192000-reference1.bin": "3c078e94e395cfc0cb148f4bb7d1234a012500687a2b1d0841ff0ab8fedbecb0"
+      }
+    }
+  ],
+  "scope": "two dry centered tracks, default gains, overlapping notes, public stems and mix; no effects/returns/sidechains",
+  "admission": "NOT_GRANTED"
+}

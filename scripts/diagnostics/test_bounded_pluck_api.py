@@ -50,6 +50,15 @@ class Contract(unittest.TestCase):
     def test_explicit_crop_is_allowed(self):
         spec=self.spec([(0,1,69,100)]);spec.duration=.1
         engine._preflight_instruments(spec)
+    def test_one_shot_iterables_rejected(self):
+        for render in (engine.render_spec,engine.render_stems):
+            for field in ('notes','tracks'):
+                spec=self.spec([(0,.1,69,100)])
+                if field=='notes': spec.tracks[-1].notes=iter(spec.tracks[-1].notes)
+                else: spec.tracks=iter(spec.tracks)
+                with patch.object(engine.daw,'RenderEngine') as factory:
+                    with self.assertRaises(ValueError):render(spec)
+                    factory.assert_not_called()
     def test_source_factory(self):
         with self.assertRaises(ValueError):bounded_pluck(SOURCE+'\n')
 if __name__=='__main__':unittest.main(verbosity=2)

@@ -11,6 +11,8 @@ from shipwright.registry import Instrument
 
 
 def preflight(spec, track, sample_rate):
+    if not isinstance(spec.tracks, (list, tuple)) or not isinstance(track.notes, (list, tuple)):
+        raise ValueError("bounded pluck requires reusable track and note sequences (list or tuple)")
     inst = track.instrument
     if (inst.kind != 'faust' or type(inst.num_voices) is not int or
             inst.num_voices != 8 or inst.dynamic_voices is not False):
