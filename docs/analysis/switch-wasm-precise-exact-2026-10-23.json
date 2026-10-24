@@ -1,0 +1,391 @@
+{
+  "admission": "NOT_GRANTED",
+  "diagnostic_only": true,
+  "events": [
+    [
+      0,
+      2000
+    ],
+    [
+      8,
+      6000
+    ],
+    [
+      16,
+      2303.999755859375
+    ],
+    [
+      24,
+      2304.0
+    ],
+    [
+      32,
+      2304.000244140625
+    ],
+    [
+      40,
+      6000
+    ],
+    [
+      48,
+      2902.85791015625
+    ],
+    [
+      56,
+      2902.858154296875
+    ],
+    [
+      64,
+      2902.8583984375
+    ],
+    [
+      72,
+      2000
+    ],
+    [
+      80,
+      2902.858154296875
+    ],
+    [
+      88,
+      2304.0
+    ],
+    [
+      96,
+      2303.999755859375
+    ],
+    [
+      104,
+      2304.0
+    ],
+    [
+      112,
+      2902.85791015625
+    ],
+    [
+      120,
+      2902.858154296875
+    ]
+  ],
+  "reference_sha256": "a40d575124bca0aa53d27784252b412b8dd7b1ea425cc18d521307227ffa04a4",
+  "rows": [
+    {
+      "control_address": "/input/cutoff_hz",
+      "rate": 44100,
+      "runs": [
+        {
+          "failures": [],
+          "max_meter_error_db": 0.00010728836059570312,
+          "max_tolerance_ratio": 0.13137838501061963,
+          "negative_receipt": {
+            "path": "44100-noise-strict-receipt.json",
+            "sha256": "5562d6993a15c62d46a4d0a03ba0b0b6abb3dfd797674ba42261fcb9d19dfae3"
+          },
+          "passed": true,
+          "receipt": {
+            "path": "44100-noise-receipt.json",
+            "sha256": "57af0a14432c459a120db4e52b0ab062336ef0d79b173db2f4e6753d2c9d41cd"
+          },
+          "stimulus": "noise",
+          "strict_audio_ratio": 221.6368575662412,
+          "strict_rejected": true,
+          "worst": {
+            "actual": -0.20831869542598724,
+            "channel": 3,
+            "frame": 0,
+            "reference": -0.20831815898418427
+          }
+        },
+        {
+          "failures": [],
+          "max_meter_error_db": 0.0010967254638671875,
+          "max_tolerance_ratio": 0.6147607175545898,
+          "negative_receipt": {
+            "path": "44100-impulse-strict-receipt.json",
+            "sha256": "7ce5201e646d7cf55bc1b897f03fa02b8d3babbbb879299f578b6dd54f91c90b"
+          },
+          "passed": true,
+          "receipt": {
+            "path": "44100-impulse-receipt.json",
+            "sha256": "9b4196806a3a6ab5d697738c0b80ef2d8b33c4ed8768433f72805ece3af8a196"
+          },
+          "stimulus": "impulse",
+          "strict_audio_ratio": 0.6147607175545898,
+          "strict_rejected": true,
+          "worst": {
+            "actual": -0.6919882893562317,
+            "channel": 3,
+            "frame": 4864,
+            "reference": -0.691993772983551
+          }
+        },
+        {
+          "failures": [],
+          "max_meter_error_db": 0.0002980232238769531,
+          "max_tolerance_ratio": 0.2593098250753184,
+          "negative_receipt": {
+            "path": "44100-sine-strict-receipt.json",
+            "sha256": "ea99ef13b1267a0b420bae5245ff88e1be787ad6d7b882d88b01a50ae04209ca"
+          },
+          "passed": true,
+          "receipt": {
+            "path": "44100-sine-receipt.json",
+            "sha256": "464155d56d48b1ca5fda1cc9e17b9f767cdc817ff18bfed47e1d4866fca022e2"
+          },
+          "stimulus": "sine",
+          "strict_audio_ratio": 12657.786969132241,
+          "strict_rejected": true,
+          "worst": {
+            "actual": -0.3516596853733063,
+            "channel": 2,
+            "frame": 4544,
+            "reference": -0.3516611158847809
+          }
+        }
+      ],
+      "status": "DIAGNOSTIC_PASS"
+    },
+    {
+      "control_address": "/input/cutoff_hz",
+      "rate": 48000,
+      "runs": [
+        {
+          "failures": [],
+          "max_meter_error_db": 3.8743019104003906e-05,
+          "max_tolerance_ratio": 0.04707335057840184,
+          "negative_receipt": {
+            "path": "48000-noise-strict-receipt.json",
+            "sha256": "12bd32f438ccda4f81a5fa015411980adbf402aa6b6e48a68c50065f64814d4c"
+          },
+          "passed": true,
+          "receipt": {
+            "path": "48000-noise-receipt.json",
+            "sha256": "756ffeaf8f5b72645797081067a2701c0f9901f87776dce1e67845bac72760b3"
+          },
+          "stimulus": "noise",
+          "strict_audio_ratio": 145.47601036417288,
+          "strict_rejected": true,
+          "worst": {
+            "actual": -0.21151773631572723,
+            "channel": 3,
+            "frame": 0,
+            "reference": -0.2115175426006317
+          }
+        },
+        {
+          "failures": [],
+          "max_meter_error_db": 0.0003695487976074219,
+          "max_tolerance_ratio": 0.2103193786606512,
+          "negative_receipt": {
+            "path": "48000-impulse-strict-receipt.json",
+            "sha256": "23575682c374fd7fd6f4737392b2bc41362fd55ffc171cab9378715681dd2ad3"
+          },
+          "passed": true,
+          "receipt": {
+            "path": "48000-impulse-receipt.json",
+            "sha256": "40cc472eb889b832c89a0d563f240f9fe4baec2617a9751020299cc9bed2b246"
+          },
+          "stimulus": "impulse",
+          "strict_audio_ratio": 0.2103193786606512,
+          "strict_rejected": true,
+          "worst": {
+            "actual": -0.6785401105880737,
+            "channel": 3,
+            "frame": 5120,
+            "reference": -0.6785419583320618
+          }
+        },
+        {
+          "failures": [],
+          "max_meter_error_db": 0.00010132789611816406,
+          "max_tolerance_ratio": 0.09469337544195487,
+          "negative_receipt": {
+            "path": "48000-sine-strict-receipt.json",
+            "sha256": "a7c01a6423f61c4a50bcfd0040e4d8d51e89809f550d74281dcce3cba0f6565c"
+          },
+          "passed": true,
+          "receipt": {
+            "path": "48000-sine-receipt.json",
+            "sha256": "9bd5a043b7455a3abf358fc3544f0d2c13d9ab868159a1d852c89e050c859724"
+          },
+          "stimulus": "sine",
+          "strict_audio_ratio": 8486.136627632759,
+          "strict_rejected": true,
+          "worst": {
+            "actual": -0.33503109216690063,
+            "channel": 2,
+            "frame": 2304,
+            "reference": -0.3350315988063812
+          }
+        }
+      ],
+      "status": "DIAGNOSTIC_PASS"
+    },
+    {
+      "control_address": "/input/cutoff_hz",
+      "rate": 96000,
+      "runs": [
+        {
+          "failures": [],
+          "max_meter_error_db": 8.344650268554688e-05,
+          "max_tolerance_ratio": 0.10124332123120668,
+          "negative_receipt": {
+            "path": "96000-noise-strict-receipt.json",
+            "sha256": "7f09c531f268f9845af19b171bf7df01ad2b74f4e7a11fefca89f79b187af945"
+          },
+          "passed": true,
+          "receipt": {
+            "path": "96000-noise-receipt.json",
+            "sha256": "9475bf6fd86e164cd125fde0ad5299f66b3fbf21f5966f7463b14408bda66fde"
+          },
+          "stimulus": "noise",
+          "strict_audio_ratio": 536.6002554797373,
+          "strict_rejected": true,
+          "worst": {
+            "actual": -0.19739091396331787,
+            "channel": 3,
+            "frame": 128,
+            "reference": -0.19739051163196564
+          }
+        },
+        {
+          "failures": [],
+          "max_meter_error_db": 0.0006437301635742188,
+          "max_tolerance_ratio": 0.38982658867401293,
+          "negative_receipt": {
+            "path": "96000-impulse-strict-receipt.json",
+            "sha256": "d23045d0f19dce977bd33753d028f348b2e61bcf9b4ffef8d4e50911531ec64e"
+          },
+          "passed": true,
+          "receipt": {
+            "path": "96000-impulse-receipt.json",
+            "sha256": "625df45262266c73053a47efacce0dc5b3f58fc446105f6d2b43ab573ea44ca2"
+          },
+          "stimulus": "impulse",
+          "strict_audio_ratio": 0.38982658867401293,
+          "strict_rejected": true,
+          "worst": {
+            "actual": -0.6256589889526367,
+            "channel": 1,
+            "frame": 8064,
+            "reference": -0.6256622076034546
+          }
+        },
+        {
+          "failures": [],
+          "max_meter_error_db": 0.00011920928955078125,
+          "max_tolerance_ratio": 0.12497392663534958,
+          "negative_receipt": {
+            "path": "96000-sine-strict-receipt.json",
+            "sha256": "91583ecb526fdaf1f45aeedb56752c6966b7fa12e2634282ae2c8c682badf148"
+          },
+          "passed": true,
+          "receipt": {
+            "path": "96000-sine-receipt.json",
+            "sha256": "6ae628e3273a50f8b96f525a703550ba64b1d3ceca4c33bdd4cd62be6516974f"
+          },
+          "stimulus": "sine",
+          "strict_audio_ratio": 8249.061241674855,
+          "strict_rejected": true,
+          "worst": {
+            "actual": -0.07423891127109528,
+            "channel": 1,
+            "frame": 576,
+            "reference": -0.07423856854438782
+          }
+        }
+      ],
+      "status": "DIAGNOSTIC_PASS"
+    },
+    {
+      "control_address": "/input/cutoff_hz",
+      "rate": 192000,
+      "runs": [
+        {
+          "failures": [],
+          "max_meter_error_db": 0.00014901161193847656,
+          "max_tolerance_ratio": 0.1623143879065999,
+          "negative_receipt": {
+            "path": "192000-noise-strict-receipt.json",
+            "sha256": "644598002ca631ad441663750c86175f0064fc032037255e058a696cc96c1a26"
+          },
+          "passed": true,
+          "receipt": {
+            "path": "192000-noise-receipt.json",
+            "sha256": "6d780aea5069a8dcb0ab88cedd79460b9e3bc5502d9c25f51419c19443f0fca2"
+          },
+          "stimulus": "noise",
+          "strict_audio_ratio": 382.556753451446,
+          "strict_rejected": true,
+          "worst": {
+            "actual": -0.2131187468767166,
+            "channel": 3,
+            "frame": 192,
+            "reference": -0.21311941742897034
+          }
+        },
+        {
+          "failures": [],
+          "max_meter_error_db": 0.0005245208740234375,
+          "max_tolerance_ratio": 0.4045512307680482,
+          "negative_receipt": {
+            "path": "192000-impulse-strict-receipt.json",
+            "sha256": "b54376b2c8803828d203917606e76922497211f4a59e722bbdaed7ba354d5a55"
+          },
+          "passed": true,
+          "receipt": {
+            "path": "192000-impulse-receipt.json",
+            "sha256": "4b7cdc3bdd4af309b0c71ed36fd2a41538f02b8c9fc3bd0924bdac16d718d59a"
+          },
+          "stimulus": "impulse",
+          "strict_audio_ratio": 0.4045512307680482,
+          "strict_rejected": true,
+          "worst": {
+            "actual": -0.4482775926589966,
+            "channel": 3,
+            "frame": 8128,
+            "reference": -0.44827497005462646
+          }
+        },
+        {
+          "failures": [],
+          "max_meter_error_db": 0.00015497207641601562,
+          "max_tolerance_ratio": 0.21151829127763772,
+          "negative_receipt": {
+            "path": "192000-sine-strict-receipt.json",
+            "sha256": "2fe6df7d3f03db6f4298cd3347f6cdb71ccabb1e097643a1b3baae3d92ca2fa2"
+          },
+          "passed": true,
+          "receipt": {
+            "path": "192000-sine-receipt.json",
+            "sha256": "23a8c87ea0b22aa249618e12f73fdb745a632e359c580e9afbfb30f14d1a3bf5"
+          },
+          "stimulus": "sine",
+          "strict_audio_ratio": 3653.449793385316,
+          "strict_rejected": true,
+          "worst": {
+            "actual": -0.1064506322145462,
+            "channel": 1,
+            "frame": 512,
+            "reference": -0.10645128041505814
+          }
+        }
+      ],
+      "status": "DIAGNOSTIC_PASS"
+    }
+  ],
+  "runner_sha256": "aee90688ada6438c1ea270b6d39a532f0e605926008d292e9b4af3fb51594565",
+  "runtime_pin": {
+    "bundled_faustlibraries_version": "2.74.2",
+    "data_sha256": "12e89b91e9b9fce899b1cdf6f62fdea18d95ce1ae63a69a61d76c3d365e52050",
+    "faust_version": "2.90.0",
+    "faustlibraries_commit": "2edec0537f53",
+    "faustlibraries_tree_sha256": "edf8f43966942ec96ec2e46341af49454c311586a62879b430687c9ffd434173",
+    "faustlibraries_version": "2.80.0",
+    "js_sha256": "73b9ee9ba0368f8a52d1e5feeeaee528930e38420acc9ea65b1198b480ed9e25",
+    "node": "22.23",
+    "wasm_sha256": "db7bde14b2553826ebcc30d8bd967aee98b37f3f0fce98182e5f574eb14bc217"
+  },
+  "source_sha256": "0a3d45f31bd662fabbb8ad86dc6f720867f6298ee90a60e33efa620be339648e",
+  "worker_sha256": "bbe37e5a0367757868ba74250222a4875e0a7d4c637aa01e6cf238f6a826eeee"
+}

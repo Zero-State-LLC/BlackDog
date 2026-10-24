@@ -1,0 +1,111 @@
+{
+  "cases": [
+    {
+      "case": "live-controls-switch-long",
+      "passed": 10,
+      "failed": [
+        {
+          "rate": 44100,
+          "stimulus": "sine",
+          "worst": {
+            "actual": -0.5057692527770996,
+            "channel": 2,
+            "frame": 135488,
+            "reference": -0.5057796239852905
+          },
+          "ratio": 1.4694683493914693
+        },
+        {
+          "rate": 48000,
+          "stimulus": "sine",
+          "worst": {
+            "actual": -0.5096316933631897,
+            "channel": 2,
+            "frame": 135616,
+            "reference": -0.5096458196640015
+          },
+          "ratio": 1.9906128409881998
+        }
+      ],
+      "negative_rejections": 12,
+      "filter_only_strict_rejections": null,
+      "max_meter_error_db": 0.0028252601623535156,
+      "max_tolerance_ratio": 1.9906128409881998,
+      "compile_ms_range": [
+        3031,
+        3430
+      ],
+      "render_ms_range": [
+        476,
+        501
+      ]
+    },
+    {
+      "case": "switch-wasm-exact",
+      "passed": 12,
+      "failed": [],
+      "negative_rejections": 12,
+      "filter_only_strict_rejections": 8,
+      "max_meter_error_db": 0.0010967254638671875,
+      "max_tolerance_ratio": 0.6147607175545898,
+      "compile_ms_range": [
+        2426,
+        2678
+      ],
+      "render_ms_range": [
+        38,
+        49
+      ]
+    },
+    {
+      "case": "live-controls-switch-long-precise-full",
+      "passed": 12,
+      "failed": [],
+      "negative_rejections": 12,
+      "filter_only_strict_rejections": null,
+      "max_meter_error_db": 0.0012755393981933594,
+      "max_tolerance_ratio": 0.7156415540599107,
+      "compile_ms_range": [
+        3783,
+        4137
+      ],
+      "render_ms_range": [
+        558,
+        584
+      ]
+    },
+    {
+      "case": "switch-wasm-precise-exact",
+      "passed": 12,
+      "failed": [],
+      "negative_rejections": 12,
+      "filter_only_strict_rejections": 8,
+      "max_meter_error_db": 0.0010967254638671875,
+      "max_tolerance_ratio": 0.6147607175545898,
+      "compile_ms_range": [
+        3231,
+        3533
+      ],
+      "render_ms_range": [
+        40,
+        50
+      ]
+    }
+  ],
+  "boundaries": {
+    "ratio": 0.7937005162239075,
+    "top": [
+      2303.999755859375,
+      2304.0,
+      2304.000244140625
+    ],
+    "lower_top": [
+      2902.85791015625,
+      2902.858154296875,
+      2902.8583984375
+    ]
+  },
+  "native_crosscheck_max_abs_error": 2.9738479678798058e-08,
+  "archive_sha256": "697e70c65fea22dc575599ad907559ea3d610992859b16859cb27bcafbba7523",
+  "admission": "NOT_GRANTED"
+}
