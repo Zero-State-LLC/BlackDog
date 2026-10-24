@@ -1,0 +1,141 @@
+{
+  "checked_at": "2026-10-24T07:03:17.125956+00:00",
+  "admission": "NOT_GRANTED",
+  "numerical_repair_qualified": false,
+  "compiler_allocation_failures": 6,
+  "helper_licenses": {
+    "issue": "https://github.com/grame-cncm/faustlibraries/issues/321",
+    "state": "open",
+    "comments": 0,
+    "exact_helper_declarations_found": [],
+    "helpers": [
+      "_tanhalf",
+      "_tpt_df"
+    ],
+    "status": "UNRESOLVED"
+  },
+  "public_custody": {
+    "sha256": "abe6d64818e92045320a4220dc5276e56371bef6dd0cffa73930233f5349bd25",
+    "unchanged": true,
+    "notion_url": "https://app.notion.com/p/4013e8ba2f5c8181a601f96a9cf82860",
+    "finding": "Active custodian record; no signed snapshot or authenticated public-key binding found in checked sources",
+    "gmail_focused_search_results": 0
+  },
+  "family": {
+    "identities": 1526,
+    "components": 12,
+    "joining_operations": 28498
+  },
+  "independent_candidates_added": 0,
+  "scope_digest": "08fb16b587cd5b23f7a5be12b234dc89ae24e18ef943b3449e61ed39f4c19516",
+  "pilot_ready": false,
+  "training_authorized": false,
+  "verified_gates": [],
+  "blockers": [
+    {
+      "gate": "instruction_pair_contract",
+      "status": "NOT_VERIFIED",
+      "code": "missing_validated_evidence",
+      "reason": "No scoped approval or validated receipt supplied",
+      "next_action": "Verify prompt provenance, qualified targets, compiler/signal evidence and signed partition membership"
+    },
+    {
+      "gate": "source_rights",
+      "status": "NOT_VERIFIED",
+      "code": "missing_validated_evidence",
+      "reason": "No scoped approval or validated receipt supplied",
+      "next_action": "Verify the exact selected units against existing rights and closure receipts"
+    },
+    {
+      "gate": "family_disjoint_split",
+      "status": "NOT_VERIFIED",
+      "code": "missing_validated_evidence",
+      "reason": "No scoped approval or validated receipt supplied",
+      "next_action": "Replay project, family and lineage separation for the selected dataset"
+    },
+    {
+      "gate": "t07_signed_split",
+      "status": "NOT_VERIFIED",
+      "code": "missing_validated_evidence",
+      "reason": "No scoped approval or validated receipt supplied",
+      "next_action": "Verify signed T07 split, including any recorded provisional-floor caveat and recheck"
+    },
+    {
+      "gate": "t08_baseline",
+      "status": "NOT_VERIFIED",
+      "code": "missing_validated_evidence",
+      "reason": "No scoped approval or validated receipt supplied",
+      "next_action": "Run and independently replay the pinned baseline on the development suite"
+    },
+    {
+      "gate": "a2_path_eval_so",
+      "status": "NOT_VERIFIED",
+      "code": "missing_validated_evidence",
+      "reason": "No scoped approval or validated receipt supplied",
+      "next_action": "Verify task-bound reward integration tests on the pinned Linux compiler"
+    },
+    {
+      "gate": "gd1_group_drop",
+      "status": "NOT_VERIFIED",
+      "code": "missing_validated_evidence",
+      "reason": "No scoped approval or validated receipt supplied",
+      "next_action": "Verify whole-group quarantine/drop tests and declared halt policy"
+    },
+    {
+      "gate": "environment_probe",
+      "status": "NOT_VERIFIED",
+      "code": "missing_validated_evidence",
+      "reason": "No scoped approval or validated receipt supplied",
+      "next_action": "Verify the preserved Spark candidate and representative model probe receipts"
+    },
+    {
+      "gate": "approved_pilot_dataset",
+      "status": "NOT_VERIFIED",
+      "code": "missing_validated_evidence",
+      "reason": "No scoped approval or validated receipt supplied",
+      "next_action": "Bind the minimum qualified dataset to one bounded pilot proposal"
+    },
+    {
+      "gate": "approved_model",
+      "status": "NOT_VERIFIED",
+      "code": "missing_validated_evidence",
+      "reason": "No scoped approval or validated receipt supplied",
+      "next_action": "Reuse the exact approved local model revision and verify its model manifest"
+    },
+    {
+      "gate": "pilot_training_authorization",
+      "status": "NOT_VERIFIED",
+      "code": "missing_validated_evidence",
+      "reason": "No scoped approval or validated receipt supplied",
+      "next_action": "Obtain one scoped human decision on the complete bounded pilot package"
+    },
+    {
+      "gate": "instruction_pair_contract",
+      "receipt_id": "tokenizer-preflight",
+      "status": "REVIEW_REQUIRED",
+      "code": "public_pairs_not_qualified",
+      "next_action": "Resolve remaining pair qualifications without truncating or changing approved targets"
+    },
+    {
+      "gate": "instruction_pair_contract",
+      "receipt_id": "saved-signal",
+      "status": "REVIEW_REQUIRED",
+      "code": "saved_signal_not_qualification",
+      "next_action": "Complete compiler provenance, semantic review and signed admission"
+    },
+    {
+      "gate": "instruction_pair_contract",
+      "receipt_id": "recorded-family",
+      "status": "REVIEW_REQUIRED",
+      "code": "outside_inventory_not_qualified",
+      "next_action": "Review dependency closures and prompt semantics; preserve inventory eligibility and qualify independent evaluation sources"
+    },
+    {
+      "gate": "family_disjoint_split",
+      "receipt_id": "recorded-family",
+      "status": "BLOCKED",
+      "code": "single_recorded_family",
+      "next_action": "Qualify additional independent project/family sources; preserve existing joins and obtain signed membership"
+    }
+  ]
+}

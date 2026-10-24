@@ -1,0 +1,58 @@
+[
+  {
+    "name": "crossmix",
+    "receipt": {
+      "source_sha256": "dea21f72ef2e6dc4b8bba1344baa09cc0a52ac5f72ba20985caf1a84206e5c09",
+      "faust_version": "2.88.0",
+      "command": [
+        "faust",
+        "--faust=2.88.0",
+        "--faustlibraries=2edec0537f53",
+        "-lang",
+        "cpp",
+        "-ftz",
+        "0"
+      ],
+      "exit_code": 0,
+      "stdout_digest": "sha256:9210963b448bfe19f59b9791ab8fecc784029c74b365c8d97eaf9a5a710d93f5",
+      "stderr_digest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "duration_ms": 68,
+      "environment_digest": "sha256:bf3f38d23eda24276c18f3f0e6cd60d7b86d1d12a6be8396b4bafb285e228df6",
+      "compiler": "faust-cli",
+      "lang": "cpp",
+      "options": [
+        "-ftz",
+        "0"
+      ],
+      "diagnostic_class": "ok"
+    }
+  },
+  {
+    "name": "atandist",
+    "receipt": {
+      "source_sha256": "0098b7f886969fc7a476e96472eb239701f0d5a07c443be128b59fbe516b383a",
+      "faust_version": "2.88.0",
+      "command": [
+        "faust",
+        "--faust=2.88.0",
+        "--faustlibraries=2edec0537f53",
+        "-lang",
+        "cpp",
+        "-ftz",
+        "0"
+      ],
+      "exit_code": 0,
+      "stdout_digest": "sha256:16b8f588fd5281ccc9e5a18fbd3695292adf1cd5876aad3b8ea715eb366e195d",
+      "stderr_digest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "duration_ms": 67,
+      "environment_digest": "sha256:bf3f38d23eda24276c18f3f0e6cd60d7b86d1d12a6be8396b4bafb285e228df6",
+      "compiler": "faust-cli",
+      "lang": "cpp",
+      "options": [
+        "-ftz",
+        "0"
+      ],
+      "diagnostic_class": "ok"
+    }
+  }
+]

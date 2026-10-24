@@ -1,0 +1,9 @@
+{
+  "domain_abs_x_max": 0.428,
+  "first_nonzero_residual_power": 15,
+  "denominator_lower_bound": 123709.64180423741,
+  "cosine_lower_bound": 0.908408,
+  "absolute_tangent_approximation_error_bound": 1.3075314506328461e-17,
+  "scope": "Exact rational approximation only; paired-float implementation requires separate numerical validation",
+  "passed": true
+}
