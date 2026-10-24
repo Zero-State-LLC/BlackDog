@@ -1,0 +1,20 @@
+{
+  "distinct_focused_tests_passed": 122,
+  "local_tests_passed": 119,
+  "linux_snapshot_tests_passed": 32,
+  "overlap": 29,
+  "linux_source_commit": "5aca86f",
+  "baseline_local_commit": "c54f5b1",
+  "local_environment_failures_reproduced_on_baseline": [
+    "case-insensitive Birds.dsp/birds.dsp collision (two tests)",
+    "pinned instruments.lib fixture absent (one test)"
+  ],
+  "linux_fixture_correction": "Staged omitted committed schemas before the successful complete run",
+  "log_sha256": {
+    "/tmp/presplit-tests.log": "6692934017b7c49d882f90bacacdf46a1fb73798aa5057b4c7edfb9fb4d213af",
+    "/tmp/presplit-snapshot-tests.log": "b71db6006ecc410f6085db2500759568a2da5d0cdf2fd3f7165307654085abe2",
+    "/tmp/presplit-baseline-tests.log": "f6c27af03dc0b73de64a84ed0f5095800096e39703cbd9987781de2ecd1257cc",
+    "work/rights-snapshot-linux-complete.log": "5cba8a0d336f6301764b9e7cb54d2168880bd1238a4afa7c45b0666fad715409"
+  },
+  "admission": "NOT_GRANTED"
+}
