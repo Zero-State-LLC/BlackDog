@@ -127,6 +127,8 @@ from faustcoder.store import ArtifactStore
 
 NANO = 1_000_000_000
 SAMPLE_RATES = (44100, 48000)
+# Explicit opt-in rates; default and frozen reward suites retain their identity.
+SUPPORTED_SAMPLE_RATES = (8000, 32000, 44100, 48000, 88200, 96000, 192000)
 DEFAULT_BLOCK_SIZE = 64
 DEFAULT_SEED = 1
 DEFAULT_FRAMES = 2048
@@ -265,8 +267,8 @@ class SignalProfile:
             if not isinstance(self.diagnostic_case, DiagnosticCase):
                 raise ValueError("diagnostic_case must be a DiagnosticCase")
             self.diagnostic_case.validate_profile(self)
-        if self.sample_rate not in SAMPLE_RATES:
-            raise ValueError("sample_rate must be 44100 or 48000")
+        if type(self.sample_rate) is not int or self.sample_rate not in SUPPORTED_SAMPLE_RATES:
+            raise ValueError("sample_rate must be an integer in SUPPORTED_SAMPLE_RATES")
         if self.block_size < 1 or self.block_size > 4096:
             raise ValueError("block_size must be from 1 to 4096")
         cap = self.max_frames
@@ -352,8 +354,8 @@ class SignalReference:
     samples: Mapping[str, Sequence[Sequence[float]]]
 
     def __post_init__(self) -> None:
-        if self.sample_rate not in SAMPLE_RATES:
-            raise ValueError("sample_rate must be 44100 or 48000")
+        if type(self.sample_rate) is not int or self.sample_rate not in SUPPORTED_SAMPLE_RATES:
+            raise ValueError("sample_rate must be an integer in SUPPORTED_SAMPLE_RATES")
         if self.block_size < 1 or self.block_size > 4096:
             raise ValueError("block_size must be from 1 to 4096")
         if self.frames < 1:

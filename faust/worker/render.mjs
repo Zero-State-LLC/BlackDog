@@ -157,7 +157,7 @@ async function main() {
   const blockSize = request.block_size;
   const frames = request.frames;
   const stimuli = request.stimuli;
-  if (sampleRate !== 44100 && sampleRate !== 48000) failClosed("sample_rate is not 44100 or 48000");
+  if (![8000, 32000, 44100, 48000, 88200, 96000, 192000].includes(sampleRate)) failClosed("unsupported sample_rate");
   if (!Number.isInteger(blockSize) || blockSize < 1 || blockSize > 4096) {
     failClosed("block_size is out of range");
   }

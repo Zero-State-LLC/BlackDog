@@ -138,7 +138,7 @@ def test_stimuli_are_deterministic_float32() -> None:
 
 
 def test_sample_rate_is_closed() -> None:
-    with pytest.raises(ValueError, match="44100 or 48000"):
+    with pytest.raises(ValueError, match="SUPPORTED_SAMPLE_RATES"):
         SignalProfile(sample_rate=22050)
 
 
