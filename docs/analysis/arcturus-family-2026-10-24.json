@@ -1,0 +1,181 @@
+{
+  "graph": {
+    "identities": 1534,
+    "components": 12,
+    "joining_operations": 28662
+  },
+  "rows": [
+    {
+      "unit_id": "new:arcturus:cubicNL",
+      "symbol": "cubicNL",
+      "source_file": "arcturus-effects.dsp",
+      "source_blob": "75fadbb415de3b73ec60f4b152cee1ef9c318f86",
+      "commit": "21f4b3105dbd5a76359adf9d1c8907c25b50532d",
+      "project": "Lef-F/arcturus",
+      "target_span": [
+        1855,
+        1880
+      ],
+      "target_sha256": "7edb52b2c75ce1f2ddf3b759f61ab30de8df04d721f5c0e197247d8786a30f12",
+      "closure_sha256": "7edb52b2c75ce1f2ddf3b759f61ab30de8df04d721f5c0e197247d8786a30f12",
+      "dependencies": [],
+      "external_library_dependencies": [],
+      "rights": "MIT root; canonical unit-rights review pending",
+      "admission": "NOT_GRANTED",
+      "family": "sha256:ed5e75dc6604b42948d2b444ee9fe8c6a956b8a881b9a9cbc7be72e2be274c22",
+      "comparison_connected": true,
+      "joining_evidence_count": 19,
+      "joining_evidence": [
+        {
+          "reason": "collective_support",
+          "group_id": "sha256:5d36d9c0080ad013ed201a50a2aee8cd56f80160d94bc6bc4c6566dc7ff4c241",
+          "comparison": "comparison:0af91c8e5d9029bd24c099abd65928fa4d250beb",
+          "covered": 2085,
+          "denominator": 2660,
+          "stream": "canonical",
+          "floor": 40
+        },
+        {
+          "left": "new:arcturus:cubicNL",
+          "right": "comparison:0af91c8e5d9029bd24c099abd65928fa4d250beb",
+          "reason": "collective_union",
+          "stream": "canonical",
+          "floor": 40,
+          "group_id": "sha256:5d36d9c0080ad013ed201a50a2aee8cd56f80160d94bc6bc4c6566dc7ff4c241"
+        },
+        {
+          "reason": "collective_support",
+          "group_id": "sha256:cad354143570b94f2fc261130bd6830570e1932c0ab354aa8669bf2225dc55e8",
+          "comparison": "comparison:17cfcc6b93848338e623383bb283e51326be8156",
+          "covered": 1730,
+          "denominator": 2280,
+          "stream": "canonical",
+          "floor": 40
+        }
+      ]
+    },
+    {
+      "unit_id": "new:arcturus:envShape",
+      "symbol": "envShape",
+      "source_file": "arcturus-synth.dsp",
+      "source_blob": "a1ac7eb0bd4ce73a79cd6901e0100b77fc529e98",
+      "commit": "21f4b3105dbd5a76359adf9d1c8907c25b50532d",
+      "project": "Lef-F/arcturus",
+      "target_span": [
+        8166,
+        8260
+      ],
+      "target_sha256": "f50e6f6ab9bc2e836483334525d03a2e40227d5747a2a7f4e287606d15244154",
+      "closure_sha256": "f50e6f6ab9bc2e836483334525d03a2e40227d5747a2a7f4e287606d15244154",
+      "dependencies": [],
+      "external_library_dependencies": [],
+      "rights": "MIT root; canonical unit-rights review pending",
+      "admission": "NOT_GRANTED",
+      "family": "sha256:ed5e75dc6604b42948d2b444ee9fe8c6a956b8a881b9a9cbc7be72e2be274c22",
+      "comparison_connected": true,
+      "joining_evidence_count": 19,
+      "joining_evidence": [
+        {
+          "reason": "collective_support",
+          "group_id": "sha256:5d36d9c0080ad013ed201a50a2aee8cd56f80160d94bc6bc4c6566dc7ff4c241",
+          "comparison": "comparison:0af91c8e5d9029bd24c099abd65928fa4d250beb",
+          "covered": 2085,
+          "denominator": 2660,
+          "stream": "canonical",
+          "floor": 40
+        },
+        {
+          "left": "new:arcturus:envShape",
+          "right": "comparison:0af91c8e5d9029bd24c099abd65928fa4d250beb",
+          "reason": "collective_union",
+          "stream": "canonical",
+          "floor": 40,
+          "group_id": "sha256:5d36d9c0080ad013ed201a50a2aee8cd56f80160d94bc6bc4c6566dc7ff4c241"
+        },
+        {
+          "reason": "collective_support",
+          "group_id": "sha256:cad354143570b94f2fc261130bd6830570e1932c0ab354aa8669bf2225dc55e8",
+          "comparison": "comparison:17cfcc6b93848338e623383bb283e51326be8156",
+          "covered": 1730,
+          "denominator": 2280,
+          "stream": "canonical",
+          "floor": 40
+        }
+      ]
+    },
+    {
+      "unit_id": "new:arcturus:widenStereo",
+      "symbol": "widenStereo",
+      "source_file": "arcturus-effects.dsp",
+      "source_blob": "75fadbb415de3b73ec60f4b152cee1ef9c318f86",
+      "commit": "21f4b3105dbd5a76359adf9d1c8907c25b50532d",
+      "project": "Lef-F/arcturus",
+      "target_span": [
+        5881,
+        6013
+      ],
+      "target_sha256": "267ca593be420f1dcd2a8fcc2fb0cb3ee95a9103cd4070f6f25dae266b4f48bc",
+      "closure_sha256": "2b16df59dcdeceff930e41a243c10c700b885ac6e19c426db54142678156f72c",
+      "dependencies": [
+        {
+          "symbol": "stereo_width",
+          "span": [
+            1452,
+            1530
+          ],
+          "sha256": "f81329b16df49bbc6f2a849894c696acd4cb98dbd6a37a77c09957702da315f5",
+          "kind": "built-in hslider"
+        }
+      ],
+      "external_library_dependencies": [],
+      "rights": "MIT root; canonical unit-rights review pending",
+      "admission": "NOT_GRANTED",
+      "family": "sha256:ed5e75dc6604b42948d2b444ee9fe8c6a956b8a881b9a9cbc7be72e2be274c22",
+      "comparison_connected": true,
+      "joining_evidence_count": 24,
+      "joining_evidence": [
+        {
+          "reason": "collective_support",
+          "group_id": "sha256:b0e832f1b4dd3c0f88a883267d9755f539d923d6c8c2d4893e0df9ced6852fb3",
+          "comparison": "comparison:6d0c5543b7ad20a2493914b2017933192cdb6337",
+          "covered": 538,
+          "denominator": 590,
+          "stream": "raw",
+          "floor": 40
+        },
+        {
+          "left": "new:arcturus:widenStereo",
+          "right": "comparison:6d0c5543b7ad20a2493914b2017933192cdb6337",
+          "reason": "collective_union",
+          "stream": "raw",
+          "floor": 40,
+          "group_id": "sha256:b0e832f1b4dd3c0f88a883267d9755f539d923d6c8c2d4893e0df9ced6852fb3"
+        },
+        {
+          "left": "new:arcturus:widenStereo",
+          "right": "comparison:0af91c8e5d9029bd24c099abd65928fa4d250beb",
+          "reason": "forward_containment",
+          "stream": "canonical",
+          "floor": 40,
+          "intersection": 40,
+          "denominator": 51
+        }
+      ]
+    }
+  ],
+  "admission": "NOT_GRANTED",
+  "policy": "unchanged floor40 provisional H1 collective",
+  "limitations": [
+    "All three candidates share one project and cannot count as separate independent projects",
+    "This is a lexical family screen, not canonical project/lineage admission",
+    "Full synthesizer library dependencies are not the dependency closures of these selected functions",
+    "No evaluation eligibility granted; prompt semantics, numerical testing, source rights, project lineage and signed membership still required"
+  ],
+  "source_blobs": {
+    "arcturus-effects.dsp": "75fadbb415de3b73ec60f4b152cee1ef9c318f86",
+    "arcturus-synth.dsp": "a1ac7eb0bd4ce73a79cd6901e0100b77fc529e98",
+    "ribbon.dsp": "af146e17caaf28dccbe4ee04cc8d65ae5858576b",
+    "arcturus-LICENSE": "c1f9f5dddc8a62c21ca43d12a3554dac59918d35",
+    "ribbon-LICENSE": "ffb96189b85cd5129fa6f967f557f7544c35fb04"
+  }
+}
