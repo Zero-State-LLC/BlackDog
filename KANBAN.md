@@ -1,5 +1,9 @@
 # BlackDog implementation backlog
 
+## Controller-preserving predelay checkpoint — 2026-10-24 PT
+
+A separate read-position-rounding candidate preserves the original crossfade controller and passes 60 platform comparisons, 24 endpoint checks and 23 isolated rounding cases. Seven used libraries are bound; all seven omission probes reject under the strict closure check. Live differences from the original are smaller, but musical acceptance, source rights, independent evaluation and signed readiness remain open. [Report](docs/analysis/spring-readround-2026-10-24.md) and [semantic review](docs/analysis/spring-readround-semantics-2026-10-24.md).
+
 ## Predelay platform checkpoint — 2026-10-24 PT
 
 60 native/browser comparisons and 24 endpoint checks pass for the exact repaired target. Same-fixture A/B exposes materially different live crossfade behavior, so musical/legacy equivalence remains open. Safari required a separate retry for its second live context; unattended sequential live batching remains unqualified. License issue has no response; family independence and signed readiness remain blocked. [Report](docs/analysis/spring-predelay-platform-2026-10-24.md) and [semantic disposition](docs/analysis/spring-predelay-semantic-review-2026-10-24.md).
