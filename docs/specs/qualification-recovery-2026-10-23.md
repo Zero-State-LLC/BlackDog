@@ -1,5 +1,15 @@
 # BlackDog qualification recovery specification (2026-10-23)
 
+## Spring / KBVerb continuation — 2026-10-24 PT
+
+- KBVerb: 32 thirty-second original/repair pairs are byte-identical. All 32 final-output guard histories are bounded; worst-case attenuation affects 83.4% of frames and still needs listening acceptance.
+- Spring: nearest-sample predelay repair passes six-rate endpoint checks and 12 short live histories in offline WASM. Native, AudioWorklet/emulator replay of this new module, longer controls and musical review remain open. Earlier browser receipts cover only the older module.
+- Spring rights: [author clarification issue #1](https://github.com/monodon-monoceros/modal_spring_reverb/issues/1) posted; no permission grant at last check.
+- Full family replay: 4,685 identities, 44 components; all 22 screened files remain comparison-connected. No independent evaluation candidate qualified.
+- Readiness remains `pilot_ready=false`, `training_authorized=false`, `verified_gates=[]`. Rights, semantic acceptance, canonical admission, family-disjoint evaluation and trusted signed T07 artifacts remain blockers. No milestone is promoted.
+
+[Exact evidence and limits](../analysis/spring-kbverb-followup-2026-10-24.md).
+
 Status: PROPOSED. Engineering planning only. No training, production admission, spending, or merges authorized by this document.
 
 ## Goal and invariants

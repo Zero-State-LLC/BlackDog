@@ -1,0 +1,54 @@
+{
+  "spring_license": {
+    "status": "AUTHOR_ISSUE_POSTED_AWAITING_RESPONSE",
+    "url": "https://github.com/monodon-monoceros/modal_spring_reverb/issues/1",
+    "comments_at_last_check": 0,
+    "permission_granted": false
+  },
+  "kbverb_repair": {
+    "status": "32_LONG_PAIRED_HISTORIES_BYTE_IDENTICAL",
+    "output": "32 guarded histories bounded; heavy attenuation at max controls/192 kHz requires listening acceptance",
+    "admission": "NOT_GRANTED"
+  },
+  "spring_predelay": {
+    "status": "TARGETED_ROUNDING_REPAIR_PASS",
+    "static_rates": [
+      8000,
+      22050,
+      44100,
+      48000,
+      96000,
+      192000
+    ],
+    "live_histories": 12,
+    "next": [
+      "native/backend equivalence for new target",
+      "browser AudioWorklet and emulator replay of new module",
+      "longer live-control histories",
+      "musical/physical-model review"
+    ],
+    "prior_browser_receipts_apply_to": "Original source/module only"
+  },
+  "spring_decay": {
+    "status": "RATE_DEPENDENT_CONTRAST_REVIEW",
+    "observation": "At 8 kHz, the trial tail-energy ratio is 76.9 rather than the exploratory >100 test criterion; higher Q still increases measured late energy. A fixed contrast ratio across rates is not an established musical requirement."
+  },
+  "family_independence": {
+    "status": "NO_QUALIFIED_NEW_FAMILY",
+    "identities": 4685,
+    "components": 44,
+    "joining_operations": 115032,
+    "screened_source_files": 22,
+    "new_source_identities": 21
+  },
+  "signed_readiness": {
+    "status": "NO_SIGNED_ARTIFACT_IN_BOUNDED_CHECKS",
+    "evidence": [
+      "custody-check.json",
+      "public-signatures.json"
+    ],
+    "next": "Admitted family-disjoint scope, signed T07 split and out-of-band trusted public key still needed"
+  },
+  "pilot_ready": false,
+  "training_authorized": false
+}
