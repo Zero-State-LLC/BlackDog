@@ -1,5 +1,9 @@
 # BlackDog implementation backlog
 
+## Predelay platform checkpoint — 2026-10-24 PT
+
+60 native/browser comparisons and 24 endpoint checks pass for the exact repaired target. Same-fixture A/B exposes materially different live crossfade behavior, so musical/legacy equivalence remains open. Safari required a separate retry for its second live context; unattended sequential live batching remains unqualified. License issue has no response; family independence and signed readiness remain blocked. [Report](docs/analysis/spring-predelay-platform-2026-10-24.md) and [semantic disposition](docs/analysis/spring-predelay-semantic-review-2026-10-24.md).
+
 ## Spring / KBVerb continuation — 2026-10-24 PT
 
 - KBVerb: 32 thirty-second original/repair pairs are byte-identical. All 32 final-output guard histories are bounded; worst-case attenuation affects 83.4% of frames and still needs listening acceptance.
