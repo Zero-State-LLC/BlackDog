@@ -1169,6 +1169,7 @@ def test_commit_signal_check_grades_a_timeout_onto_the_store_ledger(store) -> No
         SignalSuite(runs=(run,)),
         state=CandidateState.COMPILE_CHECKED,
         created_at="2026-10-17T00:00:00Z",
+        task=_linear_task(),
     )
     assert committed.state is CandidateState.COMPILE_CHECKED
     assert any(isinstance(item, Ungraded) for item in committed.outcomes)
@@ -1386,6 +1387,7 @@ def test_reward_suite_grades_timeout_and_crash_on_commit(monkeypatch, store, tmp
         suite,
         state=CandidateState.COMPILE_CHECKED,
         created_at="2026-10-18T00:00:00Z",
+        task=_linear_task(),
     )
     assert committed.state is CandidateState.COMPILE_CHECKED
     assert len(committed.outcomes) == 1
@@ -1424,6 +1426,7 @@ def test_reward_suite_grades_timeout_and_crash_on_commit(monkeypatch, store, tmp
         crashed,
         state=CandidateState.COMPILE_CHECKED,
         created_at="2026-10-18T00:00:00Z",
+        task=_linear_task(),
     )
     assert ledger.queue.count("signal") == 2
 

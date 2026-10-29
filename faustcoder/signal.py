@@ -1003,6 +1003,7 @@ def commit_signal_check(
     producer: str = "faustcoder.signal",
     ledger: object | None = None,
     policy: str = "signal",
+    task: Mapping[str, Any] | None = None,
 ) -> SignalCommit:
     """Store each DSPTestReceipt and take the signal edge.
 
@@ -1023,6 +1024,15 @@ def commit_signal_check(
         raise SignalHarnessError("signal check starts from COMPILE_CHECKED")
     if not suite.runs:
         raise SignalHarnessError("signal suite is empty")
+    # Reject invalid reward requests before persisting any receipt.
+    if any(run.receipt is None or run.receipt.get("purpose") == "reward" for run in suite.runs):
+        from faustcoder.reward.grader import RewardProvenanceError
+        from faustcoder.signal_suite import require_task_rewardable
+
+        if task is None:
+            raise RewardProvenanceError("reward commit requires a bound TaskSpec")
+        validate(dict(task), "task-spec.schema.json")
+        require_task_rewardable(task)
     artifact_ids: list[str] = []
     for run in suite.runs:
         compiler_id = store_compiler_receipt(
@@ -1086,6 +1096,7 @@ def commit_signal_check(
                         policy=policy,
                         queue=bound.queue,
                         rates=bound.rates,
+                        task=task,
                     )
                 )
                 if run.receipt is None:
@@ -1115,6 +1126,7 @@ def commit_signal_check(
                         policy=policy,
                         queue=bound.queue,
                         rates=bound.rates,
+                        task=task,
                     )
                 )
                 continue
@@ -1124,6 +1136,7 @@ def commit_signal_check(
                     policy=policy,
                     queue=bound.queue,
                     rates=bound.rates,
+                    task=task,
                 )
             )
         outcomes = tuple(outcomes_list)
