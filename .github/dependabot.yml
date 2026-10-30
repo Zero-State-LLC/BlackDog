@@ -10,3 +10,23 @@ updates:
     groups:
       actions:
         patterns: ["*"]
+  - package-ecosystem: pip
+    directory: /
+    schedule:
+      interval: weekly
+    labels: ["dependencies"]
+    commit-message:
+      prefix: "deps"
+    groups:
+      python:
+        patterns: ["*"]
+  - package-ecosystem: npm
+    directory: /faust/worker
+    schedule:
+      interval: weekly
+    labels: ["dependencies"]
+    commit-message:
+      prefix: "deps"
+    groups:
+      worker-npm:
+        patterns: ["*"]
