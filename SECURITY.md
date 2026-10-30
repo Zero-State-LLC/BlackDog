@@ -25,6 +25,7 @@ for a fix before disclosure.
 ## Data that must never be committed
 
 Licensed or restricted datasets, training material without a rights review,
+private or sealed holdout tasks (reference only their SHA-256 checksums),
 model weights and checkpoints, `.env` files and credentials, and receipts that
 contain personal data. `.gitignore`, the gitleaks pre-commit hook, GitHub secret
 scanning with push protection, and the `secret-scan` CI job enforce part of this.
