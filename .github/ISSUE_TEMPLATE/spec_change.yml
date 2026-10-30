@@ -2,6 +2,10 @@ name: Spec change
 description: Change a spec, contract, state machine, ADR or the constitution.
 labels: ["type:spec-change"]
 body:
+  - type: markdown
+    attributes:
+      value: |
+        Do not paste credentials, licensed datasets, restricted material, private holdout tasks or model weights. Report security issues privately (see SECURITY.md).
   - type: input
     id: spec
     attributes:

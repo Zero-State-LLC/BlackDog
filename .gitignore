@@ -103,3 +103,18 @@ build/
 .idea/
 .vscode/
 *.swp
+
+# Private and sealed holdout material is never committed; reference only its
+# SHA-256 checksums (CONTRIBUTING.md). Docs that discuss holdouts stay tracked.
+*holdout*
+!docs/**/*holdout*.md
+!specs/**/*holdout*.md
+**/sealed/
+
+# Local Python tool output
+venv/
+.coverage
+.coverage.*
+htmlcov/
+.mypy_cache/
+.ruff_cache/
