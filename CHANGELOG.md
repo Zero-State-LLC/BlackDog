@@ -8,6 +8,8 @@ See [docs/VERSIONING.md](docs/VERSIONING.md).
 
 ## [Unreleased]
 
+- Add spec 002 receipt schemas (ContainerPinReceipt, NeMoTrainingAttempt, NIMDeploymentReceipt, ExternalCapacityReceipt, NIM verb responses), store-time parent rules, a static receipt-graph checker with upstream invalidation, container pin capture, and NeMo AutoModel and model-free NIM glue (ADR-0008). Grading stays with the faustwasm harness. Hardware acceptance on the cleared Spark is pending.
+
 - Record seven-span bounded compiler/signal validation: 28 positive runs, five negative controls, receipt locations and preservation results. Independent production approval, 958 missing ranges and T06/T07 qualification gates remain open; TOKEN_FLOOR stays 40/provisional and T07 unfrozen.
 
 - Document the unapproved seven-span production candidate, 958 missing spans, verified source blobs, receipt locations and remaining qualification gaps. Full-inventory validation still refuses incomplete coverage; TOKEN_FLOOR stays 40/provisional and T07 remains unfrozen.

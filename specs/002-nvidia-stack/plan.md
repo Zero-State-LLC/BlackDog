@@ -47,7 +47,7 @@ cleared Spark.
 4. Local NIM endpoint with the four R-010 verbs and a deployment receipt (R-N003).
 5. Optional Inception-capacity parent wiring (R-N005).
 
-## Governing workflows
+## Workflows
 
 Copied from spec 002 section 8: anti-slop-code, production-systems,
 google-developer-style, spec-kit, and ADVERSARY review for the threat model.

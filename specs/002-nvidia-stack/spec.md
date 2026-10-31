@@ -86,6 +86,8 @@ All edges point forward. A revision of a container or recipe creates a new recei
 
 ## 8. Governing workflows
 
+### Workflows
+
 INFERRED: added for Spec Kit compliance. This list copies spec 001 section 16;
 plan, tasks and agent briefs reuse it rather than inventing another.
 

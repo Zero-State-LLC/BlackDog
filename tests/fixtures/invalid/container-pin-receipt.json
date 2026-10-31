@@ -1,0 +1,9 @@
+{
+  "kind": "ContainerPinReceipt",
+  "source": "docker.io",
+  "repository": "nvidia/pytorch",
+  "tag": "25.09-py3",
+  "image_digest": "sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+  "capture_method": "image_inspect",
+  "host_fingerprint_digest": null
+}

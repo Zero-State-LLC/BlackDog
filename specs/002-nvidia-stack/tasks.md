@@ -6,8 +6,11 @@ Format: `- [ ] Nxx [P?] [Story] Description`. `[P]` means it can run in parallel
 with other `[P]` tasks once its dependencies are met. Evidence paths are
 INFERRED until a task starts.
 
-Governing workflows for all tasks: anti-slop-code, production-systems,
-google-developer-style (spec 002 section 8).
+## Workflows
+
+Copied from spec 002 section 8 for all tasks: anti-slop-code,
+production-systems, google-developer-style, spec-kit, and ADVERSARY review
+for the threat model.
 
 ## Phase 1: Foundational
 

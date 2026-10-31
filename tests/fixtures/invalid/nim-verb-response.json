@@ -1,0 +1,15 @@
+{
+  "verb": "generate",
+  "disposition": "accepted",
+  "served_model_name": "blackdog-faust",
+  "latency_ms": 12.5,
+  "attempts": [
+    {
+      "source_sha256": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+      "compiler_receipt_digest": "sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+      "dsp_test_receipt_digest": "sha256:fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210",
+      "passed": true
+    }
+  ],
+  "source": null
+}
