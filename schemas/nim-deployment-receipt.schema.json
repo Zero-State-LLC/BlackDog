@@ -1,0 +1,95 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Zero-State-LLC/BlackDog/specs/002-nvidia-stack/contracts/nim-deployment-receipt.schema.json",
+  "title": "NIMDeploymentReceipt",
+  "description": "Spec 002 R-N003: one model-free NIM deployment and its observed latency. DRAFT.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "kind",
+    "model_artifact_digest",
+    "container_pin_digest",
+    "container_image_digest",
+    "gpu_type",
+    "served_model_name",
+    "endpoint",
+    "verbs",
+    "memory_cap_bytes",
+    "latency_ms",
+    "latency_sample_count"
+  ],
+  "properties": {
+    "kind": {
+      "const": "NIMDeploymentReceipt"
+    },
+    "model_artifact_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "description": "Served adapter or merged model artifact. Also a parent."
+    },
+    "container_pin_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "description": "ContainerPinReceipt parent."
+    },
+    "container_image_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "description": "Must equal the pin's image_digest."
+    },
+    "gpu_type": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 120
+    },
+    "served_model_name": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_./-]{0,127}$"
+    },
+    "endpoint": {
+      "type": "string",
+      "pattern": "^http://(127\\.0\\.0\\.1|localhost|\\[::1\\]):[0-9]{1,5}$",
+      "description": "Loopback only. No credentials."
+    },
+    "verbs": {
+      "const": [
+        "generate",
+        "repair",
+        "explain",
+        "optimize"
+      ]
+    },
+    "memory_cap_bytes": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 128849018880
+    },
+    "latency_ms": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "p50",
+        "p90",
+        "p99"
+      ],
+      "properties": {
+        "p50": {
+          "type": "number",
+          "minimum": 0
+        },
+        "p90": {
+          "type": "number",
+          "minimum": 0
+        },
+        "p99": {
+          "type": "number",
+          "minimum": 0
+        }
+      }
+    },
+    "latency_sample_count": {
+      "type": "integer",
+      "minimum": 1
+    }
+  }
+}

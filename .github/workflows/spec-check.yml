@@ -23,7 +23,8 @@ jobs:
       - name: Validate JSON Schema 2020-12 contracts
         run: |
           pipx run check-jsonschema==0.38.2 --check-metaschema \
-            specs/001-faustcoder/contracts/*.schema.json
+            specs/001-faustcoder/contracts/*.schema.json \
+            specs/002-nvidia-stack/contracts/*.schema.json
   spec-kit:
     runs-on: ubuntu-latest
     steps:
