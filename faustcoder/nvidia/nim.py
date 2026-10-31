@@ -14,6 +14,9 @@ every request, bounded retries with exponential backoff and jitter,
 and fail-closed responses validated against
 ``nim-verb-response.schema.json``. Response shapes are INFERRED until
 spec 001 T13.
+
+Launch options live in ``faustcoder.nvidia.nim_launch``. Readiness and
+latency on the cleared Spark are NOT_COMPUTABLE here.
 """
 
 from __future__ import annotations
@@ -38,8 +41,8 @@ from faustcoder.store import ArtifactStore
 
 VERBS = ("generate", "repair", "explain", "optimize")
 LOOPBACK_HOSTS = frozenset({"127.0.0.1", "localhost", "[::1]"})
-NIM_CONTAINER_PORT = 8000
-CONTAINER_MODEL = "/model-repo"
+READY_PATH = "/v1/health/ready"
+MODELS_PATH = "/v1/models"
 MAX_REPAIR_ATTEMPTS_LIMIT = 8
 DEFAULT_TIMEOUT_SECONDS = 60.0
 DEFAULT_RETRIES = 2
@@ -48,6 +51,7 @@ _FENCE_RE = re.compile(r"```(?:faust|dsp)?\s*\n(.*?)```", re.DOTALL)
 _NAME_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_./-]{0,127}$")
 
 Transport = Callable[[str, bytes, float], bytes]
+GetTransport = Callable[[str, float], bytes]
 EquivalenceCheck = Callable[[str, str], str | None]
 
 
@@ -120,7 +124,7 @@ class NIMClient:
         rng: random.Random | None = None,
     ) -> None:
         """Bind the endpoint, harness verifier and I/O hooks."""
-        if _NAME_RE.fullmatch(served_model_name) is None:
+        if not is_safe_model_name(served_model_name):
             raise NIMError("served_model_name is not a safe model name")
         if not 0 < timeout <= 600:
             raise NIMError("timeout must be in (0, 600] seconds")
@@ -263,11 +267,47 @@ _SYSTEM_PROMPTS: Mapping[str, str] = {
 
 def urllib_transport(url: str, body: bytes, timeout: float) -> bytes:
     """POST ``body`` to a loopback URL with a timeout. Raise NIMError on failure."""
+    return _loopback_request(url, body, timeout)
+
+
+def urllib_get(url: str, timeout: float) -> bytes:
+    """GET a loopback URL with a timeout. Raise NIMError on failure."""
+    return _loopback_request(url, None, timeout)
+
+
+def check_ready(
+    endpoint: NIMEndpoint,
+    model_name: str,
+    *,
+    get: GetTransport = urllib_get,
+    timeout: float = 10.0,
+) -> list[str]:
+    """Return the ``/v1/models`` ids once the endpoint is ready.
+
+    Raise NIMError unless ``/v1/health/ready`` answers 2xx and
+    ``model_name`` (the served name, or an adapter name on vLLM) is
+    listed. One probe; the caller owns any polling.
+    """
+    get(endpoint.base_url + READY_PATH, timeout)
+    try:
+        document = json.loads(get(endpoint.base_url + MODELS_PATH, timeout))
+        ids = [str(item["id"]) for item in document["data"]]
+    except (ValueError, KeyError, TypeError) as exc:
+        raise NIMError("NIM /v1/models response is not a model list") from exc
+    if model_name not in ids:
+        raise NIMError(f"NIM does not serve {model_name!r}")
+    return ids
+
+
+def _loopback_request(url: str, body: bytes | None, timeout: float) -> bytes:
     if not url.startswith(tuple(f"http://{host}:" for host in LOOPBACK_HOSTS)):
         raise NIMError("refusing a non-loopback NIM URL")
-    request = urllib.request.Request(
-        url, data=body, method="POST", headers={"Content-Type": "application/json"}
-    )
+    if body is None:
+        request = urllib.request.Request(url, method="GET")
+    else:
+        request = urllib.request.Request(
+            url, data=body, method="POST", headers={"Content-Type": "application/json"}
+        )
     try:
         with urllib.request.urlopen(request, timeout=timeout) as response:
             data: bytes = response.read(MAX_RESPONSE_BYTES + 1)
@@ -288,6 +328,11 @@ def parse_completion(raw: bytes) -> str:
     if not isinstance(content, str):
         raise NIMError("NIM message content is not text")
     return content
+
+
+def is_safe_model_name(name: str) -> bool:
+    """Return True for a served or adapter name this client accepts (no ':')."""
+    return _NAME_RE.fullmatch(name) is not None
 
 
 def extract_source(text: str) -> str | None:
@@ -319,51 +364,6 @@ def latency_percentiles(samples_ms: Sequence[float]) -> dict[str, float]:
         name: ordered[max(1, math.ceil(q * len(ordered))) - 1]
         for name, q in (("p50", 0.50), ("p90", 0.90), ("p99", 0.99))
     }
-
-
-def nim_launch_argv(
-    pin: ImagePin,
-    *,
-    model_dir: str,
-    served_model_name: str,
-    port: int,
-    memory_cap_bytes: int = MAX_MEMORY_CAP_BYTES,
-) -> list[str]:
-    """Return a ``docker run`` argv for a model-free NIM on a local model.
-
-    ``NIM_MODEL_PATH`` points at a read-only local mount, so nothing is
-    downloaded. The port is published on 127.0.0.1 only. No API key is
-    passed (INFERRED sufficient for a local path; confirm on Spark).
-    """
-    NIMEndpoint("127.0.0.1", port)
-    if not 1 <= memory_cap_bytes <= MAX_MEMORY_CAP_BYTES:
-        raise NIMError("memory_cap_bytes exceeds the R-001 120 GiB cap")
-    if _NAME_RE.fullmatch(served_model_name) is None:
-        raise NIMError("served_model_name is not a safe model name")
-    if not model_dir.startswith("/") or ".." in model_dir or ":" in model_dir:
-        raise NIMError("model_dir must be an absolute path without '..' or ':'")
-    return [
-        "docker",
-        "run",
-        "--rm",
-        "--gpus",
-        "all",
-        "--memory",
-        str(memory_cap_bytes),
-        "--memory-swap",
-        str(memory_cap_bytes),
-        "-e",
-        f"NIM_MODEL_PATH={CONTAINER_MODEL}",
-        "-e",
-        f"NIM_SERVED_MODEL_NAME={served_model_name}",
-        "-e",
-        "HF_HUB_OFFLINE=1",
-        "-v",
-        f"{model_dir}:{CONTAINER_MODEL}:ro",
-        "-p",
-        f"127.0.0.1:{port}:{NIM_CONTAINER_PORT}",
-        pin.reference,
-    ]
 
 
 def deployment_payload(

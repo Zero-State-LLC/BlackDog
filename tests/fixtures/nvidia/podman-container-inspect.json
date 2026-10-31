@@ -1,0 +1,7 @@
+[
+  {
+    "Id": "4f1c2a9e8d7b6c5a4f1c2a9e8d7b6c5a4f1c2a9e8d7b6c5a4f1c2a9e8d7b6c5a",
+    "Image": "fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210",
+    "ImageName": "nvcr.io/nvidia/pytorch@sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+  }
+]

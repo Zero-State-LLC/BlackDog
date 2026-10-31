@@ -6,7 +6,8 @@ import io
 import json
 import random
 import urllib.error
-from collections.abc import Iterator
+import urllib.request
+from collections.abc import Callable, Iterator, Mapping
 
 import pytest
 
@@ -19,24 +20,41 @@ from faustcoder.nvidia.nim import (
     NIMEndpoint,
     NIMError,
     RetryPolicy,
+    check_ready,
     Verification,
     Verifier,
     deployment_payload,
     extract_source,
     harness_passed,
     latency_percentiles,
-    nim_launch_argv,
     parse_completion,
     record_deployment,
     unified_diff,
+    urllib_get,
     urllib_transport,
 )
-from tests.nvidia_support import PIN, T0, T2, T3, put_plain, spark_diagnostics, stored_pin
+from faustcoder.nvidia.nim_launch import nim_launch_argv
+from tests.nvidia_support import (
+    NIM_PIN,
+    PIN,
+    T0,
+    T2,
+    T3,
+    put_plain,
+    spark_diagnostics,
+    stored_pin,
+)
 from tests.support import DIGEST_A, DIGEST_B
 
 GOOD = 'import("stdfaust.lib");\nprocess = os.osc(440);\n'
 BAD = "process = oops;\n"
 ENDPOINT = NIMEndpoint("127.0.0.1", 8000)
+
+
+def _attempts(response: Mapping[str, object]) -> list[Mapping[str, object]]:
+    attempts = response["attempts"]
+    assert isinstance(attempts, list)
+    return attempts
 
 
 def _reply(text: str) -> bytes:
@@ -101,7 +119,7 @@ def _client(
 def test_generate_keeps_only_harness_accepted_source() -> None:
     accepted = _client([_reply(_fenced(GOOD))]).generate("sine at 440 Hz")
     assert accepted["disposition"] == "accepted" and accepted["source"] == GOOD
-    assert accepted["attempts"][0]["passed"] is True
+    assert _attempts(accepted)[0]["passed"] is True
     assert accepted["latency_ms"] == 250.0
     rejected = _client([_reply(_fenced(BAD))]).generate("sine")
     assert rejected["disposition"] == "rejected" and rejected["source"] is None
@@ -123,11 +141,11 @@ def test_a_pass_without_both_receipts_fails_closed() -> None:
 def test_repair_is_bounded_and_returns_a_diff() -> None:
     transport = _Transport([_reply(_fenced(BAD)), _reply(_fenced(GOOD))])
     response = _client([], transport=transport).repair(BAD + "x\n", "error", max_repair_attempts=3)
-    assert response["disposition"] == "accepted" and len(response["attempts"]) == 2
+    assert response["disposition"] == "accepted" and len(_attempts(response)) == 2
     assert response["diff"] == unified_diff(BAD + "x\n", GOOD)
     assert "unknown identifier" in json.dumps(transport.bodies[1])
     exhausted = _client([_reply(_fenced(BAD))] * 2).repair(BAD, "error", max_repair_attempts=2)
-    assert exhausted["disposition"] == "rejected" and len(exhausted["attempts"]) == 2
+    assert exhausted["disposition"] == "rejected" and len(_attempts(exhausted)) == 2
     assert exhausted["source"] is None and exhausted["diff"] is None
     gave_up = _client([_reply("no idea")]).repair(BAD, "error", max_repair_attempts=2)
     assert gave_up["disposition"] == "abstained"
@@ -246,6 +264,15 @@ def test_urllib_transport(monkeypatch: pytest.MonkeyPatch) -> None:
     with pytest.raises(NIMError, match="non-loopback"):
         urllib_transport("http://203.0.113.7:8000/v1", b"{}", 5.0)
     assert seen == [5.0, 5.0, 5.0]
+    methods: list[str] = []
+
+    def fake_get(request: urllib.request.Request, timeout: float) -> object:
+        methods.append(request.get_method())
+        return _Response(b"ready")
+
+    monkeypatch.setattr("urllib.request.urlopen", fake_get)
+    assert urllib_get("http://127.0.0.1:8000/v1/health/ready", 5.0) == b"ready"
+    assert methods == ["GET"]
 
 
 def test_latency_percentiles_nearest_rank() -> None:
@@ -258,29 +285,85 @@ def test_latency_percentiles_nearest_rank() -> None:
 
 def test_nim_launch_argv_is_model_free_and_loopback() -> None:
     argv = nim_launch_argv(
-        PIN, model_dir="/srv/out/merged", served_model_name="blackdog-faust", port=8000
+        NIM_PIN, model_dir="/srv/out/merged", served_model_name="blackdog-faust", port=8000
     )
     assert "NIM_MODEL_PATH=/model-repo" in argv and "/srv/out/merged:/model-repo:ro" in argv
+    assert "NIM_SERVED_MODEL_NAME=blackdog-faust" in argv
+    assert argv[argv.index("--shm-size") + 1] == "16GB"
     assert argv[argv.index("-p") + 1] == "127.0.0.1:8000:8000"
-    assert argv[-1] == PIN.reference
-    assert not any("API_KEY" in item for item in argv)
+    assert argv[-1] == NIM_PIN.reference
+    assert not any(word in item for item in argv for word in ("API_KEY", "HF_TOKEN", "PEFT"))
     with pytest.raises(NIMError, match="120 GiB"):
         nim_launch_argv(
-            PIN, model_dir="/m", served_model_name="m", port=8000, memory_cap_bytes=121 * 1024**3
+            NIM_PIN,
+            model_dir="/m",
+            served_model_name="m",
+            port=8000,
+            memory_cap_bytes=121 * 1024**3,
         )
     with pytest.raises(NIMError, match="served_model_name"):
-        nim_launch_argv(PIN, model_dir="/m", served_model_name="a b", port=8000)
+        nim_launch_argv(NIM_PIN, model_dir="/m", served_model_name="a:b", port=8000)
     with pytest.raises(NIMError, match="absolute"):
-        nim_launch_argv(PIN, model_dir="rel/path", served_model_name="m", port=8000)
+        nim_launch_argv(NIM_PIN, model_dir="rel/path", served_model_name="m", port=8000)
+    with pytest.raises(NIMError, match="model-free-nim"):
+        nim_launch_argv(PIN, model_dir="/m", served_model_name="m", port=8000)
+
+
+def test_nim_launch_argv_serves_a_lora_adapter() -> None:
+    argv = nim_launch_argv(
+        NIM_PIN,
+        model_dir="/srv/models/qwen",
+        served_model_name="qwen-base",
+        port=8000,
+        adapter_dir="/srv/out/adapters",
+        model_profile="vllm-bf16-tp1-pp1-feat_lora",
+    )
+    assert "NIM_PEFT_SOURCE=/opt/nim/loras" in argv
+    assert "/srv/out/adapters:/opt/nim/loras:ro" in argv
+    assert "NIM_MODEL_PROFILE=vllm-bf16-tp1-pp1-feat_lora" in argv
+    with pytest.raises(NIMError, match="absolute"):
+        nim_launch_argv(
+            NIM_PIN, model_dir="/m", served_model_name="m", port=8000, adapter_dir="/a/../b"
+        )
+    with pytest.raises(NIMError, match="profile"):
+        nim_launch_argv(
+            NIM_PIN, model_dir="/m", served_model_name="m", port=8000, model_profile="a b"
+        )
+
+
+def test_check_ready_needs_health_and_the_model() -> None:
+    seen: list[str] = []
+
+    def get(models: bytes) -> Callable[[str, float], bytes]:
+        def fetch(url: str, timeout: float) -> bytes:
+            assert timeout == 10.0
+            seen.append(url)
+            return models if url.endswith("/v1/models") else b"{}"
+
+        return fetch
+
+    listing = json.dumps({"object": "list", "data": [{"id": "base"}, {"id": "faust"}]})
+    assert check_ready(ENDPOINT, "faust", get=get(listing.encode())) == ["base", "faust"]
+    assert seen == ["http://127.0.0.1:8000/v1/health/ready", "http://127.0.0.1:8000/v1/models"]
+    with pytest.raises(NIMError, match="does not serve"):
+        check_ready(ENDPOINT, "other", get=get(listing.encode()))
+    with pytest.raises(NIMError, match="model list"):
+        check_ready(ENDPOINT, "faust", get=get(b'{"data": 1}'))
+
+    def down(url: str, timeout: float) -> bytes:
+        raise NIMError("NIM request failed: 503")
+
+    with pytest.raises(NIMError, match="503"):
+        check_ready(ENDPOINT, "faust", get=down)
 
 
 def test_deployment_receipt_is_a_parent_of_the_evaluation(store: ArtifactStore) -> None:
     spark = put_plain(store, spark_diagnostics(), [], T0)
     dataset = put_plain(store, {"snapshot": "frozen"}, [], T0)
-    pin = stored_pin(store, host=spark)
+    pin = stored_pin(store, host=spark, pin=NIM_PIN)
     model = put_plain(store, {"model": "merged"}, [dataset], T0)
     payload = deployment_payload(
-        pin=PIN,
+        pin=NIM_PIN,
         container_pin_digest=pin,
         model_artifact_digest=model,
         gpu_type="NVIDIA GB10",

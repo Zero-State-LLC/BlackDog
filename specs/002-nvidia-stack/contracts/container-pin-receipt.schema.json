@@ -40,9 +40,10 @@
     "capture_method": {
       "enum": [
         "image_inspect",
+        "container_inspect",
         "environment"
       ],
-      "description": "INFERRED: how the digest was read."
+      "description": "How the digest was read: image inspect RepoDigests, host-side container inspect of the run, or the launcher-set BLACKDOG_CONTAINER_IMAGE claim."
     },
     "host_fingerprint_digest": {
       "type": [

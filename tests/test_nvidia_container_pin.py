@@ -16,13 +16,16 @@ from faustcoder.nvidia.container_pin import (
     ImagePin,
     UnpinnedRuntimeError,
     container_pin_payload,
+    image_id,
     in_container,
+    inspect_container,
     inspect_image,
     parse_image_reference,
     pin_from_environment,
     pin_from_image_inspect,
     record_container_pin,
     require_pinned_runtime,
+    verify_container,
     verify_running_digest,
 )
 from faustcoder.nvidia.receipts import validate_receipt_payload
@@ -32,7 +35,10 @@ from tests.support import DIGEST_A, DIGEST_B
 FIXTURES = Path(__file__).resolve().parent / "fixtures" / "nvidia"
 DOCKER = (FIXTURES / "docker-image-inspect.json").read_text(encoding="utf-8")
 PODMAN = (FIXTURES / "podman-image-inspect.json").read_text(encoding="utf-8")
+DOCKER_RUN = (FIXTURES / "docker-container-inspect.json").read_text(encoding="utf-8")
+PODMAN_RUN = (FIXTURES / "podman-container-inspect.json").read_text(encoding="utf-8")
 PINNED = f"nvcr.io/nvidia/pytorch:25.09-py3@{DIGEST_A}"
+INDEX_DIGEST = "sha256:" + "1" * 64
 
 
 def test_parse_reference() -> None:
@@ -61,6 +67,23 @@ def test_podman_inspect_with_several_tags_needs_a_tag() -> None:
     assert pin_from_image_inspect(PODMAN, tag="25.09-py3").image_digest == DIGEST_A
 
 
+def test_several_repo_digests_need_the_digest_that_was_run() -> None:
+    both = json.loads(PODMAN)
+    pin = pin_from_image_inspect(PODMAN, tag="25.09-py3", digest=INDEX_DIGEST)
+    assert pin.image_digest == INDEX_DIGEST
+    with pytest.raises(ContainerPinError, match="not among the RepoDigests"):
+        pin_from_image_inspect(PODMAN, tag="25.09-py3", digest=DIGEST_B)
+    del both[0]["Digest"]
+    with pytest.raises(ContainerPinError, match="2 RepoDigests"):
+        pin_from_image_inspect(json.dumps(both), tag="25.09-py3")
+
+
+def test_image_id_is_normalized_across_runtimes() -> None:
+    assert image_id(DOCKER) == image_id(PODMAN) == DIGEST_B
+    with pytest.raises(ContainerPinError, match="image ID"):
+        image_id(json.dumps([{"Id": "abc"}]))
+
+
 @pytest.mark.parametrize(
     ("text", "message"),
     [
@@ -69,7 +92,7 @@ def test_podman_inspect_with_several_tags_needs_a_tag() -> None:
         ("[1]", "exactly one image"),
         (
             json.dumps([{"RepoTags": ["nvcr.io/nvidia/pytorch:25.09-py3"], "RepoDigests": None}]),
-            "one RepoDigest",
+            "local-only image",
         ),
         (
             json.dumps(
@@ -120,6 +143,56 @@ def test_running_digest_must_match_the_pin() -> None:
     other = ImagePin("nvidia/pytorch", "25.09-py3", DIGEST_B, "environment")
     with pytest.raises(ContainerPinError, match="does not match pin"):
         verify_running_digest(PIN, other)
+
+
+@pytest.mark.parametrize("container_json", [DOCKER_RUN, PODMAN_RUN])
+def test_container_must_run_the_pinned_image(container_json: str) -> None:
+    observed = verify_container(PIN, container_json, DOCKER)
+    assert observed == ImagePin("nvidia/pytorch", "25.09-py3", DIGEST_A, "container_inspect")
+    validate_receipt_payload(container_pin_payload(observed, host_fingerprint_digest=None))
+
+
+def _run(**changes: object) -> str:
+    record = json.loads(DOCKER_RUN)[0]
+    record.update(changes)
+    return json.dumps([record])
+
+
+@pytest.mark.parametrize(
+    ("container_json", "image_json", "message"),
+    [
+        (_run(Config={"Image": "nvcr.io/nvidia/pytorch:25.09-py3"}), DOCKER, "not a digest"),
+        (_run(Config={"Image": f"nvcr.io/nvidia/pytorch@{DIGEST_B}"}), DOCKER, "does not match"),
+        (_run(Config={}), DOCKER, "no image reference"),
+        (_run(Image=DIGEST_A), DOCKER, "image ID differs"),
+        (DOCKER_RUN, json.dumps([{**json.loads(DOCKER)[0], "RepoDigests": []}]), "local-only"),
+        ("[]", DOCKER, "exactly one container"),
+    ],
+)
+def test_container_mismatch_is_refused(container_json: str, image_json: str, message: str) -> None:
+    with pytest.raises(ContainerPinError, match=message):
+        verify_container(PIN, container_json, image_json)
+
+
+def test_inspect_container_runs_two_fixed_commands() -> None:
+    calls: list[list[str]] = []
+
+    def fake(argv: Sequence[str], timeout: float) -> str:
+        calls.append(list(argv))
+        return PODMAN_RUN if argv[1] == "container" else PODMAN
+
+    pinned = ImagePin("nvidia/pytorch", "25.09-py3", DIGEST_A, "image_inspect")
+    assert inspect_container("blackdog-run", pinned, runtime="podman", run=fake).image_digest == (
+        DIGEST_A
+    )
+    assert calls == [
+        ["podman", "container", "inspect", "blackdog-run"],
+        ["podman", "image", "inspect", f"nvcr.io/nvidia/pytorch@{DIGEST_A}"],
+    ]
+    with pytest.raises(ContainerPinError, match="not a container"):
+        inspect_container("--all", pinned, run=fake)
+    with pytest.raises(ContainerPinError, match="runtime must be"):
+        inspect_container("blackdog-run", pinned, runtime="sh", run=fake)
 
 
 def test_inspect_image_uses_a_fixed_argv_and_timeout() -> None:

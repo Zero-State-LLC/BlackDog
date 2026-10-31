@@ -39,11 +39,66 @@ immutable and acyclic.
 
 ## Consequences
 
-- DatasetSnapshot and EvaluationRun still have no schema. The graph checks
-  take their digests from the caller. TrainingRun is recognized by its schema.
-- AutoModel CLI flags, the `BLACKDOG_CONTAINER_IMAGE` variable and NIM launch
-  options are INFERRED from public documentation and must be confirmed on the
-  cleared Spark.
+- DatasetSnapshot and EvaluationRun still have no schema. Spec 001
+  [data-model.md](../../specs/001-faustcoder/data-model.md) labels their
+  payload fields INFERRED and has no contract for them, and
+  `faustcoder/snapshot.py` writes a `DedupManifest`, not a frozen
+  DatasetSnapshot. Spec 002 does not invent one. The graph checks take
+  their digests from the caller. TrainingRun is recognized by its schema.
+- Launch options were checked against primary sources on 2026-10-31
+  (see below). Whether they behave as documented on the cleared Spark is
+  NOT_COMPUTABLE until that hardware runs them.
+- `BLACKDOG_CONTAINER_IMAGE` is a BlackDog convention, not an NGC one.
+  Inside a container it is a claim. `verify_container` checks the run on
+  the host from `container inspect` and `image inspect`.
 - Hardware acceptance for N03 to N07 remains open: the Spark smoke, the
-  20-step loss replay, a NeMo LoRA run graded by T03, the NIM latency
-  measurement and a credit-backed run.
+  running-digest match, the 20-step loss replay, a NeMo LoRA run graded by
+  T03, the NIM latency measurement and a credit-backed run.
+
+## Sources
+
+OBSERVED 2026-10-31.
+
+- NeMo AutoModel, [NVIDIA-NeMo/Automodel](https://github.com/NVIDIA-NeMo/Automodel)
+  at commit `16670959b86f61dc662605c0df8e7de774b71aac`:
+  - `nemo_automodel/cli/app.py`: `automodel <config.yaml>
+    [--nproc-per-node N] [--key.subkey=value]`.
+  - `nemo_automodel/components/config/_arg_parser.py`: a value that starts
+    with `--` is misread in `--key value` form, so overrides use
+    `--key=value`.
+  - `docs/guides/checkpointing.mdx`: `save_consolidated: final` is the
+    recommended value and `true` is the legacy form of `every`. PEFT
+    writes `adapter_config.json` and `adapter_model.safetensors` under
+    `model/`; full SFT writes HF weights under `model/consolidated/`.
+  - `tools/merge_lora.py` merges an adapter as a separate step.
+  - `docker/Dockerfile`: WORKDIR `/opt/Automodel`. Recipes ending in
+    `_spark.yaml` target GB10.
+  - Image `nvcr.io/nvidia/nemo-automodel:26.10.00`, linux/amd64 and
+    linux/arm64
+    ([NGC API](https://api.ngc.nvidia.com/v2/repos/nvidia/nemo-automodel)).
+- NIM for LLMs 2.1.4
+  ([docs](https://docs.nvidia.com/nim/large-language-models/latest/)):
+  - environment-variables: `NIM_MODEL_PATH` (local directory),
+    `NIM_SERVED_MODEL_NAME`, `NIM_MODEL_PROFILE`, `NIM_PEFT_SOURCE`, and
+    `NIM_HEALTH_PORT` serving `/v1/health/ready`.
+  - 1.x-migration-guide: `NIM_MODEL_NAME` is the 1.x name.
+  - air-gap-deployment: with a local path no download occurs; do not set
+    `NGC_API_KEY` or `HF_TOKEN`; `--shm-size=16GB`; port 8000.
+  - finetune-lora: adapter layout, a `-feat_lora` profile, and the request
+    `model` naming the adapter on vLLM.
+  - support-matrix: `vllm-model-free-nim` is verified on NVIDIA-GB10.
+  - The quickstart names `nvcr.io/nim/nvidia/model-free-nim:2.1.4`, but the
+    [NGC API](https://api.ngc.nvidia.com/v2/repos/nim/nvidia/model-free-nim)
+    lists 2.0.13 as its latest tag, and
+    [vllm-model-free-nim](https://api.ngc.nvidia.com/v2/repos/nim/nvidia/vllm-model-free-nim)
+    lists 2.1.x tags.
+- Digests (moby commit `9aa9edfa787e08bb2da31694cd8a402876f32232`,
+  containers/podman commit `d727bf2fc6a9c4e4993c6b7562f9553309395bb7`):
+  - [moby image_inspect.go](https://github.com/moby/moby/blob/9aa9edfa787e08bb2da31694cd8a402876f32232/api/types/image/image_inspect.go):
+    `Id` is the config digest, and `RepoDigests` is set after a pull or push.
+  - moby `api/swagger.yaml`: container `Image` is the image ID, and
+    `Config.Image` is the reference as given.
+  - Podman `podman-image-inspect.1`: `Digest` and several `RepoDigests`.
+  - Podman `podman-container-inspect.1`: `Image` and `ImageName`.
+  - Podman `podman-run.1`: `/run/.containerenv` holds image data only with
+    `--privileged`.

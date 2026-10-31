@@ -8,6 +8,8 @@ See [docs/VERSIONING.md](docs/VERSIONING.md).
 
 ## [Unreleased]
 
+- Check spec 002 launch glue against NeMo AutoModel and NIM 2.1.4 sources (ADR-0008). AutoModel runs use `--key=value` overrides, a read-only recipe mount, `save_consolidated: final`, the mounted base model and method-matched exports. NIM launches add LoRA adapter mounts, profile selection and a ready check. Container pins choose among several RepoDigests, refuse local-only images and verify a run from host-side container inspect. Hardware acceptance on the cleared Spark is pending.
+
 - Add spec 002 receipt schemas (ContainerPinReceipt, NeMoTrainingAttempt, NIMDeploymentReceipt, ExternalCapacityReceipt, NIM verb responses), store-time parent rules, a static receipt-graph checker with upstream invalidation, container pin capture, and NeMo AutoModel and model-free NIM glue (ADR-0008). Grading stays with the faustwasm harness. Hardware acceptance on the cleared Spark is pending.
 
 - Record seven-span bounded compiler/signal validation: 28 positive runs, five negative controls, receipt locations and preservation results. Independent production approval, 958 missing ranges and T06/T07 qualification gates remain open; TOKEN_FLOOR stays 40/provisional and T07 unfrozen.

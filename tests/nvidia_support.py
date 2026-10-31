@@ -17,6 +17,9 @@ T5 = "2026-10-06T00:00:00Z"
 REVISION = "0123456789abcdef0123456789abcdef01234567"
 PIN = ImagePin("nvidia/pytorch", "25.09-py3", DIGEST_A, "image_inspect")
 OTHER_PIN = ImagePin("nvidia/pytorch", "25.10-py3", DIGEST_B, "image_inspect")
+# Repositories and tags as published on NGC; the digests are test values.
+AUTOMODEL_PIN = ImagePin("nvidia/nemo-automodel", "26.10.00", DIGEST_A, "image_inspect")
+NIM_PIN = ImagePin("nim/nvidia/vllm-model-free-nim", "2.1.4", DIGEST_B, "image_inspect")
 
 
 def put_plain(

@@ -7,9 +7,29 @@ not launch anything itself and has no grading function: the exported
 Hugging Face checkpoint is graded only by the faustwasm harness, so a
 TrainingRun built here carries empty ``metrics``.
 
-AutoModel CLI flags (``--nproc-per-node`` and dotted overrides such as
-``--step_scheduler.max_steps``) are INFERRED from public NeMo AutoModel
-documentation and must be confirmed on the cleared Spark (N04).
+Sources (OBSERVED 2026-10-31, NVIDIA-NeMo/Automodel at commit
+16670959b86f61dc662605c0df8e7de774b71aac):
+
+- ``automodel <config.yaml> [--nproc-per-node N] [--key.subkey=override]``
+  is the CLI (nemo_automodel/cli/app.py). Overrides are parsed by
+  nemo_automodel/components/config/_arg_parser.py; this module always
+  uses the ``--key=value`` form so a value is never read as a flag.
+- The image is ``nvcr.io/nvidia/nemo-automodel`` (README, docs/guides/
+  installation.mdx; tag 26.10.00 at that commit). Its WORKDIR is
+  /opt/Automodel and it runs as root by default (docker/Dockerfile).
+  The NGC repository is multi-architecture (amd64 and arm64).
+- LoRA runs write a Hugging Face PEFT adapter (adapter_config.json and
+  adapter_model.safetensors) under ``<checkpoint>/model/``; full SFT
+  with ``checkpoint.save_consolidated: final`` writes HF weights under
+  ``<checkpoint>/model/consolidated/`` (docs/guides/checkpointing.mdx).
+  Merging an adapter into the base model is a separate step
+  (tools/merge_lora.py) that this module does not launch.
+- GB10 (DGX Spark) recipes exist, for example
+  examples/llm_finetune/qwen/qwen3_8b_squad_spark.yaml with
+  ``ci.cluster_tag: gb10`` and one process per node.
+
+NOT_COMPUTABLE here: that these flags and keys behave as documented on
+the cleared Spark, and the peak memory of a real run (N04).
 """
 
 from __future__ import annotations
@@ -43,6 +63,14 @@ _RECIPE_RE = re.compile(r"^[A-Za-z0-9_][A-Za-z0-9_./-]*\.ya?ml$")
 CONTAINER_DATA = "/data"
 CONTAINER_MODEL = "/model"
 CONTAINER_OUTPUT = "/output"
+CONTAINER_RECIPES = "/recipes"
+SHM_SIZE = "8g"
+# Images known to ship the ``automodel`` CLI. Extend only from a source.
+AUTOMODEL_REPOSITORIES = frozenset({"nvidia/nemo-automodel"})
+# Export format each method produces inside one AutoModel run.
+EXPORT_FOR_METHOD = {"lora": "hf_adapter", "full_sft": "hf_merged"}
+# Where the exported Hugging Face files land under a checkpoint directory.
+EXPORT_SUBDIR = {"hf_adapter": "model", "hf_merged": "model/consolidated"}
 
 
 class NeMoConfigError(ValueError):
@@ -52,7 +80,8 @@ class NeMoConfigError(ValueError):
 @dataclass(frozen=True)
 class NeMoRunConfig:
     """Inputs of one AutoModel run. Paths are host paths, mounted read-only
-    except ``output_dir``."""
+    except ``output_dir``. ``recipe_path`` is relative to ``recipe_dir``,
+    so ``recipe_digest`` covers a file the host can hash."""
 
     pin: ImagePin
     dataset_snapshot_digest: str
@@ -60,6 +89,7 @@ class NeMoRunConfig:
     base_model_revision: str
     recipe_path: str
     recipe_digest: str
+    recipe_dir: str
     model_dir: str
     data_dir: str
     output_dir: str
@@ -105,6 +135,14 @@ def config_payload(config: NeMoRunConfig) -> dict[str, object]:
     }
 
 
+def export_dir(step_dir: str, export_format: str) -> str:
+    """Return where AutoModel writes ``export_format`` files under one
+    ``epoch_E_step_S`` checkpoint directory (checkpointing.mdx)."""
+    if export_format not in EXPORT_SUBDIR:
+        raise NeMoConfigError(f"export_format must be one of {EXPORT_FORMATS}")
+    return f"{step_dir.rstrip('/')}/{EXPORT_SUBDIR[export_format]}"
+
+
 def config_digest(config: NeMoRunConfig) -> str:
     """Return the content digest of ``config_payload(config)``."""
     return content_digest_for(config_payload(config))
@@ -118,11 +156,12 @@ def launch_argv(config: NeMoRunConfig) -> list[str]:
     """
     validate_config(config)
     overrides = {
+        "model.pretrained_model_name_or_path": CONTAINER_MODEL,
         "step_scheduler.max_steps": str(config.max_steps),
         "rng.seed": str(config.seed),
         "checkpoint.enabled": "true",
         "checkpoint.checkpoint_dir": CONTAINER_OUTPUT,
-        "checkpoint.save_consolidated": "true",
+        "checkpoint.save_consolidated": "final",
         "checkpoint.model_save_format": "safetensors",
         **config.extra_overrides,
     }
@@ -138,6 +177,8 @@ def launch_argv(config: NeMoRunConfig) -> list[str]:
         str(config.memory_cap_bytes),
         "--memory-swap",
         str(config.memory_cap_bytes),
+        "--shm-size",
+        SHM_SIZE,
         "-e",
         "HF_HUB_OFFLINE=1",
         "-e",
@@ -149,15 +190,16 @@ def launch_argv(config: NeMoRunConfig) -> list[str]:
         "-v",
         f"{config.data_dir}:{CONTAINER_DATA}:ro",
         "-v",
+        f"{config.recipe_dir}:{CONTAINER_RECIPES}:ro",
+        "-v",
         f"{config.output_dir}:{CONTAINER_OUTPUT}",
         config.pin.reference,
         "automodel",
-        config.recipe_path,
+        f"{CONTAINER_RECIPES}/{config.recipe_path}",
         "--nproc-per-node",
         "1",
     ]
-    for key, value in sorted(overrides.items()):
-        argv.extend([f"--{key}", value])
+    argv.extend(f"--{key}={value}" for key, value in sorted(overrides.items()))
     return argv
 
 
@@ -260,6 +302,14 @@ def _config_problems(config: NeMoRunConfig) -> list[str]:
     checks = (
         (config.method in METHODS, f"method must be one of {METHODS}"),
         (config.export_format in EXPORT_FORMATS, f"export_format must be one of {EXPORT_FORMATS}"),
+        (
+            EXPORT_FOR_METHOD.get(config.method, config.export_format) == config.export_format,
+            "export_format must match the method: lora -> hf_adapter, full_sft -> hf_merged",
+        ),
+        (
+            config.pin.repository in AUTOMODEL_REPOSITORIES,
+            f"pin must be one of {sorted(AUTOMODEL_REPOSITORIES)}",
+        ),
         (1 <= config.max_steps <= MAX_STEPS_LIMIT, f"max_steps must be in 1..{MAX_STEPS_LIMIT}"),
         (config.seed >= 0, "seed must be non-negative"),
         (
@@ -286,9 +336,10 @@ def _config_problems(config: NeMoRunConfig) -> list[str]:
         (
             all(
                 _SAFE_PATH_RE.fullmatch(p) and ".." not in p
-                for p in (config.model_dir, config.data_dir, config.output_dir)
+                for p in (config.model_dir, config.data_dir, config.output_dir, config.recipe_dir)
             ),
-            "model_dir, data_dir and output_dir must be absolute paths without '..' or ':'",
+            "model_dir, data_dir, output_dir and recipe_dir must be absolute paths"
+            " without '..' or ':'",
         ),
         (
             all(re.fullmatch(r"[a-z_][a-z0-9_.]*", key) for key in config.extra_overrides),
@@ -304,6 +355,7 @@ def _config_problems(config: NeMoRunConfig) -> list[str]:
 
 _RESERVED_OVERRIDES = frozenset(
     {
+        "model.pretrained_model_name_or_path",
         "step_scheduler.max_steps",
         "rng.seed",
         "checkpoint.enabled",
