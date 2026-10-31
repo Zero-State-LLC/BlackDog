@@ -20,26 +20,31 @@ BlackDog already trains and evaluates on DGX Spark. This feature pins official N
 ## 3. Requirements
 
 ### R-N001. NGC container pin
+
 Every training or inference process that uses an NVIDIA container records the image digest (sha256), tag, and source (nvcr.io) in a ContainerPinReceipt. The receipt is an immutable parent of the TrainingRun or NIMDeploymentReceipt. Host CUDA installs remain disallowed for pinned runs.
 
 **Acceptance:** A T10-style smoke on Spark produces a ContainerPinReceipt whose digest matches the running container. Replay on a second machine with the same digest yields identical loss trajectory for the first 20 steps of a fixed Qwen 1.5B LoRA recipe.
 
 ### R-N002. NeMo AutoModel path
+
 When a training run elects the NeMo path, it uses an official NeMo AutoModel recipe (or a minimal derivative) that consumes Hugging Face Qwen checkpoints. The recipe must emit a standard Hugging Face adapter or merged checkpoint. The faustwasm compiler harness and signal tests remain the sole source of rewards and pass/fail labels. No NeMo-internal metric may substitute for a CompilerReceipt or DSPTestReceipt.
 
 **Acceptance:** A NeMo LoRA run on the Spark-cleared machine produces a checkpoint that the existing T03 harness can load and grade. Peak memory stays inside the R-001 120 GiB cap. The TrainingRun parents include both the ContainerPinReceipt and the DatasetSnapshot.
 
 ### R-N003. NIM serving path
+
 A cleared model may be served via a model-free NIM container. The endpoint implements the four R-010 verbs (generate, repair, explain, optimize) and returns schema-compliant responses. Each deployment produces a NIMDeploymentReceipt that records the model artifact digest, container digest, GPU type, and observed latency percentiles. Real-time safety checks from R-021 continue to apply to any generated Faust that leaves the endpoint.
 
 **Acceptance:** A local NIM container on Spark returns a valid generate response for a frozen task within the existing latency budget. The receipt is an immutable parent of any EvaluationRun that used the endpoint.
 
 ### R-N004. Evidence DAG compatibility
+
 New receipt types (ContainerPinReceipt, NeMoTrainingAttempt, NIMDeploymentReceipt) carry schema_version, artifact_id, content_digest, created_at, producer, and parents. They reference only prior immutable nodes. Invalidating a ContainerPinReceipt invalidates dependent TrainingRuns until they are rerun. No edge points from a later node to an earlier one.
 
 **Acceptance:** A static check on the receipt graph for a completed NeMo run confirms zero cycles and that every TrainingRun has a ContainerPinReceipt ancestor.
 
 ### R-N005. Inception-sourced resources
+
 Cloud credits or preferred-pricing hardware obtained through NVIDIA Inception are recorded as external capacity. They do not alter R-001 fingerprints or the requirement that primary qualification runs occur on a cleared local Spark. Credit usage receipts are optional metadata parents; they never replace dataset or model digests.
 
 **Acceptance:** A credit-backed H100 run can be attached as an optional parent, but the canonical EvaluationRun still traces to a local Spark fingerprint and the same DatasetSnapshot.
@@ -62,7 +67,7 @@ Cloud credits or preferred-pricing hardware obtained through NVIDIA Inception ar
 
 New nodes insert after the existing “training” and “evaluation” stages:
 
-```
+```text
 ... -> DatasetSnapshot -> ContainerPinReceipt -> NeMoTrainingAttempt -> TrainingRun
                                                               |
                                                               v
@@ -78,3 +83,16 @@ All edges point forward. A revision of a container or recipe creates a new recei
 
 - D-N001: Default to NeMo AutoModel recipes versus continued PEFT/TRL for the first qualified student model. Resolve after one head-to-head T10 comparison on the cleared Spark.
 - D-N002: Whether NIM becomes the sole production serving path or remains one of several R-010 implementations.
+
+## 8. Governing workflows
+
+INFERRED: added for Spec Kit compliance. This list copies spec 001 section 16;
+plan, tasks and agent briefs reuse it rather than inventing another.
+
+| Workflow | Applies to | Owner |
+|---|---|---|
+| anti-slop-code | Receipt schemas, container pin tooling, NeMo and NIM glue code | Cloud agent implements |
+| production-systems | NGC container pins, NIM serving, receipt store | Cloud agent implements; FORGE decomposes |
+| google-developer-style | This spec, plan, tasks and any ADR it spawns | SCRIBE |
+| spec-kit | Spec, plan and tasks for 002 | FORGE |
+| Threat model (R-013, R-021) | Generated Faust leaving a NIM endpoint; container supply chain | ADVERSARY |
