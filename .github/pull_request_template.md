@@ -11,6 +11,7 @@
 - [ ] Contract changes include schema tests and an ADR
 - [ ] State-machine changes update the transition table and diagram
 - [ ] No datasets, model weights, checkpoints, credentials, `.env` files or restricted material
-- [ ] Frozen evaluation holdouts untouched
+- [ ] Frozen evaluation holdouts untouched; no private holdout task content (SHA-256 references only)
+- [ ] `python -m pytest` and `pre-commit run --all-files` pass locally
 - [ ] CHANGELOG.md updated under Unreleased
 - [ ] Security impact described (or "none")
