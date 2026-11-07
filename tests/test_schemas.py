@@ -19,7 +19,7 @@ from faustcoder import (
 from tests.support import DIGEST_A
 
 ROOT = Path(__file__).resolve().parents[1]
-CONTRACTS = ROOT / "specs" / "001-faustcoder" / "contracts"
+SPECS = ROOT / "specs"
 FIXTURES = Path(__file__).resolve().parent / "fixtures"
 SOURCE_COMMIT = "fcc391e5b4360f594309f1e99cc1b8ac9baeaf9c"
 
@@ -35,7 +35,7 @@ def _load(kind: str, schema_name: str) -> object:
 
 def test_schema_copies_match_contracts_byte_for_byte() -> None:
     copied = sorted(schema_directory().glob("*.schema.json"))
-    sources = sorted(CONTRACTS.glob("*.schema.json"))
+    sources = sorted(SPECS.glob("*/contracts/*.schema.json"), key=lambda path: path.name)
     assert [path.name for path in copied] == [path.name for path in sources]
     assert copied, "expected copied schemas"
     for copy, source in zip(copied, sources, strict=True):
@@ -47,6 +47,7 @@ def test_provenance_records_the_source_commit() -> None:
     assert "specs/001-faustcoder/contracts/" in text
     assert SOURCE_COMMIT in text
     assert "faustcoder/canonical.py" in text
+    assert "specs/002-nvidia-stack/contracts/" in text
 
 
 def test_every_schema_has_a_valid_and_invalid_fixture() -> None:

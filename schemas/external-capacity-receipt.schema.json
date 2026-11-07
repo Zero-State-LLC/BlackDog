@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Zero-State-LLC/BlackDog/specs/002-nvidia-stack/contracts/external-capacity-receipt.schema.json",
+  "title": "ExternalCapacityReceipt",
+  "description": "Spec 002 R-N005: Inception-sourced cloud credits or preferred-pricing hardware used for a run. Optional metadata parent only; never a fingerprint, dataset or model digest. Field set INFERRED. DRAFT.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "kind",
+    "program",
+    "resource",
+    "provider",
+    "gpu_type",
+    "gpu_hours",
+    "statement_digest"
+  ],
+  "properties": {
+    "kind": {
+      "const": "ExternalCapacityReceipt"
+    },
+    "program": {
+      "const": "nvidia-inception"
+    },
+    "resource": {
+      "enum": [
+        "cloud_credits",
+        "preferred_pricing_hardware"
+      ]
+    },
+    "provider": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 120
+    },
+    "gpu_type": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 120
+    },
+    "gpu_hours": {
+      "type": "number",
+      "minimum": 0
+    },
+    "statement_digest": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "description": "sha256 of the usage statement kept outside git."
+    }
+  }
+}

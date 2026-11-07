@@ -1,0 +1,22 @@
+{
+  "kind": "NIMDeploymentReceipt",
+  "model_artifact_digest": "sha256:fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210",
+  "container_pin_digest": "sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+  "container_image_digest": "sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+  "gpu_type": "NVIDIA GB10",
+  "served_model_name": "blackdog-faust",
+  "endpoint": "http://203.0.113.7:8000",
+  "verbs": [
+    "generate",
+    "repair",
+    "explain",
+    "optimize"
+  ],
+  "memory_cap_bytes": 128849018880,
+  "latency_ms": {
+    "p50": 100.0,
+    "p90": 200.0,
+    "p99": 300.0
+  },
+  "latency_sample_count": 3
+}

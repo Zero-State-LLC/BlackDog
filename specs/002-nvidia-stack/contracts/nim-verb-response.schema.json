@@ -1,0 +1,236 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Zero-State-LLC/BlackDog/specs/002-nvidia-stack/contracts/nim-verb-response.schema.json",
+  "title": "NIMVerbResponse",
+  "description": "Spec 002 R-N003 and spec 001 R-010: structured response of one verb served through a NIM endpoint. Shapes are INFERRED until T13. DRAFT.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "verb",
+    "disposition",
+    "served_model_name",
+    "latency_ms",
+    "attempts"
+  ],
+  "properties": {
+    "verb": {
+      "enum": [
+        "generate",
+        "repair",
+        "explain",
+        "optimize"
+      ]
+    },
+    "disposition": {
+      "enum": [
+        "accepted",
+        "rejected",
+        "abstained"
+      ]
+    },
+    "served_model_name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "latency_ms": {
+      "type": "number",
+      "minimum": 0
+    },
+    "attempts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "source_sha256",
+          "compiler_receipt_digest",
+          "dsp_test_receipt_digest",
+          "passed"
+        ],
+        "properties": {
+          "source_sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "compiler_receipt_digest": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "pattern": "^sha256:[0-9a-f]{64}$"
+          },
+          "dsp_test_receipt_digest": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "pattern": "^sha256:[0-9a-f]{64}$"
+          },
+          "passed": {
+            "type": "boolean",
+            "description": "Copied from the harness receipts, never from the model."
+          }
+        }
+      },
+      "description": "One entry per candidate the harness checked."
+    },
+    "source": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Faust source. Non-null only when the harness accepted it."
+    },
+    "diff": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "explanation": {
+      "type": "string"
+    },
+    "correctness_claim": {
+      "const": false
+    },
+    "baseline": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source_sha256",
+        "compiler_receipt_digest",
+        "dsp_test_receipt_digest",
+        "passed"
+      ],
+      "properties": {
+        "source_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "compiler_receipt_digest": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "dsp_test_receipt_digest": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "passed": {
+          "type": "boolean",
+          "description": "Copied from the harness receipts, never from the model."
+        }
+      }
+    },
+    "equivalence_digest": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "verb": {
+            "const": "generate"
+          }
+        },
+        "required": [
+          "verb"
+        ]
+      },
+      "then": {
+        "required": [
+          "source"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "verb": {
+            "const": "repair"
+          }
+        },
+        "required": [
+          "verb"
+        ]
+      },
+      "then": {
+        "required": [
+          "source",
+          "diff"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "verb": {
+            "const": "explain"
+          }
+        },
+        "required": [
+          "verb"
+        ]
+      },
+      "then": {
+        "required": [
+          "explanation",
+          "correctness_claim"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "verb": {
+            "const": "optimize"
+          }
+        },
+        "required": [
+          "verb"
+        ]
+      },
+      "then": {
+        "required": [
+          "source",
+          "baseline",
+          "equivalence_digest"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "disposition": {
+            "const": "accepted"
+          }
+        },
+        "required": [
+          "disposition"
+        ]
+      },
+      "then": {
+        "not": {
+          "properties": {
+            "source": {
+              "const": null
+            }
+          },
+          "required": [
+            "source"
+          ]
+        }
+      }
+    }
+  ]
+}

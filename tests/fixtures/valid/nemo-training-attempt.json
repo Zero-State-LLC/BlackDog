@@ -1,0 +1,27 @@
+{
+  "kind": "NeMoTrainingAttempt",
+  "container_pin_digest": "sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+  "dataset_snapshot_digest": "sha256:fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210",
+  "external_capacity_digest": null,
+  "base_model": {
+    "repository": "Qwen/Qwen2.5-Coder-1.5B",
+    "revision": "0123456789abcdef0123456789abcdef01234567"
+  },
+  "recipe": {
+    "path": "examples/llm_finetune/qwen/lora.yaml",
+    "digest": "sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+  },
+  "config_digest": "sha256:fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210",
+  "method": "lora",
+  "max_steps": 20,
+  "seed": 0,
+  "memory_cap_bytes": 128849018880,
+  "peak_memory_bytes": null,
+  "status": "failed",
+  "export": {
+    "format": "hf_adapter",
+    "checkpoint_digests": []
+  },
+  "loss_log_digest": null,
+  "grading_authority": "faustwasm"
+}

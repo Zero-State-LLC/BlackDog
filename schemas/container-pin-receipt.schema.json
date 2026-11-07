@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Zero-State-LLC/BlackDog/specs/002-nvidia-stack/contracts/container-pin-receipt.schema.json",
+  "title": "ContainerPinReceipt",
+  "description": "Spec 002 R-N001: the NGC image a training or inference process ran in, pinned by digest. Payload of an ArtifactEnvelope. DRAFT.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "kind",
+    "source",
+    "repository",
+    "tag",
+    "image_digest",
+    "capture_method",
+    "host_fingerprint_digest"
+  ],
+  "properties": {
+    "kind": {
+      "const": "ContainerPinReceipt"
+    },
+    "source": {
+      "const": "nvcr.io",
+      "description": "Registry host. Only NGC images are pinned (R-N001)."
+    },
+    "repository": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(?:[._-][a-z0-9]+)*(?:/[a-z0-9]+(?:[._-][a-z0-9]+)*)+$",
+      "description": "Repository path under nvcr.io, for example nvidia/pytorch."
+    },
+    "tag": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.-]{0,127}$",
+      "description": "Human-readable tag. The digest, not the tag, is the pin."
+    },
+    "image_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "description": "Registry manifest digest (RepoDigests), sha256:<hex>."
+    },
+    "capture_method": {
+      "enum": [
+        "image_inspect",
+        "container_inspect",
+        "environment"
+      ],
+      "description": "How the digest was read: image inspect RepoDigests, host-side container inspect of the run, or the launcher-set BLACKDOG_CONTAINER_IMAGE claim."
+    },
+    "host_fingerprint_digest": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "description": "Content digest of the host environment-diagnostics artifact (R-001), when known. Also listed in parents."
+    }
+  }
+}

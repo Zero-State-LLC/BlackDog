@@ -1,0 +1,163 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Zero-State-LLC/BlackDog/specs/002-nvidia-stack/contracts/nemo-training-attempt.schema.json",
+  "title": "NeMoTrainingAttempt",
+  "description": "Spec 002 R-N002: one NeMo AutoModel run. Records configuration, resource use and exported checkpoints only. It carries no reward, pass/fail label or evaluation metric; the faustwasm harness is the only grader. DRAFT.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "kind",
+    "container_pin_digest",
+    "dataset_snapshot_digest",
+    "external_capacity_digest",
+    "base_model",
+    "recipe",
+    "config_digest",
+    "method",
+    "max_steps",
+    "seed",
+    "memory_cap_bytes",
+    "peak_memory_bytes",
+    "status",
+    "export",
+    "loss_log_digest",
+    "grading_authority"
+  ],
+  "properties": {
+    "kind": {
+      "const": "NeMoTrainingAttempt"
+    },
+    "container_pin_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "description": "ContainerPinReceipt parent."
+    },
+    "dataset_snapshot_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "description": "DatasetSnapshot parent."
+    },
+    "external_capacity_digest": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "description": "Optional ExternalCapacityReceipt metadata parent (R-N005)."
+    },
+    "base_model": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "repository",
+        "revision"
+      ],
+      "properties": {
+        "repository": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*/[A-Za-z0-9][A-Za-z0-9_.-]*$"
+        },
+        "revision": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{40}$",
+          "description": "Hugging Face commit. A mutable alias is not evidence."
+        }
+      }
+    },
+    "recipe": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "digest"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_][A-Za-z0-9_./-]*\\.ya?ml$",
+          "description": "Recipe path inside the pinned container."
+        },
+        "digest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$",
+          "description": "sha256 of the recipe file bytes."
+        }
+      }
+    },
+    "config_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "description": "Content digest of the canonical run configuration."
+    },
+    "method": {
+      "enum": [
+        "lora",
+        "full_sft"
+      ]
+    },
+    "max_steps": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "seed": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "memory_cap_bytes": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 128849018880,
+      "description": "R-001 cap: at most 120 GiB."
+    },
+    "peak_memory_bytes": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 0,
+      "description": "Observed peak. Null when not measured."
+    },
+    "status": {
+      "enum": [
+        "completed",
+        "failed"
+      ]
+    },
+    "export": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "format",
+        "checkpoint_digests"
+      ],
+      "properties": {
+        "format": {
+          "enum": [
+            "hf_adapter",
+            "hf_merged"
+          ]
+        },
+        "checkpoint_digests": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^sha256:[0-9a-f]{64}$"
+          },
+          "uniqueItems": true
+        }
+      }
+    },
+    "loss_log_digest": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "description": "sha256 of the raw training log, kept for replay (R-N001). Not a reward."
+    },
+    "grading_authority": {
+      "const": "faustwasm",
+      "description": "Rewards and pass/fail labels come only from CompilerReceipt and DSPTestReceipt (R-N002)."
+    }
+  }
+}

@@ -1,0 +1,12 @@
+[
+  {
+    "Id": "sha256:fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210",
+    "RepoTags": [
+      "nvcr.io/nvidia/pytorch:25.09-py3"
+    ],
+    "RepoDigests": [
+      "nvcr.io/nvidia/pytorch@sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+    ],
+    "Architecture": "arm64"
+  }
+]

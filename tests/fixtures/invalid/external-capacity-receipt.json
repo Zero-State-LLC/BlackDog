@@ -1,0 +1,9 @@
+{
+  "kind": "ExternalCapacityReceipt",
+  "program": "nvidia-inception",
+  "resource": "environment_fingerprint",
+  "provider": "example-cloud",
+  "gpu_type": "H100",
+  "gpu_hours": 1.5,
+  "statement_digest": null
+}

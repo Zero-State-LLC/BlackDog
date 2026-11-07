@@ -65,3 +65,14 @@ leaves the sidecar unchanged.
 
 `function-spans.schema.json` is added with the BlackDog identity in ADR-0007;
 its source and copy match. Existing schema identities are unchanged.
+
+## Spec 002 contracts
+
+The spec 002 receipt schemas are byte-for-byte copies of
+`specs/002-nvidia-stack/contracts/*.schema.json`, listed in the
+[spec 002 contracts](../specs/002-nvidia-stack/contracts/README.md)
+(ADR-0008). Their `$id` values use the BlackDog identity. Each one
+describes an envelope `payload`; the envelope schema still applies to
+the whole artifact. `tests/test_schemas.py` compares this directory with
+the union of every `specs/*/contracts/` tree, so a schema name must be
+unique across specs.

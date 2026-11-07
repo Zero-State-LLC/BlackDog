@@ -13,6 +13,7 @@ Index of the documents in this repository at main `84dd841` (spec 001 version 0.
 | [ADR-0005](adr/0005-compiler-diagnostic-classes.md) | ACCEPTED. CompilerReceipt classes for an unbound name, a resource limit and an internal harness failure |
 | [ADR-0006](adr/0006-source-attributable-failures.md) | ACCEPTED. Grade source-attributable failures at `parse_error`; quarantine environment and harness errors (A1–A7) |
 | [ADR-0007](adr/0007-reviewed-function-spans.md) | IMPLEMENTED in #89. Reviewed byte-span extraction; no production manifest approval or T07 freeze |
+| [ADR-0008](adr/0008-nvidia-stack-receipts.md) | PROPOSED. Spec 002 receipts, graph checks and NGC/NeMo/NIM glue; hardware acceptance pending |
 
 ## Decision records
 
@@ -74,5 +75,14 @@ Index of the documents in this repository at main `84dd841` (spec 001 version 0.
 | [checklists/requirements.md](../specs/001-faustcoder/checklists/requirements.md) | Requirements checklist against the spec as it stood on 2026-10-16 |
 | [checklists/state-machines.md](../specs/001-faustcoder/checklists/state-machines.md) | Checklist that spec §7.1–§7.4 list states, events and transitions |
 | [constitution](../.specify/memory/constitution.md) | Repository constitution, version 1.0.0, ratified 2026-10-16 |
+
+## Spec 002
+
+| Doc | Description |
+|---|---|
+| [spec.md](../specs/002-nvidia-stack/spec.md) | NVIDIA stack integration: NGC pins, NeMo AutoModel, NIM serving, Inception capacity |
+| [plan.md](../specs/002-nvidia-stack/plan.md) | Implementation plan for spec 002 |
+| [tasks.md](../specs/002-nvidia-stack/tasks.md) | Tasks N01 to N07 and their hardware acceptance status |
+| [contracts/README.md](../specs/002-nvidia-stack/contracts/README.md) | Index of the spec 002 receipt schemas (ADR-0008) |
 
 Schema copies and the note that `$id` still names the former FaustCoder repository are in [schemas/README.md](../schemas/README.md). The backlog is [KANBAN.md](../KANBAN.md). The changelog is [CHANGELOG.md](../CHANGELOG.md).
