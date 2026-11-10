@@ -8,6 +8,8 @@ See [docs/VERSIONING.md](docs/VERSIONING.md).
 
 ## [Unreleased]
 
+- Add `AGENTS.md` with the standing project rules, the shipping cycle and a standing grant for agents, plus `CLAUDE.md`, `FACTS.md` and `docs/handoff/NEXT.md` starting files. Docs only.
+
 - Record seven-span bounded compiler/signal validation: 28 positive runs, five negative controls, receipt locations and preservation results. Independent production approval, 958 missing ranges and T06/T07 qualification gates remain open; TOKEN_FLOOR stays 40/provisional and T07 unfrozen.
 
 - Document the unapproved seven-span production candidate, 958 missing spans, verified source blobs, receipt locations and remaining qualification gaps. Full-inventory validation still refuses incomplete coverage; TOKEN_FLOOR stays 40/provisional and T07 remains unfrozen.
