@@ -16,7 +16,7 @@ Each run copied itself into its output folder (`draft_closures.py` and
 
 ## Changes from the run copies
 
-The only edits replace host-specific values with environment variables:
+The public copies replace host-specific values with environment variables:
 
 - `BLACKDOG_REPO`: BlackDog checkout. Default: the repo containing this file.
 - `BLACKDOG_EVIDENCE_ROOT`: folder that holds the evidence input folders.
@@ -26,8 +26,15 @@ The only edits replace host-specific values with environment variables:
 - `BLACKDOG_REVIEWER_NAME` (`seven_dependencies.py` only): required. The named
   independent human reviewer, as recorded in the contract approval record.
 
-Logic, inputs, expected digests and output layout are unchanged. Because of
-these edits, the files here no longer byte-match the SHA-256 values above.
+Inputs, expected digests and output layout are unchanged.
+`seven_dependencies.py` no longer treats every non-zero compiler exit as a
+negative-control rejection. A removed helper or a missing import is
+`EXPECTED_REJECTION` only when the receipt's `exit_code` is 1 and the
+diagnostic text names that dependency. Exit 124 (`timeout`), 125
+(`resource_limit`) and 126 (`internal`), the harness results of
+`faustcoder.compiler._build`, raise `DependencyCheckError` and fail the
+check. Because of these edits, the files here no longer byte-match the
+SHA-256 values above.
 
 ## Caveats
 

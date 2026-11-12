@@ -36,7 +36,16 @@ The pending Slice 2 gates that block #10 and #13 (details in the
 [slice2-readiness runbook](runbooks/slice2-readiness.md#remaining-exit-gates)):
 
 1. Independent approval of a source/task/dependency subset, and adjudication of
-   the quarantine set. All 174 R2 dependency decisions are still pending.
+   the quarantine set. The 174-unit closure overlay has seven scoped accepted
+   bounded closures and 167 unresolved: five owner-confirmed delegated-agent
+   source-local reviews and two direct-owner imported-closure approvals
+   (`.default.dsp` and `gain.dsp`). See
+   [Latest bounded closure approvals](runbooks/slice2-readiness.md#latest-bounded-closure-approvals)
+   and the bindings in the
+   [qualification sprint](runbooks/qualification-sprint.md#two-bounded-imported-closures-approved--2026-10-22).
+   That record supersedes older wording that left all 174 dependency decisions
+   pending. These are closure counts, not retained units; historical source
+   dispositions remain 18 REJECT / 156 BLOCKED. No independent review is inferred.
 2. FLOOR qualification: two-project cleared hosts, real rejected windows,
    ratified plants and false-positive adjudication, then a floor decision.
 3. Project-disjoint development tasks with semantic references.
