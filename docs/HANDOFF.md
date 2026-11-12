@@ -7,8 +7,8 @@ checks; this page does not repeat it.
 
 ## Current main
 
-- `main` is at `a7e945c` (2026-10-27 23:57 PT), "ci(secret-scan): ignore 3
-  reviewed generic-api-key false positives (#117)".
+- `main` is at `ecc872f` (2026-11-11 13:29 PT), "docs: add AGENTS.md with
+  project rules, shipping cycle and standing grant (#124)".
 - The canonical spec is [specs/001-faustcoder](../specs/001-faustcoder/);
   decisions are in [docs/adr](adr/) and [docs/decisions](decisions/). Task
   status is in [KANBAN.md](../KANBAN.md).
@@ -45,9 +45,10 @@ The pending Slice 2 gates that block #10 and #13 (details in the
    shared machines; do not ask for them.
 5. Signing review and trusted public verification, only after gates 1-4 close.
 
-Also open: [#116](https://github.com/Zero-State-LLC/BlackDog/pull/116)
-(Dependabot), [#33](https://github.com/Zero-State-LLC/BlackDog/pull/33) and
+Also open: [#33](https://github.com/Zero-State-LLC/BlackDog/pull/33) and
 [#32](https://github.com/Zero-State-LLC/BlackDog/pull/32) (older spec/docs PRs).
+[#116](https://github.com/Zero-State-LLC/BlackDog/pull/116) (Dependabot) is
+closed; the actions-group bump landed on main as #122.
 
 ## Where the Slice 2 evidence lives
 
