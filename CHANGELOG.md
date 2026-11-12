@@ -8,6 +8,10 @@ See [docs/VERSIONING.md](docs/VERSIONING.md).
 
 ## [Unreleased]
 
+- Add `docs/HANDOFF.md` for incoming collaborators: current main state, in-flight PRs and issues to avoid, where the Slice 2 evidence bundle lives and suggested first issues. Add the two Slice 2 evidence generators that produced cited evidence under `scripts/slice2/`, with host paths replaced by environment variables. No gate, floor or approval changes.
+
+- Add `AGENTS.md` with the standing project rules, the shipping cycle and a standing grant for agents, plus `CLAUDE.md`, `FACTS.md` and `docs/handoff/NEXT.md` starting files. Docs only.
+
 - Record seven-span bounded compiler/signal validation: 28 positive runs, five negative controls, receipt locations and preservation results. Independent production approval, 958 missing ranges and T06/T07 qualification gates remain open; TOKEN_FLOOR stays 40/provisional and T07 unfrozen.
 
 - Document the unapproved seven-span production candidate, 958 missing spans, verified source blobs, receipt locations and remaining qualification gaps. Full-inventory validation still refuses incomplete coverage; TOKEN_FLOOR stays 40/provisional and T07 remains unfrozen.
