@@ -51,7 +51,7 @@ jobs:
         run: python diagnostics/t04_capture.py
       - name: Upload evidence
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: t04-x86-node2214
           path: evidence/

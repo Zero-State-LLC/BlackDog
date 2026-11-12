@@ -1,5 +1,65 @@
 # T06/T07 qualification sprint
 
+## Two bounded imported closures approved — 2026-10-22
+
+Danny Meyer directly approved **both bounded source-and-compiler-import closures**
+for these exact pd-faustgen units at pin
+`9e2aaeabe94a7fab6928711050535ac12a1a591a`:
+
+| Source | Unit | Source SHA-256 | Dossier SHA-256 |
+| --- | --- | --- | --- |
+| `external/.default.dsp` | `u017e8346c741c864edc1` | `99d30cb378be3fe911a5730bafdda8ceabf7639a336cfce36556c578075d3ca9` | `ff7e273e3561d6e07e10ef7337a21b870fe16de2a23a0570a21c5d89b307eb62` |
+| `external/examples/gain.dsp` | `uc4f8b53b25994954ca1b` | `0bd6a8f3e5ed616149c7c77fb5c84cae5567a19359185958750f3066d5f52ae1` | `4e666647b72fb59ce4f6a22c702cb1951fabd420dbdf5b72ff25e840378e291a` |
+
+Approval scope is the exact sources, local runtime dependencies, pinned
+`stdfaust.lib` compiler input and tested configurations. Native traces observed
+only that Faust library opening for both units; two runs per unit produced
+byte-identical C++. This fills the resolution gap for those current invocations,
+not historical runs or every compiler configuration. The library SHA-256 is
+`724e407565e6abfd7508b08910deba9aac4ead0ad51c0498be9596f774fdfa05`.
+Keep the declared imports and existing source MIT and imported GRAME
+LGPL/compiled-code-exception notices. No blanket library coverage is granted.
+
+Receipt (outside Git):
+`/Users/appliedalchemylabs/Documents/Codex/blackdog-s2-backups/two-imported-closure-approval-20261023T035922Z/`.
+Start with `approval.json`, `closure-overlay.json` and `REPORT.md`.
+`SHA256SUMS` digest:
+`6a2be59588f63f5cb78a5e787195a365d2d1b17efb32055cfaecd2ce400a94b3`.
+The three payloads and matching local backup were checksum-verified. This is
+local preservation verification, not a new off-host backup claim. Supporting
+receipts under the same root are `native-import-resolution-20261023T031403Z/`
+and `two-imported-closure-assessment-20261023T031606Z/`. Original packets remain
+immutable; the approval supersedes only these two unresolved closure decisions.
+
+The 174-unit closure overlay now has **7 accepted bounded closures and 167
+unresolved**: five owner-confirmed delegated-agent source-local reviews and these
+two direct-owner imported-closure approvals. These are closure counts, not
+retained-unit counts; original source dispositions remain 18 REJECT / 156 BLOCKED.
+No new independent-review claim is made.
+
+Remaining gates are exact retained-unit selection and applicable unresolved
+closures; full 1,430-unit, 23-short-group and 19-collective-set source/family
+adjudication; reviewed hosts from two repositories and fixed windows/gold labels;
+ratified FLOOR qualification; disjoint development and candidate-split checks;
+separate-task public exclusion evidence; and final integration acceptance.
+Full-pool accounting and exploratory experiments do not establish these gates.
+No collective-rule variant was adopted; the experimental floor guard keeps all
+seven pd-faustgen candidates connected.
+
+Danny's custody roles, local-only iPhone storage/access arrangements and owner
+independence waiver are recorded attestations. Independence is
+`WAIVED_BY_OWNER_NOT_INDEPENDENT`, not passed. His later clarification confirms
+review of the seven **public contracts** only; separate-task creation/review
+remains `NOT_ESTABLISHED`. Do not reopen the recorded custody arrangements or
+infer separate tasks from public source/contract hashes.
+
+**No host, gold, retention or production admission. TOKEN_FLOOR=40 remains
+provisional; T07 remains unfrozen.** This section supersedes older pending
+closure, native-trace and custody-status wording below. PR #110 is already
+squash-merged at `5f9986b5f4be8cc77719050085673df6603a80ac`; historical unmerged
+statements below are not current status. This documentation update changes no
+PR state or detector default.
+
 ## Imported-notice handling approval — 2026-10-22
 
 Danny Meyer directly approved the recommended **scoped imported-notice handling**

@@ -356,6 +356,43 @@ def test_packet_md_scope_name_missing_is_rejected(packet_run):
         validate_outputs(out)
 
 
+def test_packet_json_marginal_mismatch_is_rejected(packet_run):
+    import json
+    from faustcoder.canonical import sha256_prefixed
+    from diagnostics.batch1_review import validate_outputs
+    run, _ = packet_run
+    out = run("off")
+    binding = json.loads((out / "binding.json").read_text())
+    packet = next((out / "packets").glob("*.json"))
+    payload = json.loads(packet.read_text())
+    payload["marginal_coverage"] = not binding["marginal_coverage"]
+    raw = json.dumps(payload).encode() + b"\n"
+    packet.write_bytes(raw)
+    rel = str(packet.relative_to(out))
+    binding["outputs"][rel]["sha256"] = sha256_prefixed(raw)
+    _rewrite_binding(out, binding)
+    with pytest.raises(ValueError, match="packet marginal coverage mismatch: " + packet.name):
+        validate_outputs(out)
+
+
+def test_packet_md_marginal_missing_is_rejected(packet_run):
+    import json
+    from faustcoder.canonical import sha256_prefixed
+    from diagnostics.batch1_review import validate_outputs
+    run, _ = packet_run
+    out = run("off")
+    binding = json.loads((out / "binding.json").read_text())
+    packet = next((out / "packets").glob("*.md"))
+    label = "Marginal coverage: `off`"
+    raw = packet.read_text().replace(label, "Marginal coverage: `on`").encode()
+    packet.write_bytes(raw)
+    rel = str(packet.relative_to(out))
+    binding["outputs"][rel]["sha256"] = sha256_prefixed(raw)
+    _rewrite_binding(out, binding)
+    with pytest.raises(ValueError, match="packet marginal coverage missing: " + packet.name):
+        validate_outputs(out)
+
+
 def test_run_calls_validate_outputs(packet_run, monkeypatch):
     from diagnostics import batch1_review as module
     called = []
@@ -670,7 +707,7 @@ def _assert_opt_in_k_way(k):
     noise = " ".join(pieces[0].split()[:5]) + " " + " ".join(alphabet[k * 18:k * 18 + 30])
     items = [("cmp", " ".join(pieces))] + [(f"c{i}", pieces[i]) for i in range(k)] + [("noise", noise)]
     result, groups = _groups(items, ["cmp"], marginal_coverage=True)
-    expect = [f"c{i}" for i in range(k)]
+    expect = sorted(f"c{i}" for i in range(k))
     assert {group["stream"] for group in groups} == {"raw", "canonical"}
     for stream in ("raw", "canonical"):
         streamed = [group for group in groups if group["stream"] == stream]
@@ -826,3 +863,7 @@ def test_idiom_filter_name_and_repo_validation():
     for bad in (1, True, "2", 2.5):
         with pytest.raises(ValueError):
             IdiomFilter(5, idiom_min_repos=bad)
+
+
+def test_opt_in_thirteen_way_includes_every_copy_and_excludes_noise():
+    _assert_opt_in_k_way(13)

@@ -1,5 +1,37 @@
 # Slice 2 leakage and split readiness
 
+## Latest bounded closure approvals
+
+Danny directly approved the exact `.default.dsp` and `gain.dsp` bounded
+source-and-compiler-import closures. See
+[bindings, receipt and remaining gates](qualification-sprint.md#two-bounded-imported-closures-approved--2026-10-22).
+Receipt outside Git:
+`/Users/appliedalchemylabs/Documents/Codex/blackdog-s2-backups/two-imported-closure-approval-20261023T035922Z/`.
+Manifest SHA-256:
+`6a2be59588f63f5cb78a5e787195a365d2d1b17efb32055cfaecd2ce400a94b3`.
+The native trace fills the resolution gap for the tested exact sources and
+pinned `stdfaust.lib`; preserve declared imports and existing approved notices.
+Original packets remain immutable. Matching backup verification is local,
+not a new off-host verification.
+
+There are now **7 accepted bounded closures / 167 unresolved** in the 174-unit
+closure overlay: five owner-confirmed delegated-agent reviews and two direct
+owner approvals. This does not change historical 18 REJECT / 156 BLOCKED source
+dispositions or create retained units. No independent review is inferred.
+
+Still required: retained-unit and source/family decisions across the full pool,
+reviewed hosts from two repositories, fixed windows and gold labels, qualified
+FLOOR results, disjoint development and candidate-split checks, separate-task
+public evidence and final integration. Custody arrangements and the owner waiver
+are recorded; independence is waived, not passed. Review of the seven public
+contracts does not establish separate-task creation/review.
+
+**No host, gold, retention or production admission; TOKEN_FLOOR=40 provisional;
+T07 unfrozen.** No experimental collective rule is adopted. These updates
+supersede older pending closure/native-trace/custody wording below. PR #110 is
+already squash-merged at `5f9986b5f4be8cc77719050085673df6603a80ac`; older
+unmerged references are historical.
+
 ## Latest human source decision
 
 Danny approved COPY/shared lineage for the exact pinned `filter.lib` / `filters.lib`
