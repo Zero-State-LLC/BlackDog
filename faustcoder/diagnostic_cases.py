@@ -65,8 +65,9 @@ class DiagnosticCase:
             raise ValueError("control block outside render")
         if profile.absolute_tolerance != 2e-6 or profile.relative_tolerance != 1e-5:
             raise ValueError("diagnostic cases retain the pinned comparison tolerances")
-        if not profile.reject_nonfinite or not profile.reject_silence or not profile.require_reference:
-            raise ValueError("diagnostic cases require finite/reference/silence checks")
+        if (not profile.reject_nonfinite or not profile.reject_silence
+                or not profile.require_reference or not profile.reject_clipping):
+            raise ValueError("diagnostic cases require finite/reference/silence/clipping checks")
         if profile.suite is not None:
             raise ValueError("diagnostic cases cannot extend a named suite")
 
@@ -148,6 +149,8 @@ def validate_worker_result(profile, body, buffers):
         raise ValueError("worker applied controls mismatch")
     if case.input_stimuli is not None and len(case.input_stimuli) != body["inputs"]:
         raise ValueError("input count mismatch")
+    if body["inputs"] == 0 and case.input_stimuli is None:
+        raise ValueError("zero-input DSP requires an empty route")
     # Descriptor numbers are serialized as hex strings for canonical integer-only receipts.
     def canonical_descriptor(value):
         if isinstance(value, float):

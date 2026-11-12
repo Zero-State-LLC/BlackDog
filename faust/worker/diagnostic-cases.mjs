@@ -3,6 +3,7 @@ const INPUTS = new Set(['sine', 'noise', 'impulse', 'multitone', 'alternating'])
 export function validateDiagnostic(spec, descriptors, frames, blockSize, inputs, pressFirst) {
   if (!spec || spec.version !== 1 || !/^[A-Za-z0-9_-]{1,80}$/.test(spec.case_id) || !Array.isArray(spec.controls)) throw Error('invalid diagnostic case');
   if (spec.input_stimuli !== null && (!Array.isArray(spec.input_stimuli) || spec.input_stimuli.length !== inputs || spec.input_stimuli.some(n => !INPUTS.has(n)))) throw Error('input count or stimulus mismatch');
+  if (inputs === 0 && spec.input_stimuli === null) throw Error('zero-input DSP requires an empty route');
   const writable = new Map();
   const pending = [...descriptors];
   while (pending.length) {

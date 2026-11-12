@@ -1733,12 +1733,23 @@ def _limits_for(profile: SignalProfile) -> ResourceLimits:
     The default 8 MiB cap fits a legacy render. The eight-stimulus
     suite writes a float32 input and up to two output channels per
     stimulus, which is past that cap, so the suite gets a larger
-    ceiling and a longer timeout. A caller-supplied limit is kept.
+    ceiling and a longer timeout. Diagnostic cases that route
+    explicit per-input buffers stage extra ``channel-*`` files in
+    workdir, and the produced-byte watcher counts those files. A
+    caller-supplied limit is kept.
     """
     outputs = profile.expected_channels if profile.expected_channels is not None else 2
     if outputs < 1:
         outputs = 1
-    needed = len(profile.stimuli) * profile.frames * 4 * (1 + outputs) + 1024 * 1024
+    routed = 0
+    case = profile.diagnostic_case
+    if case is not None and case.input_stimuli:
+        routed = len(case.input_stimuli)
+    needed = (
+        len(profile.stimuli) * profile.frames * 4 * (1 + outputs)
+        + routed * profile.frames * 4
+        + 1024 * 1024
+    )
     default = 8 * 1024 * 1024
     if needed <= default:
         return ResourceLimits()

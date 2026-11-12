@@ -80,6 +80,22 @@ def test_each_extension_field_binds():
     assert len({profile_digest(profile(c)) for c in cases}) == len(cases)
 
 
+def test_limits_budget_routed_input_files():
+    from faustcoder.signal import _limits_for
+    frames = 144000
+    broadcast = replace(profile(DiagnosticCase('broadcast')), frames=frames)
+    routed = replace(profile(DiagnosticCase('routed', input_stimuli=('sine',) * 16)), frames=frames)
+    extra = 16 * frames * 4
+    assert _limits_for(broadcast).output_bytes == 8 * 1024 * 1024
+    assert _limits_for(routed).output_bytes >= extra + frames * 4 * (1 + 2) + 1024 * 1024
+    assert _limits_for(routed).output_bytes > _limits_for(broadcast).output_bytes
+
+
+def test_diagnostic_cases_require_clipping_rejection():
+    with pytest.raises(ValueError, match='clipping'):
+        profile(DiagnosticCase('c'), reject_clipping=False)
+
+
 def test_stimuli_and_worker_receipt_binding():
     c = DiagnosticCase('a',input_stimuli=('multitone','alternating','noise'))
     p = profile(c)

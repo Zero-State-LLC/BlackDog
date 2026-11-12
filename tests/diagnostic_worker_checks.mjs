@@ -17,6 +17,7 @@ assert.deepEqual(result.applied,events);assert.ok(stopped);
 inputs[0][0]=NaN;assert.throws(()=>renderDiagnostic(proc,inputs,12,4,[],false,[]));
 const generator={...proc,getNumInputs:()=>0,compute(ins,outs){assert.equal(ins.length,0);outs[0].fill(.25);return true;}};
 validateDiagnostic({...make(),input_stimuli:[]},[],12,4,0,false);
+assert.throws(()=>validateDiagnostic({...make(),input_stimuli:null},[],12,4,0,false));
 assert.equal(renderDiagnostic(generator,[],12,4,[],false,[]).channels[0][0],.25);
 console.log('worker controls, persistence, boundary rejection, routing and zero-input checks passed');
 
