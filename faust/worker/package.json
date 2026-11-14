@@ -9,6 +9,6 @@
     "node": ">=22.13"
   },
   "dependencies": {
-    "@grame/faustwasm": "0.19.0"
+    "@grame/faustwasm": "0.20.2"
   }
 }
